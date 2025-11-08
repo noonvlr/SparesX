@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  name      String
+  password  String
+  phone     String?
+  avatar    String?
+  role      Role     @default(BUYER)
+  
+  // Address fields
+  address   String?
+  city      String?
+  state     String?
+  district  String?
+  pincode   String?
+  country   String?  @default("India")
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  products     Product[]
+  ordersAsBuyer Order[] @relation("OrderBuyer")
+  ordersAsSeller Order[] @relation("OrderSeller")
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String
+  price       Float
+  condition   Condition
+  category    String
+  brand       String?
+  model       String?
+  year        Int?
+  location    String
+  quantity    Int         @default(1)
+  sellerId    String      @db.ObjectId
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  seller   User           @relation(fields: [sellerId], references: [id])
+  images   ListingImage[]
+  orders   Order[]
+
+  @@map("products")
+}
+
+model ListingImage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  url       String
+  publicId  String
+  productId String   @db.ObjectId
+  order     Int
+  createdAt DateTime @default(now())
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("listing_images")
+}
+
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  productId       String      @db.ObjectId
+  buyerId         String      @db.ObjectId
+  sellerId        String      @db.ObjectId
+  status          OrderStatus @default(PENDING)
+  totalAmount     Float
+  shippingAddress String
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  product Product @relation(fields: [productId], references: [id])
+  buyer   User    @relation("OrderBuyer", fields: [buyerId], references: [id])
+  seller  User    @relation("OrderSeller", fields: [sellerId], references: [id])
+
+  @@map("orders")
+}
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  parentId    String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  children Category[] @relation("CategoryHierarchy")
+
+  @@map("categories")
+}
+
+enum Role {
+  BUYER
+  SELLER
+  DEALER
+  ADMIN
+}
+
+enum Condition {
+  NEW
+  USED
+  REFURBISHED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+
+model Notification {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  read      Boolean          @default(false)
+  userId    String           @db.ObjectId
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model NavigationConfig {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  showInNav            Boolean  @default(true)
+  maxVisibleCategories Int      @default(6)
+  showSubcategories    Boolean  @default(true)
+  showMoreButton       Boolean  @default(true)
+  customOrder          String[] @default([])
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("navigation_configs")
+}
+
+
+
