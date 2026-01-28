@@ -4,35 +4,58 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 
 export const metadata: Metadata = {
-  title: "SparesX - Mobile Spare Parts Marketplace | Buy & Sell Quality Parts",
+  title: "Buy & Sell Mobile Spare Parts Online",
   description:
-    "SparesX is India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts, and grow your repair business. Fast delivery, quality assured.",
+    "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts & tools. Quality assured, fast delivery nationwide.",
   keywords: [
     "mobile spare parts",
-    "phone parts marketplace",
-    "technician marketplace",
-    "mobile repair parts",
-    "spare parts seller",
-    "buy mobile parts online",
+    "buy phone parts online",
+    "mobile spare parts marketplace",
+    "technician spare parts",
+    "mobile repair parts India",
+    "wholesale phone parts",
     "phone screen replacement",
-    "mobile battery",
-    "phone parts wholesale",
+    "mobile battery online",
+    "phone parts B2B",
+    "verified technician parts",
   ],
   openGraph: {
-    title: "SparesX - Mobile Spare Parts Marketplace",
+    title: "Buy & Sell Mobile Spare Parts Online | SparesX",
     description:
-      "Buy and sell genuine mobile spare parts from verified technicians. Quality assured, fast delivery.",
-    type: "website",
+      "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts. Quality assured, fast delivery.",
+    url: "/",
     siteName: "SparesX",
+    type: "website",
+    locale: "en_IN",
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "SparesX - Mobile Spare Parts Marketplace",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SparesX - Mobile Spare Parts Marketplace",
+    title: "Buy & Sell Mobile Spare Parts Online | SparesX",
     description:
-      "India's premier B2B marketplace for mobile spare parts and repair tools",
+      "India's premier B2B marketplace for mobile spare parts. Quality assured, verified technicians, fast delivery nationwide.",
+    images: ["/og-image.jpg"],
   },
   alternates: {
     canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

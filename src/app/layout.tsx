@@ -34,12 +34,27 @@ export const metadata: Metadata = {
     title: "SparesX - Mobile Spare Parts Marketplace",
     description:
       "Marketplace for mobile technicians to buy and sell spare parts",
+    url: siteUrl,
+    siteName: "SparesX",
     type: "website",
     locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SparesX - Mobile Spare Parts Marketplace",
+    description:
+      "Marketplace for mobile technicians to buy and sell spare parts",
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 
