@@ -8,7 +8,7 @@ export interface IRequest extends Document {
   phone?: string;
   category: string;
   brand?: string;
-  model?: string;
+  deviceModel?: string;
   description: string;
   status: RequestStatus;
   createdAt: Date;
@@ -22,7 +22,7 @@ const RequestSchema: Schema<IRequest> = new Schema(
     phone: { type: String, trim: true },
     category: { type: String, required: true, trim: true },
     brand: { type: String, trim: true },
-    model: { type: String, trim: true },
+    deviceModel: { type: String, trim: true },
     description: { type: String, required: true, trim: true },
     status: {
       type: String,
