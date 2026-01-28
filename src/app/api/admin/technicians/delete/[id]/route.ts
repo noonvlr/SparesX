@@ -38,14 +38,21 @@ export async function DELETE(
       );
     }
 
+    // Get all products by this user before deleting
+    const products = await Product.find({ technician: id });
+
+    // Note: Images are stored as base64 data URLs in the database, not as files
+    // They are automatically removed when products are deleted from the database
+
     // Delete all products by this user
-    await Product.deleteMany({ technicianId: id });
+    const deleteResult = await Product.deleteMany({ technician: id });
 
     // Delete the user
     await User.findByIdAndDelete(id);
 
     return NextResponse.json({
-      message: 'User and their products deleted successfully',
+      message: `User and ${deleteResult.deletedCount} product(s) deleted successfully`,
+      deletedCount: deleteResult.deletedCount,
     });
   } catch (error) {
     console.error('Delete user error:', error);

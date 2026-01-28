@@ -1,2 +1,23 @@
 @import "tailwindcss";
 
+/* Shared card hover/zoom effects (server-safe, CSS only) */
+.card-hover {
+	transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
+	will-change: transform;
+}
+
+.card-hover:hover {
+	transform: translateY(-6px);
+	box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.16);
+	border-color: rgb(191 219 254);
+}
+
+.card-image-zoom {
+	transition: transform 250ms ease;
+	will-change: transform;
+}
+
+.card-hover:hover .card-image-zoom {
+	transform: scale(1.03);
+}
+

@@ -29,19 +29,38 @@ export async function POST(req: NextRequest) {
   if (!payload || payload.role !== 'technician') {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   }
-  const { name, description, price, category, condition, images } = await req.json();
-  if (!name || !description || !price || !category || !condition) {
-    return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
+  
+  const { name, description, price, deviceCategory, brand, deviceModel, modelNumber, partType, condition, images } = await req.json();
+  
+  // Validate required fields
+  if (!name || !description || !price || !deviceCategory || !brand || !deviceModel || !partType || !condition) {
+    return NextResponse.json({ 
+      message: 'All fields are required (name, description, price, deviceCategory, brand, deviceModel, partType, condition)' 
+    }, { status: 400 });
   }
+  
   await connectDB();
+  
+  // Generate slug for SEO
+  const slug = `${deviceCategory}-${brand}-${deviceModel}-${partType}-${Date.now()}`
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  
   const product = await Product.create({
     name,
     description,
     price,
-    category,
+    deviceCategory,
+    brand,
+    deviceModel,
+    modelNumber: modelNumber || '',
+    partType,
     condition,
     images: images || [],
     technician: payload.id,
+    slug,
   });
+  
   return NextResponse.json({ product }, { status: 201 });
 }

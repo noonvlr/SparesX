@@ -2,6 +2,12 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_BASE_URL ||
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
@@ -9,6 +15,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
     default: "SparesX - Mobile Spare Parts Marketplace",
     template: "%s | SparesX",
