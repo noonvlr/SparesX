@@ -39,3 +39,20 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Documentation files (keep only README.md)
+COMPLETION_CHECKLIST.md
+DEVICE_CATEGORIES_*.md
+DOCUMENTATION_INDEX.md
+IMPLEMENTATION_SUMMARY.md
+VERCEL_BLOB_SETUP.md
+.copilot-context.md
+src/app/admin/device-categories/README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
