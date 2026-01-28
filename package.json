@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:mobile": "tsx scripts/seed-mobile-brands.ts",
+    "seed:mobile:clear": "tsx scripts/seed-mobile-brands.ts --clear",
+    "seed:mobile:status": "tsx scripts/seed-mobile-brands.ts --status",
+    "inspect:mobile": "tsx scripts/inspect-mobile-brands.ts"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

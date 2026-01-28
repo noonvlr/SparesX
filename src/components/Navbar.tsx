@@ -87,16 +87,10 @@ export default function Navbar() {
                     Users
                   </Link>
                   <Link
-                    href="/admin/categories"
+                    href="/admin/device-management"
                     className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
                   >
-                    Categories
-                  </Link>
-                  <Link
-                    href="/admin/device-categories"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-                  >
-                    Device Brands
+                    Device Management
                   </Link>
                 </>
               )}
@@ -217,16 +211,10 @@ export default function Navbar() {
                 Users
               </Link>
               <Link
-                href="/admin/categories"
+                href="/admin/device-management"
                 className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-base font-medium transition-all duration-200 hover:translate-x-1"
               >
-                Categories
-              </Link>
-              <Link
-                href="/admin/device-categories"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md text-base font-medium transition-all duration-200 hover:translate-x-1"
-              >
-                Device Brands
+                Device Management
               </Link>
             </>
           )}
