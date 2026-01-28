@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface Brand {
   _id: string;
@@ -48,10 +49,16 @@ export default function AddProductPage() {
   const [showPartTypeDropdown, setShowPartTypeDropdown] = useState(false);
 
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const {
+    uploadImages,
+    uploading: uploadingImages,
+    uploadError,
+  } = useImageUpload();
 
   // Fetch part types on mount
   useEffect(() => {
@@ -127,15 +134,7 @@ export default function AddProductPage() {
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (files) {
-      const fileArray = Array.from(files);
-      const readers = fileArray.map((file) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-      });
-      Promise.all(readers).then((results) => setImages(results));
+      setImageFiles(Array.from(files));
     }
   }
 
@@ -163,6 +162,18 @@ export default function AddProductPage() {
     setLoading(true);
 
     try {
+      // Upload images if any
+      let uploadedImageUrls = images;
+      if (imageFiles.length > 0) {
+        const urls = await uploadImages(imageFiles);
+        if (uploadError) {
+          setError(uploadError);
+          setLoading(false);
+          return;
+        }
+        uploadedImageUrls = urls;
+      }
+
       const res = await fetch("/api/technician/products", {
         method: "POST",
         headers: {
@@ -172,7 +183,7 @@ export default function AddProductPage() {
         body: JSON.stringify({
           ...form,
           price: Number(form.price),
-          images,
+          images: uploadedImageUrls,
         }),
       });
 
@@ -502,11 +513,17 @@ export default function AddProductPage() {
                   multiple
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  disabled={uploadingImages}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100"
                 />
-                {images.length > 0 && (
+                {imageFiles.length > 0 && (
                   <p className="text-sm text-green-600 mt-2">
-                    ✓ {images.length} image(s) selected
+                    ✓ {imageFiles.length} image(s) selected
+                  </p>
+                )}
+                {uploadingImages && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    🔄 Uploading images...
                   </p>
                 )}
               </div>
@@ -515,10 +532,14 @@ export default function AddProductPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 mt-2"
+              disabled={loading || uploadingImages}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? "Adding Product..." : "Add Product"}
+              {uploadingImages
+                ? "Uploading Images..."
+                : loading
+                  ? "Adding Product..."
+                  : "Add Product"}
             </button>
           </>
         )}

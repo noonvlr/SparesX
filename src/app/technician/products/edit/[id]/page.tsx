@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
+import { useImageUpload } from "@/hooks/useImageUpload";
 
 interface Brand {
   _id: string;
@@ -49,11 +50,17 @@ export default function EditProductPage() {
   const [showPartTypeDropdown, setShowPartTypeDropdown] = useState(false);
 
   const [images, setImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
+  const {
+    uploadImages,
+    uploading: uploadingImages,
+    uploadError,
+  } = useImageUpload();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -169,15 +176,7 @@ export default function EditProductPage() {
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (files) {
-      const fileArray = Array.from(files);
-      const readers = fileArray.map((file) => {
-        return new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-      });
-      Promise.all(readers).then((results) => setImages(results));
+      setImageFiles(Array.from(files));
     }
   }
 
@@ -190,25 +189,40 @@ export default function EditProductPage() {
       setError("Not authenticated");
       return;
     }
-    const finalImages = images.length > 0 ? images : existingImages;
-    const res = await fetch(`/api/technician/products/edit/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        ...form,
-        price: Number(form.price),
-        images: finalImages,
-      }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setSuccess("Product updated successfully!");
-      setTimeout(() => router.push("/technician/products"), 1200);
-    } else {
-      setError(data.message || "Failed to update product");
+
+    try {
+      // Upload new images if any
+      let uploadedImageUrls = existingImages;
+      if (imageFiles.length > 0) {
+        const urls = await uploadImages(imageFiles);
+        if (uploadError) {
+          setError(uploadError);
+          return;
+        }
+        uploadedImageUrls = [...existingImages, ...urls];
+      }
+
+      const res = await fetch(`/api/technician/products/edit/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...form,
+          price: Number(form.price),
+          images: uploadedImageUrls,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess("Product updated successfully!");
+        setTimeout(() => router.push("/technician/products"), 1200);
+      } else {
+        setError(data.message || "Failed to update product");
+      }
+    } catch (err) {
+      setError("An error occurred. Please try again.");
     }
   }
 
@@ -547,7 +561,7 @@ export default function EditProductPage() {
               <div className="mt-4">
                 <label className="block text-sm font-semibold text-gray-800 mb-2">
                   {existingImages.length > 0
-                    ? "Update Images (Optional)"
+                    ? "Add More Images (Optional)"
                     : "Product Images"}
                 </label>
                 <input
@@ -555,11 +569,17 @@ export default function EditProductPage() {
                   multiple
                   accept="image/*"
                   onChange={handleImageChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  disabled={uploadingImages}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:bg-gray-100"
                 />
-                {images.length > 0 && (
+                {imageFiles.length > 0 && (
                   <p className="text-sm text-green-600 mt-2">
-                    ✓ {images.length} new image(s) selected
+                    ✓ {imageFiles.length} new image(s) selected
+                  </p>
+                )}
+                {uploadingImages && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    🔄 Uploading images...
                   </p>
                 )}
               </div>
@@ -576,9 +596,10 @@ export default function EditProductPage() {
               </button>
               <button
                 type="submit"
-                className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition"
+                disabled={uploadingImages}
+                className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Update Product
+                {uploadingImages ? "Uploading..." : "Update Product"}
               </button>
             </div>
           </>
