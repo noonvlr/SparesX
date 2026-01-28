@@ -75,7 +75,7 @@ export default function ProductFilters() {
       {/* Mobile Filter Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed bottom-6 right-6 z-50 bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 font-semibold"
+        className="lg:hidden fixed bottom-6 left-6 z-50 bg-blue-600 bg-opacity-90 text-white px-6 py-3 rounded-full shadow-2xl hover:bg-blue-700 hover:bg-opacity-100 transition-all duration-200 flex items-center gap-2 font-semibold"
       >
         <svg
           className="w-5 h-5"
@@ -101,9 +101,11 @@ export default function ProductFilters() {
       {/* Filter Sidebar/Modal */}
       <div
         className={`
-          fixed lg:static top-0 left-0 h-screen lg:h-auto w-80 bg-white shadow-2xl lg:shadow-md
+          fixed lg:static top-0 left-0 h-screen lg:h-auto w-80 
+          bg-white/80 backdrop-blur-md lg:bg-white
+          shadow-2xl lg:shadow-md border-r border-gray-200/40 lg:border
           z-40 lg:z-0 transition-transform duration-300 ease-in-out overflow-y-auto
-          lg:rounded-xl lg:border lg:border-gray-200
+          lg:rounded-xl lg:border-gray-200
           ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
         `}
       >

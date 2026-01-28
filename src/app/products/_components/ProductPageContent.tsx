@@ -37,12 +37,12 @@ export default function ProductPageContent() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar - Hidden on mobile, visible on desktop */}
-          <aside className="hidden lg:block lg:w-80 flex-shrink-0">
-            <div className="sticky top-8">
+          {/* Filters Component - Handles mobile modal + desktop sidebar internally */}
+          <div className="lg:w-80 lg:flex-shrink-0">
+            <div className="lg:sticky lg:top-8">
               <ProductFilters />
             </div>
-          </aside>
+          </div>
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
@@ -55,7 +55,7 @@ export default function ProductPageContent() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div
                     key={i}
@@ -93,7 +93,7 @@ export default function ProductPageContent() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
                 {products.map((product: any) => (
                   <div
                     key={product._id}

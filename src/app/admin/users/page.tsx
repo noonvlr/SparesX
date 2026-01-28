@@ -1,5 +1,16 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import UsersManager from "./_components/UsersManager";
 
-export default function AdminUsersRedirect() {
-  redirect("/admin/technicians");
+export const metadata: Metadata = {
+  title: "User Management | Admin",
+  description:
+    "Manage all users, search by mobile number, and edit user information",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+export default function AdminUsersPage() {
+  return <UsersManager />;
 }

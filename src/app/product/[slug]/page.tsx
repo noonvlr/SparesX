@@ -8,7 +8,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const baseUrl = "https://spares-x-h1cj.vercel.app";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://spares-x-h1cj.vercel.app";
 
   try {
     const res = await fetch(`${baseUrl}/api/products/${slug}`, {
@@ -84,7 +85,8 @@ export default async function ProductSlugPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const baseUrl = "https://spares-x-h1cj.vercel.app";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://spares-x-h1cj.vercel.app";
 
   try {
     const res = await fetch(`${baseUrl}/api/products/${slug}`, {
