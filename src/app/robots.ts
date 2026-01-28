@@ -1,9 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-  "http://localhost:3000");
+const baseUrl = "https://spares-x-h1cj.vercel.app";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -11,7 +8,16 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/admin", "/dashboard", "/technician"],
+        disallow: [
+          "/admin",
+          "/admin/*",
+          "/dashboard",
+          "/dashboard/*",
+          "/technician",
+          "/technician/*",
+          "/api",
+          "/api/*",
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

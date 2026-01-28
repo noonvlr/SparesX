@@ -2,11 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000");
+const siteUrl = "https://spares-x-h1cj.vercel.app";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -17,11 +13,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "SparesX - Mobile Spare Parts Marketplace",
+    default: "SparesX – Mobile Spare Parts Marketplace",
     template: "%s | SparesX",
   },
   description:
-    "The premier marketplace for mobile technicians to buy and sell genuine spare parts. Quality parts, verified sellers, seamless transactions.",
+    "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts & tools. Quality assured, fast delivery nationwide.",
   keywords: [
     "mobile spare parts",
     "technician marketplace",
@@ -30,20 +26,23 @@ export const metadata: Metadata = {
     "spare parts seller",
   ],
   authors: [{ name: "SparesX Team" }],
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
-    title: "SparesX - Mobile Spare Parts Marketplace",
+    title: "SparesX – Mobile Spare Parts Marketplace",
     description:
-      "Marketplace for mobile technicians to buy and sell spare parts",
+      "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts & tools.",
     url: siteUrl,
     siteName: "SparesX",
     type: "website",
-    locale: "en_US",
+    locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SparesX - Mobile Spare Parts Marketplace",
+    title: "SparesX – Mobile Spare Parts Marketplace",
     description:
-      "Marketplace for mobile technicians to buy and sell spare parts",
+      "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians.",
   },
   robots: {
     index: true,

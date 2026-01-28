@@ -2,14 +2,34 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 
 export const metadata: Metadata = {
-  title: "Verified Sellers - SparesX",
+  title: "Verified Sellers",
   description:
-    "Browse verified technicians on SparesX. Connect with trusted sellers for mobile, laptop, and tool spare parts.",
+    "Browse verified technicians on SparesX. Connect with trusted sellers for mobile spare parts. All sellers are reviewed for quality and reliability.",
+  keywords: [
+    "verified sellers",
+    "technician network",
+    "trusted sellers",
+    "spare parts sellers",
+    "mobile repair technicians",
+  ],
+  alternates: {
+    canonical: "/sellers",
+  },
   openGraph: {
-    title: "Verified Sellers - SparesX",
+    title: "Verified Sellers | SparesX",
     description:
-      "Browse verified technicians on SparesX and connect with trusted sellers.",
+      "Browse verified technicians on SparesX. Connect with trusted sellers for mobile spare parts.",
     type: "website",
+    url: "https://spares-x-h1cj.vercel.app/sellers",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Verified Sellers | SparesX",
+    description: "Connect with trusted mobile spare parts sellers.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

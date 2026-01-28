@@ -2,40 +2,63 @@ import type { MetadataRoute } from "next";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_BASE_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-  "http://localhost:3000");
+const baseUrl = "https://spares-x-h1cj.vercel.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  await connectDB();
-  const products = await Product.find({ status: "approved" })
-    .select("_id updatedAt")
-    .sort({ updatedAt: -1 })
-    .limit(5000);
+  try {
+    await connectDB();
+    const products = await Product.find({ status: "approved" })
+      .select("_id updatedAt")
+      .sort({ updatedAt: -1 })
+      .limit(5000)
+      .lean();
 
-  const staticRoutes = [
-    "",
-    "/browse",
-    "/products",
-    "/requests",
-    "/sellers",
-    "/how-it-works",
-    "/about",
-    "/faq",
-    "/login",
-    "/register",
-  ];
+    const staticRoutes = [
+      { path: "", priority: 1.0, changeFrequency: "daily" as const },
+      { path: "/browse", priority: 0.9, changeFrequency: "daily" as const },
+      { path: "/products", priority: 0.9, changeFrequency: "daily" as const },
+      { path: "/requests", priority: 0.8, changeFrequency: "weekly" as const },
+      { path: "/sellers", priority: 0.8, changeFrequency: "weekly" as const },
+      {
+        path: "/how-it-works",
+        priority: 0.7,
+        changeFrequency: "monthly" as const,
+      },
+      { path: "/about", priority: 0.7, changeFrequency: "monthly" as const },
+      { path: "/faq", priority: 0.7, changeFrequency: "monthly" as const },
+      { path: "/login", priority: 0.5, changeFrequency: "yearly" as const },
+      {
+        path: "/register",
+        priority: 0.5,
+        changeFrequency: "yearly" as const,
+      },
+    ];
 
-  const staticEntries = staticRoutes.map((path) => ({
-    url: `${baseUrl}${path}`,
-    lastModified: new Date(),
-  }));
+    const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
+      url: `${baseUrl}${route.path}`,
+      lastModified: new Date(),
+      changeFrequency: route.changeFrequency,
+      priority: route.priority,
+    }));
 
-  const productEntries = products.map((product) => ({
-    url: `${baseUrl}/product/${product._id}`,
-    lastModified: product.updatedAt || new Date(),
-  }));
+    const productEntries: MetadataRoute.Sitemap = products.map((product) => ({
+      url: `${baseUrl}/product/${product._id}`,
+      lastModified: product.updatedAt || new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
 
-  return [...staticEntries, ...productEntries];
+    return [...staticEntries, ...productEntries];
+  } catch (error) {
+    console.error("Error generating sitemap:", error);
+    // Return basic sitemap if database connection fails
+    return [
+      {
+        url: baseUrl,
+        lastModified: new Date(),
+        changeFrequency: "daily" as const,
+        priority: 1.0,
+      },
+    ];
+  }
 }

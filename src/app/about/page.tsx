@@ -3,12 +3,31 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "About SparesX",
   description:
-    "Learn about SparesX, the technician-first marketplace for mobile, laptop, GPU, and tool spare parts.",
+    "Learn about SparesX, India's premier B2B marketplace for mobile spare parts. Connecting verified technicians with quality parts since inception.",
+  keywords: [
+    "about sparesx",
+    "mobile parts marketplace",
+    "technician network",
+    "spare parts platform",
+  ],
+  alternates: {
+    canonical: "/about",
+  },
   openGraph: {
-    title: "About SparesX",
+    title: "About SparesX | Mobile Spare Parts Marketplace",
     description:
-      "Technician-first marketplace for mobile, laptop, GPU, and tool spare parts.",
+      "Learn about SparesX, India's premier B2B marketplace connecting verified technicians with quality mobile spare parts.",
     type: "website",
+    url: "https://spares-x-h1cj.vercel.app/about",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About SparesX",
+    description: "India's premier B2B marketplace for mobile spare parts.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

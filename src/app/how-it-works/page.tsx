@@ -1,14 +1,33 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "How It Works - SparesX",
+  title: "How It Works",
   description:
-    "Understand how buyers and technicians connect on SparesX to source spare parts quickly.",
+    "Discover how SparesX connects buyers and technicians. Learn our simple 3-step process: Browse & Request, Get Verified Responses, and Secure Fulfillment.",
+  keywords: [
+    "how it works",
+    "buying process",
+    "marketplace guide",
+    "spare parts workflow",
+  ],
+  alternates: {
+    canonical: "/how-it-works",
+  },
   openGraph: {
-    title: "How It Works - SparesX",
+    title: "How It Works | SparesX",
     description:
-      "Understand how buyers and technicians connect on SparesX to source spare parts quickly.",
+      "Discover how SparesX connects buyers and technicians. Simple 3-step process to get the spare parts you need.",
     type: "website",
+    url: "https://spares-x-h1cj.vercel.app/how-it-works",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "How It Works | SparesX",
+    description: "Learn our simple process for buying mobile spare parts.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

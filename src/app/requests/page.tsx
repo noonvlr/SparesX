@@ -2,14 +2,34 @@ import type { Metadata } from "next";
 import RequestForm from "./_components/RequestForm";
 
 export const metadata: Metadata = {
-  title: "Request a Part - SparesX",
+  title: "Request a Part",
   description:
-    "Submit a spare parts request and connect with verified technicians who can source the part you need.",
+    "Can't find what you need? Submit a spare parts request and get responses from verified technicians. Fast, reliable sourcing for any mobile part.",
+  keywords: [
+    "request spare part",
+    "part request",
+    "find mobile parts",
+    "custom request",
+    "technician network",
+  ],
+  alternates: {
+    canonical: "/requests",
+  },
   openGraph: {
-    title: "Request a Part - SparesX",
+    title: "Request a Spare Part | SparesX",
     description:
-      "Submit a spare parts request and connect with verified technicians who can source the part you need.",
+      "Submit a spare parts request and get responses from verified technicians. Fast, reliable sourcing.",
     type: "website",
+    url: "https://spares-x-h1cj.vercel.app/requests",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Request a Part | SparesX",
+    description: "Get custom spare parts from verified technicians.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 

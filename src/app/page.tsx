@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 
 export const metadata: Metadata = {
   title: "Buy & Sell Mobile Spare Parts Online",
@@ -60,12 +59,7 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  // Fetch featured products with caching
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = host?.includes("localhost") ? "http" : "https";
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || (host ? `${protocol}://${host}` : "");
+  const baseUrl = "https://spares-x-h1cj.vercel.app";
 
   // Fetch featured products with revalidation (ISR)
   const productsRes = await fetch(`${baseUrl}/api/products?limit=6`, {
@@ -95,13 +89,14 @@ export default async function HomePage() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "SparesX",
-    description: "Mobile spare parts marketplace for technicians",
-    url: baseUrl || "https://sparesx.vercel.app",
+    description:
+      "India's premier B2B marketplace for mobile spare parts connecting verified technicians with quality parts",
+    url: baseUrl,
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: `${baseUrl || "https://sparesx.vercel.app"}/products?search={search_term_string}`,
+        urlTemplate: `${baseUrl}/products?search={search_term_string}`,
       },
       "query-input": "required name=search_term_string",
     },

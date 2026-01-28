@@ -1,6 +1,10 @@
 "use client";
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import ProductPageContent from "../products/_components/ProductPageContent";
+
+// Note: Since this is a client component, metadata should be in a layout file
+// Creating a layout file for this route would be ideal
 
 function ProductSkeleton() {
   return (

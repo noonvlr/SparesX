@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import RegisterForm from "./_components/RegisterForm";
 
 export const metadata: Metadata = {
-  title: "Register - SparesX",
+  title: "Register",
   description:
-    "Create a SparesX technician account to list spare parts and reach buyers.",
-  openGraph: {
-    title: "Register - SparesX",
-    description:
-      "Create a SparesX technician account to list spare parts and reach buyers.",
-    type: "website",
+    "Create your SparesX account to list spare parts, request parts, and connect with verified technicians.",
+  alternates: {
+    canonical: "/register",
+  },
+  robots: {
+    index: false,
+    follow: true,
   },
 };
 
