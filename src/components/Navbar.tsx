@@ -24,6 +24,28 @@ export default function Navbar() {
     setMobileMenuOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("nav")) {
+        setMobileMenuOpen(false);
+      }
+    };
+    const handleTouchOutside = (e: TouchEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("nav")) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClickOutside);
+    document.addEventListener("touchstart", handleTouchOutside);
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+      document.removeEventListener("touchstart", handleTouchOutside);
+    };
+  }, [mobileMenuOpen]);
+
   function handleLogout() {
     localStorage.removeItem("token");
     setIsAuthenticated(false);

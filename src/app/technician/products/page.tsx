@@ -108,23 +108,17 @@ export default function MyProductsPage() {
         </div>
 
         {/* Stats Section */}
-        <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <p className="text-gray-600 text-sm font-medium">Total Products</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200 px-4 py-2">
+            <p className="text-blue-700 text-xs font-medium">Total</p>
+            <p className="text-lg font-bold text-blue-900 leading-none">
               {products.length}
             </p>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <p className="text-gray-600 text-sm font-medium">Active Listings</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 px-4 py-2">
+            <p className="text-green-700 text-xs font-medium">Active</p>
+            <p className="text-lg font-bold text-green-900 leading-none">
               {products.filter((p) => p.status === "approved").length}
-            </p>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <p className="text-gray-600 text-sm font-medium">Pending Review</p>
-            <p className="text-3xl font-bold text-yellow-600 mt-2">
-              {products.filter((p) => p.status !== "approved").length}
             </p>
           </div>
         </div>
@@ -157,7 +151,7 @@ export default function MyProductsPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
             {products.map((product) => (
               <div
                 key={product._id}

@@ -18,8 +18,17 @@ export async function POST(req: NextRequest) {
     const uploadedUrls: string[] = [];
     const token = process.env.BLOB_READ_WRITE_TOKEN;
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    if (!token) {
-      await fs.mkdir(uploadsDir, { recursive: true });
+    const isDevelopment = process.env.NODE_ENV === "development";
+    
+    // Force local storage in development
+    const useLocalStorage = isDevelopment || !token;
+    
+    if (useLocalStorage) {
+      try {
+        await fs.mkdir(uploadsDir, { recursive: true });
+      } catch (mkdirError: any) {
+        console.error("[Upload] Failed to create uploads directory:", mkdirError);
+      }
     }
 
     for (const file of files) {
@@ -27,23 +36,26 @@ export async function POST(req: NextRequest) {
       const filename = `${Date.now()}-${file.name}`;
       const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, "_");
 
-      if (token) {
+      if (useLocalStorage) {
+        // Local file storage (development)
+        const filePath = path.join(uploadsDir, safeName);
+        await fs.writeFile(filePath, Buffer.from(buffer));
+        uploadedUrls.push(`/uploads/${safeName}`);
+        console.log("[Upload] File saved locally:", filePath);
+      } else {
+        // Vercel Blob Storage (production)
         const blob = await put(safeName, buffer, {
           access: "public",
           addRandomSuffix: true,
           token,
         });
         uploadedUrls.push(blob.url);
-      } else {
-        const filePath = path.join(uploadsDir, safeName);
-        await fs.writeFile(filePath, Buffer.from(buffer));
-        uploadedUrls.push(`/uploads/${safeName}`);
       }
     }
 
     return NextResponse.json({ urls: uploadedUrls }, { status: 200 });
   } catch (error: any) {
-    console.error("Image upload error:", error);
+    console.error("[Upload] Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to upload images" },
       { status: 500 }

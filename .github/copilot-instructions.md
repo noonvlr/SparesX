@@ -457,3 +457,11 @@ OUTPUT EXPECTATION
 - Apply changes incrementally
 - Explain what was changed and why
 - Highlight any remaining SEO or mobile risks
+
+────────────────────────────────
+DOCUMENTATION
+────────────────────────────────
+
+- Do NOT create summary or documentation files automatically
+- Only create documentation files if explicitly requested by the user
+- Focus on implementing code, not documenting changes unless asked

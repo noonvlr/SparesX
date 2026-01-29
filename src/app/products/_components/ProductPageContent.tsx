@@ -10,15 +10,43 @@ export default function ProductPageContent() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
 
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "";
+    if (url.startsWith("https://") || url.startsWith("data:")) return url;
+    if (url.startsWith("http://")) return url.replace("http://", "https://");
+    if (url.startsWith("//")) return `https:${url}`;
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      (typeof window !== "undefined" ? window.location.origin : "");
+
+    if (!baseUrl) return url.startsWith("/") ? url : `/${url}`;
+    return url.startsWith("/") ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+  };
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      const params = new URLSearchParams(searchParams.toString());
-      const res = await fetch(`/api/products?${params.toString()}`);
-      const data = await res.json();
-      setProducts(data.products || []);
-      setTotal(data.total || 0);
-      setLoading(false);
+      try {
+        const params = new URLSearchParams(searchParams.toString());
+        const res = await fetch(`/api/products?${params.toString()}`);
+
+        if (!res.ok) {
+          setProducts([]);
+          setTotal(0);
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        setProducts(data.products || []);
+        setTotal(data.total || 0);
+      } catch (error) {
+        setProducts([]);
+        setTotal(0);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProducts();
@@ -103,7 +131,9 @@ export default function ProductPageContent() {
                       <div className="relative w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
                         {product.images && product.images.length > 0 ? (
                           <img
-                            src={product.images[0]}
+                            src={resolveImageUrl(
+                              product.images.find((img: string) => !!img),
+                            )}
                             alt={product.name}
                             className="w-full h-full object-contain card-image-zoom"
                             loading="lazy"

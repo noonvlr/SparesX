@@ -19,7 +19,6 @@ export async function GET(
 
     return NextResponse.json({ user });
   } catch (error) {
-    console.error("Error fetching user:", error);
     return NextResponse.json(
       { message: "Failed to fetch user" },
       { status: 500 }
@@ -93,7 +92,6 @@ export async function PATCH(
       user: updatedUser,
     });
   } catch (error) {
-    console.error("Error updating user:", error);
     return NextResponse.json(
       { message: "Failed to update user" },
       { status: 500 }

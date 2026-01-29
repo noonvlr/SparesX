@@ -23,7 +23,7 @@ interface PartType {
 type DeviceCategory = "mobile" | "laptop" | "desktop";
 
 export default function EditProductPage() {
-  const { id } = useParams();
+  const params = useParams();
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -63,45 +63,74 @@ export default function EditProductPage() {
   } = useImageUpload();
 
   useEffect(() => {
+    // Get ID directly from params (Next.js 16 provides it synchronously in client components)
+    const productId = params?.id as string;
+
+    if (!productId) {
+      console.log("[Edit] No product ID in URL");
+      setError("Product ID not found");
+      setLoading(false);
+      return;
+    }
+
+    console.log("[Edit] Product ID from URL:", productId);
+
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Not authenticated");
       setLoading(false);
       return;
     }
-    fetch(`/api/products/${id}`)
-      .then((res) => res.json())
+
+    // Fetch from technician's products endpoint
+    console.log("[Edit] Fetching from /api/technician/products");
+    fetch("/api/technician/products", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        console.log("[Edit] Got products list, status:", res.status);
+        if (!res.ok) throw new Error(`Failed with status ${res.status}`);
+        return res.json();
+      })
       .then((data) => {
-        if (data.product) {
-          setForm({
-            name: data.product.name,
-            description: data.product.description,
-            price: data.product.price,
-            deviceCategory: data.product.deviceCategory || "",
-            brand: data.product.brand || "",
-            brandSlug:
-              data.product.brand?.toLowerCase().replace(/\s+/g, "-") || "",
-            deviceModel: data.product.deviceModel || "",
-            modelNumber: data.product.modelNumber || "",
-            partType: data.product.partType || "",
-            condition: data.product.condition || "new",
-          });
-          setBrandSearch(data.product.brand || "");
-          setModelSearch(data.product.deviceModel || "");
-          const partType = data.product.partType;
-          if (partType) {
-            const foundPartType = partTypes.find((pt) => pt.value === partType);
-            setPartTypeSearch(foundPartType?.label || "");
-          }
-          setExistingImages(data.product.images || []);
+        console.log("[Edit] Products received:", data.products?.length);
+        const product = data.products?.find((p: any) => p._id === productId);
+
+        if (!product) {
+          console.log("[Edit] Product not found in list");
+          setError("Product not found");
+          setLoading(false);
+          return;
         }
+
+        console.log("[Edit] Found product:", product);
+        setForm({
+          name: product.name || "",
+          description: product.description || "",
+          price: product.price?.toString() || "",
+          deviceCategory: product.deviceCategory || "",
+          brand: product.brand || "",
+          brandSlug: product.brand?.toLowerCase().replace(/\s+/g, "-") || "",
+          deviceModel: product.deviceModel || "",
+          modelNumber: product.modelNumber || "",
+          partType: product.partType || "",
+          condition: product.condition || "new",
+        });
+        setBrandSearch(product.brand || "");
+        setModelSearch(product.deviceModel || "");
+        setPartTypeSearch(product.partType || "");
+        setExistingImages(product.images || []);
+        console.log("[Edit] Form populated successfully");
         setLoading(false);
       })
-      .catch(() => {
-        setError("Failed to load product");
+      .catch((error) => {
+        console.error("[Edit] Error:", error);
+        setError("Failed to load product: " + error.message);
         setLoading(false);
       });
-  }, [id]);
+  }, [params]);
 
   // Fetch part types on mount
   useEffect(() => {
@@ -182,6 +211,8 @@ export default function EditProductPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const productId = params?.id as string;
+
     setError("");
     setSuccess("");
     const token = localStorage.getItem("token");
@@ -202,7 +233,7 @@ export default function EditProductPage() {
         uploadedImageUrls = [...existingImages, ...urls];
       }
 
-      const res = await fetch(`/api/technician/products/edit/${id}`, {
+      const res = await fetch(`/api/technician/products/edit/${productId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -233,9 +264,33 @@ export default function EditProductPage() {
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900">Edit Product</h1>
-        <p className="text-gray-600">Update your device parts listing</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2 text-gray-900">
+            Edit Product
+          </h1>
+          <p className="text-gray-600">Update your device parts listing</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center justify-center px-4 py-2.5 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 font-medium"
+        >
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+          Back
+        </button>
       </div>
 
       <form
@@ -267,10 +322,15 @@ export default function EditProductPage() {
                   setForm((f) => ({
                     ...f,
                     deviceCategory: cat as DeviceCategory,
-                    brand: "",
-                    brandSlug: "",
-                    deviceModel: "",
-                    modelNumber: "",
+                    // Only clear brand/model if category is being CHANGED
+                    ...(f.deviceCategory !== cat
+                      ? {
+                          brand: "",
+                          brandSlug: "",
+                          deviceModel: "",
+                          modelNumber: "",
+                        }
+                      : {}),
                   }))
                 }
                 className={`p-4 rounded-lg border-2 transition font-medium capitalize text-center ${
@@ -308,13 +368,24 @@ export default function EditProductPage() {
                   setShowBrandDropdown(true);
                 }}
                 onFocus={() => {
-                  if (!form.brand) {
+                  if (form.brand) {
+                    // Reset brand selection when clicking again
+                    setForm((f) => ({
+                      ...f,
+                      brand: "",
+                      brandSlug: "",
+                      deviceModel: "",
+                      modelNumber: "",
+                    }));
+                    setBrandSearch("");
+                    setModelSearch("");
+                  } else {
                     setBrandSearch("");
                   }
                   setShowBrandDropdown(true);
                 }}
                 onBlur={() =>
-                  setTimeout(() => setShowBrandDropdown(false), 200)
+                  setTimeout(() => setShowBrandDropdown(false), 300)
                 }
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required={!!form.deviceCategory}
@@ -330,8 +401,12 @@ export default function EditProductPage() {
                     <button
                       key={brand._id}
                       type="button"
-                      onClick={() => handleBrandSelect(brand)}
-                      className="w-full px-4 py-3 text-left hover:bg-blue-50 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleBrandSelect(brand);
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                      className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
                     >
                       {brand.name}
                     </button>
@@ -366,7 +441,7 @@ export default function EditProductPage() {
                     setShowModelDropdown(true);
                   }}
                   onBlur={() =>
-                    setTimeout(() => setShowModelDropdown(false), 200)
+                    setTimeout(() => setShowModelDropdown(false), 300)
                   }
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required={!!form.brand}
@@ -382,8 +457,12 @@ export default function EditProductPage() {
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => handleModelSelect(model)}
-                        className="w-full px-4 py-3 text-left hover:bg-blue-50 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleModelSelect(model);
+                        }}
+                        onClick={(e) => e.preventDefault()}
+                        className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
                       >
                         {model.name}{" "}
                         {model.modelNumber && (
@@ -448,6 +527,9 @@ export default function EditProductPage() {
                       setShowPartTypeDropdown(true);
                     }}
                     onFocus={() => setShowPartTypeDropdown(true)}
+                    onBlur={() =>
+                      setTimeout(() => setShowPartTypeDropdown(false), 300)
+                    }
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
                   {form.partType && (
@@ -462,8 +544,12 @@ export default function EditProductPage() {
                         <button
                           key={partType.value}
                           type="button"
-                          onClick={() => handlePartTypeSelect(partType)}
-                          className="w-full px-4 py-2.5 text-left hover:bg-blue-50 transition font-medium text-gray-700 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handlePartTypeSelect(partType);
+                          }}
+                          onClick={(e) => e.preventDefault()}
+                          className="w-full px-4 py-2.5 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
                         >
                           <span className="text-xl">{partType.icon}</span>
                           {partType.label}

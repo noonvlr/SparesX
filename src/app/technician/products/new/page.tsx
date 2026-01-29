@@ -97,6 +97,9 @@ export default function AddProductPage() {
     setForm((f) => ({ ...f, brand: brand.name, brandSlug: brand.slug }));
     setBrandSearch(brand.name);
     setShowBrandDropdown(false);
+    // Clear model selection when brand changes
+    setModelSearch("");
+    setForm((f) => ({ ...f, deviceModel: "", modelNumber: "" }));
   }
 
   function handleModelSelect(model: Model) {
@@ -281,13 +284,24 @@ export default function AddProductPage() {
                   setShowBrandDropdown(true);
                 }}
                 onFocus={() => {
-                  if (!form.brand) {
+                  // If brand is already selected and user clicks again, reset it
+                  if (form.brand) {
+                    setForm((f) => ({
+                      ...f,
+                      brand: "",
+                      brandSlug: "",
+                      deviceModel: "",
+                      modelNumber: "",
+                    }));
+                    setBrandSearch("");
+                    setModelSearch("");
+                  } else {
                     setBrandSearch("");
                   }
                   setShowBrandDropdown(true);
                 }}
                 onBlur={() =>
-                  setTimeout(() => setShowBrandDropdown(false), 200)
+                  setTimeout(() => setShowBrandDropdown(false), 300)
                 }
                 className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                 required={!!form.deviceCategory}
@@ -303,8 +317,12 @@ export default function AddProductPage() {
                     <button
                       key={brand._id}
                       type="button"
-                      onClick={() => handleBrandSelect(brand)}
-                      className="w-full px-4 py-3 text-left hover:bg-blue-50 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleBrandSelect(brand);
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                      className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
                     >
                       {brand.name}
                     </button>
@@ -339,7 +357,7 @@ export default function AddProductPage() {
                     setShowModelDropdown(true);
                   }}
                   onBlur={() =>
-                    setTimeout(() => setShowModelDropdown(false), 200)
+                    setTimeout(() => setShowModelDropdown(false), 300)
                   }
                   className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required={!!form.brand}
@@ -355,8 +373,12 @@ export default function AddProductPage() {
                       <button
                         key={idx}
                         type="button"
-                        onClick={() => handleModelSelect(model)}
-                        className="w-full px-4 py-3 text-left hover:bg-blue-50 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleModelSelect(model);
+                        }}
+                        onClick={(e) => e.preventDefault()}
+                        className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
                       >
                         {model.name}{" "}
                         {model.modelNumber && (
@@ -421,6 +443,9 @@ export default function AddProductPage() {
                       setShowPartTypeDropdown(true);
                     }}
                     onFocus={() => setShowPartTypeDropdown(true)}
+                    onBlur={() =>
+                      setTimeout(() => setShowPartTypeDropdown(false), 300)
+                    }
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   />
                   {form.partType && (
@@ -435,8 +460,12 @@ export default function AddProductPage() {
                         <button
                           key={partType.value}
                           type="button"
-                          onClick={() => handlePartTypeSelect(partType)}
-                          className="w-full px-4 py-2.5 text-left hover:bg-blue-50 transition font-medium text-gray-700 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handlePartTypeSelect(partType);
+                          }}
+                          onClick={(e) => e.preventDefault()}
+                          className="w-full px-4 py-2.5 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
                         >
                           <span className="text-xl">{partType.icon}</span>
                           {partType.label}

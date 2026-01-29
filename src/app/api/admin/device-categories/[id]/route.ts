@@ -95,7 +95,6 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error updating brand:", error);
     return NextResponse.json(
       { error: error.message || "Failed to update brand" },
       { status: 500 }
@@ -134,7 +133,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error deleting brand:", error);
     return NextResponse.json(
       { error: error.message || "Failed to delete brand" },
       { status: 500 }

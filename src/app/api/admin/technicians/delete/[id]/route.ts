@@ -55,7 +55,6 @@ export async function DELETE(
       deletedCount: deleteResult.deletedCount,
     });
   } catch (error) {
-    console.error('Delete user error:', error);
     return NextResponse.json(
       { message: 'Failed to delete user' },
       { status: 500 }

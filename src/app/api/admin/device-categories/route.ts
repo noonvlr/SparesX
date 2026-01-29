@@ -39,7 +39,6 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error fetching brands:", error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch brands" },
       { status: 500 }
@@ -104,7 +103,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Error creating brand:", error);
     return NextResponse.json(
       { error: error.message || "Failed to create brand" },
       { status: 500 }

@@ -65,8 +65,6 @@ export async function POST(req: NextRequest) {
       { status: 201 }
     );
   } catch (error: any) {
-    console.error("Seed error:", error);
-
     // Handle duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
@@ -116,7 +114,6 @@ export async function DELETE(req: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Delete error:", error);
     return NextResponse.json(
       {
         success: false,
@@ -157,7 +154,6 @@ export async function GET(req: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Status error:", error);
     return NextResponse.json(
       {
         success: false,

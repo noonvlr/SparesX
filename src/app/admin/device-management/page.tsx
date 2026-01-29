@@ -128,19 +128,29 @@ export default function AdminDeviceManagementPage() {
 
       if (categoriesRes.ok) {
         const data = await categoriesRes.json();
-        setCategories(data.categories);
+        setCategories(data.categories || []);
       }
+
+      let nextBrands: CategoryBrand[] = [];
+      let nextDeviceTypes: DeviceTypeData[] = [];
+
       if (brandsRes.ok) {
         const data = await brandsRes.json();
-        setBrands(data.brands);
+        nextBrands = data.brands || [];
+        setBrands(nextBrands);
       }
+
       if (typesRes.ok) {
         const data = await typesRes.json();
-        setDeviceTypes(data.deviceTypes || []);
-        // Set first device type as selected
-        if (data.deviceTypes && data.deviceTypes.length > 0) {
-          setSelectedBrandCategory(data.deviceTypes[0]._id);
-        }
+        nextDeviceTypes = data.deviceTypes || [];
+        setDeviceTypes(nextDeviceTypes);
+      }
+
+      // Ensure a valid brand category selection
+      if (nextDeviceTypes.length > 0) {
+        setSelectedBrandCategory(nextDeviceTypes[0].slug);
+      } else if (nextBrands.length > 0) {
+        setSelectedBrandCategory(nextBrands[0].category);
       }
     } catch (err: any) {
       setError(err.message);
@@ -247,14 +257,15 @@ export default function AdminDeviceManagementPage() {
   // ==================== DEVICE TYPES HANDLERS ====================
   function handleEditDeviceType(type: DeviceTypeData) {
     setEditingDeviceType(type);
-    setDeviceTypeFormData({
+    const formData = {
       name: type.name,
       emoji: type.emoji,
       slug: type.slug,
       description: type.description,
       isActive: type.isActive,
       order: type.order,
-    });
+    };
+    setDeviceTypeFormData(formData);
     setShowDeviceTypeForm(true);
     setError("");
     setSuccess("");
@@ -335,14 +346,15 @@ export default function AdminDeviceManagementPage() {
   // ==================== BRANDS HANDLERS ====================
   function handleEditBrand(brand: CategoryBrand) {
     setEditingBrand(brand);
-    setBrandFormData({
+    const formData = {
       category: brand.category,
       name: brand.name,
       slug: brand.slug,
       logo: brand.logo || "",
-      models: [...brand.models],
+      models: Array.isArray(brand.models) ? [...brand.models] : [],
       isActive: brand.isActive,
-    });
+    };
+    setBrandFormData(formData);
     setSelectedBrandCategory(brand.category);
     setShowBrandForm(true);
     setError("");
@@ -456,9 +468,9 @@ export default function AdminDeviceManagementPage() {
     );
   }
 
-  const filteredBrands = brands.filter(
-    (b) => b.category === selectedBrandCategory,
-  );
+  const filteredBrands = selectedBrandCategory
+    ? brands.filter((b) => b.category === selectedBrandCategory)
+    : brands;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4 md:px-8">
@@ -763,14 +775,14 @@ export default function AdminDeviceManagementPage() {
             <div className="flex gap-2 flex-wrap">
               {deviceTypes.map((type) => {
                 const count = brands.filter(
-                  (b) => b.category === type._id,
+                  (b) => b.category === type.slug,
                 ).length;
                 return (
                   <button
                     key={type._id}
-                    onClick={() => setSelectedBrandCategory(type._id)}
+                    onClick={() => setSelectedBrandCategory(type.slug)}
                     className={`px-4 py-2 rounded-lg font-semibold transition ${
-                      selectedBrandCategory === type._id
+                      selectedBrandCategory === type.slug
                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
                         : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
                     }`}
@@ -786,6 +798,7 @@ export default function AdminDeviceManagementPage() {
                 <h3 className="text-2xl font-bold mb-6">
                   {editingBrand ? "Edit Brand" : "Add New Brand"}
                 </h3>
+
                 <form onSubmit={handleSubmitBrand} className="space-y-6">
                   {/* Device Category Selection */}
                   <div>
@@ -800,11 +813,11 @@ export default function AdminDeviceManagementPage() {
                           onClick={() =>
                             setBrandFormData({
                               ...brandFormData,
-                              category: type._id,
+                              category: type.slug,
                             })
                           }
                           className={`px-4 py-2 rounded-lg font-semibold transition ${
-                            brandFormData.category === type._id
+                            brandFormData.category === type.slug
                               ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                           }`}
@@ -1080,11 +1093,11 @@ export default function AdminDeviceManagementPage() {
         {/* ==================== DEVICE TYPES TAB ==================== */}
         {activeTab === "types" && (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <h2 className="text-2xl font-bold text-gray-900">Device Types</h2>
               <button
                 onClick={handleAddNewDeviceType}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg font-semibold transition"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg font-semibold transition w-full md:w-auto"
               >
                 + Add Device Type
               </button>
@@ -1097,6 +1110,7 @@ export default function AdminDeviceManagementPage() {
                     ? "Edit Device Type"
                     : "Add New Device Type"}
                 </h3>
+
                 <form onSubmit={handleSubmitDeviceType} className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -1240,10 +1254,10 @@ export default function AdminDeviceManagementPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {deviceTypes.map((type) => {
                 const brandCount = brands.filter(
-                  (b) => b.category === type._id,
+                  (b) => b.category === type.slug,
                 ).length;
                 const modelCount = brands
-                  .filter((b) => b.category === type._id)
+                  .filter((b) => b.category === type.slug)
                   .reduce((sum, b) => sum + b.models.length, 0);
 
                 return (
@@ -1301,7 +1315,7 @@ export default function AdminDeviceManagementPage() {
                       <button
                         onClick={() => {
                           setActiveTab("brands");
-                          setSelectedBrandCategory(type._id);
+                          setSelectedBrandCategory(type.slug);
                         }}
                         className="flex-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 py-2 rounded-lg hover:shadow-md font-semibold transition text-sm"
                       >

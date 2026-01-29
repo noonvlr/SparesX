@@ -59,7 +59,16 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const baseUrl = "https://spares-x-h1cj.vercel.app";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "https://spares-x-h1cj.vercel.app";
+
+  const resolveImageUrl = (url?: string) => {
+    if (!url) return "";
+    if (url.startsWith("https://") || url.startsWith("data:")) return url;
+    if (url.startsWith("http://")) return url.replace("http://", "https://");
+    if (url.startsWith("//")) return `https:${url}`;
+    return url.startsWith("/") ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+  };
 
   // Fetch featured products with revalidation (ISR)
   const productsRes = await fetch(`${baseUrl}/api/products?limit=6`, {
@@ -217,7 +226,9 @@ export default async function HomePage() {
                   <div className="relative aspect-square bg-gray-50 overflow-hidden">
                     {product.images && product.images[0] ? (
                       <Image
-                        src={product.images[0]}
+                        src={resolveImageUrl(
+                          product.images.find((img: string) => !!img),
+                        )}
                         alt={product.name}
                         fill
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

@@ -41,7 +41,6 @@ export async function GET(
       models 
     }, { status: 200 });
   } catch (error) {
-    console.error('Error fetching models:', error);
     return NextResponse.json(
       { message: 'Failed to fetch models' },
       { status: 500 }

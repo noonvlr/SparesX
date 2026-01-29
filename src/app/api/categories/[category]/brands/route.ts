@@ -36,7 +36,6 @@ export async function GET(
 
     return NextResponse.json({ brands }, { status: 200 });
   } catch (error: any) {
-    console.error('Error fetching brands:', error);
     return NextResponse.json(
       { error: 'Failed to fetch brands' },
       { status: 500 }

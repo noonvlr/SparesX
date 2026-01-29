@@ -68,7 +68,6 @@ export async function PUT(
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error updating device type:", error);
     return NextResponse.json(
       {
         success: false,
@@ -114,7 +113,6 @@ export async function DELETE(
       { status: 200 }
     );
   } catch (error: any) {
-    console.error("Error deleting device type:", error);
     return NextResponse.json(
       {
         success: false,

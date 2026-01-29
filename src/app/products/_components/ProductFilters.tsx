@@ -41,13 +41,17 @@ export default function ProductFilters() {
     fetch("/api/brands?includeModels=false")
       .then((res) => res.json())
       .then((data) => setBrands(data.brands || []))
-      .catch(() => console.error("Failed to load brands"));
+      .catch(() => {
+        // Silently fail and keep empty brands list
+      });
 
     // Fetch part types
     fetch("/api/part-types")
       .then((res) => res.json())
       .then((data) => setPartTypes(data.partTypes || []))
-      .catch(() => console.error("Failed to load part types"));
+      .catch(() => {
+        // Silently fail and keep empty part types list
+      });
   }, []);
 
   // Apply filters immediately when any filter changes
@@ -70,33 +74,44 @@ export default function ProductFilters() {
     priceRange.max,
   ].filter(Boolean).length;
 
+  // Close filter menu when navigating
+  useEffect(() => {
+    const handleNavigation = () => {
+      setIsOpen(false);
+    };
+
+    window.addEventListener("popstate", handleNavigation);
+    return () => window.removeEventListener("popstate", handleNavigation);
+  }, []);
+
   return (
     <>
-      {/* Mobile Filter Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed bottom-6 left-6 z-50 bg-blue-600 bg-opacity-90 text-white px-6 py-3 rounded-full shadow-2xl hover:bg-blue-700 hover:bg-opacity-100 transition-all duration-200 flex items-center gap-2 font-semibold"
-      >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Mobile Filter Toggle Button - Hidden when filter is open */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="lg:hidden fixed bottom-6 left-6 z-40 bg-gradient-to-br from-blue-500 to-blue-700 text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-110 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 font-semibold animate-in fade-in slide-in-from-bottom-2 ease-out"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-          />
-        </svg>
-        Filters
-        {activeFilterCount > 0 && (
-          <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold">
-            {activeFilterCount}
-          </span>
-        )}
-      </button>
+          <svg
+            className="w-4.5 h-4.5 transition-transform duration-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            />
+          </svg>
+          {activeFilterCount > 0 && (
+            <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold animate-bounce">
+              {activeFilterCount}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Filter Sidebar/Modal */}
       <div
@@ -130,7 +145,8 @@ export default function ProductFilters() {
             </h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-gray-600 transition"
+              className="lg:hidden text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 hover:bg-gray-100 rounded-lg"
+              aria-label="Close filters"
             >
               <svg
                 className="w-6 h-6"
@@ -293,6 +309,16 @@ export default function ProductFilters() {
               </button>
             </div>
           )}
+
+          {/* Apply Button for Mobile */}
+          <div className="pt-6 border-t border-gray-200 lg:hidden">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
+            >
+              Apply Filters
+            </button>
+          </div>
         </div>
       </div>
 
@@ -300,7 +326,7 @@ export default function ProductFilters() {
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden animate-in fade-in duration-200"
         />
       )}
     </>
