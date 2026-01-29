@@ -111,6 +111,21 @@ export default function AdminDeviceManagementPage() {
     fetchData();
   }, []);
 
+  // Auto-dismiss success and error messages after 5 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(""), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   async function fetchData() {
     try {
       const token = localStorage.getItem("token");
@@ -487,14 +502,28 @@ export default function AdminDeviceManagementPage() {
 
         {/* Error and Success Messages */}
         {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-md flex items-center justify-between">
             <p className="text-red-700 font-medium">{error}</p>
+            <button
+              onClick={() => setError("")}
+              className="ml-4 text-red-500 hover:text-red-700 font-bold text-xl"
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
           </div>
         )}
 
         {success && (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
+          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg shadow-md flex items-center justify-between">
             <p className="text-green-700 font-medium">{success}</p>
+            <button
+              onClick={() => setSuccess("")}
+              className="ml-4 text-green-500 hover:text-green-700 font-bold text-xl"
+              aria-label="Dismiss"
+            >
+              ×
+            </button>
           </div>
         )}
 

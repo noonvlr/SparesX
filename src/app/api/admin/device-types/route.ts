@@ -1,33 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
-import Category from "@/lib/models/Category";
 
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    let deviceTypes = await DeviceType.find({})
+    const deviceTypes = await DeviceType.find({})
       .sort({ order: 1, createdAt: 1 })
       .lean();
-
-    if (!deviceTypes || deviceTypes.length === 0) {
-      const categories = await Category.find({})
-        .sort({ order: 1, name: 1 })
-        .lean();
-
-      deviceTypes = categories.map((category) => ({
-        _id: category._id,
-        name: category.name,
-        emoji: category.icon || "📦",
-        slug: category.slug,
-        description: category.description || "",
-        isActive: category.isActive ?? true,
-        order: category.order ?? 0,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
-      }));
-    }
 
     return NextResponse.json(
       {
