@@ -8,6 +8,10 @@ export default function MyProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState<{
+    [key: string]: number;
+  }>({});
+  const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,6 +34,34 @@ export default function MyProductsPage() {
         setLoading(false);
       });
   }, []);
+
+  // Auto-rotate images for products with multiple images (Desktop only or on hover)
+  useEffect(() => {
+    const intervals: { [key: string]: NodeJS.Timeout } = {};
+
+    products.forEach((product) => {
+      if (product.images && product.images.length > 1) {
+        // Only auto-rotate on desktop (lg screens) or when product is hovered
+        const isDesktop =
+          typeof window !== "undefined" && window.innerWidth >= 1024;
+        const shouldAutoRotate = isDesktop || hoveredProductId === product._id;
+
+        if (shouldAutoRotate) {
+          intervals[product._id] = setInterval(() => {
+            setCurrentImageIndex((prev) => ({
+              ...prev,
+              [product._id]:
+                ((prev[product._id] || 0) + 1) % product.images.length,
+            }));
+          }, 1500); // Change image every 1.5 seconds
+        }
+      }
+    });
+
+    return () => {
+      Object.values(intervals).forEach((interval) => clearInterval(interval));
+    };
+  }, [products, hoveredProductId]);
 
   async function handleDelete(productId: string) {
     if (!confirm("Are you sure you want to delete this product?")) return;
@@ -89,12 +121,12 @@ export default function MyProductsPage() {
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {/* Header Section */}
-        <div className="mb-8 sm:mb-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-6 sm:mb-12 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 text-gray-900">
+            <h1 className="text-xl sm:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-gray-900">
               My Products
             </h1>
-            <p className="text-gray-600 text-base sm:text-lg">
+            <p className="text-xs sm:text-sm lg:text-base text-gray-600">
               Manage and track your listed spare parts
             </p>
           </div>
@@ -155,17 +187,35 @@ export default function MyProductsPage() {
             {products.map((product) => (
               <div
                 key={product._id}
-                className="group bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300"
+                className="group bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-xl hover:border-blue-200 transition-all duration-300 flex flex-col h-full"
+                onMouseEnter={() => setHoveredProductId(product._id)}
+                onMouseLeave={() => setHoveredProductId(null)}
               >
-                {/* Product Image */}
-                <div className="relative w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
+                {/* Product Image with Carousel */}
+                <div className="relative w-full h-36 sm:h-44 lg:h-48 bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
                   {product.images && product.images.length > 0 ? (
-                    <img
-                      src={product.images[0]}
-                      alt={product.name}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
+                    <>
+                      <img
+                        src={
+                          product.images[currentImageIndex[product._id] || 0]
+                        }
+                        alt={product.name}
+                        className="w-full h-full object-contain group-hover:scale-105 transition-all duration-500 opacity-100"
+                        loading="lazy"
+                        onError={(e) => {
+                          // Fallback to first image if loading fails
+                          const img = e.target as HTMLImageElement;
+                          img.src = product.images[0];
+                        }}
+                      />
+                      {/* Image Counter Badge */}
+                      {product.images.length > 1 && (
+                        <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm animate-fadeInScale">
+                          {(currentImageIndex[product._id] || 0) + 1}/
+                          {product.images.length}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
                       <svg

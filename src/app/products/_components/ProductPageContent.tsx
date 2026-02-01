@@ -9,19 +9,23 @@ export default function ProductPageContent() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState<{
+    [key: string]: number;
+  }>({});
+  const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
 
   const resolveImageUrl = (url?: string) => {
     if (!url) return "";
-    if (url.startsWith("https://") || url.startsWith("data:")) return url;
+    // If it's a data URL or already has protocol, return as is
+    if (url.startsWith("data:")) return url;
+    if (url.startsWith("https://")) return url;
     if (url.startsWith("http://")) return url.replace("http://", "https://");
     if (url.startsWith("//")) return `https:${url}`;
 
-    const baseUrl =
-      process.env.NEXT_PUBLIC_BASE_URL ||
-      (typeof window !== "undefined" ? window.location.origin : "");
-
-    if (!baseUrl) return url.startsWith("/") ? url : `/${url}`;
-    return url.startsWith("/") ? `${baseUrl}${url}` : `${baseUrl}/${url}`;
+    // For relative paths, use the path directly (browser will resolve it)
+    // This fixes mobile image loading issues
+    if (url.startsWith("/")) return url;
+    return `/${url}`;
   };
 
   useEffect(() => {
@@ -51,6 +55,32 @@ export default function ProductPageContent() {
 
     fetchProducts();
   }, [searchParams]);
+
+  // Auto-rotate images for products with multiple images (Only on hover)
+  useEffect(() => {
+    const intervals: { [key: string]: NodeJS.Timeout } = {};
+
+    products.forEach((product) => {
+      if (product.images && product.images.length > 1) {
+        // Only rotate when product is hovered
+        const shouldAutoRotate = hoveredProductId === product._id;
+
+        if (shouldAutoRotate) {
+          intervals[product._id] = setInterval(() => {
+            setCurrentImageIndex((prev) => ({
+              ...prev,
+              [product._id]:
+                ((prev[product._id] || 0) + 1) % product.images.length,
+            }));
+          }, 1500); // Change image every 1.5 seconds
+        }
+      }
+    });
+
+    return () => {
+      Object.values(intervals).forEach((interval) => clearInterval(interval));
+    };
+  }, [products, hoveredProductId]);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -126,18 +156,36 @@ export default function ProductPageContent() {
                   <div
                     key={product._id}
                     className="group bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 card-hover"
+                    onMouseEnter={() => setHoveredProductId(product._id)}
+                    onMouseLeave={() => setHoveredProductId(null)}
                   >
                     <Link href={`/product/${product._id}`} className="block">
                       <div className="relative w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
                         {product.images && product.images.length > 0 ? (
-                          <img
-                            src={resolveImageUrl(
-                              product.images.find((img: string) => !!img),
+                          <>
+                            <img
+                              src={resolveImageUrl(
+                                product.images[
+                                  currentImageIndex[product._id] || 0
+                                ],
+                              )}
+                              alt={product.name}
+                              className="w-full h-full object-contain card-image-zoom transition-all duration-500"
+                              loading="lazy"
+                              onError={(e) => {
+                                // Fallback to first image if loading fails
+                                const img = e.target as HTMLImageElement;
+                                img.src = resolveImageUrl(product.images[0]);
+                              }}
+                            />
+                            {/* Image Counter Badge */}
+                            {product.images.length > 1 && (
+                              <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
+                                {(currentImageIndex[product._id] || 0) + 1}/
+                                {product.images.length}
+                              </div>
                             )}
-                            alt={product.name}
-                            className="w-full h-full object-contain card-image-zoom"
-                            loading="lazy"
-                          />
+                          </>
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
                             <svg

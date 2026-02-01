@@ -1,7 +1,5 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
-export type DeviceCategory = 'mobile' | 'laptop' | 'desktop';
-
 export interface IModel {
   name: string;
   modelNumber?: string;
@@ -9,7 +7,7 @@ export interface IModel {
 }
 
 export interface ICategoryBrand extends Document {
-  category: DeviceCategory;
+  category: string; // Now accepts any device type slug (mobile, laptop, desktop, tv, etc.)
   name: string;
   slug: string;
   logo?: string;
@@ -28,9 +26,9 @@ const ModelSchema = new Schema<IModel>({
 const CategoryBrandSchema = new Schema<ICategoryBrand>({
   category: {
     type: String,
-    enum: ['mobile', 'laptop', 'desktop'],
     required: true,
     index: true
+    // Removed hardcoded enum to allow dynamic device types
   },
   name: { type: String, required: true },
   slug: { type: String, required: true, lowercase: true },

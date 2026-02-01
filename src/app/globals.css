@@ -21,3 +21,68 @@
 	transform: scale(1.03);
 }
 
+/* Image Upload Animations */
+@keyframes fadeInZoom {
+	from {
+		opacity: 0;
+		transform: scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.animate-in {
+	animation: fadeInZoom 0.3s ease-out forwards;
+}
+
+.fade-in {
+	animation: fadeInZoom 0.3s ease-out;
+}
+
+.zoom-in {
+	animation: fadeInZoom 0.3s ease-out;
+}
+
+/* Image Carousel Animation - Smooth Fade In */
+@keyframes imageCarouselFadeIn {
+	0% {
+		opacity: 0.7;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.animate-fadeInScale {
+	animation: imageCarouselFadeIn 0.6s ease-in-out;
+}
+
+/* Progress bar animation */
+@keyframes shimmer {
+	0% {
+		background-position: -1000px 0;
+	}
+	100% {
+		background-position: 1000px 0;
+	}
+}
+
+.animate-shimmer {
+	animation: shimmer 2s infinite;
+	background: linear-gradient(90deg, #3b82f6 25%, #60a5fa 50%, #3b82f6 75%);
+	background-size: 1000px 100%;
+	animation: shimmer 2s infinite;
+}
+
+/* Hide scrollbar while keeping functionality */
+.scrollbar-hide {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+	display: none;
+}
+

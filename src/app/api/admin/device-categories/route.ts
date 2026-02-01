@@ -1,5 +1,6 @@
 import { CategoryBrand, ICategoryBrand } from "@/lib/models/CategoryBrand";
 import { connectDB } from "@/lib/db/connect";
+import DeviceType from "@/lib/models/DeviceType";
 import { NextRequest, NextResponse } from "next/server";
 
 // Helper to verify admin role
@@ -28,17 +29,27 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
 
     let query: any = {};
-    if (category && ["mobile", "laptop", "desktop"].includes(category)) {
-      query.category = category;
+    if (category) {
+      // Validate category exists in DeviceType collection
+      const deviceType = await DeviceType.findOne({ slug: category });
+      if (deviceType) {
+        query.category = category;
+      }
     }
 
     const brands = await CategoryBrand.find(query).sort({ name: 1 });
+
+    console.log(`[API] device-categories: found ${brands.length} brands`, {
+      query,
+      sample: brands[0]?.name
+    });
 
     return NextResponse.json(
       { brands, count: brands.length },
       { status: 200 }
     );
   } catch (error: any) {
+    console.error('[API] device-categories error:', error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch brands" },
       { status: 500 }
@@ -60,9 +71,18 @@ export async function POST(req: NextRequest) {
     const { category, name, slug, logo, models, isActive } = body;
 
     // Validation
-    if (!category || !["mobile", "laptop", "desktop"].includes(category)) {
+    if (!category) {
       return NextResponse.json(
-        { error: "Invalid category" },
+        { error: "Category is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate category exists in DeviceType collection
+    const deviceType = await DeviceType.findOne({ slug: category });
+    if (!deviceType) {
+      return NextResponse.json(
+        { error: "Invalid category. Device type not found." },
         { status: 400 }
       );
     }

@@ -10,6 +10,8 @@
     "seed:mobile": "tsx scripts/seed-mobile-brands.ts",
     "seed:mobile:clear": "tsx scripts/seed-mobile-brands.ts --clear",
     "seed:mobile:status": "tsx scripts/seed-mobile-brands.ts --status",
+    "seed:device-types": "tsx scripts/seed-device-types.ts",
+    "seed:part-types": "tsx scripts/seed-part-types.ts",
     "inspect:mobile": "tsx scripts/inspect-mobile-brands.ts"
   },
   "dependencies": {
@@ -34,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.3",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }

@@ -207,7 +207,7 @@ const categoryBrandsData = [
 
 async function seedCategoryBrands() {
   try {
-    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sparesx';
+    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/spares-x';
     await mongoose.connect(uri);
     console.log('Connected to MongoDB');
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
-import { MobileBrand } from '@/lib/models/MobileBrand';
+import { CategoryBrand } from '@/lib/models/CategoryBrand';
 
 // Get all mobile brands (with optional search)
 export async function GET(req: NextRequest) {
@@ -11,13 +11,13 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
 
-    let query: any = { isActive: true };
+    let query: any = { category: 'mobile', isActive: true };
     
     if (search) {
       query.name = { $regex: search, $options: 'i' };
     }
 
-    const brands = await MobileBrand.find(query)
+    const brands = await CategoryBrand.find(query)
       .select(includeModels ? 'name slug models' : 'name slug')
       .sort({ name: 1 });
 

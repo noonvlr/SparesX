@@ -2,39 +2,18 @@ import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
 export type ProductStatus = 'pending' | 'approved' | 'rejected';
 export type ProductCondition = 'new' | 'used';
-export type DeviceCategory = 'mobile' | 'laptop' | 'desktop';
-
-// Part types for mobile spares
-export type PartType = 
-  | 'screen' 
-  | 'battery' 
-  | 'charging-port' 
-  | 'camera' 
-  | 'motherboard' 
-  | 'back-panel' 
-  | 'speaker' 
-  | 'microphone' 
-  | 'sim-tray' 
-  | 'buttons' 
-  | 'flex-cable' 
-  | 'antenna' 
-  | 'vibration-motor' 
-  | 'earpiece' 
-  | 'proximity-sensor'
-  | 'tools'
-  | 'other';
 
 export interface IProduct extends Document {
   name: string;
   description: string;
   price: number;
   // Device category
-  deviceCategory: DeviceCategory;    // 'mobile', 'laptop', 'desktop'
+  deviceCategory: string;    // e.g., 'mobile', 'laptop', 'desktop', 'tv'
   // Categorization
   brand: string;              // e.g., "Apple", "Samsung"
   deviceModel: string;        // e.g., "iPhone 15 Pro", "Galaxy S24" (renamed from 'model' to avoid conflict)
   modelNumber?: string;       // e.g., "A3108", "SM-S928"
-  partType: PartType;         // e.g., "screen", "battery"
+  partType: string;           // e.g., "screen", "battery", "camera"
   // Legacy field for backward compatibility (will be deprecated)
   category?: string;
   condition: ProductCondition;
@@ -55,9 +34,9 @@ const ProductSchema: Schema<IProduct> = new Schema({
   // Device category
   deviceCategory: {
     type: String,
-    enum: ['mobile', 'laptop', 'desktop'],
     required: true,
     index: true
+    // Removed hardcoded enum to allow dynamic device types from DeviceType collection
   },
   // Categorization fields
   brand: { type: String, required: true, index: true },
@@ -66,13 +45,8 @@ const ProductSchema: Schema<IProduct> = new Schema({
   partType: { 
     type: String, 
     required: true,
-    enum: [
-      'screen', 'battery', 'charging-port', 'camera', 'motherboard', 
-      'back-panel', 'speaker', 'microphone', 'sim-tray', 'buttons', 
-      'flex-cable', 'antenna', 'vibration-motor', 'earpiece', 
-      'proximity-sensor', 'tools', 'other'
-    ],
     index: true
+    // Removed hardcoded enum to allow dynamic part types from PartType collection
   },
   // Legacy field (kept for backward compatibility)
   category: { type: String },

@@ -42,18 +42,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-# Documentation files (keep only README.md)
+# Documentation files (keep only README.md and essential docs)
 COMPLETION_CHECKLIST.md
 DEVICE_CATEGORIES_*.md
 DOCUMENTATION_INDEX.md
 IMPLEMENTATION_SUMMARY.md
-VERCEL_BLOB_SETUP.md
 SEEDING_GUIDE.md
 SEEDING_QUICK_START.md
 ADD_BRANDS_GUIDE.md
 MOBILE_IMPROVEMENTS_SUMMARY.md
 .copilot-context.md
 src/app/admin/device-categories/README.md
+
+# Development and test files
+dev.log
+test-*.js
+check-*.js
 
 # IDE
 .vscode/
@@ -63,3 +67,4 @@ src/app/admin/device-categories/README.md
 
 # OS
 Thumbs.db
+.DS_Store

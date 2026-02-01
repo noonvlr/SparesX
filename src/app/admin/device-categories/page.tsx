@@ -2,17 +2,23 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-type DeviceCategory = "mobile" | "laptop" | "desktop";
-
 interface IModel {
   name: string;
   modelNumber?: string;
   releaseYear?: number;
 }
 
+interface DeviceTypeOption {
+  _id: string;
+  name: string;
+  slug: string;
+  emoji: string;
+  isActive: boolean;
+}
+
 interface CategoryBrand {
   _id: string;
-  category: DeviceCategory;
+  category: string; // Changed from hardcoded DeviceCategory type
   name: string;
   slug: string;
   logo?: string;
@@ -25,13 +31,13 @@ interface CategoryBrand {
 export default function AdminDeviceCategoriesPage() {
   const router = useRouter();
   const [brands, setBrands] = useState<CategoryBrand[]>([]);
+  const [deviceTypes, setDeviceTypes] = useState<DeviceTypeOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingBrand, setEditingBrand] = useState<CategoryBrand | null>(null);
-  const [selectedCategory, setSelectedCategory] =
-    useState<DeviceCategory>("mobile");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [formData, setFormData] = useState({
-    category: "mobile" as DeviceCategory,
+    category: "",
     name: "",
     slug: "",
     logo: "",
@@ -46,20 +52,34 @@ export default function AdminDeviceCategoriesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const categoryEmojis = {
-    mobile: "📱",
-    laptop: "💻",
-    desktop: "🖥️",
-  };
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/login");
       return;
     }
+    fetchDeviceTypes();
     fetchBrands();
   }, []);
+
+  async function fetchDeviceTypes() {
+    try {
+      const res = await fetch("/api/admin/device-types");
+      if (!res.ok) throw new Error("Failed to fetch device types");
+      const data = await res.json();
+      setDeviceTypes(data.deviceTypes || []);
+      // Set first device type as default if available
+      if (data.deviceTypes?.length > 0) {
+        setSelectedCategory(data.deviceTypes[0].slug);
+        setFormData((prev) => ({
+          ...prev,
+          category: data.deviceTypes[0].slug,
+        }));
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
 
   async function fetchBrands() {
     try {
@@ -84,6 +104,10 @@ export default function AdminDeviceCategoriesPage() {
       .replace(/^-+|-+$/g, "");
   }
 
+  function getDeviceTypeEmoji(slug: string): string {
+    return deviceTypes.find((dt) => dt.slug === slug)?.emoji || "❓";
+  }
+
   function handleEdit(brand: CategoryBrand) {
     setEditingBrand(brand);
     setFormData({
@@ -102,8 +126,9 @@ export default function AdminDeviceCategoriesPage() {
 
   function handleAddNew() {
     setEditingBrand(null);
+    const defaultCategory = deviceTypes.length > 0 ? deviceTypes[0].slug : "";
     setFormData({
-      category: "mobile",
+      category: defaultCategory,
       name: "",
       slug: "",
       logo: "",
@@ -276,29 +301,25 @@ export default function AdminDeviceCategoriesPage() {
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
                   Device Category *
                 </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(["mobile", "laptop", "desktop"] as DeviceCategory[]).map(
-                    (cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() => {
-                          setFormData({ ...formData, category: cat });
-                          setSelectedCategory(cat);
-                        }}
-                        className={`p-3 rounded-lg font-semibold transition ${
-                          formData.category === cat
-                            ? "bg-blue-600 text-white ring-2 ring-blue-300"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        <span className="text-2xl mr-2">
-                          {categoryEmojis[cat]}
-                        </span>
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                      </button>
-                    ),
-                  )}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {deviceTypes.map((dt) => (
+                    <button
+                      key={dt.slug}
+                      type="button"
+                      onClick={() => {
+                        setFormData({ ...formData, category: dt.slug });
+                        setSelectedCategory(dt.slug);
+                      }}
+                      className={`p-3 rounded-lg font-semibold transition ${
+                        formData.category === dt.slug
+                          ? "bg-blue-600 text-white ring-2 ring-blue-300"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      <span className="text-2xl mr-2">{dt.emoji}</span>
+                      {dt.name}
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -559,26 +580,29 @@ export default function AdminDeviceCategoriesPage() {
 
         {/* Category Tabs */}
         <div className="mb-6">
-          <div className="flex gap-2">
-            {(["mobile", "laptop", "desktop"] as DeviceCategory[]).map(
-              (cat) => (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {deviceTypes.map((dt) => {
+              const categoryBrands = brands.filter(
+                (b) => b.category === dt.slug,
+              );
+              return (
                 <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-6 py-3 rounded-lg font-semibold transition ${
-                    selectedCategory === cat
+                  key={dt.slug}
+                  onClick={() => setSelectedCategory(dt.slug)}
+                  className={`px-6 py-3 rounded-lg font-semibold transition whitespace-nowrap ${
+                    selectedCategory === dt.slug
                       ? "bg-blue-600 text-white shadow-lg"
                       : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                   }`}
                 >
-                  <span className="text-xl mr-2">{categoryEmojis[cat]}</span>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                  <span className="text-xl mr-2">{dt.emoji}</span>
+                  {dt.name}
                   <span className="ml-2 text-sm">
-                    ({filteredBrands.length})
+                    ({categoryBrands.length})
                   </span>
                 </button>
-              ),
-            )}
+              );
+            })}
           </div>
         </div>
 
@@ -662,10 +686,10 @@ export default function AdminDeviceCategoriesPage() {
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center">
                       <div className="text-gray-400 text-5xl mb-4">
-                        {categoryEmojis[selectedCategory]}
+                        {getDeviceTypeEmoji(selectedCategory)}
                       </div>
                       <p className="text-gray-600 font-medium">
-                        No brands for {selectedCategory}
+                        No brands for this category
                       </p>
                       <p className="text-gray-500 text-sm mt-2">
                         Click "Add Brand" to create your first brand

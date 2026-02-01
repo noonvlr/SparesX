@@ -1,27 +1,35 @@
 import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/db/connect';
+import Category from '@/lib/models/Category';
 
-// List of all available part types
-export const partTypes = [
-  { value: 'screen', label: 'Screen/Display', icon: '📱' },
-  { value: 'battery', label: 'Battery', icon: '🔋' },
-  { value: 'charging-port', label: 'Charging Port', icon: '🔌' },
-  { value: 'camera', label: 'Camera', icon: '📷' },
-  { value: 'motherboard', label: 'Motherboard', icon: '🖥️' },
-  { value: 'back-panel', label: 'Back Panel', icon: '📦' },
-  { value: 'speaker', label: 'Speaker', icon: '🔊' },
-  { value: 'microphone', label: 'Microphone', icon: '🎤' },
-  { value: 'sim-tray', label: 'SIM Tray', icon: '📇' },
-  { value: 'buttons', label: 'Buttons', icon: '🔘' },
-  { value: 'flex-cable', label: 'Flex Cable', icon: '🔗' },
-  { value: 'antenna', label: 'Antenna', icon: '📡' },
-  { value: 'vibration-motor', label: 'Vibration Motor', icon: '📳' },
-  { value: 'earpiece', label: 'Earpiece', icon: '👂' },
-  { value: 'proximity-sensor', label: 'Proximity Sensor', icon: '🔍' },
-  { value: 'tools', label: 'Tools & Equipment', icon: '🔧' },
-  { value: 'other', label: 'Other Parts', icon: '⚙️' },
-];
-
-// Get all part types
+// DEPRECATED: Use /api/categories instead
+// This endpoint is kept for backward compatibility but now uses the unified Category collection
 export async function GET() {
-  return NextResponse.json({ partTypes }, { status: 200 });
+  try {
+    await connectDB();
+
+    // Fetch from unified categories collection
+    const categories = await Category.find({ isActive: true })
+      .sort({ order: 1, createdAt: 1 })
+      .select('name icon slug')
+      .lean();
+
+    // Format to match legacy partTypes structure for backward compatibility
+    const formattedPartTypes = categories.map((cat) => ({
+      value: cat.slug,
+      label: cat.name,
+      icon: cat.icon,
+    }));
+
+    return NextResponse.json(
+      { partTypes: formattedPartTypes },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error('Failed to fetch part types:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch part types' },
+      { status: 500 }
+    );
+  }
 }

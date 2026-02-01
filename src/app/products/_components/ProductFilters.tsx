@@ -14,12 +14,18 @@ interface PartType {
   icon: string;
 }
 
+interface Condition {
+  value: string;
+  label: string;
+}
+
 export default function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [brands, setBrands] = useState<Brand[]>([]);
   const [partTypes, setPartTypes] = useState<PartType[]>([]);
+  const [conditions, setConditions] = useState<Condition[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
   const [selectedBrand, setSelectedBrand] = useState(
@@ -45,12 +51,29 @@ export default function ProductFilters() {
         // Silently fail and keep empty brands list
       });
 
-    // Fetch part types
-    fetch("/api/part-types")
+    // Fetch part types (categories)
+    fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => setPartTypes(data.partTypes || []))
+      .then((data) => {
+        // Map categories to partTypes format for backward compatibility
+        const mappedPartTypes =
+          data.categories?.map((cat: any) => ({
+            value: cat.slug,
+            label: cat.name,
+            icon: cat.icon,
+          })) || [];
+        setPartTypes(mappedPartTypes);
+      })
       .catch(() => {
         // Silently fail and keep empty part types list
+      });
+
+    // Fetch conditions
+    fetch("/api/conditions")
+      .then((res) => res.json())
+      .then((data) => setConditions(data.conditions || []))
+      .catch(() => {
+        // Silently fail and keep empty conditions list
       });
   }, []);
 
@@ -90,7 +113,7 @@ export default function ProductFilters() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed bottom-6 left-6 z-40 bg-gradient-to-br from-blue-500 to-blue-700 text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-110 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 font-semibold animate-in fade-in slide-in-from-bottom-2 ease-out"
+          className="lg:hidden fixed bottom-6 left-6 z-50 bg-gradient-to-br from-blue-500 to-blue-700 text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-110 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 font-semibold animate-in fade-in slide-in-from-bottom-2 ease-out"
         >
           <svg
             className="w-4.5 h-4.5 transition-transform duration-300"
@@ -113,23 +136,32 @@ export default function ProductFilters() {
         </button>
       )}
 
-      {/* Filter Sidebar/Modal */}
+      {/* Filter Sidebar/Modal - Sleek Side Slider */}
+      {/* Backdrop with Blur - Filter only */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
+          onClick={() => setIsOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Filter Slider Panel - Sleek with Rounded Corners - From Left */}
       <div
         className={`
-          fixed lg:static top-0 left-0 h-screen lg:h-auto w-80 
-          bg-white/80 backdrop-blur-md lg:bg-white
-          shadow-2xl lg:shadow-md border-r border-gray-200/40 lg:border
-          z-40 lg:z-0 transition-transform duration-300 ease-in-out overflow-y-auto
-          lg:rounded-xl lg:border-gray-200
+          fixed lg:static top-0 left-0 h-auto max-h-[calc(100vh)] lg:h-auto w-64 
+          bg-white shadow-xl lg:shadow-md border-r border-gray-200 lg:border
+          z-50 lg:z-0 transition-transform duration-300 ease-out overflow-y-auto
+          lg:rounded-lg lg:border-gray-200 rounded-r-2xl
           ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
         `}
       >
-        <div className="p-6">
+        <div className="p-4">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
               <svg
-                className="w-5 h-5 text-blue-600"
+                className="w-4 h-4 text-blue-600"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -145,11 +177,11 @@ export default function ProductFilters() {
             </h2>
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 hover:bg-gray-100 rounded-lg"
               aria-label="Close filters"
             >
               <svg
-                className="w-6 h-6"
+                className="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -165,14 +197,14 @@ export default function ProductFilters() {
           </div>
 
           {/* Brand Filter */}
-          <div className="mb-7">
-            <label className="block text-sm font-semibold text-gray-800 mb-2.5">
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Brand
             </label>
             <select
               value={selectedBrand}
               onChange={(e) => setSelectedBrand(e.target.value)}
-              className="w-full px-3.5 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm font-medium text-gray-900 hover:border-gray-400"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
             >
               <option value="">All Brands</option>
               {brands.map((brand) => (
@@ -184,28 +216,28 @@ export default function ProductFilters() {
           </div>
 
           {/* Part Type Filter */}
-          <div className="mb-7">
-            <label className="block text-sm font-semibold text-gray-800 mb-2.5">
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Part Type
             </label>
-            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-2">
-              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer transition">
-                <input
-                  type="radio"
-                  name="partType"
-                  value=""
-                  checked={selectedPartType === ""}
-                  onChange={(e) => setSelectedPartType(e.target.value)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  All Parts
-                </span>
-              </label>
+            <div className="space-y-1 max-h-48 overflow-y-auto pr-2">
+              {partTypes.length > 1 && (
+                <label className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition">
+                  <input
+                    type="radio"
+                    name="partType"
+                    value=""
+                    checked={selectedPartType === ""}
+                    onChange={(e) => setSelectedPartType(e.target.value)}
+                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">All Types</span>
+                </label>
+              )}
               {partTypes.map((partType) => (
                 <label
                   key={partType.value}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer transition"
+                  className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition"
                 >
                   <input
                     type="radio"
@@ -216,7 +248,7 @@ export default function ProductFilters() {
                     className="w-4 h-4 text-blue-600 focus:ring-blue-500"
                   />
                   <span className="text-base">{partType.icon}</span>
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm text-gray-700">
                     {partType.label}
                   </span>
                 </label>
@@ -225,12 +257,12 @@ export default function ProductFilters() {
           </div>
 
           {/* Condition Filter */}
-          <div className="mb-7">
-            <label className="block text-sm font-semibold text-gray-800 mb-2.5">
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Condition
             </label>
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer transition">
+            <div className="space-y-1">
+              <label className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition">
                 <input
                   type="radio"
                   name="condition"
@@ -241,37 +273,33 @@ export default function ProductFilters() {
                 />
                 <span className="text-sm font-medium text-gray-700">All</span>
               </label>
-              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer transition">
-                <input
-                  type="radio"
-                  name="condition"
-                  value="new"
-                  checked={selectedCondition === "new"}
-                  onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">New</span>
-              </label>
-              <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-blue-50 cursor-pointer transition">
-                <input
-                  type="radio"
-                  name="condition"
-                  value="used"
-                  checked={selectedCondition === "used"}
-                  onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Used</span>
-              </label>
+              {conditions.map((condition) => (
+                <label
+                  key={condition.value}
+                  className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition"
+                >
+                  <input
+                    type="radio"
+                    name="condition"
+                    value={condition.value}
+                    checked={selectedCondition === condition.value}
+                    onChange={(e) => setSelectedCondition(e.target.value)}
+                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700">
+                    {condition.label}
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
 
           {/* Price Range Filter */}
-          <div className="mb-7">
-            <label className="block text-sm font-semibold text-gray-800 mb-2.5">
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Price Range (₹)
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="number"
                 placeholder="Min"
@@ -279,7 +307,7 @@ export default function ProductFilters() {
                 onChange={(e) =>
                   setPriceRange({ ...priceRange, min: e.target.value })
                 }
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium placeholder-gray-500"
+                className="px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm placeholder-gray-500"
               />
               <input
                 type="number"
@@ -288,7 +316,7 @@ export default function ProductFilters() {
                 onChange={(e) =>
                   setPriceRange({ ...priceRange, max: e.target.value })
                 }
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm font-medium placeholder-gray-500"
+                className="px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm placeholder-gray-500"
               />
             </div>
           </div>
@@ -321,14 +349,6 @@ export default function ProductFilters() {
           </div>
         </div>
       </div>
-
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden animate-in fade-in duration-200"
-        />
-      )}
     </>
   );
 }

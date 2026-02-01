@@ -20,15 +20,13 @@ interface PartType {
   icon: string;
 }
 
-type DeviceCategory = "mobile" | "laptop" | "desktop";
-
 export default function EditProductPage() {
   const params = useParams();
   const [form, setForm] = useState({
     name: "",
     description: "",
     price: "",
-    deviceCategory: "" as DeviceCategory | "",
+    deviceCategory: "",
     brand: "",
     brandSlug: "",
     deviceModel: "",
@@ -132,11 +130,20 @@ export default function EditProductPage() {
       });
   }, [params]);
 
-  // Fetch part types on mount
+  // Fetch part types (categories) on mount
   useEffect(() => {
-    fetch("/api/part-types")
+    fetch("/api/categories")
       .then((res) => res.json())
-      .then((data) => setPartTypes(data.partTypes || []))
+      .then((data) => {
+        // Map categories to partTypes format for backward compatibility
+        const mappedPartTypes =
+          data.categories?.map((cat: any) => ({
+            value: cat.slug,
+            label: cat.name,
+            icon: cat.icon,
+          })) || [];
+        setPartTypes(mappedPartTypes);
+      })
       .catch(() => setError("Failed to load part types"));
   }, []);
 

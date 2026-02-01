@@ -8,30 +8,30 @@ export const metadata: Metadata = {
 
 export default function TechnicianDashboard() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3 md:p-8">
       <section className="max-w-6xl mx-auto">
         {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-5xl font-bold text-gray-900 mb-2 md:mb-3">
             Technician Dashboard
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-sm md:text-lg leading-relaxed">
             Manage your spare part listings and seller profile.
           </p>
         </div>
 
         {/* Main Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-3 gap-3 md:gap-4 mb-6 md:mb-8">
           {/* My Products Card */}
           <Link
             href="/technician/products"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-blue-300 transition-all duration-300"
+            className="group relative bg-white rounded-xl shadow-md border border-gray-200 p-3 md:p-4 hover:shadow-lg hover:border-blue-300 transition-all duration-300"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center mb-2">
                 <svg
-                  className="w-6 h-6 text-blue-700"
+                  className="w-5 h-5 text-blue-700"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -44,15 +44,12 @@ export default function TechnicianDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-sm md:text-base font-bold text-gray-900 mb-2">
                 My Products
               </h3>
-              <p className="text-sm text-gray-600">
-                View and manage your spare part listings.
-              </p>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-blue-600 font-semibold flex items-center gap-1">
-                  View Products <span>→</span>
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-blue-600 font-semibold flex items-center gap-1 hover:text-blue-700 transition">
+                  View <span>→</span>
                 </p>
               </div>
             </div>
@@ -61,13 +58,13 @@ export default function TechnicianDashboard() {
           {/* Add New Product Card */}
           <Link
             href="/technician/products/new"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-green-300 transition-all duration-300"
+            className="group relative bg-white rounded-xl shadow-md border border-gray-200 p-3 md:p-4 hover:shadow-lg hover:border-green-300 transition-all duration-300"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center mb-2">
                 <svg
-                  className="w-6 h-6 text-green-700"
+                  className="w-5 h-5 text-green-700"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -80,15 +77,12 @@ export default function TechnicianDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Add New Product
+              <h3 className="text-sm md:text-base font-bold text-gray-900 mb-2">
+                Add Product
               </h3>
-              <p className="text-sm text-gray-600">
-                List a new spare part for sale.
-              </p>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-green-600 font-semibold flex items-center gap-1">
-                  Create Listing <span>→</span>
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-green-600 font-semibold flex items-center gap-1 hover:text-green-700 transition">
+                  Create <span>→</span>
                 </p>
               </div>
             </div>
@@ -97,13 +91,13 @@ export default function TechnicianDashboard() {
           {/* Profile Card */}
           <Link
             href="/technician/profile"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300"
+            className="group relative bg-white rounded-xl shadow-md border border-gray-200 p-3 md:p-4 hover:shadow-lg hover:border-purple-300 transition-all duration-300"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-purple-200 rounded-lg flex items-center justify-center mb-2">
                 <svg
-                  className="w-6 h-6 text-purple-700"
+                  className="w-5 h-5 text-purple-700"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -116,13 +110,12 @@ export default function TechnicianDashboard() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Profile</h3>
-              <p className="text-sm text-gray-600">
-                Manage your profile and account settings.
-              </p>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-purple-600 font-semibold flex items-center gap-1">
-                  Edit Profile <span>→</span>
+              <h3 className="text-sm md:text-base font-bold text-gray-900 mb-2">
+                Profile
+              </h3>
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-purple-600 font-semibold flex items-center gap-1 hover:text-purple-700 transition">
+                  Edit <span>→</span>
                 </p>
               </div>
             </div>
@@ -130,20 +123,18 @@ export default function TechnicianDashboard() {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8 mb-6 md:mb-8">
+          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">
             Your Statistics
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-3 gap-3 md:gap-4">
             {/* Total Products */}
-            <div className="p-5 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-blue-700">
-                  Total Listings
-                </p>
-                <div className="p-2 bg-blue-200 rounded-lg">
+            <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-md transition">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-blue-700">Listings</p>
+                <div className="p-1.5 bg-blue-200 rounded-lg">
                   <svg
-                    className="w-5 h-5 text-blue-700"
+                    className="w-4 h-4 text-blue-700"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -151,21 +142,16 @@ export default function TechnicianDashboard() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-blue-900">0</p>
-              <p className="text-xs text-blue-600 mt-2">
-                Start listing products
-              </p>
+              <p className="text-2xl md:text-3xl font-bold text-blue-900">0</p>
             </div>
 
             {/* Active Listings */}
-            <div className="p-5 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-green-700">
-                  Active Listings
-                </p>
-                <div className="p-2 bg-green-200 rounded-lg">
+            <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100 border border-green-200 hover:shadow-md transition">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-green-700">Active</p>
+                <div className="p-1.5 bg-green-200 rounded-lg">
                   <svg
-                    className="w-5 h-5 text-green-700"
+                    className="w-4 h-4 text-green-700"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -177,19 +163,18 @@ export default function TechnicianDashboard() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-green-900">0</p>
-              <p className="text-xs text-green-600 mt-2">No active listings</p>
+              <p className="text-2xl md:text-3xl font-bold text-green-900">0</p>
             </div>
 
             {/* Pending Requests */}
-            <div className="p-5 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-purple-700">
-                  Buyer Enquiries
+            <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 hover:shadow-md transition">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-purple-700">
+                  Enquiries
                 </p>
-                <div className="p-2 bg-purple-200 rounded-lg">
+                <div className="p-1.5 bg-purple-200 rounded-lg">
                   <svg
-                    className="w-5 h-5 text-purple-700"
+                    className="w-4 h-4 text-purple-700"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -198,16 +183,15 @@ export default function TechnicianDashboard() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-purple-900">0</p>
-              <p className="text-xs text-purple-600 mt-2">
-                No pending enquiries
+              <p className="text-2xl md:text-3xl font-bold text-purple-900">
+                0
               </p>
             </div>
           </div>
         </div>
 
-        {/* Quick Tips */}
-        <div className="mt-8 bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+        {/* Quick Tips - Hidden on mobile, visible on md+ */}
+        <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6">
             Quick Tips to Boost Sales
           </h3>
