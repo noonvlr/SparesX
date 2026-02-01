@@ -373,17 +373,28 @@ export default function AdminDeviceCategoriesPage() {
               </div>
 
               {/* Models Section */}
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Device Models
-                </h3>
+              <div className="border-t pt-8">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    📱 Device Models
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    Add all variants and versions of this{" "}
+                    {formData.name || "brand"} device
+                  </p>
+                </div>
 
-                {/* Add Model Form */}
-                <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                {/* Add Model Form Card */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                  <h4 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2">
+                    <span className="text-lg">➕</span> Add a New Model
+                  </h4>
+
+                  <div className="space-y-4">
+                    {/* Model Name - Primary field */}
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Model Name *
+                      <label className="block text-sm font-semibold text-gray-800 mb-2">
+                        Model Name <span className="text-red-600">*</span>
                       </label>
                       <input
                         type="text"
@@ -391,95 +402,139 @@ export default function AdminDeviceCategoriesPage() {
                         onChange={(e) =>
                           setNewModel({ ...newModel, name: e.target.value })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                        placeholder="e.g., iPhone 15 Pro"
+                        className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-base font-medium"
+                        placeholder="e.g., iPhone 15 Pro, Galaxy S24, MacBook Pro 14-inch"
                       />
+                      <p className="text-xs text-gray-600 mt-1">
+                        The exact product name or variant
+                      </p>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Model Number
-                      </label>
-                      <input
-                        type="text"
-                        value={newModel.modelNumber}
-                        onChange={(e) =>
-                          setNewModel({
-                            ...newModel,
-                            modelNumber: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                        placeholder="e.g., A3108"
-                      />
+                    {/* Secondary fields in grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">
+                          Model Number
+                        </label>
+                        <input
+                          type="text"
+                          value={newModel.modelNumber}
+                          onChange={(e) =>
+                            setNewModel({
+                              ...newModel,
+                              modelNumber: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                          placeholder="e.g., A3108, SM-S911B"
+                        />
+                        <p className="text-xs text-gray-600 mt-1">
+                          Technical model code (optional)
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-800 mb-2">
+                          Release Year
+                        </label>
+                        <input
+                          type="number"
+                          value={newModel.releaseYear}
+                          onChange={(e) =>
+                            setNewModel({
+                              ...newModel,
+                              releaseYear: e.target.value,
+                            })
+                          }
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                          placeholder={new Date().getFullYear().toString()}
+                          min="2000"
+                          max={new Date().getFullYear() + 1}
+                        />
+                        <p className="text-xs text-gray-600 mt-1">
+                          Year of release
+                        </p>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">
-                        Release Year
-                      </label>
-                      <input
-                        type="number"
-                        value={newModel.releaseYear}
-                        onChange={(e) =>
-                          setNewModel({
-                            ...newModel,
-                            releaseYear: e.target.value,
-                          })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                        placeholder="2024"
-                        min="2000"
-                        max={new Date().getFullYear() + 1}
-                      />
-                    </div>
-
-                    <div className="flex items-end">
-                      <button
-                        type="button"
-                        onClick={handleAddModel}
-                        className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-semibold text-sm"
-                      >
-                        Add Model
-                      </button>
-                    </div>
+                    {/* Add button - Clear primary action */}
+                    <button
+                      type="button"
+                      onClick={handleAddModel}
+                      className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-base shadow-md hover:shadow-lg"
+                    >
+                      <span>✓</span> Add This Model
+                    </button>
                   </div>
                 </div>
 
-                {/* Models List */}
-                {formData.models.length > 0 ? (
-                  <div className="space-y-2">
-                    {formData.models.map((model, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200 hover:bg-gray-100 transition"
-                      >
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {model.name}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {model.modelNumber &&
-                              `Model: ${model.modelNumber} • `}
-                            {model.releaseYear &&
-                              `Released: ${model.releaseYear}`}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveModel(index)}
-                          className="text-red-600 hover:text-red-800 font-semibold px-3 py-1 hover:bg-red-50 rounded transition"
+                {/* Models List - Clear visual separation */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <h4 className="font-bold text-gray-900 text-base">
+                      Added Models
+                    </h4>
+                    <span className="bg-blue-100 text-blue-800 font-semibold text-sm px-2.5 py-0.5 rounded-full">
+                      {formData.models.length}
+                    </span>
+                  </div>
+
+                  {formData.models.length > 0 ? (
+                    <div className="space-y-2">
+                      {formData.models.map((model, index) => (
+                        <div
+                          key={index}
+                          className="flex items-start justify-between bg-white border-l-4 border-l-blue-500 p-4 rounded-lg border border-gray-200 hover:shadow-md transition group"
                         >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                    <p className="text-gray-500">No models added yet</p>
-                  </div>
-                )}
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900 text-base">
+                              {model.name}
+                            </p>
+                            <div className="flex flex-wrap gap-3 mt-2">
+                              {model.modelNumber && (
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-mono">
+                                  {model.modelNumber}
+                                </span>
+                              )}
+                              {model.releaseYear && (
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                  Released {model.releaseYear}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveModel(index)}
+                            className="ml-4 text-gray-400 hover:text-red-600 hover:bg-red-50 p-2 rounded transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Remove this model"
+                          >
+                            <svg
+                              className="w-5 h-5"
+                              fill="currentColor"
+                              viewBox="0 0 20 20"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <p className="text-gray-500 font-medium">
+                        No models added yet
+                      </p>
+                      <p className="text-gray-400 text-sm mt-1">
+                        Add at least one model above to continue
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Form Actions */}

@@ -33,14 +33,26 @@ export async function PUT(req: NextRequest) {
   if (!payload || payload.role !== 'technician') {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   }
-  const { name, email } = await req.json();
+  const body = await req.json();
   await connectDB();
   const user = await User.findById(payload.id);
   if (!user) {
     return NextResponse.json({ message: 'User not found' }, { status: 404 });
   }
-  if (name) user.name = name;
-  if (email) user.email = email;
+  
+  // Update allowed fields
+  if (body.name) user.name = body.name;
+  if (body.email) user.email = body.email;
+  if (body.address !== undefined) user.address = body.address;
+  if (body.city !== undefined) user.city = body.city;
+  if (body.state !== undefined) user.state = body.state;
+  if (body.pinCode !== undefined) user.pinCode = body.pinCode;
+  if (body.countryCode !== undefined) user.countryCode = body.countryCode;
+  if (body.whatsappNumber !== undefined) user.whatsappNumber = body.whatsappNumber;
+  if (body.profilePicture !== undefined) user.profilePicture = body.profilePicture;
+  
   await user.save();
-  return NextResponse.json({ message: 'Profile updated', user: { name: user.name, email: user.email } }, { status: 200 });
+  
+  const updatedUser = await User.findById(payload.id).select('-password');
+  return NextResponse.json({ message: 'Profile updated', user: updatedUser }, { status: 200 });
 }

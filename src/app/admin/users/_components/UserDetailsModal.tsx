@@ -320,12 +320,85 @@ export default function UserDetailsModal({
               </div>
 
               {/* Edit Button */}
-              <div className="mt-6 flex justify-end">
+              <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                  className="flex-1 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
                 >
                   Edit User
+                </button>
+                <button
+                  onClick={async () => {
+                    if (
+                      confirm(
+                        "Reset this user's password? They will receive an email with a reset link.",
+                      )
+                    ) {
+                      setLoading(true);
+                      setError("");
+                      try {
+                        const token = localStorage.getItem("token");
+                        const res = await fetch(
+                          `/api/admin/users/${user._id}/reset-password`,
+                          {
+                            method: "POST",
+                            headers: { Authorization: `Bearer ${token}` },
+                          },
+                        );
+                        const data = await res.json();
+                        if (res.ok) {
+                          setSuccess("Password reset email sent successfully");
+                        } else {
+                          setError(data.message || "Failed to reset password");
+                        }
+                      } catch (err) {
+                        setError("Error resetting password");
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }}
+                  className="flex-1 px-6 py-2.5 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Reset Password
+                </button>
+                <button
+                  onClick={async () => {
+                    if (
+                      confirm(
+                        "Are you sure you want to delete this user? This action cannot be undone.",
+                      )
+                    ) {
+                      setLoading(true);
+                      setError("");
+                      try {
+                        const token = localStorage.getItem("token");
+                        const res = await fetch(
+                          `/api/admin/users/${user._id}`,
+                          {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          },
+                        );
+                        const data = await res.json();
+                        if (res.ok) {
+                          setSuccess("User deleted successfully");
+                          setTimeout(() => onClose(), 1500);
+                        } else {
+                          setError(data.message || "Failed to delete user");
+                        }
+                      } catch (err) {
+                        setError("Error deleting user");
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }}
+                  className="flex-1 px-6 py-2.5 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                  disabled={loading}
+                >
+                  Delete User
                 </button>
               </div>
             </div>

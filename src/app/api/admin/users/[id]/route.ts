@@ -98,3 +98,56 @@ export async function PATCH(
     );
   }
 }
+
+// DELETE user
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const authHeader = request.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const { verifyJwt } = await import("@/lib/auth/jwt");
+    const payload = verifyJwt(token);
+
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    }
+
+    await connectDB();
+    const { id } = await params;
+
+    const user = await User.findById(id);
+    if (!user) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
+    // Don't allow deleting admin users
+    if (user.role === "admin") {
+      return NextResponse.json(
+        { message: "Cannot delete admin users" },
+        { status: 403 }
+      );
+    }
+
+    // Delete all products by this user
+    const { Product } = await import("@/lib/models/Product");
+    const deleteResult = await Product.deleteMany({ technician: id });
+
+    // Delete the user
+    await User.findByIdAndDelete(id);
+
+    return NextResponse.json({
+      message: `User and ${deleteResult.deletedCount} product(s) deleted successfully`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Failed to delete user" },
+      { status: 500 }
+    );
+  }
+}

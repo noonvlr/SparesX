@@ -16,6 +16,8 @@ export interface IUser extends Document {
   whatsappNumber: string;
   profilePicture?: string;
   isBlocked: boolean;
+  passwordResetOTP?: string;
+  passwordResetOTPExpiry?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,6 +36,8 @@ const UserSchema: Schema<IUser> = new Schema({
   whatsappNumber: { type: String, required: true, trim: true },
   profilePicture: { type: String, trim: true },
   isBlocked: { type: Boolean, default: false },
+  passwordResetOTP: { type: String, default: undefined },
+  passwordResetOTPExpiry: { type: Date, default: undefined },
 }, { timestamps: true });
 
 export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);

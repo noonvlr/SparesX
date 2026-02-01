@@ -488,14 +488,14 @@ export default function AdminDeviceManagementPage() {
     : brands;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-8 px-4 md:px-8">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-6 md:py-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 md:mb-8 text-center">
+          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3">
             Device Management
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-base md:text-lg">
             Manage categories, device brands, and device types in one place
           </p>
         </div>
@@ -533,40 +533,40 @@ export default function AdminDeviceManagementPage() {
             {/* Categories Tab */}
             <button
               onClick={() => setActiveTab("categories")}
-              className={`py-4 px-4 md:px-6 font-semibold text-center border-b-4 transition-all duration-200 ${
+              className={`py-4 px-2 md:px-6 font-semibold text-center border-b-4 transition-all duration-200 min-h-[60px] flex flex-col items-center justify-center gap-1 ${
                 activeTab === "categories"
                   ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-b-blue-600 text-blue-700"
                   : "border-b-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xl md:text-base">📦</span>
-              <span className="hidden sm:inline ml-2">Categories</span>
+              <span className="text-2xl md:text-xl">📦</span>
+              <span className="text-xs md:text-sm">Categories</span>
             </button>
 
             {/* Brands Tab */}
             <button
               onClick={() => setActiveTab("brands")}
-              className={`py-4 px-4 md:px-6 font-semibold text-center border-b-4 transition-all duration-200 ${
+              className={`py-4 px-2 md:px-6 font-semibold text-center border-b-4 transition-all duration-200 min-h-[60px] flex flex-col items-center justify-center gap-1 ${
                 activeTab === "brands"
                   ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-b-blue-600 text-blue-700"
                   : "border-b-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xl md:text-base">🏢</span>
-              <span className="hidden sm:inline ml-2">Brands</span>
+              <span className="text-2xl md:text-xl">🏢</span>
+              <span className="text-xs md:text-sm">Brands</span>
             </button>
 
             {/* Device Types Tab */}
             <button
               onClick={() => setActiveTab("types")}
-              className={`py-4 px-4 md:px-6 font-semibold text-center border-b-4 transition-all duration-200 ${
+              className={`py-4 px-2 md:px-6 font-semibold text-center border-b-4 transition-all duration-200 min-h-[60px] flex flex-col items-center justify-center gap-1 ${
                 activeTab === "types"
                   ? "bg-gradient-to-r from-blue-50 to-indigo-50 border-b-blue-600 text-blue-700"
                   : "border-b-gray-200 text-gray-600 hover:text-gray-900 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xl md:text-base">🎯</span>
-              <span className="hidden sm:inline ml-2">Types</span>
+              <span className="text-2xl md:text-xl">🎯</span>
+              <span className="text-xs md:text-sm">Types</span>
             </button>
           </div>
         </div>
@@ -589,8 +589,8 @@ export default function AdminDeviceManagementPage() {
             </div>
 
             {showCategoryForm && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                <h3 className="text-2xl font-bold mb-6">
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8">
+                <h3 className="text-xl md:text-2xl font-bold mb-5 md:mb-6">
                   {editingCategory ? "Edit Category" : "Add New Category"}
                 </h3>
                 <form onSubmit={handleSubmitCategory} className="space-y-4">
@@ -710,17 +710,17 @@ export default function AdminDeviceManagementPage() {
                     </label>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6">
                     <button
                       type="submit"
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:shadow-lg font-semibold transition"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-lg hover:shadow-lg font-semibold transition min-h-[48px]"
                     >
                       {editingCategory ? "Update Category" : "Create Category"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowCategoryForm(false)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold transition"
+                      className="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-lg hover:bg-gray-300 font-semibold transition min-h-[48px]"
                     >
                       Cancel
                     </button>
@@ -730,33 +730,35 @@ export default function AdminDeviceManagementPage() {
             )}
 
             {/* Categories Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
               {categories.map((category) => (
                 <div
                   key={category._id}
-                  className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition"
+                  className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 p-5 md:p-6 hover:shadow-xl transition"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="text-4xl">{category.icon}</div>
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="text-5xl">{category.icon}</div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleEditCategory(category)}
-                        className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                        className="p-3 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Edit category"
                       >
                         ✏️
                       </button>
                       <button
                         onClick={() => handleDeleteCategory(category._id)}
-                        className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
+                        className="p-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        aria-label="Delete category"
                       >
                         🗑️
                       </button>
                     </div>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                     {category.name}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-3">
+                  <p className="text-sm text-gray-600 mb-4">
                     {category.description}
                   </p>
                   <div className="flex items-center justify-between text-sm">
@@ -788,13 +790,13 @@ export default function AdminDeviceManagementPage() {
         {/* ==================== BRANDS TAB ==================== */}
         {activeTab === "brands" && (
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
                 Device Brands
               </h2>
               <button
                 onClick={handleAddNewBrand}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg font-semibold transition w-full md:w-auto"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3.5 rounded-xl hover:shadow-lg font-semibold transition w-full sm:w-auto min-h-[48px]"
               >
                 + Add Brand
               </button>
@@ -810,7 +812,7 @@ export default function AdminDeviceManagementPage() {
                   <button
                     key={type._id}
                     onClick={() => setSelectedBrandCategory(type.slug)}
-                    className={`px-4 py-2 rounded-lg font-semibold transition ${
+                    className={`px-4 py-3 rounded-lg font-semibold transition min-h-[48px] text-sm md:text-base ${
                       selectedBrandCategory === type.slug
                         ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
                         : "bg-white border border-gray-300 text-gray-700 hover:border-gray-400"
@@ -823,8 +825,8 @@ export default function AdminDeviceManagementPage() {
             </div>
 
             {showBrandForm && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                <h3 className="text-2xl font-bold mb-6">
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8">
+                <h3 className="text-xl md:text-2xl font-bold mb-5 md:mb-6">
                   {editingBrand ? "Edit Brand" : "Add New Brand"}
                 </h3>
 
@@ -845,7 +847,7 @@ export default function AdminDeviceManagementPage() {
                               category: type.slug,
                             })
                           }
-                          className={`px-4 py-2 rounded-lg font-semibold transition ${
+                          className={`px-4 py-3 rounded-lg font-semibold transition min-h-[48px] text-sm md:text-base ${
                             brandFormData.category === type.slug
                               ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -982,7 +984,7 @@ export default function AdminDeviceManagementPage() {
                       <button
                         type="button"
                         onClick={addModel}
-                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-lg hover:shadow-lg font-semibold transition"
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3.5 rounded-lg hover:shadow-lg font-semibold transition min-h-[48px]"
                       >
                         + Add Model
                       </button>
@@ -1018,17 +1020,17 @@ export default function AdminDeviceManagementPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-3 pt-4 border-t border-gray-200">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-gray-200 mt-6">
                     <button
                       type="submit"
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:shadow-lg font-semibold transition"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-lg hover:shadow-lg font-semibold transition min-h-[48px]"
                     >
                       {editingBrand ? "Update Brand" : "Create Brand"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowBrandForm(false)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold transition"
+                      className="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-lg hover:bg-gray-300 font-semibold transition min-h-[48px]"
                     >
                       Cancel
                     </button>
@@ -1037,9 +1039,10 @@ export default function AdminDeviceManagementPage() {
               </div>
             )}
 
-            {/* Brands Table */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-              <div className="overflow-x-auto">
+            {/* Brands List - Table on Desktop, Cards on Mobile */}
+            <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
                     <tr>
@@ -1091,13 +1094,15 @@ export default function AdminDeviceManagementPage() {
                         <td className="px-6 py-4 flex gap-2">
                           <button
                             onClick={() => handleEditBrand(brand)}
-                            className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                            className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                            aria-label="Edit brand"
                           >
                             ✏️
                           </button>
                           <button
                             onClick={() => handleDeleteBrand(brand._id)}
-                            className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
+                            className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                            aria-label="Delete brand"
                           >
                             🗑️
                           </button>
@@ -1106,6 +1111,60 @@ export default function AdminDeviceManagementPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {filteredBrands.map((brand) => (
+                  <div
+                    key={brand._id}
+                    className="p-5 hover:bg-gray-50 transition"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900 text-lg mb-1">
+                          {brand.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-2">
+                          {brand.slug}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ml-3 ${
+                          brand.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {brand.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-semibold">
+                          {brand.models.length}
+                        </span>{" "}
+                        models
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditBrand(brand)}
+                        className="flex-1 bg-blue-100 text-blue-700 py-3 rounded-lg hover:bg-blue-200 transition font-semibold min-h-[48px] flex items-center justify-center gap-2"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBrand(brand._id)}
+                        className="flex-1 bg-red-100 text-red-700 py-3 rounded-lg hover:bg-red-200 transition font-semibold min-h-[48px] flex items-center justify-center gap-2"
+                      >
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {filteredBrands.length === 0 && !showBrandForm && (
@@ -1122,19 +1181,21 @@ export default function AdminDeviceManagementPage() {
         {/* ==================== DEVICE TYPES TAB ==================== */}
         {activeTab === "types" && (
           <div className="space-y-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">Device Types</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+                Device Types
+              </h2>
               <button
                 onClick={handleAddNewDeviceType}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl hover:shadow-lg font-semibold transition w-full md:w-auto"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3.5 rounded-xl hover:shadow-lg font-semibold transition w-full sm:w-auto min-h-[48px]"
               >
                 + Add Device Type
               </button>
             </div>
 
             {showDeviceTypeForm && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-                <h3 className="text-2xl font-bold mb-6">
+              <div className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8">
+                <h3 className="text-xl md:text-2xl font-bold mb-5 md:mb-6">
                   {editingDeviceType
                     ? "Edit Device Type"
                     : "Add New Device Type"}
@@ -1258,10 +1319,10 @@ export default function AdminDeviceManagementPage() {
                     </label>
                   </div>
 
-                  <div className="flex gap-3 pt-4">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6">
                     <button
                       type="submit"
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-lg hover:shadow-lg font-semibold transition"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-lg hover:shadow-lg font-semibold transition min-h-[48px]"
                     >
                       {editingDeviceType
                         ? "Update Device Type"
@@ -1270,7 +1331,7 @@ export default function AdminDeviceManagementPage() {
                     <button
                       type="button"
                       onClick={() => setShowDeviceTypeForm(false)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 font-semibold transition"
+                      className="flex-1 bg-gray-200 text-gray-700 py-3.5 rounded-lg hover:bg-gray-300 font-semibold transition min-h-[48px]"
                     >
                       Cancel
                     </button>
@@ -1280,7 +1341,7 @@ export default function AdminDeviceManagementPage() {
             )}
 
             {/* Device Types Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
               {deviceTypes.map((type) => {
                 const brandCount = brands.filter(
                   (b) => b.category === type.slug,
@@ -1292,32 +1353,34 @@ export default function AdminDeviceManagementPage() {
                 return (
                   <div
                     key={type._id}
-                    className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition"
+                    className="bg-white rounded-xl md:rounded-2xl shadow-lg border border-gray-200 p-5 md:p-6 hover:shadow-xl transition"
                   >
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-5">
                       <div className="text-5xl">{type.emoji}</div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditDeviceType(type)}
-                          className="p-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition"
+                          className="p-3 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          aria-label="Edit device type"
                         >
                           ✏️
                         </button>
                         <button
                           onClick={() => handleDeleteDeviceType(type._id)}
-                          className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition"
+                          className="p-3 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                          aria-label="Delete device type"
                         >
                           🗑️
                         </button>
                       </div>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                    <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">
                       {type.name}
                     </h3>
                     <p className="text-sm text-gray-600 mb-4">
                       {type.description}
                     </p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Brands:</span>
                         <span className="font-bold text-blue-600">
@@ -1331,9 +1394,9 @@ export default function AdminDeviceManagementPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-200">
                       <span
-                        className={`flex-1 px-3 py-1 rounded-full text-xs font-semibold text-center ${
+                        className={`px-3 py-2 rounded-full text-xs font-semibold text-center ${
                           type.isActive
                             ? "bg-green-100 text-green-700"
                             : "bg-gray-100 text-gray-700"
@@ -1346,7 +1409,7 @@ export default function AdminDeviceManagementPage() {
                           setActiveTab("brands");
                           setSelectedBrandCategory(type.slug);
                         }}
-                        className="flex-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 py-2 rounded-lg hover:shadow-md font-semibold transition text-sm"
+                        className="flex-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 py-3 rounded-lg hover:shadow-md font-semibold transition text-sm min-h-[44px]"
                       >
                         Manage →
                       </button>

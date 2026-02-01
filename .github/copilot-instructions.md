@@ -465,3 +465,74 @@ DOCUMENTATION
 - Do NOT create summary or documentation files automatically
 - Only create documentation files if explicitly requested by the user
 - Focus on implementing code, not documenting changes unless asked
+
+UI / UX RULES (VERY IMPORTANT):
+
+Spacing & Layout:
+
+- Use generous vertical spacing between sections (min 24px)
+- Group related content into cards
+- Avoid stacking too many elements without separation
+- Never reuse desktop padding values directly on mobile
+
+Typography:
+
+- Establish clear hierarchy:
+  - Page title: largest
+  - Section headers: medium
+  - Body text: normal
+  - Meta text: small + muted
+- Avoid long paragraphs on mobile
+- Break content into scannable chunks
+
+Mobile Interaction:
+
+- Touch targets must be minimum 44px height
+- Primary CTA must be clearly separated
+- Only ONE primary action per screen
+- Secondary actions should be visually subdued
+
+Content Density:
+
+- Do not show everything at once
+- Use accordions, "View more", or progressive disclosure
+- Prioritize information for small screens
+- Hide advanced or secondary data by default
+
+Color & Visual Noise:
+
+- Limit accent colors
+- Avoid excessive borders
+- Prefer whitespace over lines
+- Backgrounds should remain neutral and calm
+
+Component Strategy:
+
+- Prefer cards over flat lists
+- Use consistent padding inside components
+- Avoid deeply nested UI on mobile
+- Ensure components breathe visually
+
+SEO & Performance:
+
+- Do not harm SEO
+- Preserve semantic HTML
+- Avoid layout shift
+- Keep components lightweight
+
+When modifying UI:
+
+- Explain WHY a change improves mobile UX
+- Make minimal but impactful changes
+- Do not introduce unnecessary dependencies
+- Respect existing Tailwind config and design tokens
+
+When unsure:
+
+- Ask a clarifying question BEFORE writing code
+
+Assume:
+
+- Production-ready quality
+- Real users (technicians) using the app daily
+- Trust and comfort matter more than feature density
