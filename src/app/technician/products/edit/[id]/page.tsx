@@ -328,7 +328,7 @@ export default function EditProductPage() {
                 onClick={() =>
                   setForm((f) => ({
                     ...f,
-                    deviceCategory: cat as DeviceCategory,
+                    deviceCategory: cat,
                     // Only clear brand/model if category is being CHANGED
                     ...(f.deviceCategory !== cat
                       ? {
