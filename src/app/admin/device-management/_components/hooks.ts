@@ -554,7 +554,7 @@ export function useDeviceHierarchy() {
     }, 4000);
   }, []);
 
-  const ensureAuthHeaders = () => {
+  const ensureAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem("token");
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
