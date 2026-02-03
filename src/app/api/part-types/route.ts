@@ -9,7 +9,10 @@ export async function GET() {
     await connectDB();
 
     // Fetch from unified categories collection
-    const categories = await Category.find({ isActive: true })
+    const categories = await Category.find({
+      isActive: true,
+      $or: [{ deviceId: { $exists: false } }, { deviceId: null }],
+    })
       .sort({ order: 1, createdAt: 1 })
       .select('name icon slug')
       .lean();

@@ -4,6 +4,8 @@ export interface IModel {
   name: string;
   modelNumber?: string;
   releaseYear?: number;
+  isActive?: boolean;
+  slug?: string;
 }
 
 export interface ICategoryBrand extends Document {
@@ -19,8 +21,10 @@ export interface ICategoryBrand extends Document {
 
 const ModelSchema = new Schema<IModel>({
   name: { type: String, required: true },
+  slug: { type: String, lowercase: true },
   modelNumber: { type: String },
   releaseYear: { type: Number },
+  isActive: { type: Boolean, default: true },
 }, { _id: false });
 
 const CategoryBrandSchema = new Schema<ICategoryBrand>({

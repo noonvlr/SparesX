@@ -1,30 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/connect';
-import { CategoryBrand } from '@/lib/models/CategoryBrand';
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db/connect";
+import { CategoryBrand } from "@/lib/models/CategoryBrand";
 
-// Get all mobile brands (with optional search)
 export async function GET(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const search = searchParams.get('search');
-    const includeModels = searchParams.get('includeModels') !== 'false';
+    const { searchParams } = new URL(req.url);
+    const includeModels = searchParams.get("includeModels") !== "false";
 
     await connectDB();
 
-    let query: any = { category: 'mobile', isActive: true };
-    
-    if (search) {
-      query.name = { $regex: search, $options: 'i' };
-    }
-
-    const brands = await CategoryBrand.find(query)
-      .select(includeModels ? 'name slug models' : 'name slug')
-      .sort({ name: 1 });
+    const brands = await CategoryBrand.find({ isActive: true })
+      .select(includeModels ? "name slug logo models" : "name slug logo")
+      .sort({ name: 1 })
+      .lean();
 
     return NextResponse.json({ brands }, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     return NextResponse.json(
-      { message: 'Failed to fetch brands' },
+      { error: error.message || "Failed to fetch brands" },
       { status: 500 }
     );
   }

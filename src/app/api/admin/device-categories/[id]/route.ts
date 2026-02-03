@@ -1,5 +1,6 @@
 import { CategoryBrand } from "@/lib/models/CategoryBrand";
 import { connectDB } from "@/lib/db/connect";
+import DeviceType from "@/lib/models/DeviceType";
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 
@@ -44,9 +45,18 @@ export async function PUT(
     const { category, name, slug, logo, models, isActive } = body;
 
     // Validation
-    if (!category || !["mobile", "laptop", "desktop"].includes(category)) {
+    if (!category) {
       return NextResponse.json(
-        { error: "Invalid category" },
+        { error: "Category is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate category exists in DeviceType collection
+    const deviceType = await DeviceType.findOne({ slug: category });
+    if (!deviceType) {
+      return NextResponse.json(
+        { error: "Invalid category. Device type not found." },
         { status: 400 }
       );
     }

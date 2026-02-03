@@ -25,9 +25,28 @@ export async function PUT(
 
     await connectDB();
 
+    const existingCategory = await Category.findById(id);
+    if (!existingCategory) {
+      return NextResponse.json(
+        { error: "Category not found" },
+        { status: 404 }
+      );
+    }
+
+    if (existingCategory.deviceId) {
+      return NextResponse.json(
+        { error: "Device-scoped categories are managed in device management" },
+        { status: 400 }
+      );
+    }
+
     // Check if new slug conflicts with another category
     if (slug) {
-      const existing = await Category.findOne({ slug, _id: { $ne: id } });
+      const existing = await Category.findOne({
+        slug,
+        _id: { $ne: id },
+        $or: [{ deviceId: { $exists: false } }, { deviceId: null }],
+      });
       if (existing) {
         return NextResponse.json(
           { error: "Category with this slug already exists" },
@@ -85,14 +104,22 @@ export async function DELETE(
 
     await connectDB();
 
-    const category = await Category.findByIdAndDelete(id);
-
+    const category = await Category.findById(id);
     if (!category) {
       return NextResponse.json(
         { error: "Category not found" },
         { status: 404 }
       );
     }
+
+    if (category.deviceId) {
+      return NextResponse.json(
+        { error: "Device-scoped categories are managed in device management" },
+        { status: 400 }
+      );
+    }
+
+    await Category.findByIdAndDelete(id);
 
     return NextResponse.json(
       { message: "Category deleted successfully" },

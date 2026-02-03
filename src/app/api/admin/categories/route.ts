@@ -17,7 +17,9 @@ export async function GET(req: NextRequest) {
     }
 
     await connectDB();
-    const categories = await Category.find().sort({ order: 1, name: 1 });
+    const categories = await Category.find({
+      $or: [{ deviceId: { $exists: false } }, { deviceId: null }],
+    }).sort({ order: 1, name: 1 });
 
     return NextResponse.json({ categories }, { status: 200 });
   } catch (error: any) {
@@ -54,7 +56,10 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     // Check if slug already exists
-    const existing = await Category.findOne({ slug });
+    const existing = await Category.findOne({
+      slug,
+      $or: [{ deviceId: { $exists: false } }, { deviceId: null }],
+    });
     if (existing) {
       return NextResponse.json(
         { error: "Category with this slug already exists" },

@@ -7,7 +7,10 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB();
     
-    const categories = await Category.find({ isActive: true })
+    const categories = await Category.find({
+      isActive: true,
+      $or: [{ deviceId: { $exists: false } }, { deviceId: null }],
+    })
       .sort({ order: 1, name: 1 })
       .select("name icon slug description order");
 

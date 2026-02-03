@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/connect';
-import { MobileBrand } from '@/lib/models/MobileBrand';
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db/connect";
+import { MobileBrand } from "@/lib/models/MobileBrand";
 
 // Get models for a specific brand
 export async function GET(
@@ -10,22 +10,18 @@ export async function GET(
   try {
     const { slug } = await params;
     const searchParams = req.nextUrl.searchParams;
-    const search = searchParams.get('search');
+    const search = searchParams.get("search");
 
     await connectDB();
 
     const brand = await MobileBrand.findOne({ slug, isActive: true });
-    
+
     if (!brand) {
-      return NextResponse.json(
-        { message: 'Brand not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ message: "Brand not found" }, { status: 404 });
     }
 
     let models = brand.models;
 
-    // Filter models by search query
     if (search) {
       const searchLower = search.toLowerCase();
       models = models.filter(
@@ -35,14 +31,17 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ 
-      brand: brand.name,
-      slug: brand.slug,
-      models 
-    }, { status: 200 });
+    return NextResponse.json(
+      {
+        brand: brand.name,
+        slug: brand.slug,
+        models,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json(
-      { message: 'Failed to fetch models' },
+      { message: "Failed to fetch models" },
       { status: 500 }
     );
   }

@@ -1,6 +1,7 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 export interface ICategory {
+  deviceId?: Types.ObjectId;
   name: string;
   icon: string;
   slug: string;
@@ -13,6 +14,12 @@ export interface ICategory {
 
 const CategorySchema = new mongoose.Schema<ICategory>(
   {
+    deviceId: {
+      type: Schema.Types.ObjectId,
+      ref: "DeviceType",
+      index: true,
+      required: false,
+    },
     name: {
       type: String,
       required: true,
@@ -45,6 +52,8 @@ const CategorySchema = new mongoose.Schema<ICategory>(
   },
   { timestamps: true }
 );
+
+CategorySchema.index({ deviceId: 1, slug: 1 });
 
 const Category =
   mongoose.models.Category ||
