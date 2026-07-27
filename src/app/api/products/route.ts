@@ -6,6 +6,48 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** Strip brand / marketing prefixes so "Galaxy S24 Ultra" ≈ "S24 Ultra". */
+function normalizeModelTokens(deviceModel: string, brand?: string | null) {
+  let normalized = deviceModel.trim();
+
+  if (brand) {
+    normalized = normalized.replace(
+      new RegExp(`^${escapeRegex(brand)}\\s+`, "i"),
+      "",
+    );
+  }
+
+  normalized = normalized.replace(
+    /^(galaxy|iphone|ipad|pixel|redmi|poco|moto|nokia|oneplus|realme|oppo|vivo)\s+/i,
+    "",
+  );
+
+  return normalized
+    .split(/[\s\-_/]+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2);
+}
+
+function buildModelFilter(deviceModel: string, brand?: string | null) {
+  const tokens = normalizeModelTokens(deviceModel, brand);
+  const fields = ["deviceModel", "name", "modelNumber"] as const;
+
+  const fieldMatch = (pattern: string) => ({
+    $or: fields.map((field) => ({
+      [field]: { $regex: pattern, $options: "i" },
+    })),
+  });
+
+  // Prefer token match so catalog "Galaxy S24 Ultra" hits product "S24 Ultra"
+  if (tokens.length > 0) {
+    return {
+      $and: tokens.map((token) => fieldMatch(escapeRegex(token))),
+    };
+  }
+
+  return fieldMatch(escapeRegex(deviceModel));
+}
+
 // Public: List products with search, filters, pagination
 export async function GET(req: NextRequest) {
   try {
@@ -31,7 +73,6 @@ export async function GET(req: NextRequest) {
     if (deviceCategory) {
       query.deviceCategory = deviceCategory.toLowerCase();
     } else if (category) {
-      // Legacy ?category= maps to deviceCategory or old category field
       andClauses.push({
         $or: [
           { deviceCategory: category.toLowerCase() },
@@ -48,10 +89,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (deviceModel) {
-      query.deviceModel = {
-        $regex: escapeRegex(deviceModel),
-        $options: "i",
-      };
+      andClauses.push(buildModelFilter(deviceModel, brand));
     }
 
     if (partType) query.partType = partType;
