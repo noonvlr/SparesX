@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
-import { CategoryBrand } from "@/lib/models/CategoryBrand";
+import { CategoryBrand, IModel } from "@/lib/models/CategoryBrand";
 
 // Get models for a specific brand (from CategoryBrand collection)
 export async function GET(
@@ -29,7 +29,7 @@ export async function GET(
 
     if (search) {
       const searchLower = search.toLowerCase();
-      models = models.filter((model) => {
+      models = models.filter((model: IModel) => {
         const nameMatch = model.name?.toLowerCase().includes(searchLower);
         const numberMatch = model.modelNumber
           ?.toLowerCase()
