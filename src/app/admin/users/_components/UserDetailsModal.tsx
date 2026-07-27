@@ -38,6 +38,7 @@ export default function UserDetailsModal({
     whatsappNumber: user.whatsappNumber,
     profilePicture: user.profilePicture || "",
     isBlocked: user.isBlocked,
+    role: user.role,
   });
 
   const handleChange = (
@@ -138,9 +139,18 @@ export default function UserDetailsModal({
     setSuccess("");
 
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Not authenticated");
+        setLoading(false);
+        return;
+      }
       const response = await fetch(`/api/admin/users/${user._id}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(editData),
       });
 
@@ -234,7 +244,7 @@ export default function UserDetailsModal({
                   </p>
                 </div>
 
-                {/* Role (Mandatory - Cannot Edit) */}
+                {/* Role */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <label className="text-xs font-semibold text-gray-500 uppercase">
                     Role
@@ -243,7 +253,7 @@ export default function UserDetailsModal({
                     {user.role}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    🔒 Cannot be edited
+                    Editable in edit mode
                   </p>
                 </div>
 
@@ -593,6 +603,22 @@ export default function UserDetailsModal({
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Role
+                  </label>
+                  <select
+                    name="role"
+                    value={editData.role}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="technician">Technician</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
 
                 {/* Block Status */}

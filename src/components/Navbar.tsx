@@ -211,6 +211,12 @@ export default function Navbar() {
                     Products
                   </Link>
                   <Link
+                    href="/admin/requests"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Requests
+                  </Link>
+                  <Link
                     href="/admin/technicians"
                     className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
                   >
@@ -466,6 +472,34 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dashboard
+              </Link>
+              <Link
+                href="/admin/products"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Products
+              </Link>
+              <Link
+                href="/admin/requests"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Requests
+              </Link>
+              <Link
+                href="/admin/users"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Users
+              </Link>
+              <Link
+                href="/admin/device-management"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Device Management
               </Link>
               <Link
                 href="/admin/settings"

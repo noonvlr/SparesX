@@ -20,6 +20,8 @@ export interface IProduct extends Document {
   priceNegotiable?: boolean;
   images: string[];
   status: ProductStatus;
+  /** Pin on homepage featured section when approved */
+  featured?: boolean;
   technician: Types.ObjectId;
   // SEO and searchability
   slug?: string;
@@ -54,7 +56,8 @@ const ProductSchema: Schema<IProduct> = new Schema({
   condition: { type: String, enum: ['new', 'used'], required: true },
   priceNegotiable: { type: Boolean, default: false },
   images: [{ type: String }],
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved', index: true },
+  featured: { type: Boolean, default: false, index: true },
   technician: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   // Additional fields
   slug: { type: String, unique: true, sparse: true },

@@ -1,25 +1,8 @@
-import { CategoryBrand, ICategoryBrand } from "@/lib/models/CategoryBrand";
+import { CategoryBrand } from "@/lib/models/CategoryBrand";
 import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
 import { NextRequest, NextResponse } from "next/server";
-
-// Helper to verify admin role
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const token = authHeader?.split(" ")[1];
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    // For now, basic token validation - in production, verify JWT properly
-    // This is a simplified check - ideally use a JWT verification library
-    return { authenticated: true }; // Simplified for this example
-  } catch {
-    return null;
-  }
-}
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -30,7 +13,6 @@ export async function GET(req: NextRequest) {
 
     let query: any = {};
     if (category) {
-      // Validate category exists in DeviceType collection
       const deviceType = await DeviceType.findOne({ slug: category });
       if (deviceType) {
         query.category = category;
@@ -39,17 +21,11 @@ export async function GET(req: NextRequest) {
 
     const brands = await CategoryBrand.find(query).sort({ name: 1 });
 
-    console.log(`[API] device-categories: found ${brands.length} brands`, {
-      query,
-      sample: brands[0]?.name
-    });
-
     return NextResponse.json(
       { brands, count: brands.length },
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('[API] device-categories error:', error);
     return NextResponse.json(
       { error: error.message || "Failed to fetch brands" },
       { status: 500 }
@@ -59,18 +35,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify admin
-    const admin = await verifyAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
     await connectDB();
 
     const body = await req.json();
     const { category, name, slug, logo, models, isActive } = body;
 
-    // Validation
     if (!category) {
       return NextResponse.json(
         { error: "Category is required" },

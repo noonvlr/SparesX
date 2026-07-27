@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     await connectDB();
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
         success: true,
         deviceTypes,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -23,24 +24,20 @@ export async function GET(req: NextRequest) {
         success: false,
         error: error.message || "Failed to fetch device types",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
-    // Verify admin token (basic check - in production use proper JWT verification)
     const body = await req.json();
 
     await connectDB();
 
-    // Check if device type already exists
     const existing = await DeviceType.findOne({
       $or: [{ name: body.name }, { slug: body.slug }],
     });
@@ -48,7 +45,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       return NextResponse.json(
         { error: "Device type with this name or slug already exists" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -68,7 +65,7 @@ export async function POST(req: NextRequest) {
         success: true,
         deviceType,
       },
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -76,7 +73,7 @@ export async function POST(req: NextRequest) {
         success: false,
         error: error.message || "Failed to create device type",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

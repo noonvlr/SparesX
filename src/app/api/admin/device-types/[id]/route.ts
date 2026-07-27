@@ -2,30 +2,31 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
 import mongoose from "mongoose";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export const dynamic = "force-dynamic";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const token = req.headers.get("authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
     const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid device type ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid device type ID" },
+        { status: 400 },
+      );
     }
 
     const body = await req.json();
 
     await connectDB();
 
-    // Check if slug is already taken by another device type
     if (body.slug) {
       const existing = await DeviceType.findOne({
         _id: { $ne: id },
@@ -35,7 +36,7 @@ export async function PUT(
       if (existing) {
         return NextResponse.json(
           { error: "Slug already taken" },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -52,13 +53,13 @@ export async function PUT(
           order: body.order || 0,
         },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!deviceType) {
       return NextResponse.json(
         { error: "Device type not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -67,7 +68,7 @@ export async function PUT(
         success: true,
         deviceType,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -75,25 +76,26 @@ export async function PUT(
         success: false,
         error: error.message || "Failed to update device type",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const token = req.headers.get("authorization")?.replace("Bearer ", "");
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
     const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: "Invalid device type ID" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid device type ID" },
+        { status: 400 },
+      );
     }
 
     await connectDB();
@@ -103,7 +105,7 @@ export async function DELETE(
     if (!deviceType) {
       return NextResponse.json(
         { error: "Device type not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -112,7 +114,7 @@ export async function DELETE(
         success: true,
         message: "Device type deleted successfully",
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -120,7 +122,7 @@ export async function DELETE(
         success: false,
         error: error.message || "Failed to delete device type",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

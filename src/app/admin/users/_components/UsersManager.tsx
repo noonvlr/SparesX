@@ -17,10 +17,27 @@ export default function UsersManager() {
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [createForm, setCreateForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    mobile: "",
+    whatsappNumber: "",
+    address: "",
+    pinCode: "",
+    city: "",
+    state: "",
+    role: "technician" as "technician" | "admin",
+  });
 
   const fetchUsers = async (query?: string, pageNum: number = 1) => {
     try {
       setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: "20",
@@ -29,7 +46,9 @@ export default function UsersManager() {
         params.append("q", query);
       }
 
-      const response = await fetch(`/api/admin/users?${params}`);
+      const response = await fetch(`/api/admin/users?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
 
       if (response.ok) {
@@ -71,6 +90,50 @@ export default function UsersManager() {
     setSelectedUser(updatedUser);
   };
 
+  async function handleCreateUser(e: React.FormEvent) {
+    e.preventDefault();
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setCreating(true);
+    setCreateError("");
+    try {
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...createForm,
+          countryCode: "+91",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setCreateError(data.message || "Failed to create user");
+        return;
+      }
+      setShowCreate(false);
+      setCreateForm({
+        name: "",
+        email: "",
+        password: "",
+        mobile: "",
+        whatsappNumber: "",
+        address: "",
+        pinCode: "",
+        city: "",
+        state: "",
+        role: "technician",
+      });
+      fetchUsers(searchQuery, 1);
+    } catch {
+      setCreateError("Failed to create user");
+    } finally {
+      setCreating(false);
+    }
+  }
+
   const filteredUsers = users.filter((user) => {
     if (statusFilter === "active" && user.isBlocked) return false;
     if (statusFilter === "blocked" && !user.isBlocked) return false;
@@ -88,11 +151,20 @@ export default function UsersManager() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
       {/* Header Section */}
-      <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-          User Management
-        </h1>
-        <p className="text-gray-600">Manage and monitor all system users</p>
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            User Management
+          </h1>
+          <p className="text-gray-600">Manage and monitor all system users</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowCreate(true)}
+          className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
+        >
+          + Create user
+        </button>
       </div>
 
       {/* Search & Filters Card */}
@@ -327,6 +399,78 @@ export default function UsersManager() {
           onClose={handleCloseModal}
           onUpdate={handleUserUpdate}
         />
+      )}
+
+      {showCreate && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <form
+            onSubmit={handleCreateUser}
+            className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-3"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-bold">Create user</h2>
+              <button type="button" onClick={() => setShowCreate(false)}>
+                ✕
+              </button>
+            </div>
+            {createError && (
+              <p className="text-sm text-red-600">{createError}</p>
+            )}
+            {(
+              [
+                ["name", "Full name"],
+                ["email", "Email"],
+                ["password", "Temp password"],
+                ["mobile", "Mobile"],
+                ["whatsappNumber", "WhatsApp"],
+                ["address", "Address"],
+                ["pinCode", "PIN code"],
+                ["city", "City"],
+                ["state", "State"],
+              ] as const
+            ).map(([key, label]) => (
+              <div key={key}>
+                <label className="block text-xs font-semibold text-gray-700 mb-1">
+                  {label}
+                </label>
+                <input
+                  type={key === "password" ? "password" : key === "email" ? "email" : "text"}
+                  value={createForm[key]}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+                  required
+                />
+              </div>
+            ))}
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">
+                Role
+              </label>
+              <select
+                value={createForm.role}
+                onChange={(e) =>
+                  setCreateForm((f) => ({
+                    ...f,
+                    role: e.target.value as "technician" | "admin",
+                  }))
+                }
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
+              >
+                <option value="technician">Technician</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={creating}
+              className="w-full py-2.5 rounded-xl bg-blue-600 text-white font-semibold disabled:opacity-60"
+            >
+              {creating ? "Creating..." : "Create account"}
+            </button>
+          </form>
+        </div>
       )}
     </div>
   );

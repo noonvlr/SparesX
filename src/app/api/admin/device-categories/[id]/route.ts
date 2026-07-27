@@ -3,34 +3,15 @@ import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
-
-// Helper to verify admin role
-async function verifyAdmin(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const token = authHeader?.split(" ")[1];
-
-  if (!token) {
-    return null;
-  }
-
-  try {
-    // For now, basic token validation - in production, verify JWT properly
-    return { authenticated: true }; // Simplified for this example
-  } catch {
-    return null;
-  }
-}
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify admin
-    const admin = await verifyAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
     const { id } = await params;
 
@@ -117,11 +98,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify admin
-    const admin = await verifyAdmin(req);
-    if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const admin = requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
     const { id } = await params;
 

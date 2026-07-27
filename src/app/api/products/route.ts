@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
     const products = await Product.find(query)
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ createdAt: -1 });
+      .sort({ featured: -1, createdAt: -1 });
 
     return NextResponse.json(
       { products, total, page, pages: Math.ceil(total / limit) },
