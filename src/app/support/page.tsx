@@ -42,6 +42,19 @@ export default function SupportPage() {
       });
       const data = await res.json();
       setTickets(data.tickets || []);
+
+      // Mark admin replies as read once the user sees their inbox
+      const hasUnread = (data.tickets || []).some((t: any) => t.userUnread);
+      if (hasUnread) {
+        await fetch("/api/support", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({}),
+        });
+      }
     } catch {
       setTickets([]);
     } finally {
@@ -229,40 +242,76 @@ export default function SupportPage() {
                 <p className="text-sm text-gray-500">No requests yet.</p>
               ) : (
                 <div className="space-y-3 max-h-[520px] overflow-y-auto pr-1">
-                  {tickets.map((ticket) => (
-                    <article
-                      key={ticket._id}
-                      className="rounded-xl border border-gray-100 p-3 hover:border-blue-100 transition"
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <h3 className="font-semibold text-sm text-gray-900 line-clamp-2">
-                          {ticket.subject}
-                        </h3>
-                        <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize whitespace-nowrap ${STATUS_STYLE[ticket.status] || STATUS_STYLE.open}`}
-                        >
-                          {String(ticket.status).replace("_", " ")}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-2 capitalize">
-                        {String(ticket.type).replace("_", " ")} ·{" "}
-                        {new Date(ticket.createdAt).toLocaleDateString("en-IN")}
-                      </p>
-                      <p className="text-sm text-gray-600 line-clamp-3 mb-2">
-                        {ticket.message}
-                      </p>
-                      {ticket.adminReply && (
-                        <div className="rounded-lg bg-blue-50 border border-blue-100 p-2.5">
-                          <p className="text-[11px] font-semibold text-blue-700 mb-1">
-                            Admin reply
-                          </p>
-                          <p className="text-sm text-blue-900 whitespace-pre-wrap">
-                            {ticket.adminReply}
-                          </p>
+                  {tickets.map((ticket) => {
+                    const unread = Boolean(ticket.userUnread);
+                    return (
+                      <article
+                        key={ticket._id}
+                        className={`rounded-xl border p-3 transition ${
+                          unread
+                            ? "border-green-200 bg-emerald-50/50"
+                            : "border-gray-100 hover:border-blue-100"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <div className="flex items-start gap-2 min-w-0">
+                            {unread && (
+                              <span
+                                className="mt-1.5 w-2 h-2 rounded-full bg-green-500 flex-shrink-0"
+                                aria-label="New reply"
+                              />
+                            )}
+                            <h3
+                              className={`text-sm line-clamp-2 ${
+                                unread
+                                  ? "font-bold text-gray-900"
+                                  : "font-semibold text-gray-900"
+                              }`}
+                            >
+                              {ticket.subject}
+                            </h3>
+                          </div>
+                          <span
+                            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize whitespace-nowrap ${STATUS_STYLE[ticket.status] || STATUS_STYLE.open}`}
+                          >
+                            {String(ticket.status).replace("_", " ")}
+                          </span>
                         </div>
-                      )}
-                    </article>
-                  ))}
+                        <p className="text-xs text-gray-500 mb-2 capitalize">
+                          {unread ? "New reply · " : ""}
+                          {String(ticket.type).replace("_", " ")} ·{" "}
+                          {new Date(ticket.createdAt).toLocaleDateString("en-IN")}
+                        </p>
+                        <p className="text-sm text-gray-600 line-clamp-3 mb-2">
+                          {ticket.message}
+                        </p>
+                        {ticket.adminReply && (
+                          <div
+                            className={`rounded-lg border p-2.5 ${
+                              unread
+                                ? "bg-green-50 border-green-200"
+                                : "bg-blue-50 border-blue-100"
+                            }`}
+                          >
+                            <p
+                              className={`text-[11px] font-semibold mb-1 ${
+                                unread ? "text-green-700" : "text-blue-700"
+                              }`}
+                            >
+                              {unread ? "New admin reply" : "Admin reply"}
+                            </p>
+                            <p
+                              className={`text-sm whitespace-pre-wrap ${
+                                unread ? "text-green-900 font-medium" : "text-blue-900"
+                              }`}
+                            >
+                              {ticket.adminReply}
+                            </p>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </div>

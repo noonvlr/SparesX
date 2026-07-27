@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { SupportRequest } from "@/lib/models/SupportRequest";
-import { User } from "@/lib/models/User";
 import { verifyJwt } from "@/lib/auth/jwt";
-
-void User;
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,24 +15,14 @@ export async function GET(req: NextRequest) {
     }
 
     await connectDB();
-    const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status");
+    const unreadCount = await SupportRequest.countDocuments({
+      adminUnread: { $ne: false },
+    });
 
-    const query: Record<string, unknown> = {};
-    if (status && status !== "all") query.status = status;
-
-    const [tickets, unreadCount] = await Promise.all([
-      SupportRequest.find(query)
-        .populate("user", "name email profilePicture role")
-        .sort({ adminUnread: -1, createdAt: -1 })
-        .lean(),
-      SupportRequest.countDocuments({ adminUnread: { $ne: false } }),
-    ]);
-
-    return NextResponse.json({ tickets, unreadCount }, { status: 200 });
+    return NextResponse.json({ unreadCount }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { message: "Failed to fetch support tickets" },
+      { message: "Failed to fetch unread count", unreadCount: 0 },
       { status: 500 },
     );
   }

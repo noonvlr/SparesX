@@ -8,6 +8,7 @@ const STATUS_OPTIONS = [
   { value: "in_progress", label: "In progress" },
   { value: "resolved", label: "Resolved" },
   { value: "closed", label: "Closed" },
+  { value: "unread", label: "Unread" },
 ];
 
 const STATUS_STYLE: Record<string, string> = {
@@ -17,16 +18,24 @@ const STATUS_STYLE: Record<string, string> = {
   closed: "bg-gray-50 text-gray-600 border-gray-200",
 };
 
+function isUnread(ticket: any) {
+  return ticket.adminUnread !== false;
+}
+
 export default function AdminSupportPage() {
   const [tickets, setTickets] = useState<any[]>([]);
-  const [status, setStatus] = useState("open");
+  const [status, setStatus] = useState("all");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const [saving, setSaving] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const selected = tickets.find((t) => t._id === selectedId) || null;
+
+  const visibleTickets =
+    status === "unread" ? tickets.filter(isUnread) : tickets;
 
   const load = async (filter = status) => {
     const token = localStorage.getItem("token");
@@ -37,7 +46,8 @@ export default function AdminSupportPage() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/support?status=${filter}`, {
+      const apiStatus = filter === "unread" ? "all" : filter;
+      const res = await fetch(`/api/admin/support?status=${apiStatus}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -46,7 +56,14 @@ export default function AdminSupportPage() {
         return;
       }
       setTickets(data.tickets || []);
+      setUnreadCount(data.unreadCount || 0);
       setError("");
+      // Notify navbar to refresh badge
+      window.dispatchEvent(
+        new CustomEvent("support-unread-updated", {
+          detail: { unreadCount: data.unreadCount || 0 },
+        }),
+      );
     } catch {
       setError("Failed to load support tickets");
     } finally {
@@ -63,6 +80,52 @@ export default function AdminSupportPage() {
     if (selected) setReply(selected.adminReply || "");
   }, [selectedId]);
 
+  async function markAsRead(ticketId: string) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    const ticket = tickets.find((t) => t._id === ticketId);
+    if (!ticket || !isUnread(ticket)) return;
+
+    // Optimistic UI
+    setTickets((prev) =>
+      prev.map((t) =>
+        t._id === ticketId
+          ? { ...t, adminUnread: false, adminReadAt: new Date().toISOString() }
+          : t,
+      ),
+    );
+    setUnreadCount((c) => Math.max(0, c - 1));
+
+    try {
+      const res = await fetch(`/api/admin/support/${ticketId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ markRead: true }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const count = data.unreadCount ?? 0;
+        setUnreadCount(count);
+        window.dispatchEvent(
+          new CustomEvent("support-unread-updated", {
+            detail: { unreadCount: count },
+          }),
+        );
+      }
+    } catch {
+      // ignore; next load will sync
+    }
+  }
+
+  async function openTicket(ticketId: string) {
+    setSelectedId(ticketId);
+    await markAsRead(ticketId);
+  }
+
   async function updateTicket(nextStatus?: string) {
     if (!selected) return;
     const token = localStorage.getItem("token");
@@ -78,9 +141,19 @@ export default function AdminSupportPage() {
         body: JSON.stringify({
           status: nextStatus || selected.status,
           adminReply: reply,
+          markRead: true,
         }),
       });
       if (res.ok) {
+        const data = await res.json();
+        if (typeof data.unreadCount === "number") {
+          setUnreadCount(data.unreadCount);
+          window.dispatchEvent(
+            new CustomEvent("support-unread-updated", {
+              detail: { unreadCount: data.unreadCount },
+            }),
+          );
+        }
         await load();
       }
     } finally {
@@ -96,9 +169,16 @@ export default function AdminSupportPage() {
     <main className="max-w-6xl mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Support inbox</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-gray-900">Support inbox</h1>
+            {unreadCount > 0 && (
+              <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-2 rounded-full bg-green-500 text-white text-xs font-bold">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+          </div>
           <p className="text-gray-600 text-sm mt-1">
-            User bugs, change requests, and issues
+            Unread messages stay bold until you open them
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -114,6 +194,7 @@ export default function AdminSupportPage() {
               }`}
             >
               {opt.label}
+              {opt.value === "unread" && unreadCount > 0 ? ` (${unreadCount})` : ""}
             </button>
           ))}
         </div>
@@ -123,39 +204,65 @@ export default function AdminSupportPage() {
         <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {loading ? (
             <div className="p-6 text-sm text-gray-500">Loading...</div>
-          ) : tickets.length === 0 ? (
+          ) : visibleTickets.length === 0 ? (
             <div className="p-6 text-sm text-gray-500">No tickets in this view.</div>
           ) : (
             <ul className="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto">
-              {tickets.map((ticket) => (
-                <li key={ticket._id}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedId(ticket._id)}
-                    className={`w-full text-left p-4 hover:bg-blue-50/50 transition ${
-                      selectedId === ticket._id ? "bg-blue-50" : ""
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="font-semibold text-sm text-gray-900 line-clamp-2">
-                        {ticket.subject}
-                      </p>
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLE[ticket.status]}`}
-                      >
-                        {String(ticket.status).replace("_", " ")}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {ticket.name} · {ticket.email}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1 capitalize">
-                      {String(ticket.type).replace("_", " ")} ·{" "}
-                      {new Date(ticket.createdAt).toLocaleString("en-IN")}
-                    </p>
-                  </button>
-                </li>
-              ))}
+              {visibleTickets.map((ticket) => {
+                const unread = isUnread(ticket);
+                return (
+                  <li key={ticket._id}>
+                    <button
+                      type="button"
+                      onClick={() => openTicket(ticket._id)}
+                      className={`w-full text-left p-4 transition relative ${
+                        selectedId === ticket._id
+                          ? "bg-blue-50"
+                          : unread
+                            ? "bg-emerald-50/40 hover:bg-emerald-50/70"
+                            : "hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span
+                          className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+                            unread ? "bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" : "bg-transparent"
+                          }`}
+                          aria-hidden
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <p
+                              className={`text-sm line-clamp-2 ${
+                                unread
+                                  ? "font-bold text-gray-900"
+                                  : "font-medium text-gray-700"
+                              }`}
+                            >
+                              {ticket.subject}
+                            </p>
+                            <span
+                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLE[ticket.status]}`}
+                            >
+                              {String(ticket.status).replace("_", " ")}
+                            </span>
+                          </div>
+                          <p
+                            className={`text-xs ${unread ? "text-gray-700 font-medium" : "text-gray-500"}`}
+                          >
+                            {ticket.name} · {ticket.email}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1 capitalize">
+                            {unread ? "New · " : "Opened · "}
+                            {String(ticket.type).replace("_", " ")} ·{" "}
+                            {new Date(ticket.createdAt).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -163,12 +270,21 @@ export default function AdminSupportPage() {
         <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 min-h-[420px]">
           {!selected ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">
-              Select a ticket to reply
+              Select a ticket to open and reply
             </div>
           ) : (
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">{selected.subject}</h2>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {selected.subject}
+                  </h2>
+                  {!isUnread(selected) && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                      Read
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 mt-1">
                   From {selected.name} ({selected.email}) ·{" "}
                   <span className="capitalize">

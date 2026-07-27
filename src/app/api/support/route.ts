@@ -17,10 +17,12 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
     const tickets = await SupportRequest.find({ user: payload.id })
-      .sort({ createdAt: -1 })
+      .sort({ userUnread: -1, updatedAt: -1 })
       .lean();
 
-    return NextResponse.json({ tickets }, { status: 200 });
+    const unreadCount = tickets.filter((t: any) => t.userUnread).length;
+
+    return NextResponse.json({ tickets, unreadCount }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to fetch support requests" },
@@ -65,12 +67,52 @@ export async function POST(req: NextRequest) {
       subject: subject.trim(),
       message: message.trim(),
       status: "open",
+      adminUnread: true,
+      userUnread: false,
     });
 
     return NextResponse.json({ ticket }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to submit support request" },
+      { status: 500 },
+    );
+  }
+}
+
+/** Mark the current user's tickets as read (after viewing admin replies). */
+export async function PATCH(req: NextRequest) {
+  try {
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    const payload = verifyJwt(authHeader.split(" ")[1]);
+    if (!payload?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const ticketId = body?.ticketId as string | undefined;
+
+    await connectDB();
+
+    if (ticketId) {
+      await SupportRequest.updateOne(
+        { _id: ticketId, user: payload.id },
+        { $set: { userUnread: false } },
+      );
+    } else {
+      await SupportRequest.updateMany(
+        { user: payload.id, userUnread: true },
+        { $set: { userUnread: false } },
+      );
+    }
+
+    return NextResponse.json({ ok: true }, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Failed to mark as read" },
       { status: 500 },
     );
   }

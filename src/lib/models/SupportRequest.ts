@@ -18,6 +18,11 @@ export interface ISupportRequest extends Document {
   message: string;
   status: SupportStatus;
   adminReply?: string;
+  /** Unread for admin (new ticket / new user activity) */
+  adminUnread: boolean;
+  adminReadAt?: Date;
+  /** Unread for the user (new admin reply) */
+  userUnread: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +47,9 @@ const SupportRequestSchema: Schema<ISupportRequest> = new Schema(
       index: true,
     },
     adminReply: { type: String, trim: true, maxlength: 4000 },
+    adminUnread: { type: Boolean, default: true, index: true },
+    adminReadAt: { type: Date },
+    userUnread: { type: Boolean, default: false, index: true },
   },
   { timestamps: true },
 );

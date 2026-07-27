@@ -10,6 +10,7 @@ export default function Navbar() {
   const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [supportUnread, setSupportUnread] = useState(0);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -72,15 +73,65 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [profileOpen]);
 
+  // Admin support unread badge — poll + listen for inbox updates
+  useEffect(() => {
+    if (!isAuthenticated || userRole !== "admin") {
+      setSupportUnread(0);
+      return;
+    }
+
+    const fetchUnread = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/admin/support/unread-count", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setSupportUnread(data.unreadCount || 0);
+      } catch {
+        // ignore transient errors
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+
+    const onUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail?.unreadCount === "number") {
+        setSupportUnread(detail.unreadCount);
+      } else {
+        fetchUnread();
+      }
+    };
+    window.addEventListener("support-unread-updated", onUpdated);
+    window.addEventListener("focus", fetchUnread);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("support-unread-updated", onUpdated);
+      window.removeEventListener("focus", fetchUnread);
+    };
+  }, [isAuthenticated, userRole, pathname]);
+
   function handleLogout() {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName(null);
     setProfilePicture(null);
+    setSupportUnread(0);
     setProfileOpen(false);
     router.push("/");
   }
+
+  const UnreadBadge = ({ count }: { count: number }) =>
+    count > 0 ? (
+      <span className="inline-flex items-center justify-center min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-green-500 text-white text-[10px] font-bold leading-none">
+        {count > 99 ? "99+" : count}
+      </span>
+    ) : null;
 
   const initial = (userName || "U").charAt(0).toUpperCase();
 
@@ -173,9 +224,10 @@ export default function Navbar() {
                   </Link>
                   <Link
                     href="/admin/support"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                    className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
                   >
                     Support Inbox
+                    <UnreadBadge count={supportUnread} />
                   </Link>
                 </>
               )}
@@ -424,10 +476,11 @@ export default function Navbar() {
               </Link>
               <Link
                 href="/admin/support"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                className="flex items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Support Inbox
+                <span>Support Inbox</span>
+                <UnreadBadge count={supportUnread} />
               </Link>
             </div>
           )}

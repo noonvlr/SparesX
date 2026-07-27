@@ -18,7 +18,8 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const { status, adminReply } = await req.json();
+    const body = await req.json();
+    const { status, adminReply, markRead } = body;
 
     await connectDB();
     const ticket = await SupportRequest.findById(id);
@@ -26,11 +27,30 @@ export async function PATCH(
       return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
     }
 
+    if (markRead) {
+      ticket.adminUnread = false;
+      ticket.adminReadAt = new Date();
+    }
+
     if (status) ticket.status = status;
-    if (typeof adminReply === "string") ticket.adminReply = adminReply.trim();
+
+    if (typeof adminReply === "string") {
+      const trimmed = adminReply.trim();
+      const replyChanged = trimmed !== (ticket.adminReply || "");
+      ticket.adminReply = trimmed;
+      // New/changed admin reply becomes unread for the user
+      if (replyChanged && trimmed) {
+        ticket.userUnread = true;
+      }
+    }
+
     await ticket.save();
 
-    return NextResponse.json({ ticket }, { status: 200 });
+    const unreadCount = await SupportRequest.countDocuments({
+      adminUnread: { $ne: false },
+    });
+
+    return NextResponse.json({ ticket, unreadCount }, { status: 200 });
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to update ticket" },
