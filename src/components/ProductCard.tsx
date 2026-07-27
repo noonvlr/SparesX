@@ -130,6 +130,13 @@ export default function ProductCard({
       >
         <Link href={`/product/${product._id}`} className="block">
           <div className="relative w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
+            {product.priceNegotiable && (
+              <div className="absolute top-0 right-0 z-10 overflow-hidden w-24 h-24 pointer-events-none">
+                <div className="absolute top-3 -right-7 w-28 rotate-45 bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold tracking-wide text-center py-1 shadow-md">
+                  Negotiable
+                </div>
+              </div>
+            )}
             {images.length > 0 ? (
               <>
                 <img
@@ -195,11 +202,6 @@ export default function ProductCard({
               <span className="text-lg sm:text-xl font-bold text-blue-600">
                 ₹{product.price?.toLocaleString()}
               </span>
-              {product.priceNegotiable && (
-                <span className="text-[10px] sm:text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded">
-                  Negotiable
-                </span>
-              )}
             </div>
 
             <button

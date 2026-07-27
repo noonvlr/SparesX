@@ -191,6 +191,13 @@ export default function ProductDetail({
           {/* Gallery */}
           <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
             <div className="relative aspect-square rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 overflow-hidden flex items-center justify-center">
+              {product.priceNegotiable && (
+                <div className="absolute top-0 right-0 z-10 overflow-hidden w-28 h-28 pointer-events-none">
+                  <div className="absolute top-4 -right-8 w-32 rotate-45 bg-emerald-500 text-white text-xs font-bold tracking-wide text-center py-1.5 shadow-md">
+                    Negotiable
+                  </div>
+                </div>
+              )}
               {selectedImage ? (
                 <img
                   src={selectedImage}
@@ -270,11 +277,6 @@ export default function ProductDetail({
                   <p className="text-3xl sm:text-4xl font-bold">
                     ₹{product.price?.toLocaleString()}
                   </p>
-                  {product.priceNegotiable && (
-                    <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded-md">
-                      Negotiable
-                    </span>
-                  )}
                 </div>
               </div>
 
