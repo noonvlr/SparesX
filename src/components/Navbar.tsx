@@ -72,6 +72,12 @@ export default function Navbar() {
               >
                 Products
               </Link>
+              <Link
+                href="/requests"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+              >
+                Requests
+              </Link>
               {isAuthenticated && userRole === "technician" && (
                 <>
                   <Link
@@ -204,6 +210,13 @@ export default function Navbar() {
             onClick={() => setMobileMenuOpen(false)}
           >
             Products
+          </Link>
+          <Link
+            href="/requests"
+            className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Requests
           </Link>
           {isAuthenticated && userRole === "technician" && (
             <>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import DashboardStats from "./_components/DashboardStats";
 
 export const metadata: Metadata = {
   title: "Technician Dashboard - SparesX",
@@ -122,73 +123,7 @@ export default function TechnicianDashboard() {
           </Link>
         </div>
 
-        {/* Stats Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8 mb-6 md:mb-8">
-          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">
-            Your Statistics
-          </h2>
-          <div className="grid grid-cols-3 gap-3 md:gap-4">
-            {/* Total Products */}
-            <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-blue-700">Listings</p>
-                <div className="p-1.5 bg-blue-200 rounded-lg">
-                  <svg
-                    className="w-4 h-4 text-blue-700"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 6H6.28l-.31-1.243A1 1 0 005 4H3z" />
-                  </svg>
-                </div>
-              </div>
-              <p className="text-2xl md:text-3xl font-bold text-blue-900">0</p>
-            </div>
-
-            {/* Active Listings */}
-            <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100 border border-green-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-green-700">Active</p>
-                <div className="p-1.5 bg-green-200 rounded-lg">
-                  <svg
-                    className="w-4 h-4 text-green-700"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-              <p className="text-2xl md:text-3xl font-bold text-green-900">0</p>
-            </div>
-
-            {/* Pending Requests */}
-            <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-purple-700">
-                  Enquiries
-                </p>
-                <div className="p-1.5 bg-purple-200 rounded-lg">
-                  <svg
-                    className="w-4 h-4 text-purple-700"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                  </svg>
-                </div>
-              </div>
-              <p className="text-2xl md:text-3xl font-bold text-purple-900">
-                0
-              </p>
-            </div>
-          </div>
-        </div>
+        <DashboardStats />
 
         {/* Quick Tips - Hidden on mobile, visible on md+ */}
         <div className="hidden md:block bg-white rounded-2xl shadow-lg border border-gray-200 p-8">

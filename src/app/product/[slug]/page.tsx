@@ -95,7 +95,7 @@ export default async function ProductSlugPage({
 
     if (!res.ok) return notFound();
 
-    const { product } = await res.json();
+    const { product, similarProducts = [] } = await res.json();
 
     // JSON-LD structured data for product
     const productSchema = {
@@ -119,7 +119,7 @@ export default async function ProductSlugPage({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
         />
-        <ProductDetail product={product} />
+        <ProductDetail product={product} similarProducts={similarProducts} />
       </>
     );
   } catch (error) {

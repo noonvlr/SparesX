@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 
-export default function RequestForm() {
+export default function RequestForm({
+  onSubmitted,
+}: {
+  onSubmitted?: () => void;
+}) {
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -39,6 +43,7 @@ export default function RequestForm() {
         model: "",
         description: "",
       });
+      onSubmitted?.();
     } else {
       const data = await res.json();
       setError(data.message || "Failed to submit request.");
