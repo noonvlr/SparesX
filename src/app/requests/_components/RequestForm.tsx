@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import ModelSelector from "@/components/ModelSelector";
 
 interface Brand {
   _id: string;
@@ -52,7 +53,6 @@ export default function RequestForm({
   const [modelSearch, setModelSearch] = useState("");
   const [partTypeSearch, setPartTypeSearch] = useState("");
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showPartTypeDropdown, setShowPartTypeDropdown] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -139,11 +139,6 @@ export default function RequestForm({
   const filteredBrands = brands.filter((b) =>
     b.name.toLowerCase().includes(brandSearch.toLowerCase()),
   );
-  const filteredModels = models.filter(
-    (m) =>
-      m.name.toLowerCase().includes(modelSearch.toLowerCase()) ||
-      (m.modelNumber || "").toLowerCase().includes(modelSearch.toLowerCase()),
-  );
   const filteredPartTypes = partTypes.filter((p) =>
     p.label.toLowerCase().includes(partTypeSearch.toLowerCase()),
   );
@@ -163,7 +158,6 @@ export default function RequestForm({
   const handleModelSelect = useCallback((model: Model) => {
     setForm((f) => ({ ...f, deviceModel: model.name }));
     setModelSearch(model.name);
-    setShowModelDropdown(false);
   }, []);
 
   const handlePartTypeSelect = useCallback((part: Option) => {
@@ -425,43 +419,18 @@ export default function RequestForm({
           </div>
 
           {form.brand && (
-            <div className="relative animate-in fade-in duration-200">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">Model *</label>
-              <input
-                type="text"
-                placeholder="Search model..."
-                value={modelSearch}
-                onChange={(e) => {
-                  setModelSearch(e.target.value);
-                  setShowModelDropdown(true);
-                }}
-                onFocus={() => setShowModelDropdown(true)}
-                onBlur={() => setTimeout(() => setShowModelDropdown(false), 300)}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            <div className="animate-in fade-in duration-200">
+              <ModelSelector
+                models={models}
+                value={form.deviceModel}
+                searchValue={modelSearch}
+                onSearchChange={setModelSearch}
+                onSelect={handleModelSelect}
+                brandSlug={form.brandSlug}
+                category={form.deviceCategory}
+                onModelsUpdated={setModels}
                 required
               />
-              {form.deviceModel && (
-                <div className="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                  ✓ {form.deviceModel}
-                </div>
-              )}
-              {showModelDropdown && (
-                <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-xl">
-                  {filteredModels.map((model, idx) => (
-                    <button
-                      key={`${model.name}-${idx}`}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleModelSelect(model);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-blue-50 font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
-                    >
-                      {model.name}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>

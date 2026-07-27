@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { CategoryBrand, IModel } from "@/lib/models/CategoryBrand";
+import { verifyJwt } from "@/lib/auth/jwt";
+import { slugifyModelName } from "@/lib/utils/modelSuggest";
+
+function normalizeKey(name: string, modelNumber?: string) {
+  return `${name}::${modelNumber || ""}`.toLowerCase().trim();
+}
 
 // Get models for a specific brand (from CategoryBrand collection)
 export async function GET(
@@ -29,12 +35,11 @@ export async function GET(
       return NextResponse.json({ message: "Brand not found" }, { status: 404 });
     }
 
-    // Merge models across matching category docs (same brand slug)
     const seen = new Set<string>();
     let models: IModel[] = [];
     for (const brand of brands) {
       for (const model of brand.models ?? []) {
-        const key = `${model.name}::${model.modelNumber || ""}`.toLowerCase();
+        const key = normalizeKey(model.name, model.modelNumber);
         if (seen.has(key)) continue;
         seen.add(key);
         models.push(model);
@@ -66,6 +71,94 @@ export async function GET(
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to fetch models" },
+      { status: 500 },
+    );
+  }
+}
+
+/** Add a user-entered model to the brand catalog (authenticated users). */
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> },
+) {
+  try {
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload?.id) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { slug } = await params;
+    const body = await req.json();
+    const category = String(body.category || "").toLowerCase().trim();
+    const name = String(body.name || "").trim();
+    const modelNumber = String(body.modelNumber || "").trim();
+
+    if (!category || !name) {
+      return NextResponse.json(
+        { message: "category and name are required" },
+        { status: 400 },
+      );
+    }
+
+    if (name.length < 2 || name.length > 80) {
+      return NextResponse.json(
+        { message: "Model name must be between 2 and 80 characters" },
+        { status: 400 },
+      );
+    }
+
+    await connectDB();
+
+    const brand = await CategoryBrand.findOne({
+      slug: slug.toLowerCase(),
+      category,
+      isActive: true,
+    });
+
+    if (!brand) {
+      return NextResponse.json({ message: "Brand not found" }, { status: 404 });
+    }
+
+    const exists = (brand.models || []).some(
+      (m: IModel) =>
+        normalizeKey(m.name, m.modelNumber) === normalizeKey(name, modelNumber),
+    );
+
+    if (exists) {
+      const existing = (brand.models || []).find(
+        (m: IModel) =>
+          normalizeKey(m.name, m.modelNumber) ===
+          normalizeKey(name, modelNumber),
+      );
+      return NextResponse.json(
+        { message: "Model already exists", model: existing, created: false },
+        { status: 200 },
+      );
+    }
+
+    const model: IModel = {
+      name,
+      modelNumber: modelNumber || undefined,
+      slug: slugifyModelName(name),
+      isActive: true,
+    };
+
+    brand.models.push(model);
+    brand.updatedAt = new Date();
+    await brand.save();
+
+    return NextResponse.json(
+      { message: "Model created", model, created: true },
+      { status: 201 },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Failed to create model", details: String(error) },
       { status: 500 },
     );
   }

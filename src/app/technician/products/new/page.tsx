@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import ModelSelector from "@/components/ModelSelector";
 
 interface Brand {
   _id: string;
@@ -11,7 +12,7 @@ interface Brand {
 
 interface Model {
   name: string;
-  modelNumber: string;
+  modelNumber?: string;
 }
 
 interface PartType {
@@ -63,7 +64,6 @@ export default function AddProductPage() {
   const [partTypeSearch, setPartTypeSearch] = useState("");
 
   const [showBrandDropdown, setShowBrandDropdown] = useState(false);
-  const [showModelDropdown, setShowModelDropdown] = useState(false);
   const [showPartTypeDropdown, setShowPartTypeDropdown] = useState(false);
 
   const [images, setImages] = useState<string[]>([]);
@@ -168,7 +168,6 @@ export default function AddProductPage() {
       name: model.name,
     }));
     setModelSearch(model.name);
-    setShowModelDropdown(false);
   }, []);
 
   const handlePartTypeSelect = useCallback((partType: PartType) => {
@@ -183,17 +182,6 @@ export default function AddProductPage() {
         b.name.toLowerCase().includes(brandSearch.toLowerCase()),
       ),
     [brands, brandSearch],
-  )();
-
-  const filteredModels = useCallback(
-    () =>
-      models.filter(
-        (m) =>
-          m.name.toLowerCase().includes(modelSearch.toLowerCase()) ||
-          (m.modelNumber &&
-            m.modelNumber.toLowerCase().includes(modelSearch.toLowerCase())),
-      ),
-    [models, modelSearch],
   )();
 
   const filteredPartTypes = useCallback(
@@ -477,66 +465,20 @@ export default function AddProductPage() {
               )}
             </div>
 
-            {/* Model Dropdown - Only show when brand is selected */}
+            {/* Model selector - search existing, suggest close matches, or add new */}
             {form.brand && (
-              <div className="relative animate-in fade-in duration-200">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  Model *
-                </label>
-                <input
-                  type="text"
-                  placeholder="Search model..."
-                  value={modelSearch}
-                  onChange={(e) => {
-                    setModelSearch(e.target.value);
-                    setShowModelDropdown(true);
-                  }}
-                  onFocus={() => {
-                    if (!form.deviceModel) {
-                      setModelSearch("");
-                    }
-                    setShowModelDropdown(true);
-                  }}
-                  onBlur={() =>
-                    setTimeout(() => setShowModelDropdown(false), 300)
-                  }
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  required={!!form.brand}
+              <div className="animate-in fade-in duration-200">
+                <ModelSelector
+                  models={models}
+                  value={form.deviceModel}
+                  searchValue={modelSearch}
+                  onSearchChange={setModelSearch}
+                  onSelect={handleModelSelect}
+                  brandSlug={form.brandSlug}
+                  category={form.deviceCategory}
+                  onModelsUpdated={setModels}
+                  required
                 />
-                {form.deviceModel && (
-                  <div className="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                    ✓ {form.deviceModel}
-                  </div>
-                )}
-                {showModelDropdown && (
-                  <div className="absolute z-10 mt-2 w-full max-h-80 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-xl animate-in fade-in duration-200">
-                    {filteredModels.length > 0 ? (
-                      filteredModels.map((model, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            handleModelSelect(model);
-                          }}
-                          onClick={(e) => e.preventDefault()}
-                          className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
-                        >
-                          {model.name}{" "}
-                          {model.modelNumber && (
-                            <span className="text-gray-500 text-sm">
-                              ({model.modelNumber})
-                            </span>
-                          )}
-                        </button>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2.5 text-gray-500 text-center">
-                        No models found
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             )}
           </div>
