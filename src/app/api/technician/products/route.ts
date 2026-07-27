@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   }
   
-  const { name, description, price, deviceCategory, brand, deviceModel, modelNumber, partType, condition, images } = await req.json();
+  const { name, description, price, deviceCategory, brand, deviceModel, modelNumber, partType, condition, images, priceNegotiable } = await req.json();
   
   // Validate required fields
   if (!name || !description || !price || !deviceCategory || !brand || !deviceModel || !partType || !condition) {
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
     modelNumber: modelNumber || '',
     partType,
     condition,
+    priceNegotiable: !!priceNegotiable,
     images: images || [],
     technician: payload.id,
     slug,

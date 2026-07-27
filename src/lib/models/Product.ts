@@ -17,6 +17,7 @@ export interface IProduct extends Document {
   // Legacy field for backward compatibility (will be deprecated)
   category?: string;
   condition: ProductCondition;
+  priceNegotiable?: boolean;
   images: string[];
   status: ProductStatus;
   technician: Types.ObjectId;
@@ -51,6 +52,7 @@ const ProductSchema: Schema<IProduct> = new Schema({
   // Legacy field (kept for backward compatibility)
   category: { type: String },
   condition: { type: String, enum: ['new', 'used'], required: true },
+  priceNegotiable: { type: Boolean, default: false },
   images: [{ type: String }],
   status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
   technician: { type: Schema.Types.ObjectId, ref: 'User', required: true },

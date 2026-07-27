@@ -28,6 +28,7 @@ interface Product {
   price: number;
   description: string;
   condition: string;
+  priceNegotiable?: boolean;
   images: string[];
   createdAt: string;
   technician?: Seller | string;
@@ -265,9 +266,16 @@ export default function ProductDetail({
 
               <div className="rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white p-5 mb-5">
                 <p className="text-sm text-blue-100 mb-1">Price</p>
-                <p className="text-3xl sm:text-4xl font-bold">
-                  ₹{product.price?.toLocaleString()}
-                </p>
+                <div className="flex items-baseline gap-3 flex-wrap">
+                  <p className="text-3xl sm:text-4xl font-bold">
+                    ₹{product.price?.toLocaleString()}
+                  </p>
+                  {product.priceNegotiable && (
+                    <span className="text-xs font-semibold bg-white/20 px-2 py-1 rounded-md">
+                      Negotiable
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="mb-5">

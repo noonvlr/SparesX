@@ -208,121 +208,192 @@ export default function RequestsBoard() {
           </aside>
         </div>
       ) : (
-        <div className="space-y-5 animate-in fade-in slide-in-from-left-2 duration-300">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 sm:p-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="relative flex-1">
-                <svg
-                  className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        <div className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
+          {/* Marketplace-style search hero */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-800 text-white p-5 sm:p-8 shadow-xl">
+            <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="absolute -left-8 bottom-0 w-32 h-32 rounded-full bg-blue-400/20 blur-2xl" />
+            <div className="relative">
+              <p className="text-blue-200 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2">
+                Live demand board
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+                Parts people need right now
+              </h2>
+              <p className="text-blue-100/90 text-sm sm:text-base mb-5 max-w-2xl">
+                Browse open requests like a job feed — claim ones you can fulfill and message the buyer instantly.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <svg
+                    className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                  <input
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Try “Samsung screen”, “battery”, “iPhone 13”…"
+                    className="w-full rounded-2xl border-0 bg-white text-gray-900 pl-12 pr-4 py-3.5 text-sm shadow-lg focus:ring-2 focus:ring-blue-300"
                   />
-                </svg>
-                <input
-                  type="search"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search keywords in description, brand, model, part..."
-                  className="w-full rounded-xl border border-gray-200 pl-10 pr-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                />
+                </div>
+                {searchInput && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchInput("");
+                      setSearch("");
+                    }}
+                    className="px-5 py-3 rounded-2xl bg-white/10 border border-white/20 text-sm font-medium hover:bg-white/20 transition"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
-              {searchInput && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchInput("");
-                    setSearch("");
-                  }}
-                  className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
-                >
-                  Clear
-                </button>
-              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {["Display", "Battery", "Camera", "Charging port"].map((chip) => (
+                  <button
+                    key={chip}
+                    type="button"
+                    onClick={() => setSearchInput(chip)}
+                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 border border-white/15 transition"
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-gray-600">
+              {loading
+                ? "Refreshing feed…"
+                : `${total} open request${total === 1 ? "" : "s"}`}
+            </p>
+            <button
+              type="button"
+              onClick={() => setTab("submit")}
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+            >
+              + Post a request
+            </button>
+          </div>
+
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-44 rounded-2xl bg-white border border-gray-100 animate-pulse"
-                  style={{ animationDelay: `${i * 80}ms` }}
+                  className="h-36 rounded-2xl bg-white border border-gray-100 animate-pulse"
                 />
               ))}
             </div>
           ) : requests.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center text-gray-500 animate-in fade-in zoom-in-95">
-              <p className="mb-4">{emptyMessage}</p>
+            <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-12 text-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <p className="text-gray-700 font-medium mb-2">{emptyMessage}</p>
               <button
                 type="button"
                 onClick={() => setTab("submit")}
-                className="inline-flex px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
+                className="mt-2 inline-flex px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
               >
                 Submit a request
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {requests.map((request, index) => (
-                <article
-                  key={request._id}
-                  className="group bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-100 transition-all duration-300 animate-in fade-in slide-in-from-bottom-2"
-                  style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
-                >
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <div>
-                      <h3 className="font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
-                        {highlightText(request.category, search)}
-                        {request.brand ? (
-                          <>
-                            {" · "}
-                            {highlightText(request.brand, search)}
-                          </>
-                        ) : null}
-                      </h3>
-                      <div className="flex flex-wrap gap-1.5 mt-2">
-                        {request.deviceCategory && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-100 capitalize">
-                            {request.deviceCategory}
-                          </span>
-                        )}
-                        {request.deviceModel && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                            {highlightText(request.deviceModel, search)}
-                          </span>
-                        )}
+            <div className="space-y-3">
+              {requests.map((request, index) => {
+                const initial = (request.name || "?").charAt(0).toUpperCase();
+                const ageMs = Date.now() - new Date(request.createdAt).getTime();
+                const hours = Math.max(1, Math.round(ageMs / 36e5));
+                const ageLabel =
+                  hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
+
+                return (
+                  <article
+                    key={request._id}
+                    className="group relative bg-white rounded-2xl border border-gray-100/80 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 overflow-hidden"
+                    style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+                  >
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition" />
+                    <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
+                      <div className="flex gap-3 flex-1 min-w-0">
+                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 flex items-center justify-center text-sm font-bold flex-shrink-0 border border-slate-200">
+                          {initial}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <h3 className="font-bold text-gray-900 text-base sm:text-lg">
+                              {highlightText(request.category, search)}
+                              {request.brand ? (
+                                <span className="text-gray-500 font-semibold">
+                                  {" · "}
+                                  {highlightText(request.brand, search)}
+                                </span>
+                              ) : null}
+                            </h3>
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              Open
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {request.deviceCategory && (
+                              <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 capitalize">
+                                {request.deviceCategory}
+                              </span>
+                            )}
+                            {request.deviceModel && (
+                              <span className="text-[11px] px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700">
+                                {highlightText(request.deviceModel, search)}
+                              </span>
+                            )}
+                            <span className="text-[11px] px-2 py-0.5 rounded-md bg-amber-50 text-amber-700">
+                              {ageLabel}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 sm:line-clamp-3">
+                            {highlightText(request.description, search)}
+                          </p>
+                          <p className="mt-2 text-xs text-gray-400">
+                            Requested by <span className="font-medium text-gray-600">{request.name}</span>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex sm:flex-col items-stretch justify-end gap-2 sm:w-44 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => respondViaWhatsApp(request)}
+                          className="px-4 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 hover:shadow-md transition active:scale-[0.98]"
+                        >
+                          I have this part
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => respondViaWhatsApp(request)}
+                          className="px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition"
+                        >
+                          Message buyer
+                        </button>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-100 capitalize">
-                      {request.status}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700 flex-1 mb-4 line-clamp-4 leading-relaxed">
-                    {highlightText(request.description, search)}
-                  </p>
-                  <div className="flex items-center justify-between gap-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-500">
-                      by {request.name} ·{" "}
-                      {new Date(request.createdAt).toLocaleDateString("en-IN")}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => respondViaWhatsApp(request)}
-                      className="px-3 py-2 rounded-xl bg-green-600 text-white text-xs sm:text-sm font-semibold hover:bg-green-700 hover:shadow-md transition active:scale-95 whitespace-nowrap"
-                    >
-                      I have this part
-                    </button>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           )}
         </div>

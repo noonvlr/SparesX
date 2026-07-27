@@ -49,6 +49,7 @@ export default function AddProductPage() {
     modelNumber: "",
     partType: "",
     condition: "new",
+    priceNegotiable: false,
   });
 
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -603,6 +604,22 @@ export default function AddProductPage() {
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                     required
                   />
+                  <label className="mt-3 flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={form.priceNegotiable}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          priceNegotiable: e.target.checked,
+                        }))
+                      }
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">
+                      Price is negotiable
+                    </span>
+                  </label>
                 </div>
 
                 <div>
