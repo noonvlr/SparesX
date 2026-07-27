@@ -11,13 +11,12 @@ export async function GET(
     await connectDB();
 
     const { category: rawCategory } = await params;
-    const category = rawCategory.toLowerCase() as 'mobile' | 'laptop' | 'desktop';
+    const category = rawCategory.toLowerCase();
     const searchParams = req.nextUrl.searchParams;
     const search = searchParams.get('search');
     const includeModels = searchParams.get('includeModels') !== 'false';
 
-    // Validate category
-    if (!['mobile', 'laptop', 'desktop'].includes(category)) {
+    if (!category) {
       return NextResponse.json(
         { error: 'Invalid category' },
         { status: 400 }

@@ -11,15 +11,14 @@ export async function GET(
     await connectDB();
 
     const { category: rawCategory, slug: rawSlug } = await params;
-    const category = rawCategory.toLowerCase() as 'mobile' | 'laptop' | 'desktop';
+    const category = rawCategory.toLowerCase();
     const brandSlug = rawSlug.toLowerCase();
     const searchParams = req.nextUrl.searchParams;
     const search = searchParams.get('search');
 
-    // Validate category
-    if (!['mobile', 'laptop', 'desktop'].includes(category)) {
+    if (!category || !brandSlug) {
       return NextResponse.json(
-        { error: 'Invalid category' },
+        { error: 'Invalid category or brand' },
         { status: 400 }
       );
     }

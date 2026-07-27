@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface Brand {
@@ -8,7 +8,18 @@ interface Brand {
   slug: string;
 }
 
+interface Model {
+  name: string;
+  modelNumber?: string;
+}
+
 interface PartType {
+  value: string;
+  label: string;
+  icon: string;
+}
+
+interface DeviceCategory {
   value: string;
   label: string;
   icon: string;
@@ -22,14 +33,30 @@ interface Condition {
 export default function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isFirstRender = useRef(true);
 
+  const [deviceCategories, setDeviceCategories] = useState<DeviceCategory[]>(
+    [],
+  );
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [models, setModels] = useState<Model[]>([]);
   const [partTypes, setPartTypes] = useState<PartType[]>([]);
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [selectedDeviceCategory, setSelectedDeviceCategory] = useState(
+    searchParams.get("deviceCategory") || searchParams.get("category") || "",
+  );
   const [selectedBrand, setSelectedBrand] = useState(
     searchParams.get("brand") || "",
+  );
+  const [selectedBrandSlug, setSelectedBrandSlug] = useState("");
+  const [selectedModel, setSelectedModel] = useState(
+    searchParams.get("deviceModel") || searchParams.get("model") || "",
   );
   const [selectedPartType, setSelectedPartType] = useState(
     searchParams.get("partType") || "",
@@ -42,20 +69,16 @@ export default function ProductFilters() {
     max: searchParams.get("maxPrice") || "",
   });
 
+  // Load static filter options
   useEffect(() => {
-    // Fetch brands
-    fetch("/api/brands?includeModels=false")
+    fetch("/api/device-categories")
       .then((res) => res.json())
-      .then((data) => setBrands(data.brands || []))
-      .catch(() => {
-        // Silently fail and keep empty brands list
-      });
+      .then((data) => setDeviceCategories(data.categories || []))
+      .catch(() => {});
 
-    // Fetch part types (categories)
     fetch("/api/categories")
       .then((res) => res.json())
       .then((data) => {
-        // Map categories to partTypes format for backward compatibility
         const mappedPartTypes =
           data.categories?.map((cat: any) => ({
             value: cat.slug,
@@ -64,52 +87,150 @@ export default function ProductFilters() {
           })) || [];
         setPartTypes(mappedPartTypes);
       })
-      .catch(() => {
-        // Silently fail and keep empty part types list
-      });
+      .catch(() => {});
 
-    // Fetch conditions
     fetch("/api/conditions")
       .then((res) => res.json())
       .then((data) => setConditions(data.conditions || []))
-      .catch(() => {
-        // Silently fail and keep empty conditions list
-      });
+      .catch(() => {});
   }, []);
 
-  // Apply filters immediately when any filter changes
+  // Debounce search so typing doesn't spam navigation
   useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Load brands for selected device type (or all brands if none selected)
+  useEffect(() => {
+    let cancelled = false;
+    const url = selectedDeviceCategory
+      ? `/api/categories/${selectedDeviceCategory}/brands?includeModels=false`
+      : "/api/brands?includeModels=false";
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        const nextBrands: Brand[] = data.brands || [];
+        setBrands(nextBrands);
+
+        setSelectedBrand((currentBrand) => {
+          if (!currentBrand) {
+            setSelectedBrandSlug("");
+            return currentBrand;
+          }
+          const match = nextBrands.find(
+            (b) => b.name.toLowerCase() === currentBrand.toLowerCase(),
+          );
+          setSelectedBrandSlug(match?.slug || "");
+          if (!match) {
+            setSelectedModel("");
+            return "";
+          }
+          return currentBrand;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setBrands([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDeviceCategory]);
+
+  // Load models when brand + device category are known
+  useEffect(() => {
+    if (!selectedBrandSlug || !selectedDeviceCategory) {
+      setModels([]);
+      return;
+    }
+
+    fetch(
+      `/api/categories/${selectedDeviceCategory}/brands/${selectedBrandSlug}/models`,
+    )
+      .then((res) => res.json())
+      .then((data) => setModels(data.models || []))
+      .catch(() => setModels([]));
+  }, [selectedBrandSlug, selectedDeviceCategory]);
+
+  // Push filter state into the URL (skip first render to avoid wiping URL)
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (selectedDeviceCategory)
+      params.set("deviceCategory", selectedDeviceCategory);
     if (selectedBrand) params.set("brand", selectedBrand);
+    if (selectedModel) params.set("deviceModel", selectedModel);
     if (selectedPartType) params.set("partType", selectedPartType);
     if (selectedCondition) params.set("condition", selectedCondition);
     if (priceRange.min) params.set("minPrice", priceRange.min);
     if (priceRange.max) params.set("maxPrice", priceRange.max);
 
-    router.push(`/products?${params.toString()}`);
-  }, [selectedBrand, selectedPartType, selectedCondition, priceRange, router]);
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      router.push(next ? `/products?${next}` : "/products");
+    }
+  }, [
+    search,
+    selectedDeviceCategory,
+    selectedBrand,
+    selectedModel,
+    selectedPartType,
+    selectedCondition,
+    priceRange,
+    router,
+    searchParams,
+  ]);
 
   const activeFilterCount = [
+    search,
+    selectedDeviceCategory,
     selectedBrand,
+    selectedModel,
     selectedPartType,
     selectedCondition,
     priceRange.min,
     priceRange.max,
   ].filter(Boolean).length;
 
-  // Close filter menu when navigating
-  useEffect(() => {
-    const handleNavigation = () => {
-      setIsOpen(false);
-    };
+  const clearAllFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setSelectedDeviceCategory("");
+    setSelectedBrand("");
+    setSelectedBrandSlug("");
+    setSelectedModel("");
+    setSelectedPartType("");
+    setSelectedCondition("");
+    setPriceRange({ min: "", max: "" });
+    setModels([]);
+  };
 
-    window.addEventListener("popstate", handleNavigation);
-    return () => window.removeEventListener("popstate", handleNavigation);
-  }, []);
+  const handleDeviceCategoryChange = (value: string) => {
+    setSelectedDeviceCategory(value);
+    setSelectedBrand("");
+    setSelectedBrandSlug("");
+    setSelectedModel("");
+    setModels([]);
+  };
+
+  const handleBrandChange = (value: string) => {
+    setSelectedBrand(value);
+    setSelectedModel("");
+    const match = brands.find((b) => b.name === value);
+    setSelectedBrandSlug(match?.slug || "");
+  };
 
   return (
     <>
-      {/* Mobile Filter Toggle Button - Hidden when filter is open */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -136,8 +257,6 @@ export default function ProductFilters() {
         </button>
       )}
 
-      {/* Filter Sidebar/Modal - Sleek Side Slider */}
-      {/* Backdrop with Blur - Filter only */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
@@ -146,7 +265,6 @@ export default function ProductFilters() {
         />
       )}
 
-      {/* Filter Slider Panel - Sleek with Rounded Corners - From Left */}
       <div
         className={`
           fixed lg:static top-0 left-0 h-auto max-h-[calc(100vh)] lg:h-auto w-64 
@@ -157,7 +275,6 @@ export default function ProductFilters() {
         `}
       >
         <div className="p-4">
-          {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
               <svg
@@ -196,14 +313,48 @@ export default function ProductFilters() {
             </button>
           </div>
 
-          {/* Brand Filter */}
+          {/* Search */}
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+              Search
+            </label>
+            <input
+              type="search"
+              placeholder="Name, brand, model..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
+            />
+          </div>
+
+          {/* Device Type */}
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+              Device Type
+            </label>
+            <select
+              value={selectedDeviceCategory}
+              onChange={(e) => handleDeviceCategoryChange(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
+            >
+              <option value="">All Devices</option>
+              {deviceCategories.map((cat) => (
+                <option key={cat.value} value={cat.value}>
+                  {cat.icon ? `${cat.icon} ` : ""}
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Brand */}
           <div className="mb-5">
             <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Brand
             </label>
             <select
               value={selectedBrand}
-              onChange={(e) => setSelectedBrand(e.target.value)}
+              onChange={(e) => handleBrandChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
             >
               <option value="">All Brands</option>
@@ -215,7 +366,34 @@ export default function ProductFilters() {
             </select>
           </div>
 
-          {/* Part Type Filter */}
+          {/* Model */}
+          <div className="mb-5">
+            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+              Model
+            </label>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              disabled={!selectedBrandSlug || !selectedDeviceCategory}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400 disabled:bg-gray-50 disabled:text-gray-400"
+            >
+              <option value="">
+                {!selectedDeviceCategory
+                  ? "Select device type first"
+                  : !selectedBrand
+                    ? "Select brand first"
+                    : "All Models"}
+              </option>
+              {models.map((model) => (
+                <option key={`${model.name}-${model.modelNumber || ""}`} value={model.name}>
+                  {model.name}
+                  {model.modelNumber ? ` (${model.modelNumber})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Part Type */}
           <div className="mb-5">
             <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Part Type
@@ -256,7 +434,7 @@ export default function ProductFilters() {
             </div>
           </div>
 
-          {/* Condition Filter */}
+          {/* Condition */}
           <div className="mb-5">
             <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Condition
@@ -294,7 +472,7 @@ export default function ProductFilters() {
             </div>
           </div>
 
-          {/* Price Range Filter */}
+          {/* Price Range */}
           <div className="mb-5">
             <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
               Price Range (₹)
@@ -321,16 +499,10 @@ export default function ProductFilters() {
             </div>
           </div>
 
-          {/* Clear Button */}
           {activeFilterCount > 0 && (
             <div className="pt-6 border-t border-gray-200">
               <button
-                onClick={() => {
-                  setSelectedBrand("");
-                  setSelectedPartType("");
-                  setSelectedCondition("");
-                  setPriceRange({ min: "", max: "" });
-                }}
+                onClick={clearAllFilters}
                 className="w-full text-blue-600 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200"
               >
                 Clear All Filters
@@ -338,7 +510,6 @@ export default function ProductFilters() {
             </div>
           )}
 
-          {/* Apply Button for Mobile */}
           <div className="pt-6 border-t border-gray-200 lg:hidden">
             <button
               onClick={() => setIsOpen(false)}
