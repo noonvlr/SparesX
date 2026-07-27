@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || 'sparesx';
 
 if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');
@@ -17,6 +18,7 @@ export async function connectDB() {
   if (!cached.promise) {
     cached.promise = mongoose.connect(MONGODB_URI, {
       bufferCommands: false,
+      dbName: MONGODB_DB_NAME,
     }).then((mongoose) => mongoose);
   }
   cached.conn = await cached.promise;
