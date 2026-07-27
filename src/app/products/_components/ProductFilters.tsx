@@ -40,6 +40,7 @@ export default function ProductFilters() {
   );
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
   const [partTypes, setPartTypes] = useState<PartType[]>([]);
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -140,19 +141,41 @@ export default function ProductFilters() {
     };
   }, [selectedDeviceCategory]);
 
-  // Load models when brand + device category are known
+  // Load models whenever a brand is selected
   useEffect(() => {
-    if (!selectedBrandSlug || !selectedDeviceCategory) {
+    if (!selectedBrandSlug) {
       setModels([]);
+      setModelsLoading(false);
       return;
     }
 
-    fetch(
-      `/api/categories/${selectedDeviceCategory}/brands/${selectedBrandSlug}/models`,
-    )
+    let cancelled = false;
+    setModelsLoading(true);
+    setModels([]);
+
+    const params = new URLSearchParams();
+    if (selectedDeviceCategory) {
+      params.set("category", selectedDeviceCategory);
+    }
+    const query = params.toString();
+    const url = `/api/brands/${selectedBrandSlug}/models${query ? `?${query}` : ""}`;
+
+    fetch(url)
       .then((res) => res.json())
-      .then((data) => setModels(data.models || []))
-      .catch(() => setModels([]));
+      .then((data) => {
+        if (cancelled) return;
+        setModels(data.models || []);
+      })
+      .catch(() => {
+        if (!cancelled) setModels([]);
+      })
+      .finally(() => {
+        if (!cancelled) setModelsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedBrandSlug, selectedDeviceCategory]);
 
   // Push filter state into the URL (skip first render to avoid wiping URL)
@@ -225,6 +248,11 @@ export default function ProductFilters() {
   const handleBrandChange = (value: string) => {
     setSelectedBrand(value);
     setSelectedModel("");
+    if (!value) {
+      setSelectedBrandSlug("");
+      setModels([]);
+      return;
+    }
     const match = brands.find((b) => b.name === value);
     setSelectedBrandSlug(match?.slug || "");
   };
@@ -374,18 +402,23 @@ export default function ProductFilters() {
             <select
               value={selectedModel}
               onChange={(e) => setSelectedModel(e.target.value)}
-              disabled={!selectedBrandSlug || !selectedDeviceCategory}
+              disabled={!selectedBrandSlug}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400 disabled:bg-gray-50 disabled:text-gray-400"
             >
               <option value="">
-                {!selectedDeviceCategory
-                  ? "Select device type first"
-                  : !selectedBrand
-                    ? "Select brand first"
-                    : "All Models"}
+                {!selectedBrand
+                  ? "Select brand first"
+                  : modelsLoading
+                    ? "Loading models..."
+                    : models.length === 0
+                      ? "No models found"
+                      : "All Models"}
               </option>
               {models.map((model) => (
-                <option key={`${model.name}-${model.modelNumber || ""}`} value={model.name}>
+                <option
+                  key={`${model.name}-${model.modelNumber || ""}`}
+                  value={model.name}
+                >
                   {model.name}
                   {model.modelNumber ? ` (${model.modelNumber})` : ""}
                 </option>
