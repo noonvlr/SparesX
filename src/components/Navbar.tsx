@@ -7,6 +7,7 @@ export default function Navbar() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -37,12 +38,14 @@ export default function Navbar() {
         .then((r) => r.json())
         .then((data) => {
           if (data.user?.name) setUserName(data.user.name);
+          setProfilePicture(data.user?.profilePicture || null);
         })
         .catch(() => {});
     } else {
       setIsAuthenticated(false);
       setUserRole(null);
       setUserName(null);
+      setProfilePicture(null);
     }
     setMobileMenuOpen(false);
     setProfileOpen(false);
@@ -74,11 +77,27 @@ export default function Navbar() {
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName(null);
+    setProfilePicture(null);
     setProfileOpen(false);
     router.push("/");
   }
 
   const initial = (userName || "U").charAt(0).toUpperCase();
+
+  const Avatar = ({ className = "w-9 h-9" }: { className?: string }) =>
+    profilePicture ? (
+      <img
+        src={profilePicture}
+        alt={userName || "Profile"}
+        className={`${className} rounded-full object-cover border border-blue-100 shadow-sm`}
+      />
+    ) : (
+      <span
+        className={`${className} rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-sm font-bold shadow-sm`}
+      >
+        {initial}
+      </span>
+    );
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
@@ -103,6 +122,12 @@ export default function Navbar() {
                 className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
               >
                 Requests
+              </Link>
+              <Link
+                href="/support"
+                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+              >
+                Support
               </Link>
               {isAuthenticated && userRole === "technician" && (
                 <>
@@ -146,6 +171,12 @@ export default function Navbar() {
                   >
                     Device Management
                   </Link>
+                  <Link
+                    href="/admin/support"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Support Inbox
+                  </Link>
                 </>
               )}
             </div>
@@ -175,9 +206,7 @@ export default function Navbar() {
                   className="flex items-center gap-2 rounded-full p-1 pr-2 hover:bg-gray-50 transition border border-transparent hover:border-gray-200"
                   aria-label="Open profile menu"
                 >
-                  <span className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-sm font-bold shadow-sm">
-                    {initial}
-                  </span>
+                  <Avatar />
                   <svg
                     className={`w-4 h-4 text-gray-500 transition ${profileOpen ? "rotate-180" : ""}`}
                     fill="none"
@@ -195,13 +224,16 @@ export default function Navbar() {
 
                 {profileOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-in fade-in zoom-in-95">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-semibold text-gray-900 truncate">
-                        {userName || "Account"}
-                      </p>
-                      <p className="text-xs text-gray-500 capitalize">
-                        {userRole || "user"}
-                      </p>
+                    <div className="px-4 py-2 border-b border-gray-100 flex items-center gap-3">
+                      <Avatar className="w-10 h-10" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate">
+                          {userName || "Account"}
+                        </p>
+                        <p className="text-xs text-gray-500 capitalize">
+                          {userRole || "user"}
+                        </p>
+                      </div>
                     </div>
                     <Link
                       href={profileHref}
@@ -222,6 +254,26 @@ export default function Navbar() {
                         />
                       </svg>
                       Profile
+                    </Link>
+                    <Link
+                      href="/support"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                        />
+                      </svg>
+                      Support
                     </Link>
                     <button
                       type="button"
@@ -251,12 +303,8 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2 md:hidden">
             {isAuthenticated && (
-              <Link
-                href={profileHref}
-                className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-sm font-bold shadow-sm"
-                aria-label="Profile"
-              >
-                {initial}
+              <Link href={profileHref} aria-label="Profile">
+                <Avatar />
               </Link>
             )}
             <button
@@ -320,6 +368,13 @@ export default function Navbar() {
           >
             Requests
           </Link>
+          <Link
+            href="/support"
+            className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Support
+          </Link>
           {isAuthenticated && userRole === "technician" && (
             <div className="border-t border-gray-100 pt-2 mt-2">
               <p className="text-xs font-bold text-gray-400 px-3 py-1.5 uppercase tracking-wider">
@@ -366,6 +421,13 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Profile / Settings
+              </Link>
+              <Link
+                href="/admin/support"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Support Inbox
               </Link>
             </div>
           )}
