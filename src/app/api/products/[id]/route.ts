@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
+import { User } from "@/lib/models/User";
 import { verifyJwt } from "@/lib/auth/jwt";
+
+// Ensure User schema is registered for technician populate
+void User;
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
