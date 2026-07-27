@@ -65,6 +65,9 @@ check-*.js
 *.swp
 *.swo
 
+# Local agent handoff (machine-only; do not commit)
+.cursor/LOCAL_PROJECT_REFERENCE.md
+
 # OS
 Thumbs.db
 .DS_Store
