@@ -3,6 +3,10 @@ import { connectDB } from "@/lib/db/connect";
 import { RequestModel } from "@/lib/models/Request";
 import { verifyJwt } from "@/lib/auth/jwt";
 
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
@@ -13,19 +17,42 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search");
     const category = searchParams.get("category");
     const brand = searchParams.get("brand");
+    const deviceCategory = searchParams.get("deviceCategory");
 
     const query: Record<string, unknown> = {};
     if (status !== "all") query.status = status;
-    if (category) query.category = category;
+    if (category) query.category = { $regex: category, $options: "i" };
     if (brand) query.brand = { $regex: brand, $options: "i" };
-    if (search) {
-      query.$or = [
-        { description: { $regex: search, $options: "i" } },
-        { brand: { $regex: search, $options: "i" } },
-        { deviceModel: { $regex: search, $options: "i" } },
-        { category: { $regex: search, $options: "i" } },
-        { name: { $regex: search, $options: "i" } },
-      ];
+    if (deviceCategory) query.deviceCategory = deviceCategory.toLowerCase();
+
+    if (search?.trim()) {
+      const tokens = search
+        .trim()
+        .split(/[\s,]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 2);
+
+      const fields = [
+        "description",
+        "category",
+        "brand",
+        "deviceModel",
+        "deviceCategory",
+        "name",
+      ] as const;
+
+      // Every keyword must match at least one field (including description)
+      if (tokens.length > 0) {
+        query.$and = tokens.map((token) => ({
+          $or: fields.map((field) => ({
+            [field]: { $regex: escapeRegex(token), $options: "i" },
+          })),
+        }));
+      } else {
+        query.$or = fields.map((field) => ({
+          [field]: { $regex: escapeRegex(search.trim()), $options: "i" },
+        }));
+      }
     }
 
     const total = await RequestModel.countDocuments(query);
@@ -35,7 +62,6 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .lean();
 
-    // Hide contact details from anonymous users
     const authHeader = req.headers.get("authorization");
     const token = authHeader?.replace("Bearer ", "");
     let isAuthenticated = false;
@@ -79,8 +105,34 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, category, brand, model, deviceModel, description } =
-      await req.json();
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { message: "Login required to submit a request." },
+        { status: 401 },
+      );
+    }
+
+    const token = authHeader.split(" ")[1];
+    const payload = verifyJwt(token);
+    if (!payload?.id) {
+      return NextResponse.json(
+        { message: "Invalid session. Please login again." },
+        { status: 401 },
+      );
+    }
+
+    const {
+      name,
+      email,
+      phone,
+      category,
+      brand,
+      model,
+      deviceModel,
+      deviceCategory,
+      description,
+    } = await req.json();
 
     if (!name || !email || !category || !description) {
       return NextResponse.json(
@@ -95,10 +147,12 @@ export async function POST(req: NextRequest) {
       email,
       phone,
       category,
+      deviceCategory: deviceCategory || "",
       brand,
       deviceModel: deviceModel || model || "",
       description,
       status: "open",
+      userId: payload.id,
     });
 
     return NextResponse.json({ request }, { status: 201 });
