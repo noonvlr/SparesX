@@ -19,6 +19,7 @@ export default function LoginForm() {
     const data = await res.json();
     if (res.ok) {
       localStorage.setItem("token", data.token);
+      window.dispatchEvent(new Event("sparesx-auth-changed"));
       if (data.role === "admin") {
         router.push("/admin/dashboard");
       } else if (data.role === "technician") {

@@ -25,10 +25,24 @@ export default function ChatNotificationsProvider({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socketRef = useRef<Socket | null>(null);
   const onMessagesPage = pathname?.startsWith("/messages");
+
+  useEffect(() => {
+    const syncAuth = () => setAuthToken(localStorage.getItem("token"));
+    syncAuth();
+    window.addEventListener("storage", syncAuth);
+    window.addEventListener("focus", syncAuth);
+    window.addEventListener("sparesx-auth-changed", syncAuth);
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("focus", syncAuth);
+      window.removeEventListener("sparesx-auth-changed", syncAuth);
+    };
+  }, []);
 
   const refreshUnread = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -66,8 +80,7 @@ export default function ChatNotificationsProvider({
   );
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!authToken) return;
 
     refreshUnread();
     const poll = setInterval(refreshUnread, 12000);
@@ -75,7 +88,7 @@ export default function ChatNotificationsProvider({
     let socket = getSharedSocket();
     if (!socket || socket.disconnected) {
       socket = io(SOCKET_URL, {
-        auth: { token },
+        auth: { token: authToken },
         transports: ["websocket", "polling"],
         autoConnect: true,
       });
@@ -111,7 +124,7 @@ export default function ChatNotificationsProvider({
       socket?.off("new-message", onNewMessage);
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
-  }, [pathname, refreshUnread, showToast]);
+  }, [authToken, pathname, refreshUnread, showToast]);
 
   return (
     <>

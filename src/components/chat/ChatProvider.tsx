@@ -606,6 +606,19 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     [conversations],
   );
 
+  useEffect(() => {
+    const syncAuth = () => setUserId(currentUserId());
+    syncAuth();
+    window.addEventListener("storage", syncAuth);
+    window.addEventListener("focus", syncAuth);
+    window.addEventListener("sparesx-auth-changed", syncAuth);
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("focus", syncAuth);
+      window.removeEventListener("sparesx-auth-changed", syncAuth);
+    };
+  }, []);
+
   // Auth + socket lifecycle
   useEffect(() => {
     const syncAuth = () => {
@@ -643,6 +656,10 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
+    const onConnectError = (error: Error) => {
+      console.error("[chat] socket connect_error", error.message);
+      setConnected(false);
+    };
     const onPresenceSnapshot = (payload: { userIds?: string[] }) => {
       const ids = new Set((payload.userIds || []).map(String));
       setOnlineMap((prev) => {
@@ -767,6 +784,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.on("connect_error", onConnectError);
     socket.on("presence-snapshot", onPresenceSnapshot);
     socket.on("new-message", onNew);
     socket.on("message-sent", onSent);
@@ -785,6 +803,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       clearInterval(poll);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("connect_error", onConnectError);
       socket.off("presence-snapshot", onPresenceSnapshot);
       socket.off("new-message", onNew);
       socket.off("message-sent", onSent);
@@ -799,7 +818,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       remoteTypingTimers.current = {};
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appendMessage, loadConversations, refreshUnread]);
+  }, [appendMessage, loadConversations, refreshUnread, userId]);
 
   // Deep-links handled via `sparesx-open-chat` from /messages or product CTAs
 

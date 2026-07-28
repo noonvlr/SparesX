@@ -162,6 +162,7 @@ export default function Navbar() {
 
   function handleLogout() {
     localStorage.removeItem("token");
+    window.dispatchEvent(new Event("sparesx-auth-changed"));
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName(null);
