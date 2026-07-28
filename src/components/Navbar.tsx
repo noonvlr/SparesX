@@ -2,8 +2,11 @@
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useChatDockOptional } from "@/components/chat/ChatProvider";
+import { openChatUi } from "@/components/chat/openChat";
 
 export default function Navbar() {
+  const chatDock = useChatDockOptional();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
@@ -169,6 +172,11 @@ export default function Navbar() {
     router.push("/");
   }
 
+  const openMessages = () => {
+    if (chatDock?.openPanel) chatDock.openPanel();
+    else openChatUi({});
+  };
+
   const UnreadBadge = ({ count }: { count: number }) =>
     count > 0 ? (
       <span className="inline-flex items-center justify-center min-w-[1.15rem] h-[1.15rem] px-1 rounded-full bg-green-500 text-white text-[10px] font-bold leading-none">
@@ -226,11 +234,7 @@ export default function Navbar() {
               {isAuthenticated && (
                 <button
                   type="button"
-                  onClick={() =>
-                    window.dispatchEvent(
-                      new CustomEvent("sparesx-open-chat", { detail: {} }),
-                    )
-                  }
+                  onClick={openMessages}
                   className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
                 >
                   Messages
@@ -374,9 +378,7 @@ export default function Navbar() {
                       type="button"
                       onClick={() => {
                         setProfileOpen(false);
-                        window.dispatchEvent(
-                          new CustomEvent("sparesx-open-chat", { detail: {} }),
-                        );
+                        openMessages();
                       }}
                       className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                     >
@@ -524,9 +526,7 @@ export default function Navbar() {
               className="flex w-full items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
               onClick={() => {
                 setMobileMenuOpen(false);
-                window.dispatchEvent(
-                  new CustomEvent("sparesx-open-chat", { detail: {} }),
-                );
+                openMessages();
               }}
             >
               <span>Messages</span>
@@ -550,9 +550,7 @@ export default function Navbar() {
                 className="block w-full text-left text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  window.dispatchEvent(
-                    new CustomEvent("sparesx-open-chat", { detail: {} }),
-                  );
+                  openMessages();
                 }}
               >
                 Messages

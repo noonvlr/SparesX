@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { openChatUi } from "@/components/chat/openChat";
 
 export interface ProductCardData {
   _id: string;
@@ -251,14 +252,10 @@ export default function ProductCard({
                   onClick={() => {
                     if (!sellerId) return;
                     setContactOpen(false);
-                    window.dispatchEvent(
-                      new CustomEvent("sparesx-open-chat", {
-                        detail: {
-                          peerId: sellerId,
-                          productId: product._id,
-                        },
-                      }),
-                    );
+                    openChatUi({
+                      peerId: sellerId,
+                      productId: product._id,
+                    });
                   }}
                   className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
                 >

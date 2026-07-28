@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
+import { openChatUi } from "@/components/chat/openChat";
 
 interface Seller {
   _id?: string;
@@ -157,11 +158,10 @@ export default function ProductDetail({
       alert("Seller is not available for chat.");
       return;
     }
-    window.dispatchEvent(
-      new CustomEvent("sparesx-open-chat", {
-        detail: { peerId: sellerId, productId: product._id },
-      }),
-    );
+    openChatUi({
+      peerId: sellerId,
+      productId: product._id,
+    });
   };
 
   const handleWhatsAppClick = () => {

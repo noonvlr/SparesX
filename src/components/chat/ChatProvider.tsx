@@ -94,7 +94,9 @@ export function useChatDockOptional() {
 
 export default function ChatProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(() =>
+    typeof window !== "undefined" ? currentUserId() : null,
+  );
   const [connected, setConnected] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
@@ -258,16 +260,17 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     async (conversationId: string, opts?: { floating?: boolean }) => {
       const id = String(conversationId);
       const useFloating = opts?.floating ?? false;
+      const isMobile =
+        typeof window !== "undefined" &&
+        window.matchMedia("(max-width: 767px)").matches;
 
-      await ensureConversationInList(id);
-
-      // Always fetch messages FIRST so UI has data immediately
-      await loadMessages(id);
-      await markRead(id);
-
-      if (useFloating) {
+      // Open UI immediately so clicks always feel responsive
+      if (useFloating && !isMobile) {
         setFloatingIds((prev) => {
-          const next = [id, ...prev.filter((x) => x !== id)].slice(0, MAX_FLOATING);
+          const next = [id, ...prev.filter((x) => x !== id)].slice(
+            0,
+            MAX_FLOATING,
+          );
           return next;
         });
         setMinimizedIds((prev) => {
@@ -281,16 +284,31 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
         setPanelView("thread");
         setPanelOpen(true);
       }
+
+      try {
+        await ensureConversationInList(id);
+        await loadMessages(id);
+        await markRead(id);
+      } catch (err) {
+        console.error("[chat] openConversation failed", err);
+        // Keep window open; show empty/error state via existing loading flags
+      }
     },
     [ensureConversationInList, loadMessages, markRead],
   );
 
   const openPanel = useCallback(() => {
+    const uid = currentUserId();
+    if (!uid) {
+      router.push(`/login?next=${encodeURIComponent("/")}`);
+      return;
+    }
+    setUserId(uid);
     setPanelOpen(true);
     setPanelView("list");
     setActiveId(null);
     void loadConversations();
-  }, [loadConversations]);
+  }, [loadConversations, router]);
 
   const closePanel = useCallback(() => {
     setPanelOpen(false);
@@ -306,27 +324,47 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
   const startChat = useCallback(
     async (peerId: string, productId?: string) => {
-      if (!currentUserId()) {
+      const uid = currentUserId();
+      if (!uid) {
         router.push(`/login?next=${encodeURIComponent("/")}`);
         return;
       }
-      if (String(peerId) === String(currentUserId())) return;
+      setUserId(uid);
+      if (String(peerId) === String(uid)) {
+        alert("You cannot message yourself.");
+        return;
+      }
 
-      const res = await fetch("/api/chat/conversations", {
-        method: "POST",
-        headers: authHeaders(),
-        body: JSON.stringify({ peerId, productId }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to start chat");
-      const id = String(data.conversation._id);
-      await loadConversations();
-      const isMobile = window.matchMedia("(max-width: 767px)").matches;
-      await openConversation(id, { floating: !isMobile });
-      if (isMobile) {
+      // Show inbox immediately while conversation is created
+      setPanelOpen(true);
+      setPanelView("list");
+      setLoadingList(true);
+
+      try {
+        const res = await fetch("/api/chat/conversations", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ peerId, productId }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.message || "Failed to start chat");
+        }
+        const id = String(data.conversation._id);
+        await loadConversations();
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+        await openConversation(id, { floating: !isMobile });
+      } catch (err) {
+        console.error("[chat] startChat failed", err);
+        alert(
+          err instanceof Error
+            ? err.message
+            : "Could not start chat. Please try again.",
+        );
         setPanelOpen(true);
-        setPanelView("thread");
-        setActiveId(id);
+        setPanelView("list");
+      } finally {
+        setLoadingList(false);
       }
     },
     [loadConversations, openConversation, router],
@@ -512,11 +550,17 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
   // Auth + socket lifecycle
   useEffect(() => {
-    const uid = currentUserId();
-    setUserId(uid);
+    const syncAuth = () => {
+      const uid = currentUserId();
+      setUserId(uid);
+      return uid;
+    };
+
+    const uid = syncAuth();
     if (!uid) {
       socketRef.current?.disconnect();
       socketRef.current = null;
+      setConnected(false);
       return;
     }
 
@@ -672,19 +716,32 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail || {};
-      if (detail.peerId) void startChat(detail.peerId, detail.productId);
-      else if (detail.conversationId) {
-        const isMobile = window.matchMedia("(max-width: 767px)").matches;
-        void openConversation(detail.conversationId, { floating: !isMobile });
-        if (isMobile) {
-          setPanelOpen(true);
-          setPanelView("thread");
-          setActiveId(String(detail.conversationId));
+      try {
+        if (detail.peerId) {
+          void startChat(String(detail.peerId), detail.productId).catch(
+            (err) => {
+              console.error(err);
+              alert(
+                err instanceof Error ? err.message : "Could not open chat",
+              );
+            },
+          );
+        } else if (detail.conversationId) {
+          const isMobile = window.matchMedia("(max-width: 767px)").matches;
+          void openConversation(String(detail.conversationId), {
+            floating: !isMobile,
+          });
+        } else {
+          openPanel();
         }
-      } else openPanel();
+      } catch (err) {
+        console.error("[chat] open event failed", err);
+        openPanel();
+      }
     };
-    window.addEventListener("sparesx-open-chat", handler);
-    return () => window.removeEventListener("sparesx-open-chat", handler);
+    window.addEventListener("sparesx-open-chat", handler as EventListener);
+    return () =>
+      window.removeEventListener("sparesx-open-chat", handler as EventListener);
   }, [openConversation, openPanel, startChat]);
 
   const value = useMemo<ChatContextValue>(

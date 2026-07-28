@@ -158,12 +158,22 @@ function FloatingWindow({
 export default function FloatingChatDock() {
   const chat = useChatDock();
   const [muted, setMuted] = useState(false);
+  const [hasToken, setHasToken] = useState(false);
 
   useEffect(() => {
     setMuted(isChatMuted());
+    const sync = () => setHasToken(Boolean(localStorage.getItem("token")));
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("focus", sync);
+    };
   }, []);
 
-  if (!chat.userId) return null;
+  // Guests: no dock. Logged-in: always show launcher (even before userId hydrates).
+  if (!hasToken && !chat.userId && !chat.panelOpen) return null;
 
   const activeConv = chat.activeId
     ? chat.getConversation(chat.activeId)
