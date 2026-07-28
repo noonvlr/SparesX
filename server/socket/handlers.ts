@@ -14,6 +14,7 @@ import {
   addSocket,
   removeSocket,
   isOnline,
+  listOnlineUserIds,
   setViewing,
   isViewing,
 } from "./presence";
@@ -26,6 +27,9 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
   const userId = uid(socket);
   const becameOnline = addSocket(userId, socket.id);
   socket.join(userId);
+  socket.emit("presence-snapshot", {
+    userIds: listOnlineUserIds(),
+  });
 
   void (async () => {
     try {

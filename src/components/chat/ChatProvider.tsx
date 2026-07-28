@@ -13,7 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
-import { playMessageSound } from "@/lib/chat/sound";
+import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
 
 const SOCKET_URL =
   process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4001";
@@ -121,6 +121,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   const minimizedRef = useRef<Set<string>>(new Set());
   const panelOpenRef = useRef(false);
   const typingTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const remoteTypingTimers = useRef<
+    Record<string, ReturnType<typeof setTimeout>>
+  >({});
   activeIdRef.current = activeId;
   floatingRef.current = floatingIds;
   minimizedRef.current = minimizedIds;
@@ -145,7 +148,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     } catch {
       // ignore
     }
-  }, [bumpUnread]);
+  }, [bumpUnread, userId]);
 
   const loadConversations = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -159,6 +162,19 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       if (res.ok) {
         setConversations(data.conversations || []);
         bumpUnread(data.unreadTotal || 0);
+        setOnlineMap((prev) => {
+          const next = { ...prev };
+          for (const conversation of data.conversations || []) {
+            const peer =
+              conversation.peer ||
+              conversation.participants?.find(
+                (p: { _id: string }) => String(p._id) !== String(userId),
+              );
+            if (!peer?._id || peer._id in next) continue;
+            next[peer._id] = false;
+          }
+          return next;
+        });
       }
     } finally {
       setLoadingList(false);
@@ -402,6 +418,13 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       if (!clean) return;
       const peer = conversations.find((c) => c._id === id)?.peer;
       const socket = socketRef.current;
+      if (typingTimers.current[id]) {
+        clearTimeout(typingTimers.current[id]);
+        delete typingTimers.current[id];
+      }
+      if (socket?.connected && peer?._id) {
+        socket.emit("typing-stop", { conversationId: id, peerId: peer._id });
+      }
 
       // Optimistic placeholder
       const tempId = `temp-${Date.now()}`;
@@ -480,6 +503,13 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       if (!mediaUrl) return;
       const peer = conversations.find((c) => c._id === id)?.peer;
       const socket = socketRef.current;
+      if (typingTimers.current[id]) {
+        clearTimeout(typingTimers.current[id]);
+        delete typingTimers.current[id];
+      }
+      if (socket?.connected && peer?._id) {
+        socket.emit("typing-stop", { conversationId: id, peerId: peer._id });
+      }
       if (socket?.connected) {
         await new Promise<void>((resolve, reject) => {
           socket.timeout(8000).emit(
@@ -524,6 +554,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       const peer = conversations.find((c) => c._id === id)?.peer;
       const socket = socketRef.current;
       if (!socket?.connected || !peer?._id) return;
+      prepareChatSound();
       socket.emit("typing-start", { conversationId: id, peerId: peer._id });
       if (typingTimers.current[id]) clearTimeout(typingTimers.current[id]);
       typingTimers.current[id] = setTimeout(() => {
@@ -585,6 +616,19 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
     const onConnect = () => setConnected(true);
     const onDisconnect = () => setConnected(false);
+    const onPresenceSnapshot = (payload: { userIds?: string[] }) => {
+      const ids = new Set((payload.userIds || []).map(String));
+      setOnlineMap((prev) => {
+        const next = { ...prev };
+        for (const key of Object.keys(next)) {
+          next[key] = ids.has(key);
+        }
+        for (const id of ids) {
+          if (id !== String(uid)) next[id] = true;
+        }
+        return next;
+      });
+    };
 
     const isViewing = (conversationId: string) => {
       const id = String(conversationId);
@@ -668,20 +712,35 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       if (String(payload.userId) === String(uid)) return;
       const cid = String(payload.conversationId);
       setTypingById((p) => ({ ...p, [cid]: true }));
+      if (remoteTypingTimers.current[cid]) {
+        clearTimeout(remoteTypingTimers.current[cid]);
+      }
+      remoteTypingTimers.current[cid] = setTimeout(() => {
+        setTypingById((p) => ({ ...p, [cid]: false }));
+      }, 1800);
     };
     const onStopTyping = (payload: { conversationId: string }) => {
+      const cid = String(payload.conversationId);
+      if (remoteTypingTimers.current[cid]) {
+        clearTimeout(remoteTypingTimers.current[cid]);
+        delete remoteTypingTimers.current[cid];
+      }
       setTypingById((p) => ({
         ...p,
-        [String(payload.conversationId)]: false,
+        [cid]: false,
       }));
     };
     const onOnline = (p: { userId: string }) =>
       setOnlineMap((m) => ({ ...m, [p.userId]: true }));
     const onOffline = (p: { userId: string }) =>
       setOnlineMap((m) => ({ ...m, [p.userId]: false }));
+    const onConversationUpdated = () => {
+      void loadConversations();
+    };
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
+    socket.on("presence-snapshot", onPresenceSnapshot);
     socket.on("new-message", onNew);
     socket.on("message-sent", onSent);
     socket.on("message-delivered", onDelivered);
@@ -690,6 +749,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     socket.on("stop-typing", onStopTyping);
     socket.on("user-online", onOnline);
     socket.on("user-offline", onOffline);
+    socket.on("conversation-updated", onConversationUpdated);
     if (socket.connected) setConnected(true);
 
     const poll = setInterval(refreshUnread, 20000);
@@ -698,6 +758,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       clearInterval(poll);
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
+      socket.off("presence-snapshot", onPresenceSnapshot);
       socket.off("new-message", onNew);
       socket.off("message-sent", onSent);
       socket.off("message-delivered", onDelivered);
@@ -706,6 +767,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       socket.off("stop-typing", onStopTyping);
       socket.off("user-online", onOnline);
       socket.off("user-offline", onOffline);
+      socket.off("conversation-updated", onConversationUpdated);
+      Object.values(remoteTypingTimers.current).forEach(clearTimeout);
+      remoteTypingTimers.current = {};
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appendMessage, loadConversations, refreshUnread]);

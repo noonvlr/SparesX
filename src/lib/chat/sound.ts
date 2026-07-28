@@ -1,16 +1,38 @@
 "use client";
 
 /** Soft notification chime via Web Audio (no asset file). Respects mute preference. */
+let audioContext: AudioContext | null = null;
+
+function getAudioContext() {
+  const Ctx =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext })
+      .webkitAudioContext;
+  if (!Ctx) return null;
+  if (!audioContext) audioContext = new Ctx();
+  return audioContext;
+}
+
+export function prepareChatSound() {
+  if (typeof window === "undefined") return;
+  if (localStorage.getItem("sparesx_chat_mute") === "1") return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state !== "running") {
+      void ctx.resume();
+    }
+  } catch {
+    // ignore autoplay restrictions until the next user gesture
+  }
+}
+
 export function playMessageSound() {
   if (typeof window === "undefined") return;
   try {
     if (localStorage.getItem("sparesx_chat_mute") === "1") return;
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!Ctx) return;
-    const ctx = new Ctx();
+    const ctx = getAudioContext();
+    if (!ctx || ctx.state !== "running") return;
     const now = ctx.currentTime;
 
     const beep = (freq: number, start: number, dur: number, gain = 0.04) => {
@@ -29,8 +51,6 @@ export function playMessageSound() {
 
     beep(880, now, 0.09);
     beep(1175, now + 0.1, 0.12);
-    void ctx.resume();
-    setTimeout(() => void ctx.close(), 500);
   } catch {
     // ignore autoplay restrictions
   }

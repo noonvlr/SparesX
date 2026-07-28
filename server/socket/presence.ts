@@ -44,6 +44,12 @@ export function isOnline(userId: string): boolean {
   return Boolean(set && set.size > 0);
 }
 
+export function listOnlineUserIds(): string[] {
+  return [...presence.sockets.entries()]
+    .filter(([, sockets]) => sockets.size > 0)
+    .map(([userId]) => userId);
+}
+
 export function setViewing(userId: string, conversationId: string | null) {
   if (!conversationId) presence.viewing.delete(userId);
   else presence.viewing.set(userId, conversationId);

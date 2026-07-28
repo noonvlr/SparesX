@@ -9,13 +9,28 @@ import MessageInput from "@/components/chat/MessageInput";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import ProductHeader from "@/components/chat/ProductHeader";
 import OnlineStatus from "@/components/chat/OnlineStatus";
-import { isChatMuted, setChatMuted } from "@/lib/chat/sound";
+import {
+  isChatMuted,
+  prepareChatSound,
+  setChatMuted,
+} from "@/lib/chat/sound";
 import type { ChatConversation } from "@/types/chat";
 
 function peerOf(c?: ChatConversation | null, userId?: string | null) {
   if (!c) return undefined;
   if (c.peer) return c.peer;
   return c.participants?.find((p) => String(p._id) !== String(userId));
+}
+
+const FAB_SIZE = 56;
+const FAB_MARGIN = 16;
+
+function clampFabPosition(x: number, y: number) {
+  if (typeof window === "undefined") return { x, y };
+  return {
+    x: Math.max(FAB_MARGIN, Math.min(x, window.innerWidth - FAB_SIZE - FAB_MARGIN)),
+    y: Math.max(FAB_MARGIN, Math.min(y, window.innerHeight - FAB_SIZE - FAB_MARGIN)),
+  };
 }
 
 function ThreadBody({
@@ -159,18 +174,116 @@ export default function FloatingChatDock() {
   const chat = useChatDock();
   const [muted, setMuted] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+  const dragState = useRef<{
+    pointerId: number | null;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    moved: boolean;
+  }>({
+    pointerId: null,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+    moved: false,
+  });
+  const suppressClickRef = useRef(false);
 
   useEffect(() => {
     setMuted(isChatMuted());
     const sync = () => setHasToken(Boolean(localStorage.getItem("token")));
     sync();
+    try {
+      const raw = localStorage.getItem("sparesx_chat_fab_pos");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { x?: number; y?: number };
+        if (typeof parsed.x === "number" && typeof parsed.y === "number") {
+          setFabPosition(clampFabPosition(parsed.x, parsed.y));
+        }
+      }
+    } catch {
+      // ignore invalid saved position
+    }
     window.addEventListener("storage", sync);
     window.addEventListener("focus", sync);
+    const unlockAudio = () => prepareChatSound();
+    window.addEventListener("pointerdown", unlockAudio, { passive: true });
+    window.addEventListener("keydown", unlockAudio);
+    const onResize = () => {
+      setFabPosition((prev) => (prev ? clampFabPosition(prev.x, prev.y) : prev));
+    };
+    window.addEventListener("resize", onResize);
     return () => {
       window.removeEventListener("storage", sync);
       window.removeEventListener("focus", sync);
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+      window.removeEventListener("resize", onResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (!fabPosition) return;
+    localStorage.setItem("sparesx_chat_fab_pos", JSON.stringify(fabPosition));
+  }, [fabPosition]);
+
+  const handleFabPointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    const current = fabPosition || {
+      x: window.innerWidth - FAB_SIZE - FAB_MARGIN,
+      y: window.innerHeight - FAB_SIZE - 20,
+    };
+    dragState.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: current.x,
+      originY: current.y,
+      moved: false,
+    };
+    suppressClickRef.current = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handleFabPointerMove = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (dragState.current.pointerId !== e.pointerId) return;
+    const dx = e.clientX - dragState.current.startX;
+    const dy = e.clientY - dragState.current.startY;
+    if (!dragState.current.moved && Math.hypot(dx, dy) > 6) {
+      dragState.current.moved = true;
+      suppressClickRef.current = true;
+    }
+    if (!dragState.current.moved) return;
+    setFabPosition(
+      clampFabPosition(
+        dragState.current.originX + dx,
+        dragState.current.originY + dy,
+      ),
+    );
+  };
+
+  const handleFabPointerUp = (e: React.PointerEvent<HTMLButtonElement>) => {
+    if (dragState.current.pointerId !== e.pointerId) return;
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore capture cleanup errors
+    }
+    dragState.current.pointerId = null;
+    window.setTimeout(() => {
+      suppressClickRef.current = false;
+    }, 0);
+  };
+
+  const togglePanel = () => {
+    prepareChatSound();
+    if (chat.panelOpen) chat.closePanel();
+    else chat.openPanel();
+  };
 
   // Guests: no dock. Logged-in: always show launcher (even before userId hydrates).
   if (!hasToken && !chat.userId && !chat.panelOpen) return null;
@@ -330,8 +443,20 @@ export default function FloatingChatDock() {
       {/* Launcher FAB */}
       <button
         type="button"
-        onClick={() => (chat.panelOpen ? chat.closePanel() : chat.openPanel())}
-        className="fixed bottom-5 right-4 z-[96] w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 flex items-center justify-center transition focus:outline-none focus:ring-4 focus:ring-blue-300"
+        onPointerDown={handleFabPointerDown}
+        onPointerMove={handleFabPointerMove}
+        onPointerUp={handleFabPointerUp}
+        onPointerCancel={handleFabPointerUp}
+        onClick={() => {
+          if (suppressClickRef.current) return;
+          togglePanel();
+        }}
+        className="fixed z-[96] w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 flex items-center justify-center transition focus:outline-none focus:ring-4 focus:ring-blue-300 touch-none select-none"
+        style={
+          fabPosition
+            ? { left: fabPosition.x, top: fabPosition.y }
+            : { right: "1rem", bottom: "1.25rem" }
+        }
         aria-label="Open messages"
       >
         <svg
