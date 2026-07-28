@@ -74,6 +74,17 @@ export default function AdminDashboard() {
       muted: "text-rose-100",
     },
     {
+      label: "Chat threads",
+      value: stats.conversationCount,
+      href: "/admin/chat",
+      from: "from-cyan-500",
+      to: "to-cyan-700",
+      muted: "text-cyan-100",
+      badge: stats.messageCount
+        ? `${stats.messageCount} messages`
+        : null,
+    },
+    {
       label: "Blocked users",
       value: stats.blockedUsers,
       href: "/admin/users",
@@ -89,13 +100,17 @@ export default function AdminDashboard() {
     { href: "/admin/users", title: "Users", desc: "Create, block, reset, delete" },
     { href: "/admin/device-management", title: "Devices", desc: "Types, brands, models, parts" },
     { href: "/admin/support", title: "Support", desc: "Reply to user tickets" },
+    { href: "/admin/chat", title: "Chat disputes", desc: "Read chats for dispute review" },
+    { href: "/admin/categories", title: "Categories", desc: "Manage part categories" },
+    { href: "/admin/reports", title: "Reports", desc: "Platform counts overview" },
+    { href: "/admin/settings", title: "Control center", desc: "All admin tools in one place" },
   ];
 
   return (
     <main className="max-w-6xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-2 text-gray-900">Admin Dashboard</h1>
       <p className="text-gray-600 text-sm mb-8">
-        Full control over catalog, requests, users, and devices
+        Full control over catalog, requests, users, devices, support, and chats
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">

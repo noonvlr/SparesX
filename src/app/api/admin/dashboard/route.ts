@@ -4,6 +4,8 @@ import { User } from "@/lib/models/User";
 import { Product } from "@/lib/models/Product";
 import { RequestModel } from "@/lib/models/Request";
 import { SupportRequest } from "@/lib/models/SupportRequest";
+import { Conversation } from "@/lib/models/Conversation";
+import { Message } from "@/lib/models/Message";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET(req: NextRequest) {
@@ -19,6 +21,8 @@ export async function GET(req: NextRequest) {
     openRequests,
     unreadSupport,
     blockedUsers,
+    conversationCount,
+    messageCount,
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: "technician" }),
@@ -27,6 +31,8 @@ export async function GET(req: NextRequest) {
     RequestModel.countDocuments({ status: "open" }),
     SupportRequest.countDocuments({ adminUnread: { $ne: false } }),
     User.countDocuments({ isBlocked: true }),
+    Conversation.countDocuments(),
+    Message.countDocuments(),
   ]);
 
   return NextResponse.json(
@@ -38,6 +44,8 @@ export async function GET(req: NextRequest) {
       openRequests,
       unreadSupport,
       blockedUsers,
+      conversationCount,
+      messageCount,
     },
     { status: 200 },
   );

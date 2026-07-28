@@ -474,4 +474,150 @@ export async function setConversationTyping(params: {
   return { typingUserId: null, typingUntil: null };
 }
 
+/** Admin: list all conversations for dispute review (bypasses participant check). */
+export async function adminListConversations(params: {
+  page?: number;
+  limit?: number;
+  q?: string;
+}) {
+  await connectDB();
+  const page = Math.max(1, params.page || 1);
+  const limit = Math.min(50, Math.max(1, params.limit || 30));
+  const skip = (page - 1) * limit;
+  const q = (params.q || "").trim();
+
+  let filter: Record<string, unknown> = {};
+  if (q) {
+    const users = await User.find({
+      $or: [
+        { name: { $regex: q, $options: "i" } },
+        { email: { $regex: q, $options: "i" } },
+      ],
+    })
+      .select("_id")
+      .limit(40)
+      .lean();
+    const ids = users.map((u) => u._id);
+    if (Types.ObjectId.isValid(q)) {
+      ids.push(new Types.ObjectId(q));
+      filter = {
+        $or: [
+          { participants: { $in: ids } },
+          { _id: new Types.ObjectId(q) },
+        ],
+      };
+    } else if (ids.length) {
+      filter = { participants: { $in: ids } };
+    } else {
+      return { conversations: [], total: 0, page, pages: 1 };
+    }
+  }
+
+  const [items, total, conversationCount, messageCount] = await Promise.all([
+    Conversation.find(filter)
+      .sort({ lastMessageTime: -1, updatedAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("participants", "name email profilePicture role lastSeen isBlocked")
+      .populate("productId", "name images price brand deviceModel status")
+      .lean(),
+    Conversation.countDocuments(filter),
+    Conversation.countDocuments(),
+    Message.countDocuments(),
+  ]);
+
+  const convIds = items.map((c) => c._id);
+  const messageCounts = await Message.aggregate([
+    { $match: { conversationId: { $in: convIds } } },
+    { $group: { _id: "$conversationId", count: { $sum: 1 } } },
+  ]);
+  const countMap = new Map<string, number>(
+    messageCounts.map((r: { _id: Types.ObjectId; count: number }) => [
+      String(r._id),
+      r.count,
+    ]),
+  );
+
+  const conversations = items.map((c) => ({
+    ...c,
+    _id: String(c._id),
+    participants: (c.participants as any[]).map((p) => ({
+      ...p,
+      _id: String(p._id),
+      online: isRecentlyOnline(p.lastSeen),
+    })),
+    productId:
+      c.productId && typeof c.productId === "object"
+        ? {
+            ...(c.productId as object),
+            _id: String((c.productId as any)._id),
+          }
+        : c.productId
+          ? String(c.productId)
+          : undefined,
+    messageCount: countMap.get(String(c._id)) || 0,
+  }));
+
+  return {
+    conversations,
+    total,
+    page,
+    pages: Math.ceil(total / limit) || 1,
+    stats: { conversationCount, messageCount },
+  };
+}
+
+/** Admin: full conversation + messages for dispute review. */
+export async function adminGetConversation(conversationId: string) {
+  await connectDB();
+  const conversation = await Conversation.findById(conversationId)
+    .populate("participants", "name email profilePicture role lastSeen isBlocked")
+    .populate("productId", "name images price brand deviceModel status slug")
+    .lean();
+  if (!conversation) return null;
+
+  const messages = await Message.find({ conversationId: toOid(conversationId) })
+    .sort({ createdAt: 1 })
+    .limit(500)
+    .lean();
+
+  return {
+    conversation: {
+      ...conversation,
+      _id: String(conversation._id),
+      participants: (conversation.participants as any[]).map((p) => ({
+        ...p,
+        _id: String(p._id),
+        online: isRecentlyOnline(p.lastSeen),
+      })),
+      productId:
+        conversation.productId && typeof conversation.productId === "object"
+          ? {
+              ...(conversation.productId as object),
+              _id: String((conversation.productId as any)._id),
+            }
+          : conversation.productId
+            ? String(conversation.productId)
+            : undefined,
+    },
+    messages: messages.map((m) => ({
+      ...m,
+      _id: String(m._id),
+      conversationId: String(m.conversationId),
+      senderId: String(m.senderId),
+      receiverId: String(m.receiverId),
+    })),
+  };
+}
+
+/** Admin: hard-delete a message (moderation). */
+export async function adminDeleteMessage(messageId: string) {
+  await connectDB();
+  const msg = await Message.findByIdAndDelete(messageId);
+  if (!msg) {
+    throw Object.assign(new Error("Message not found"), { status: 404 });
+  }
+  return { deleted: true, messageId: String(messageId) };
+}
+
 export type { IMessage, IConversation };
