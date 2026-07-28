@@ -40,24 +40,36 @@ export default function AboutPage() {
             About SparesX
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            SparesX connects buyers with verified technicians for fast, trusted
-            spare parts sourcing.
+            SparesX is an India-only online marketplace that connects buyers and
+            sellers of mobile and device spare parts. Anyone in India can
+            register and sell.
           </p>
         </header>
+
+        <div className="mb-8 rounded-xl border border-blue-100 bg-blue-50/70 p-5 text-sm text-blue-950 leading-relaxed">
+          <p className="font-semibold mb-1">Important</p>
+          <p>
+            SparesX is not the seller. We only provide the platform for buyers
+            and sellers to connect. There are no in-app payments yet — payment
+            and shipping are arranged directly between users.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <article className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-xl font-semibold mb-3">Our Mission</h2>
             <p className="text-gray-600">
-              Empower repair professionals with a reliable marketplace that
-              reduces downtime and improves service quality.
+              Help repair professionals and spare-part businesses find each
+              other faster with clear listings, requests, and direct
+              communication.
             </p>
           </article>
           <article className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-xl font-semibold mb-3">Why SparesX</h2>
             <p className="text-gray-600">
-              Verified sellers, transparent listings, and a network built for
-              technicians first.
+              Built for India&apos;s spare-parts trade: marketplace-only tools,
+              transparent listings, and policies that set clear expectations for
+              buyers and sellers.
             </p>
           </article>
         </div>

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useChatDockOptional } from "@/components/chat/ChatProvider";
 import { openChatUi } from "@/components/chat/openChat";
 import { announceChatOffline } from "@/lib/chat/announceOffline";
+import { showToast } from "@/components/ToastHost";
 
 export default function Navbar() {
   const chatDock = useChatDockOptional();
@@ -178,6 +179,7 @@ export default function Navbar() {
     setSupportUnread(0);
     setChatUnread(0);
     setProfileOpen(false);
+    showToast("Logged out successfully");
     router.push("/");
   }
 
@@ -290,14 +292,6 @@ export default function Navbar() {
                   >
                     Requests
                   </Link>
-                  {isAuthenticated && (
-                    <Link
-                      href="/requests/mine"
-                      className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-                    >
-                      My requests
-                    </Link>
-                  )}
                   {isAuthenticated && userRole === "technician" && (
                     <Link
                       href="/technician/products"
@@ -400,15 +394,6 @@ export default function Navbar() {
                       </svg>
                       Profile
                     </Link>
-                    {userRole !== "admin" && (
-                      <Link
-                        href="/requests/mine"
-                        onClick={() => setProfileOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
-                      >
-                        My requests
-                      </Link>
-                    )}
                     {userRole !== "admin" && (
                     <button
                       type="button"
@@ -624,15 +609,6 @@ export default function Navbar() {
               >
                 Requests
               </Link>
-              {isAuthenticated && (
-                <Link
-                  href="/requests/mine"
-                  className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  My requests
-                </Link>
-              )}
               {isAuthenticated && userRole === "technician" && (
                 <Link
                   href="/technician/products"

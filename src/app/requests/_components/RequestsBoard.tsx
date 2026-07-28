@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import RequestForm from "./RequestForm";
+import RequestsTabs from "./RequestsTabs";
 
 interface PartRequest {
   _id: string;
@@ -130,36 +131,7 @@ export default function RequestsBoard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-in fade-in duration-300">
-        <div className="inline-flex rounded-2xl bg-white/90 backdrop-blur border border-gray-200 p-1.5 shadow-sm">
-          <button
-            type="button"
-            onClick={() => {
-              setTab("browse");
-              router.replace("/requests");
-            }}
-            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-              tab === "browse"
-                ? "bg-blue-600 text-white shadow-md scale-[1.02]"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Browse requests
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setTab("submit");
-              router.replace("/requests?tab=submit");
-            }}
-            className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
-              tab === "submit"
-                ? "bg-blue-600 text-white shadow-md scale-[1.02]"
-                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-            }`}
-          >
-            Submit request
-          </button>
-        </div>
+        <RequestsTabs active={tab === "submit" ? "submit" : "browse"} />
         {tab === "browse" && (
           <p className="text-sm text-gray-500 animate-in fade-in">
             {loading ? "Searching…" : `${total} open request${total === 1 ? "" : "s"}`}

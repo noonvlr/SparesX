@@ -119,9 +119,9 @@ export default async function HomePage() {
               Welcome to SparesX
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-              The premier marketplace for mobile technicians to buy and sell
-              spare parts. Quality parts, verified sellers, seamless
-              transactions.
+              India&apos;s marketplace for mobile spare parts. SparesX connects
+              buyers and sellers — we are not the seller, and there are no
+              in-app payments yet.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-4">
               <Link
@@ -153,10 +153,11 @@ export default async function HomePage() {
             <article className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
               <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">✅</div>
               <h2 className="text-lg sm:text-xl font-semibold mb-2">
-                Verified Sellers
+                Anyone Can Sell
               </h2>
               <p className="text-sm sm:text-base text-gray-600">
-                All sellers are verified technicians with quality assurance
+                Anyone in India can register and list spare parts on the
+                platform
               </p>
             </article>
             <article className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow sm:col-span-2 lg:col-span-1">

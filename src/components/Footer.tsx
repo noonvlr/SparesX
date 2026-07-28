@@ -12,8 +12,9 @@ export default function Footer() {
               SparesX
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-slate-400 max-w-xs">
-              B2B marketplace for mobile & device spare parts. Connect with
-              verified technicians, buy genuine parts, and fulfill requests faster.
+              India-only marketplace connecting buyers and sellers of mobile &amp;
+              device spare parts. SparesX is not the seller — we provide the
+              platform. No in-app payments yet.
             </p>
           </div>
 
@@ -79,13 +80,53 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <span className="text-slate-500">Privacy Policy</span>
+                <Link href="/privacy" className="hover:text-white transition">
+                  Privacy Policy
+                </Link>
               </li>
               <li>
-                <span className="text-slate-500">Terms of Service</span>
+                <Link href="/terms" className="hover:text-white transition">
+                  Terms of Service
+                </Link>
               </li>
               <li>
-                <span className="text-slate-500">Refund Policy</span>
+                <Link href="/refund" className="hover:text-white transition">
+                  Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/guidelines" className="hover:text-white transition">
+                  Community Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/prohibited-items"
+                  className="hover:text-white transition"
+                >
+                  Prohibited Items
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/seller-guidelines"
+                  className="hover:text-white transition"
+                >
+                  Seller Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link href="/disputes" className="hover:text-white transition">
+                  Dispute Resolution
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/report-abuse"
+                  className="hover:text-white transition"
+                >
+                  Report Abuse
+                </Link>
               </li>
               <li>
                 <a

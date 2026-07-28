@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import RequestsTabs from "../_components/RequestsTabs";
 
 type MyRequest = {
   _id: string;
@@ -152,6 +153,9 @@ export default function MyRequestsPage() {
 
   return (
     <main className="max-w-4xl mx-auto py-8 px-4">
+      <div className="mb-6">
+        <RequestsTabs active="mine" />
+      </div>
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My requests</h1>

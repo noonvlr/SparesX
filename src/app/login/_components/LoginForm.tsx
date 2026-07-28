@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { showToast } from "@/components/ToastHost";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export default function LoginForm() {
     if (res.ok) {
       localStorage.setItem("token", data.token);
       window.dispatchEvent(new Event("sparesx-auth-changed"));
+      showToast("Logged in successfully");
       if (data.role === "admin") {
         router.push("/admin/dashboard");
       } else if (data.role === "technician") {

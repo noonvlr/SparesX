@@ -5,12 +5,7 @@ import Cropper from "react-easy-crop";
 import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 
-const COUNTRY_CODES = [
-  { code: "+91", country: "India", flag: "🇮🇳" },
-  { code: "+1", country: "USA", flag: "🇺🇸" },
-  { code: "+44", country: "UK", flag: "🇬🇧" },
-  { code: "+61", country: "Australia", flag: "🇦🇺" },
-];
+const COUNTRY_CODES = [{ code: "+91", country: "India", flag: "🇮🇳" }];
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -28,6 +23,7 @@ export default function RegisterForm() {
     profilePicture: "",
   });
 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isMobileWhatsapp, setIsMobileWhatsapp] = useState(true);
@@ -233,6 +229,11 @@ export default function RegisterForm() {
 
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError("Please agree to the Terms of Service and Privacy Policy");
       return;
     }
 
@@ -835,10 +836,42 @@ export default function RegisterForm() {
         </div>
 
         {/* Submit Button */}
-        <div className="pt-6 border-t border-gray-200">
+        <div className="pt-6 border-t border-gray-200 space-y-4">
+          <label className="flex items-start gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              required
+            />
+            <span className="text-sm text-gray-600 leading-relaxed">
+              I agree to the{" "}
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 font-semibold hover:underline"
+              >
+                Privacy Policy
+              </a>
+              . I understand SparesX is an India-only marketplace platform and
+              does not process payments.
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading || !passwordMatch}
+            disabled={loading || !passwordMatch || !acceptedTerms}
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
           >
             {loading ? (
