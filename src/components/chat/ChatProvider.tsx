@@ -15,6 +15,7 @@ import { io, type Socket } from "socket.io-client";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
 import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
 import { getSocketUrl } from "@/lib/chat/socketUrl";
+import { announceChatOffline } from "@/lib/chat/announceOffline";
 const MAX_FLOATING = 3;
 
 function authHeaders() {
@@ -666,10 +667,22 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     window.addEventListener("storage", syncAuth);
     window.addEventListener("focus", syncAuth);
     window.addEventListener("sparesx-auth-changed", syncAuth);
+
+    const onPageHide = () => {
+      void announceChatOffline();
+      try {
+        socketRef.current?.disconnect();
+      } catch {
+        // ignore
+      }
+    };
+    window.addEventListener("pagehide", onPageHide);
+
     return () => {
       window.removeEventListener("storage", syncAuth);
       window.removeEventListener("focus", syncAuth);
       window.removeEventListener("sparesx-auth-changed", syncAuth);
+      window.removeEventListener("pagehide", onPageHide);
     };
   }, []);
 

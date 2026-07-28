@@ -424,6 +424,19 @@ export async function updateLastSeen(userId: string) {
   await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
 }
 
+/** Force offline immediately (logout / tab close). */
+export async function markUserOffline(userId: string) {
+  await connectDB();
+  const offlineAt = new Date(Date.now() - ONLINE_WINDOW_MS - 5_000);
+  await Promise.all([
+    User.findByIdAndUpdate(userId, { lastSeen: offlineAt }),
+    Conversation.updateMany(
+      { typingUserId: toOid(userId) },
+      { $unset: { typingUserId: 1, typingUntil: 1 } },
+    ),
+  ]);
+}
+
 export async function setConversationTyping(params: {
   conversationId: string;
   userId: string;

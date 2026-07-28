@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useChatDockOptional } from "@/components/chat/ChatProvider";
 import { openChatUi } from "@/components/chat/openChat";
+import { announceChatOffline } from "@/lib/chat/announceOffline";
 
 export default function Navbar() {
   const chatDock = useChatDockOptional();
@@ -160,7 +161,14 @@ export default function Navbar() {
     };
   }, [isAuthenticated, pathname]);
 
-  function handleLogout() {
+  async function handleLogout() {
+    // Mark offline while auth token is still available
+    await announceChatOffline();
+    try {
+      (globalThis as any).__sparesx_socket?.disconnect?.();
+    } catch {
+      // ignore
+    }
     localStorage.removeItem("token");
     window.dispatchEvent(new Event("sparesx-auth-changed"));
     setIsAuthenticated(false);
