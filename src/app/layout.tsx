@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import ChatNotificationsProvider from "@/components/chat/ChatNotificationsProvider";
+import ChatShell from "@/components/chat/ChatShell";
 
 const siteUrl = "https://spares-x-h1cj.vercel.app";
 
@@ -67,11 +67,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased min-h-screen flex flex-col">
-        <ChatNotificationsProvider>
+        <ChatShell>
           <Navbar />
           <div className="flex-1">{children}</div>
           <Footer />
-        </ChatNotificationsProvider>
+        </ChatShell>
       </body>
     </html>
   );

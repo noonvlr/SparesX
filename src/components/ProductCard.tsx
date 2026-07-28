@@ -251,8 +251,13 @@ export default function ProductCard({
                   onClick={() => {
                     if (!sellerId) return;
                     setContactOpen(false);
-                    router.push(
-                      `/messages?peer=${encodeURIComponent(sellerId)}&product=${encodeURIComponent(product._id)}`,
+                    window.dispatchEvent(
+                      new CustomEvent("sparesx-open-chat", {
+                        detail: {
+                          peerId: sellerId,
+                          productId: product._id,
+                        },
+                      }),
                     );
                   }}
                   className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"

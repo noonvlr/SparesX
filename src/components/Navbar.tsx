@@ -224,13 +224,18 @@ export default function Navbar() {
                 Support
               </Link>
               {isAuthenticated && (
-                <Link
-                  href="/messages"
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("sparesx-open-chat", { detail: {} }),
+                    )
+                  }
                   className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
                 >
                   Messages
                   <UnreadBadge count={chatUnread} />
-                </Link>
+                </button>
               )}
               {isAuthenticated && userRole === "technician" && (
                 <>
@@ -365,10 +370,15 @@ export default function Navbar() {
                       </svg>
                       Profile
                     </Link>
-                    <Link
-                      href="/messages"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        window.dispatchEvent(
+                          new CustomEvent("sparesx-open-chat", { detail: {} }),
+                        );
+                      }}
+                      className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                     >
                       <span className="flex items-center gap-2">
                         <svg
@@ -387,7 +397,7 @@ export default function Navbar() {
                         Messages
                       </span>
                       <UnreadBadge count={chatUnread} />
-                    </Link>
+                    </button>
                     <Link
                       href="/support"
                       onClick={() => setProfileOpen(false)}
@@ -509,14 +519,19 @@ export default function Navbar() {
             Support
           </Link>
           {isAuthenticated && (
-            <Link
-              href="/messages"
-              className="flex items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-              onClick={() => setMobileMenuOpen(false)}
+            <button
+              type="button"
+              className="flex w-full items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                window.dispatchEvent(
+                  new CustomEvent("sparesx-open-chat", { detail: {} }),
+                );
+              }}
             >
               <span>Messages</span>
               <UnreadBadge count={chatUnread} />
-            </Link>
+            </button>
           )}
           {isAuthenticated && userRole === "technician" && (
             <div className="border-t border-gray-100 pt-2 mt-2">
@@ -530,13 +545,18 @@ export default function Navbar() {
               >
                 Dashboard
               </Link>
-              <Link
-                href="/messages"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
+              <button
+                type="button"
+                className="block w-full text-left text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  window.dispatchEvent(
+                    new CustomEvent("sparesx-open-chat", { detail: {} }),
+                  );
+                }}
               >
                 Messages
-              </Link>
+              </button>
               <Link
                 href="/technician/products"
                 className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"

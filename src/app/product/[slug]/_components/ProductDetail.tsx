@@ -157,8 +157,10 @@ export default function ProductDetail({
       alert("Seller is not available for chat.");
       return;
     }
-    router.push(
-      `/messages?peer=${encodeURIComponent(sellerId)}&product=${encodeURIComponent(product._id)}`,
+    window.dispatchEvent(
+      new CustomEvent("sparesx-open-chat", {
+        detail: { peerId: sellerId, productId: product._id },
+      }),
     );
   };
 
