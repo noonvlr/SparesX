@@ -9,6 +9,9 @@ export interface IConversation extends Document {
   lastMessageSenderId?: Types.ObjectId;
   /** Per-user unread counts keyed by userId string */
   unreadCounts: Map<string, number>;
+  /** 1:1 typing indicator (REST/Vercel-safe) */
+  typingUserId?: Types.ObjectId;
+  typingUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +35,8 @@ const ConversationSchema: Schema<IConversation> = new Schema(
       of: Number,
       default: () => new Map(),
     },
+    typingUserId: { type: Schema.Types.ObjectId, ref: "User" },
+    typingUntil: { type: Date },
   },
   { timestamps: true },
 );

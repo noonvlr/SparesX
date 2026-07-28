@@ -4,6 +4,7 @@ export type ChatUser = {
   profilePicture?: string;
   lastSeen?: string;
   role?: string;
+  online?: boolean;
 };
 
 export type ChatProduct = {
@@ -27,6 +28,8 @@ export type ChatConversation = {
   lastMessageSenderId?: string;
   unreadCount?: number;
   peer?: ChatUser;
+  peerOnline?: boolean;
+  peerTyping?: boolean;
   updatedAt?: string;
   createdAt?: string;
 };

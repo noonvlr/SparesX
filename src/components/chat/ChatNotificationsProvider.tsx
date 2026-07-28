@@ -4,10 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { getSocketUrl } from "@/lib/chat/socketUrl";
 import { getSharedSocket } from "@/hooks/useSocket";
-
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4001";
 
 type Toast = {
   id: number;
@@ -85,43 +83,51 @@ export default function ChatNotificationsProvider({
     refreshUnread();
     const poll = setInterval(refreshUnread, 12000);
 
-    let socket = getSharedSocket();
-    if (!socket || socket.disconnected) {
-      socket = io(SOCKET_URL, {
-        auth: { token: authToken },
-        transports: ["websocket", "polling"],
-        autoConnect: true,
-      });
-      // keep shared reference in sync via side-effect module
-      (globalThis as any).__sparesx_socket = socket;
+    const socketUrl = getSocketUrl();
+    let socket: Socket | null = null;
+    if (socketUrl) {
+      socket = getSharedSocket();
+      if (!socket || socket.disconnected) {
+        socket = io(socketUrl, {
+          auth: { token: authToken },
+          transports: ["websocket", "polling"],
+          autoConnect: true,
+        });
+        (globalThis as any).__sparesx_socket = socket;
+      }
+      socketRef.current = socket;
+
+      const onNotification = (payload: {
+        preview?: string;
+        conversationId?: string;
+      }) => {
+        showToast(payload.preview || "New message", payload.conversationId);
+      };
+
+      const onNewMessage = (payload: {
+        conversationId?: string;
+        message?: { text?: string; type?: string };
+      }) => {
+        const preview =
+          payload.message?.type === "image"
+            ? "📷 Photo"
+            : payload.message?.text || "New message";
+        showToast(preview, payload.conversationId);
+      };
+
+      socket.on("notification", onNotification);
+      socket.on("new-message", onNewMessage);
+
+      return () => {
+        clearInterval(poll);
+        socket?.off("notification", onNotification);
+        socket?.off("new-message", onNewMessage);
+        if (toastTimer.current) clearTimeout(toastTimer.current);
+      };
     }
-    socketRef.current = socket;
-
-    const onNotification = (payload: {
-      preview?: string;
-      conversationId?: string;
-    }) => {
-      showToast(payload.preview || "New message", payload.conversationId);
-    };
-
-    const onNewMessage = (payload: {
-      conversationId?: string;
-      message?: { text?: string; type?: string };
-    }) => {
-      const preview =
-        payload.message?.type === "image"
-          ? "📷 Photo"
-          : payload.message?.text || "New message";
-      showToast(preview, payload.conversationId);
-    };
-
-    socket.on("notification", onNotification);
-    socket.on("new-message", onNewMessage);
 
     return () => {
       clearInterval(poll);
-      socket?.off("notification", onNotification);
-      socket?.off("new-message", onNewMessage);
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, [authToken, pathname, refreshUnread, showToast]);

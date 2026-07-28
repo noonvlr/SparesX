@@ -13,8 +13,31 @@ import {
 void User;
 void Product;
 
+/** Consider online if lastSeen within this window (Vercel REST presence). */
+export const ONLINE_WINDOW_MS = 90_000;
+export const TYPING_WINDOW_MS = 4_000;
+
 function toOid(id: string | Types.ObjectId) {
   return typeof id === "string" ? new Types.ObjectId(id) : id;
+}
+
+function isRecentlyOnline(lastSeen?: Date | string | null) {
+  if (!lastSeen) return false;
+  const t = new Date(lastSeen).getTime();
+  if (Number.isNaN(t)) return false;
+  return Date.now() - t < ONLINE_WINDOW_MS;
+}
+
+function isActivelyTyping(
+  typingUserId: unknown,
+  typingUntil: Date | string | null | undefined,
+  peerId: string,
+) {
+  if (!typingUserId || !typingUntil) return false;
+  if (String(typingUserId) !== String(peerId)) return false;
+  const t = new Date(typingUntil).getTime();
+  if (Number.isNaN(t)) return false;
+  return t > Date.now();
 }
 
 function sortedPair(a: string, b: string): [string, string] {
@@ -121,10 +144,23 @@ export async function listConversations(userId: string, page = 1, limit = 30) {
     const peer = (c.participants as any[]).find(
       (p) => String(p._id) !== String(userId),
     );
+    const peerId = peer?._id ? String(peer._id) : "";
     return {
       ...c,
       unreadCount: unreadByConv.get(String(c._id)) || 0,
-      peer,
+      peer: peer
+        ? {
+            ...peer,
+            _id: peerId,
+            online: isRecentlyOnline(peer.lastSeen),
+          }
+        : peer,
+      peerOnline: isRecentlyOnline(peer?.lastSeen),
+      peerTyping: isActivelyTyping(
+        (c as any).typingUserId,
+        (c as any).typingUntil,
+        peerId,
+      ),
     };
   });
 
@@ -151,13 +187,30 @@ export async function getConversationForUser(
   const peer = (conversation.participants as any[]).find(
     (p) => String(p._id) !== String(userId),
   );
+  const peerId = peer?._id ? String(peer._id) : "";
   const unread = await Message.countDocuments({
     conversationId: conversation._id,
     receiverId: toOid(userId),
     read: false,
     deletedFor: { $ne: toOid(userId) },
   });
-  return { ...conversation, peer, unreadCount: unread };
+  return {
+    ...conversation,
+    peer: peer
+      ? {
+          ...peer,
+          _id: peerId,
+          online: isRecentlyOnline(peer.lastSeen),
+        }
+      : peer,
+    peerOnline: isRecentlyOnline(peer?.lastSeen),
+    peerTyping: isActivelyTyping(
+      (conversation as any).typingUserId,
+      (conversation as any).typingUntil,
+      peerId,
+    ),
+    unreadCount: unread,
+  };
 }
 
 export async function listMessages(params: {
@@ -369,6 +422,43 @@ export async function getTotalUnread(userId: string) {
 export async function updateLastSeen(userId: string) {
   await connectDB();
   await User.findByIdAndUpdate(userId, { lastSeen: new Date() });
+}
+
+export async function setConversationTyping(params: {
+  conversationId: string;
+  userId: string;
+  typing: boolean;
+}) {
+  const { conversationId, userId, typing } = params;
+  await connectDB();
+  const conversation = await Conversation.findById(conversationId);
+  if (!conversation || !assertParticipant(conversation, userId)) {
+    throw Object.assign(new Error("Forbidden"), { status: 403 });
+  }
+
+  if (typing) {
+    await Conversation.updateOne(
+      { _id: conversation._id },
+      {
+        $set: {
+          typingUserId: toOid(userId),
+          typingUntil: new Date(Date.now() + TYPING_WINDOW_MS),
+        },
+      },
+    );
+    return {
+      typingUserId: userId,
+      typingUntil: new Date(Date.now() + TYPING_WINDOW_MS),
+    };
+  }
+
+  if (String(conversation.typingUserId || "") === String(userId)) {
+    await Conversation.updateOne(
+      { _id: conversation._id },
+      { $unset: { typingUserId: 1, typingUntil: 1 } },
+    );
+  }
+  return { typingUserId: null, typingUntil: null };
 }
 
 export type { IMessage, IConversation };

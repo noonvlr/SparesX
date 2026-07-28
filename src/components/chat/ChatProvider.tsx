@@ -14,9 +14,7 @@ import { useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
 import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
-
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4001";
+import { getSocketUrl } from "@/lib/chat/socketUrl";
 const MAX_FLOATING = 3;
 
 function authHeaders() {
@@ -52,6 +50,7 @@ function normalizeChatUser(raw: any) {
   return {
     ...raw,
     _id: String(raw._id),
+    online: Boolean(raw.online),
   };
 }
 
@@ -74,6 +73,8 @@ function normalizeConversation(raw: any): ChatConversation {
     peer,
     productId: product,
     unreadCount: raw?.unreadCount || 0,
+    peerOnline: Boolean(raw?.peerOnline ?? peer?.online),
+    peerTyping: Boolean(raw?.peerTyping),
   };
 }
 
@@ -127,7 +128,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   const [userId, setUserId] = useState<string | null>(() =>
     typeof window !== "undefined" ? currentUserId() : null,
   );
-  const [connected, setConnected] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
   const [unreadTotal, setUnreadTotal] = useState(0);
   const [conversations, setConversations] = useState<ChatConversation[]>([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -180,10 +181,10 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [bumpUnread, userId]);
 
-  const loadConversations = useCallback(async () => {
+  const loadConversations = useCallback(async (opts?: { silent?: boolean }) => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    setLoadingList(true);
+    if (!opts?.silent) setLoadingList(true);
     try {
       const res = await fetch("/api/chat/conversations?limit=50", {
         headers: authHeaders(),
@@ -201,14 +202,23 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
               conversation.participants?.find(
                 (p: { _id: string }) => String(p._id) !== String(userId),
               );
-            if (!peer?._id || peer._id in next) continue;
-            next[peer._id] = false;
+            if (!peer?._id) continue;
+            next[peer._id] = Boolean(
+              conversation.peerOnline ?? peer.online ?? false,
+            );
+          }
+          return next;
+        });
+        setTypingById((prev) => {
+          const next = { ...prev };
+          for (const conversation of normalized) {
+            next[conversation._id] = Boolean(conversation.peerTyping);
           }
           return next;
         });
       }
     } finally {
-      setLoadingList(false);
+      if (!opts?.silent) setLoadingList(false);
     }
   }, [bumpUnread, userId]);
 
@@ -222,40 +232,60 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const loadMessages = useCallback(async (conversationId: string, cursor?: string) => {
-    const id = String(conversationId);
-    setLoadingThread(true);
-    try {
-      const params = new URLSearchParams({ limit: "40" });
-      if (cursor) params.set("cursor", cursor);
-      const res = await fetch(`/api/chat/messages/${id}?${params}`, {
-        headers: authHeaders(),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to load");
-      const msgs = (data.messages || []).map(normalizeMessage);
-      setMessagesById((prev) => {
-        if (cursor) {
-          const existing = prev[id] || [];
-          const merged = [...msgs, ...existing];
-          const seen = new Set<string>();
-          return {
-            ...prev,
-            [id]: merged.filter((m) => {
-              if (seen.has(m._id)) return false;
-              seen.add(m._id);
-              return true;
-            }),
-          };
+  const loadMessages = useCallback(
+    async (
+      conversationId: string,
+      cursor?: string,
+      opts?: { silent?: boolean },
+    ) => {
+      const id = String(conversationId);
+      if (!opts?.silent) setLoadingThread(true);
+      try {
+        const params = new URLSearchParams({ limit: "40" });
+        if (cursor) params.set("cursor", cursor);
+        const res = await fetch(`/api/chat/messages/${id}?${params}`, {
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to load");
+        const msgs = (data.messages || []).map(normalizeMessage);
+        setMessagesById((prev) => {
+          if (cursor) {
+            const existing = prev[id] || [];
+            const merged = [...msgs, ...existing];
+            const seen = new Set<string>();
+            return {
+              ...prev,
+              [id]: merged.filter((m) => {
+                if (seen.has(m._id)) return false;
+                seen.add(m._id);
+                return true;
+              }),
+            };
+          }
+          // Silent refresh: merge new messages without wiping local optimistic ones
+          if (opts?.silent) {
+            const existing = prev[id] || [];
+            const byId = new Map(existing.map((m) => [m._id, m]));
+            for (const m of msgs) byId.set(m._id, m);
+            const merged = [...byId.values()].sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+            );
+            return { ...prev, [id]: merged };
+          }
+          return { ...prev, [id]: msgs };
+        });
+        if (!opts?.silent) {
+          setCursorById((p) => ({ ...p, [id]: data.nextCursor || null }));
+          setHasMoreById((p) => ({ ...p, [id]: Boolean(data.hasMore) }));
         }
-        return { ...prev, [id]: msgs };
-      });
-      setCursorById((p) => ({ ...p, [id]: data.nextCursor || null }));
-      setHasMoreById((p) => ({ ...p, [id]: Boolean(data.hasMore) }));
-    } finally {
-      setLoadingThread(false);
-    }
-  }, []);
+      } finally {
+        if (!opts?.silent) setLoadingThread(false);
+      }
+    },
+    [],
+  );
 
   const markRead = useCallback(
     async (conversationId: string) => {
@@ -451,6 +481,12 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       }
       if (socket?.connected && peer?._id) {
         socket.emit("typing-stop", { conversationId: id, peerId: peer._id });
+      } else {
+        void fetch("/api/chat/presence", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ conversationId: id, typing: false }),
+        }).catch(() => {});
       }
 
       // Optimistic placeholder
@@ -580,13 +616,31 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       const id = String(conversationId);
       const peer = conversations.find((c) => c._id === id)?.peer;
       const socket = socketRef.current;
-      if (!socket?.connected || !peer?._id) return;
       prepareChatSound();
-      socket.emit("typing-start", { conversationId: id, peerId: peer._id });
+
+      if (socket?.connected && peer?._id) {
+        socket.emit("typing-start", { conversationId: id, peerId: peer._id });
+        if (typingTimers.current[id]) clearTimeout(typingTimers.current[id]);
+        typingTimers.current[id] = setTimeout(() => {
+          socket.emit("typing-stop", { conversationId: id, peerId: peer._id });
+        }, 1200);
+        return;
+      }
+
+      // Vercel REST fallback
+      void fetch("/api/chat/presence", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ conversationId: id, typing: true }),
+      }).catch(() => {});
       if (typingTimers.current[id]) clearTimeout(typingTimers.current[id]);
       typingTimers.current[id] = setTimeout(() => {
-        socket.emit("typing-stop", { conversationId: id, peerId: peer._id });
-      }, 1200);
+        void fetch("/api/chat/presence", {
+          method: "POST",
+          headers: authHeaders(),
+          body: JSON.stringify({ conversationId: id, typing: false }),
+        }).catch(() => {});
+      }, 1500);
     },
     [conversations],
   );
@@ -631,17 +685,26 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     if (!uid) {
       socketRef.current?.disconnect();
       socketRef.current = null;
-      setConnected(false);
+      setSocketConnected(false);
       return;
     }
 
     void loadConversations();
     void refreshUnread();
 
+    const socketUrl = getSocketUrl();
+    if (!socketUrl) {
+      // Vercel / no companion server: stay on REST presence + polling
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+      setSocketConnected(false);
+      return;
+    }
+
     const token = localStorage.getItem("token")!;
     let socket = socketRef.current;
     if (!socket || !socket.connected) {
-      socket = io(SOCKET_URL, {
+      socket = io(socketUrl, {
         auth: { token },
         transports: ["websocket", "polling"],
         reconnection: true,
@@ -654,11 +717,11 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       (globalThis as any).__sparesx_socket = socket;
     }
 
-    const onConnect = () => setConnected(true);
-    const onDisconnect = () => setConnected(false);
+    const onConnect = () => setSocketConnected(true);
+    const onDisconnect = () => setSocketConnected(false);
     const onConnectError = (error: Error) => {
       console.error("[chat] socket connect_error", error.message);
-      setConnected(false);
+      setSocketConnected(false);
     };
     const onPresenceSnapshot = (payload: { userIds?: string[] }) => {
       const ids = new Set((payload.userIds || []).map(String));
@@ -795,7 +858,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     socket.on("user-online", onOnline);
     socket.on("user-offline", onOffline);
     socket.on("conversation-updated", onConversationUpdated);
-    if (socket.connected) setConnected(true);
+    if (socket.connected) setSocketConnected(true);
 
     const poll = setInterval(refreshUnread, 20000);
 
@@ -820,7 +883,51 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appendMessage, loadConversations, refreshUnread, userId]);
 
-  // Deep-links handled via `sparesx-open-chat` from /messages or product CTAs
+  // Vercel-safe REST realtime: presence heartbeat + poll open threads
+  useEffect(() => {
+    if (!userId || socketConnected) return;
+
+    const heartbeat = () => {
+      void fetch("/api/chat/presence", {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({}),
+      }).catch(() => {});
+    };
+
+    heartbeat();
+    const presenceTimer = setInterval(heartbeat, 25000);
+    const listTimer = setInterval(() => {
+      void loadConversations({ silent: true });
+      void refreshUnread();
+    }, 4000);
+
+    const openIds = () => {
+      const ids = new Set<string>();
+      if (activeIdRef.current && panelOpenRef.current) {
+        ids.add(activeIdRef.current);
+      }
+      for (const id of floatingRef.current) {
+        if (!minimizedRef.current.has(id)) ids.add(id);
+      }
+      return [...ids];
+    };
+
+    const threadTimer = setInterval(() => {
+      for (const id of openIds()) {
+        void loadMessages(id, undefined, { silent: true });
+      }
+    }, 2000);
+
+    return () => {
+      clearInterval(presenceTimer);
+      clearInterval(listTimer);
+      clearInterval(threadTimer);
+    };
+  }, [userId, socketConnected, loadConversations, loadMessages, refreshUnread]);
+
+  // Live for UI: socket OR Vercel REST sync path
+  const connected = socketConnected || Boolean(userId && !getSocketUrl());
 
   // Custom event for product buttons / navbar / deep-links
   useEffect(() => {

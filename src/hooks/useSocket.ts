@@ -2,9 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
-
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:4001";
+import { getSocketUrl } from "@/lib/chat/socketUrl";
 
 let shared: Socket | null = null;
 
@@ -27,11 +25,12 @@ export function useSocket() {
 
   useEffect(() => {
     const token = getToken();
-    if (!token) return;
+    const socketUrl = getSocketUrl();
+    if (!token || !socketUrl) return;
 
     let socket = resolveShared();
     if (!socket || socket.disconnected) {
-      socket = io(SOCKET_URL, {
+      socket = io(socketUrl, {
         auth: { token },
         transports: ["websocket", "polling"],
         autoConnect: true,

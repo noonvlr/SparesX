@@ -8,10 +8,51 @@ import { connectDB } from "../src/lib/db/connect";
 import { registerSocketHandlers } from "./socket/handlers";
 
 const PORT = Number(process.env.SOCKET_PORT || 4001);
-const CLIENT_ORIGIN =
+const CLIENT_ORIGINS = (
   process.env.SOCKET_CORS_ORIGIN ||
   process.env.NEXT_PUBLIC_BASE_URL ||
-  "http://localhost:3000";
+  "http://localhost:3000"
+)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function isDevOriginAllowed(origin?: string) {
+  if (!origin) return true;
+  try {
+    const { hostname } = new URL(origin);
+    return (
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname === "::1" ||
+      /^192\.168\./.test(hostname) ||
+      /^10\./.test(hostname) ||
+      /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
+function isAllowedOrigin(origin?: string) {
+  if (!origin) return true;
+  if (CLIENT_ORIGINS.includes(origin)) return true;
+  if (process.env.NODE_ENV !== "production" && isDevOriginAllowed(origin)) {
+    return true;
+  }
+  return false;
+}
+
+const corsOrigin = (
+  origin: string | undefined,
+  callback: (err: Error | null, allow?: boolean) => void,
+) => {
+  if (isAllowedOrigin(origin)) {
+    callback(null, true);
+    return;
+  }
+  callback(new Error(`Socket origin not allowed: ${origin || "unknown"}`));
+};
 
 async function main() {
   await connectDB();
@@ -19,7 +60,7 @@ async function main() {
   const app = express();
   app.use(
     cors({
-      origin: CLIENT_ORIGIN.split(",").map((s) => s.trim()),
+      origin: corsOrigin,
       credentials: true,
     }),
   );
@@ -30,7 +71,7 @@ async function main() {
   const server = http.createServer(app);
   const io = new Server(server, {
     cors: {
-      origin: CLIENT_ORIGIN.split(",").map((s) => s.trim()),
+      origin: corsOrigin,
       credentials: true,
     },
     // Ready for @socket.io/redis-adapter later
@@ -42,21 +83,27 @@ async function main() {
         socket.handshake.auth?.token ||
         socket.handshake.headers?.authorization?.toString().replace(/^Bearer\s+/i, "");
       if (!token) {
+        console.warn("[socket] missing auth token", socket.handshake.headers.origin);
         return next(new Error("Unauthorized"));
       }
       const payload = verifyJwt(token);
       if (!payload?.id) {
+        console.warn("[socket] invalid auth token", socket.handshake.headers.origin);
         return next(new Error("Unauthorized"));
       }
       socket.data.userId = payload.id;
       socket.data.role = payload.role;
       next();
     } catch {
+      console.warn("[socket] auth verification failed", socket.handshake.headers.origin);
       next(new Error("Unauthorized"));
     }
   });
 
   io.on("connection", (socket) => {
+    console.log(
+      `[socket] connected user=${socket.data.userId} origin=${socket.handshake.headers.origin || "unknown"}`,
+    );
     registerSocketHandlers(io, socket);
   });
 
