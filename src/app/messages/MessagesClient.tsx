@@ -12,6 +12,7 @@ export default function MessagesClient() {
   const searchParams = useSearchParams();
   const peerId = searchParams.get("peer");
   const productId = searchParams.get("product") || undefined;
+  const openId = searchParams.get("open");
   const [authChecked, setAuthChecked] = useState(false);
   const [authed, setAuthed] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -43,6 +44,15 @@ export default function MessagesClient() {
       .finally(() => setStarting(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authed, peerId, productId]);
+
+  useEffect(() => {
+    if (!authed || !openId || peerId) return;
+    chat.openConversation(openId).then(() => {
+      setMobileShowChat(true);
+      router.replace("/messages");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authed, openId, peerId]);
 
   if (!authChecked) {
     return (

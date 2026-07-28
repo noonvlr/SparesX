@@ -13,6 +13,14 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
+function resolveShared(): Socket | null {
+  if (shared) return shared;
+  if (typeof globalThis !== "undefined" && (globalThis as any).__sparesx_socket) {
+    shared = (globalThis as any).__sparesx_socket as Socket;
+  }
+  return shared;
+}
+
 export function useSocket() {
   const [connected, setConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
@@ -21,15 +29,17 @@ export function useSocket() {
     const token = getToken();
     if (!token) return;
 
-    if (!shared || shared.disconnected) {
-      shared = io(SOCKET_URL, {
+    let socket = resolveShared();
+    if (!socket || socket.disconnected) {
+      socket = io(SOCKET_URL, {
         auth: { token },
         transports: ["websocket", "polling"],
         autoConnect: true,
       });
+      shared = socket;
+      (globalThis as any).__sparesx_socket = socket;
     }
 
-    const socket = shared;
     socketRef.current = socket;
 
     const onConnect = () => setConnected(true);
@@ -48,7 +58,7 @@ export function useSocket() {
   const emitAck = useCallback(
     <T = unknown>(event: string, payload?: unknown): Promise<T> => {
       return new Promise((resolve, reject) => {
-        const socket = socketRef.current || shared;
+        const socket = socketRef.current || resolveShared();
         if (!socket?.connected) {
           reject(new Error("Socket not connected"));
           return;
@@ -62,9 +72,9 @@ export function useSocket() {
     [],
   );
 
-  return { socket: socketRef.current || shared, connected, emitAck };
+  return { socket: socketRef.current || resolveShared(), connected, emitAck };
 }
 
 export function getSharedSocket() {
-  return shared;
+  return resolveShared();
 }

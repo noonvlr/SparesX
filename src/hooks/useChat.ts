@@ -96,6 +96,35 @@ export function useChat(initialConversationId?: string | null) {
         });
       }
       setActiveId(conversationId);
+
+      // Ensure this conversation appears in the sidebar (receiver inbox)
+      try {
+        const res = await fetch(`/api/chat/conversations/${conversationId}`, {
+          headers: authHeaders(),
+        });
+        const data = await res.json();
+        if (res.ok && data.conversation) {
+          setConversations((prev) => {
+            const exists = prev.some((c) => c._id === conversationId);
+            if (exists) {
+              return prev.map((c) =>
+                c._id === conversationId
+                  ? { ...c, ...data.conversation, unreadCount: 0 }
+                  : c,
+              );
+            }
+            return [
+              { ...data.conversation, unreadCount: 0 },
+              ...prev,
+            ];
+          });
+        } else {
+          await loadConversations();
+        }
+      } catch {
+        await loadConversations();
+      }
+
       await loadMessages(conversationId);
       try {
         await emitAck("join-conversation", { conversationId });
@@ -113,7 +142,7 @@ export function useChat(initialConversationId?: string | null) {
       );
       window.dispatchEvent(new CustomEvent("chat-unread-updated"));
     },
-    [emitAck, loadMessages, socket],
+    [emitAck, loadMessages, loadConversations, socket],
   );
 
   const startChat = useCallback(
@@ -325,7 +354,13 @@ export function useChat(initialConversationId?: string | null) {
     };
   }, [socket, userId, loadConversations]);
 
-  const active = conversations.find((c) => c._id === activeId) || null;
+  const active = (() => {
+    const found = conversations.find((c) => c._id === activeId) || null;
+    if (!found || !userId) return found;
+    if (found.peer) return found;
+    const peer = found.participants?.find((p) => String(p._id) !== String(userId));
+    return peer ? { ...found, peer } : found;
+  })();
 
   return {
     userId,

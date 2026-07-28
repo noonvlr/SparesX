@@ -138,8 +138,15 @@ export default function Navbar() {
     };
 
     fetchUnread();
-    const interval = setInterval(fetchUnread, 30000);
-    const onUpdated = () => fetchUnread();
+    const interval = setInterval(fetchUnread, 12000);
+    const onUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail?.unreadTotal === "number") {
+        setChatUnread(detail.unreadTotal);
+      } else {
+        fetchUnread();
+      }
+    };
     window.addEventListener("chat-unread-updated", onUpdated);
     window.addEventListener("focus", fetchUnread);
 
@@ -522,6 +529,13 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Dashboard
+              </Link>
+              <Link
+                href="/messages"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Messages
               </Link>
               <Link
                 href="/technician/products"

@@ -25,7 +25,9 @@ export function assertParticipant(
   conversation: IConversation,
   userId: string,
 ): boolean {
-  return conversation.participants.some((p) => String(p) === userId);
+  return conversation.participants.some(
+    (p) => String((p as any)?._id || p) === String(userId),
+  );
 }
 
 export async function getOrCreateConversation(params: {
@@ -87,7 +89,7 @@ export async function listConversations(userId: string, page = 1, limit = 30) {
   const skip = (page - 1) * limit;
   const filter = { participants: toOid(userId) };
 
-  const [items, total] = await Promise.all([
+  const [items, total, unreadRows] = await Promise.all([
     Conversation.find(filter)
       .sort({ lastMessageTime: -1, updatedAt: -1 })
       .skip(skip)
@@ -96,17 +98,32 @@ export async function listConversations(userId: string, page = 1, limit = 30) {
       .populate("productId", "name images price brand deviceModel slug status")
       .lean(),
     Conversation.countDocuments(filter),
+    Message.aggregate([
+      {
+        $match: {
+          receiverId: toOid(userId),
+          read: false,
+          deletedFor: { $ne: toOid(userId) },
+        },
+      },
+      { $group: { _id: "$conversationId", count: { $sum: 1 } } },
+    ]),
   ]);
 
+  const unreadByConv = new Map<string, number>(
+    unreadRows.map((r: { _id: Types.ObjectId; count: number }) => [
+      String(r._id),
+      r.count,
+    ]),
+  );
+
   const conversations = items.map((c) => {
-    const unread =
-      (c.unreadCounts instanceof Map
-        ? c.unreadCounts.get(userId)
-        : (c.unreadCounts as Record<string, number> | undefined)?.[userId]) || 0;
-    const peer = (c.participants as any[]).find((p) => String(p._id) !== userId);
+    const peer = (c.participants as any[]).find(
+      (p) => String(p._id) !== String(userId),
+    );
     return {
       ...c,
-      unreadCount: unread,
+      unreadCount: unreadByConv.get(String(c._id)) || 0,
       peer,
     };
   });
@@ -124,10 +141,23 @@ export async function getConversationForUser(
     .populate("productId", "name images price brand deviceModel slug status")
     .lean();
   if (!conversation) return null;
-  if (!conversation.participants.some((p: any) => String(p._id || p) === userId)) {
+  if (
+    !conversation.participants.some(
+      (p: any) => String(p._id || p) === String(userId),
+    )
+  ) {
     return null;
   }
-  return conversation;
+  const peer = (conversation.participants as any[]).find(
+    (p) => String(p._id) !== String(userId),
+  );
+  const unread = await Message.countDocuments({
+    conversationId: conversation._id,
+    receiverId: toOid(userId),
+    read: false,
+    deletedFor: { $ne: toOid(userId) },
+  });
+  return { ...conversation, peer, unreadCount: unread };
 }
 
 export async function listMessages(params: {
@@ -329,22 +359,11 @@ export async function markMessagesDelivered(params: {
 
 export async function getTotalUnread(userId: string) {
   await connectDB();
-  const conversations = await Conversation.find({
-    participants: toOid(userId),
-  })
-    .select("unreadCounts")
-    .lean();
-
-  let total = 0;
-  for (const c of conversations) {
-    const counts = c.unreadCounts as Map<string, number> | Record<string, number>;
-    if (counts instanceof Map) {
-      total += counts.get(userId) || 0;
-    } else if (counts && typeof counts === "object") {
-      total += Number((counts as any)[userId] || 0);
-    }
-  }
-  return total;
+  return Message.countDocuments({
+    receiverId: toOid(userId),
+    read: false,
+    deletedFor: { $ne: toOid(userId) },
+  });
 }
 
 export async function updateLastSeen(userId: string) {
