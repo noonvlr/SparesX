@@ -121,7 +121,7 @@ function FloatingWindow({
 
   return (
     <div
-      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col hidden md:flex"
+      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] bg-white/95 backdrop-blur rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
       style={{ right }}
       role="dialog"
       aria-label={`Chat with ${peer?.name || "user"}`}
@@ -308,7 +308,7 @@ export default function FloatingChatDock() {
                 key={id}
                 type="button"
                 onClick={() => chat.restoreFloating(id)}
-                className="relative w-12 h-12 rounded-full shadow-lg border-2 border-white bg-blue-600 text-white font-bold overflow-hidden"
+                className="relative w-12 h-12 rounded-full shadow-lg border-2 border-white bg-blue-600 text-white font-bold overflow-hidden transition-transform duration-200 hover:scale-105 animate-in zoom-in-75"
                 title={peer?.name || "Chat"}
               >
                 {peer?.profilePicture ? (
@@ -321,7 +321,7 @@ export default function FloatingChatDock() {
                   (peer?.name || "?").charAt(0).toUpperCase()
                 )}
                 {unread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-green-500 text-[10px] flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-[10px] flex items-center justify-center shadow-md animate-pulse">
                     {unread}
                   </span>
                 )}
@@ -340,12 +340,12 @@ export default function FloatingChatDock() {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[85] bg-black/30 md:bg-transparent md:pointer-events-none"
+            className="fixed inset-0 z-[85] bg-black/30 md:bg-black/10 backdrop-blur-[1px]"
             aria-label="Close chat overlay"
             onClick={() => chat.closePanel()}
           />
           <aside
-            className="fixed z-[95] bg-white shadow-2xl border border-gray-200 flex flex-col
+            className="fixed z-[95] bg-white/95 backdrop-blur shadow-2xl border border-gray-200 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
               inset-x-0 bottom-0 h-[min(92vh,720px)] rounded-t-3xl
               md:inset-auto md:right-4 md:bottom-24 md:w-[380px] md:h-[min(640px,calc(100vh-7rem))] md:rounded-2xl"
             role="dialog"
@@ -451,7 +451,7 @@ export default function FloatingChatDock() {
           if (suppressClickRef.current) return;
           togglePanel();
         }}
-        className="fixed z-[96] w-14 h-14 rounded-full bg-blue-600 text-white shadow-xl hover:bg-blue-700 flex items-center justify-center transition focus:outline-none focus:ring-4 focus:ring-blue-300 touch-none select-none"
+        className="fixed z-[96] w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-xl hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 touch-none select-none"
         style={
           fabPosition
             ? { left: fabPosition.x, top: fabPosition.y }
@@ -473,7 +473,7 @@ export default function FloatingChatDock() {
           />
         </svg>
         {chat.unreadTotal > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-green-500 text-[11px] font-bold flex items-center justify-center border-2 border-white">
+          <span className="absolute -top-1 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-rose-500 text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-md animate-pulse">
             {chat.unreadTotal > 99 ? "99+" : chat.unreadTotal}
           </span>
         )}
