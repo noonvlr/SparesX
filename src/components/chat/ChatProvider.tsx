@@ -47,6 +47,36 @@ function normalizeMessage(raw: any): ChatMessage {
   };
 }
 
+function normalizeChatUser(raw: any) {
+  if (!raw) return raw;
+  return {
+    ...raw,
+    _id: String(raw._id),
+  };
+}
+
+function normalizeConversation(raw: any): ChatConversation {
+  const participants = Array.isArray(raw?.participants)
+    ? raw.participants.map(normalizeChatUser)
+    : [];
+  const peer = raw?.peer ? normalizeChatUser(raw.peer) : undefined;
+  const product =
+    raw?.productId && typeof raw.productId === "object"
+      ? { ...raw.productId, _id: String(raw.productId._id) }
+      : raw?.productId
+        ? String(raw.productId)
+        : undefined;
+
+  return {
+    ...raw,
+    _id: String(raw._id),
+    participants,
+    peer,
+    productId: product,
+    unreadCount: raw?.unreadCount || 0,
+  };
+}
+
 type PanelView = "list" | "thread";
 
 type ChatContextValue = {
@@ -160,11 +190,12 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setConversations(data.conversations || []);
+        const normalized = (data.conversations || []).map(normalizeConversation);
+        setConversations(normalized);
         bumpUnread(data.unreadTotal || 0);
         setOnlineMap((prev) => {
           const next = { ...prev };
-          for (const conversation of data.conversations || []) {
+          for (const conversation of normalized) {
             const peer =
               conversation.peer ||
               conversation.participants?.find(
@@ -179,7 +210,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoadingList(false);
     }
-  }, [bumpUnread]);
+  }, [bumpUnread, userId]);
 
   const appendMessage = useCallback((conversationId: string, msg: ChatMessage) => {
     const id = String(conversationId);
@@ -258,11 +289,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       await loadConversations();
       return;
     }
-    const conv = {
-      ...data.conversation,
-      _id: String(data.conversation._id),
-      unreadCount: data.conversation.unreadCount || 0,
-    };
+    const conv = normalizeConversation(data.conversation);
     setConversations((prev) => {
       const exists = prev.some((c) => c._id === id);
       if (exists) {
