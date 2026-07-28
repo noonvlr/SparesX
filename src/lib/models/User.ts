@@ -16,6 +16,7 @@ export interface IUser extends Document {
   whatsappNumber: string;
   profilePicture?: string;
   isBlocked: boolean;
+  lastSeen?: Date;
   passwordResetOTP?: string;
   passwordResetOTPExpiry?: Date;
   createdAt: Date;
@@ -36,6 +37,7 @@ const UserSchema: Schema<IUser> = new Schema({
   whatsappNumber: { type: String, required: true, trim: true },
   profilePicture: { type: String, trim: true },
   isBlocked: { type: Boolean, default: false },
+  lastSeen: { type: Date },
   passwordResetOTP: { type: String, default: undefined },
   passwordResetOTPExpiry: { type: Date, default: undefined },
 }, { timestamps: true });
