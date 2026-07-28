@@ -81,7 +81,7 @@ export default function MessageInput({
         rows={1}
         placeholder="Type a message"
         disabled={disabled}
-        className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm max-h-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-base leading-5 max-h-28 focus:outline-none focus:ring-2 focus:ring-blue-500 chat-input"
       />
       <button
         type="submit"

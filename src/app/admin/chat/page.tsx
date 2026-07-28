@@ -160,7 +160,7 @@ export default function AdminChatPage() {
   }, [selected]);
 
   return (
-    <main className="max-w-7xl mx-auto py-8 px-4">
+    <main className="chat-ui max-w-7xl mx-auto py-8 px-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Chat disputes</h1>
@@ -343,59 +343,91 @@ export default function AdminChatPage() {
                 </p>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f7f8fa] max-h-[60vh]">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 bg-[#efeae2] max-h-[62vh]">
                 {messages.length === 0 ? (
                   <p className="text-sm text-gray-500 text-center py-8">
                     No messages in this conversation.
                   </p>
                 ) : (
-                  messages.map((m) => {
+                  messages.map((m, idx) => {
                     const sender = participantMap.get(String(m.senderId));
+                    const participants = selected.participants || [];
+                    const isFirst =
+                      String(m.senderId) === String(participants[0]?._id);
+                    const prev = messages[idx - 1];
+                    const showName =
+                      !prev || String(prev.senderId) !== String(m.senderId);
                     return (
                       <div
                         key={m._id}
-                        className="rounded-2xl bg-white border border-gray-100 p-3 shadow-sm"
+                        className={`flex ${isFirst ? "justify-start" : "justify-end"}`}
                       >
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <p className="text-xs font-semibold text-gray-800">
-                            {nameOf(sender)}
-                            <span className="font-normal text-gray-400">
-                              {" "}
-                              ·{" "}
-                              {new Date(m.createdAt).toLocaleString("en-IN")}
-                            </span>
-                          </p>
-                          <button
-                            type="button"
-                            disabled={deletingId === m._id}
-                            onClick={() => void deleteMessage(m._id)}
-                            className="text-[11px] text-rose-600 hover:underline disabled:opacity-50"
+                        <div
+                          className={`max-w-[88%] sm:max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm border ${
+                            isFirst
+                              ? "bg-white border-gray-100 rounded-bl-md"
+                              : "bg-blue-600 text-white border-blue-600 rounded-br-md"
+                          }`}
+                        >
+                          {showName && (
+                            <div
+                              className={`flex items-center justify-between gap-3 mb-1 ${
+                                isFirst ? "text-blue-700" : "text-blue-100"
+                              }`}
+                            >
+                              <p className="text-xs font-semibold truncate">
+                                {nameOf(sender)}
+                              </p>
+                              <button
+                                type="button"
+                                disabled={deletingId === m._id}
+                                onClick={() => void deleteMessage(m._id)}
+                                className={`text-[11px] shrink-0 disabled:opacity-50 ${
+                                  isFirst
+                                    ? "text-rose-600 hover:underline"
+                                    : "text-white/80 hover:underline"
+                                }`}
+                              >
+                                {deletingId === m._id ? "Deleting…" : "Delete"}
+                              </button>
+                            </div>
+                          )}
+                          {m.type === "image" && m.mediaUrl ? (
+                            <a
+                              href={m.mediaUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block"
+                            >
+                              <img
+                                src={m.mediaUrl}
+                                alt="Chat attachment"
+                                className="max-h-64 rounded-xl border border-black/5 object-contain bg-white/80"
+                              />
+                            </a>
+                          ) : (
+                            <p
+                              className={`chat-bubble-text whitespace-pre-wrap break-words ${
+                                isFirst ? "text-gray-900" : "text-white"
+                              }`}
+                            >
+                              {m.text || ""}
+                            </p>
+                          )}
+                          <p
+                            className={`text-[10px] mt-1.5 text-right ${
+                              isFirst ? "text-gray-400" : "text-white/70"
+                            }`}
                           >
-                            {deletingId === m._id ? "Deleting…" : "Delete"}
-                          </button>
+                            {new Date(m.createdAt).toLocaleString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {m.read ? " · Read" : m.delivered ? " · Delivered" : ""}
+                          </p>
                         </div>
-                        {m.type === "image" && m.mediaUrl ? (
-                          <a
-                            href={m.mediaUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block"
-                          >
-                            <img
-                              src={m.mediaUrl}
-                              alt="Chat attachment"
-                              className="max-h-56 rounded-xl border border-gray-100 object-contain bg-gray-50"
-                            />
-                          </a>
-                        ) : (
-                          <p className="text-sm text-gray-800 whitespace-pre-wrap">
-                            {m.text || ""}
-                          </p>
-                        )}
-                        <p className="text-[10px] text-gray-400 mt-1">
-                          {m.delivered ? "Delivered" : "Sent"}
-                          {m.read ? " · Read" : ""}
-                        </p>
                       </div>
                     );
                   })

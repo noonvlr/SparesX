@@ -125,7 +125,7 @@ export default function ProductCard({
   return (
     <>
       <div
-        className="group bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 hover:shadow-2xl transition-all duration-300 flex flex-col"
+        className="group bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col scale-[0.92] sm:scale-[0.95] origin-top"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => {
           setHovered(false);
@@ -135,8 +135,8 @@ export default function ProductCard({
         <Link href={`/product/${product._id}`} className="block">
           <div className="relative w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
             {product.priceNegotiable && (
-              <div className="absolute top-0 right-0 z-10 overflow-hidden w-24 h-24 pointer-events-none">
-                <div className="absolute top-3 -right-7 w-28 rotate-45 bg-emerald-500 text-white text-[10px] sm:text-[11px] font-bold tracking-wide text-center py-1 shadow-md">
+              <div className="absolute top-0 right-0 z-10 overflow-hidden w-20 h-20 pointer-events-none">
+                <div className="absolute top-2.5 -right-6 w-24 rotate-45 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold tracking-wide text-center py-0.5 shadow-md">
                   Negotiable
                 </div>
               </div>
@@ -146,11 +146,11 @@ export default function ProductCard({
                 <img
                   src={resolveImageUrl(images[imageIndex] || images[0])}
                   alt={product.name}
-                  className="w-full h-full object-contain p-3 sm:p-4 transition-all duration-500 group-hover:scale-105"
+                  className="w-full h-full object-contain p-2 sm:p-3 transition-all duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
                 {images.length > 1 && (
-                  <div className="absolute bottom-2 right-2 bg-black/50 text-white px-2.5 py-1 rounded-full text-xs font-semibold backdrop-blur-sm">
+                  <div className="absolute bottom-1.5 right-1.5 bg-black/50 text-white px-2 py-0.5 rounded-full text-[10px] font-semibold backdrop-blur-sm">
                     {imageIndex + 1}/{images.length}
                   </div>
                 )}
@@ -158,7 +158,7 @@ export default function ProductCard({
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 text-gray-300">
                 <svg
-                  className="w-12 h-12"
+                  className="w-10 h-10"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -175,22 +175,22 @@ export default function ProductCard({
           </div>
         </Link>
 
-        <div className="p-3 sm:p-4 flex flex-col flex-1">
+        <div className="p-2.5 sm:p-3 flex flex-col flex-1">
           <Link href={`/product/${product._id}`}>
-            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors text-sm sm:text-base">
+            <h3 className="font-semibold text-gray-900 mb-1.5 line-clamp-2 group-hover:text-blue-600 transition-colors text-xs sm:text-sm leading-snug">
               {product.name}
             </h3>
           </Link>
 
-          <div className="flex items-center gap-1.5 flex-wrap mb-3">
+          <div className="flex items-center gap-1 flex-wrap mb-2">
             {badge && (
-              <span className="text-[11px] sm:text-xs px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium">
+              <span className="text-[10px] sm:text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium">
                 {badge}
               </span>
             )}
             {product.condition && (
               <span
-                className={`text-[11px] sm:text-xs px-2 py-0.5 rounded-full font-medium ${
+                className={`text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-full font-medium ${
                   product.condition === "new"
                     ? "bg-green-50 text-green-700"
                     : "bg-amber-50 text-amber-700"
@@ -201,9 +201,9 @@ export default function ProductCard({
             )}
           </div>
 
-          <div className="mt-auto space-y-2.5">
+          <div className="mt-auto space-y-2">
             <div className="flex items-baseline gap-2 flex-wrap">
-              <span className="text-lg sm:text-xl font-bold text-blue-600">
+              <span className="text-base sm:text-lg font-bold text-blue-600">
                 ₹{product.price?.toLocaleString()}
               </span>
             </div>
@@ -211,7 +211,7 @@ export default function ProductCard({
             <button
               type="button"
               onClick={openContact}
-              className="w-full py-2 rounded-lg bg-gray-900 text-white text-xs sm:text-sm font-semibold hover:bg-gray-800 transition active:scale-[0.98]"
+              className="w-full py-1.5 rounded-lg bg-gray-900 text-white text-[11px] sm:text-xs font-semibold hover:bg-gray-800 transition active:scale-[0.98]"
             >
               Contact now
             </button>

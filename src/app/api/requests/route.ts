@@ -18,9 +18,31 @@ export async function GET(req: NextRequest) {
     const category = searchParams.get("category");
     const brand = searchParams.get("brand");
     const deviceCategory = searchParams.get("deviceCategory");
+    const mine = searchParams.get("mine") === "1";
+
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.replace(/^Bearer\s+/i, "");
+    let payload: { id: string; role: string } | null = null;
+    if (token) {
+      payload = verifyJwt(token);
+    }
+
+    if (mine) {
+      if (!payload?.id) {
+        return NextResponse.json(
+          { message: "Login required to view your requests." },
+          { status: 401 },
+        );
+      }
+    }
 
     const query: Record<string, unknown> = {};
-    if (status !== "all") query.status = status;
+    if (mine && payload?.id) {
+      query.userId = payload.id;
+      if (status !== "all") query.status = status;
+    } else {
+      if (status !== "all") query.status = status;
+    }
     if (category) query.category = { $regex: category, $options: "i" };
     if (brand) query.brand = { $regex: brand, $options: "i" };
     if (deviceCategory) query.deviceCategory = deviceCategory.toLowerCase();
@@ -62,20 +84,8 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .lean();
 
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
-    let isAuthenticated = false;
-    if (token) {
-      try {
-        verifyJwt(token);
-        isAuthenticated = true;
-      } catch {
-        isAuthenticated = false;
-      }
-    }
-
     const sanitized = requests.map((item) => {
-      if (isAuthenticated) return item;
+      if (payload || mine) return item;
       const { email, phone, ...rest } = item as any;
       return {
         ...rest,
@@ -91,7 +101,7 @@ export async function GET(req: NextRequest) {
         total,
         page,
         pages: Math.ceil(total / limit),
-        isAuthenticated,
+        isAuthenticated: Boolean(payload),
       },
       { status: 200 },
     );

@@ -86,3 +86,21 @@
 	display: none;
 }
 
+/* Chat-only typography (Plus Jakarta Sans via --font-chat) */
+.chat-ui {
+	font-family: var(--font-chat), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+	letter-spacing: -0.01em;
+}
+
+.chat-ui .chat-input,
+.chat-ui textarea,
+.chat-ui input[type="text"] {
+	font-size: 16px !important; /* prevent iOS focus zoom */
+	line-height: 1.35;
+}
+
+.chat-bubble-text {
+	font-size: 0.95rem;
+	line-height: 1.45;
+}
+

@@ -69,7 +69,7 @@ export default function ProductPageContent() {
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div
                     key={i}
@@ -89,7 +89,7 @@ export default function ProductPageContent() {
                 <p className="text-sm mt-2">Try adjusting your search criteria</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
                 {products.map((product: any) => (
                   <ProductCard key={product._id} product={product} />
                 ))}

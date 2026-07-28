@@ -28,7 +28,7 @@ export default function MessageBubble({
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"} mb-2`}>
       <div
-        className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[15px] shadow-sm ${
           mine
             ? "bg-blue-600 text-white rounded-br-md"
             : "bg-white text-gray-900 border border-gray-100 rounded-bl-md"
@@ -43,7 +43,9 @@ export default function MessageBubble({
             />
           </a>
         ) : (
-          <p className="whitespace-pre-wrap break-words">{message.text}</p>
+          <p className="chat-bubble-text whitespace-pre-wrap break-words">
+            {message.text}
+          </p>
         )}
         <div
           className={`flex items-center justify-end gap-1 mt-0.5 ${

@@ -221,52 +221,8 @@ export default function Navbar() {
             >
               SparesX
             </Link>
-            <div className="hidden md:ml-10 md:flex md:items-baseline md:space-x-4">
-              <Link
-                href="/products"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-              >
-                Products
-              </Link>
-              <Link
-                href="/requests"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-              >
-                Requests
-              </Link>
-              <Link
-                href="/support"
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-              >
-                Support
-              </Link>
-              {isAuthenticated && (
-                <button
-                  type="button"
-                  onClick={openMessages}
-                  className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
-                >
-                  Messages
-                  <UnreadBadge count={chatUnread} />
-                </button>
-              )}
-              {isAuthenticated && userRole === "technician" && (
-                <>
-                  <Link
-                    href="/technician/dashboard"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/technician/products"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-                  >
-                    My Products
-                  </Link>
-                </>
-              )}
-              {isAuthenticated && userRole === "admin" && (
+            <div className="hidden md:ml-10 md:flex md:items-baseline md:space-x-1 lg:space-x-2">
+              {isAuthenticated && userRole === "admin" ? (
                 <>
                   <Link
                     href="/admin/dashboard"
@@ -275,10 +231,16 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                   <Link
+                    href="/admin/users"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Users
+                  </Link>
+                  <Link
                     href="/admin/products"
                     className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
                   >
-                    Products
+                    Listings
                   </Link>
                   <Link
                     href="/admin/requests"
@@ -287,22 +249,16 @@ export default function Navbar() {
                     Requests
                   </Link>
                   <Link
-                    href="/admin/technicians"
-                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
-                  >
-                    Users
-                  </Link>
-                  <Link
                     href="/admin/device-management"
                     className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
                   >
-                    Device Management
+                    Devices
                   </Link>
                   <Link
                     href="/admin/support"
                     className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
                   >
-                    Support Inbox
+                    Support
                     <UnreadBadge count={supportUnread} />
                   </Link>
                   <Link
@@ -311,6 +267,61 @@ export default function Navbar() {
                   >
                     Chat disputes
                   </Link>
+                </>
+              ) : (
+                <>
+                  {isAuthenticated && userRole === "technician" && (
+                    <Link
+                      href="/technician/dashboard"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                    >
+                      Dashboard
+                    </Link>
+                  )}
+                  <Link
+                    href="/products"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Products
+                  </Link>
+                  <Link
+                    href="/requests"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Requests
+                  </Link>
+                  {isAuthenticated && (
+                    <Link
+                      href="/requests/mine"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                    >
+                      My requests
+                    </Link>
+                  )}
+                  {isAuthenticated && userRole === "technician" && (
+                    <Link
+                      href="/technician/products"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                    >
+                      My Products
+                    </Link>
+                  )}
+                  <Link
+                    href="/support"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Support
+                  </Link>
+                  {isAuthenticated && (
+                    <button
+                      type="button"
+                      onClick={openMessages}
+                      className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
+                    >
+                      Messages
+                      <UnreadBadge count={chatUnread} />
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -389,6 +400,16 @@ export default function Navbar() {
                       </svg>
                       Profile
                     </Link>
+                    {userRole !== "admin" && (
+                      <Link
+                        href="/requests/mine"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        My requests
+                      </Link>
+                    )}
+                    {userRole !== "admin" && (
                     <button
                       type="button"
                       onClick={() => {
@@ -415,8 +436,9 @@ export default function Navbar() {
                       </span>
                       <UnreadBadge count={chatUnread} />
                     </button>
+                    )}
                     <Link
-                      href="/support"
+                      href={userRole === "admin" ? "/admin/support" : "/support"}
                       onClick={() => setProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
                     >
@@ -514,80 +536,8 @@ export default function Navbar() {
         }`}
       >
         <div className="px-3 py-4 space-y-2">
-          <Link
-            href="/products"
-            className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Products
-          </Link>
-          <Link
-            href="/requests"
-            className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Requests
-          </Link>
-          <Link
-            href="/support"
-            className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Support
-          </Link>
-          {isAuthenticated && (
-            <button
-              type="button"
-              className="flex w-full items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                openMessages();
-              }}
-            >
-              <span>Messages</span>
-              <UnreadBadge count={chatUnread} />
-            </button>
-          )}
-          {isAuthenticated && userRole === "technician" && (
-            <div className="border-t border-gray-100 pt-2 mt-2">
-              <p className="text-xs font-bold text-gray-400 px-3 py-1.5 uppercase tracking-wider">
-                Technician
-              </p>
-              <Link
-                href="/technician/dashboard"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Dashboard
-              </Link>
-              <button
-                type="button"
-                className="block w-full text-left text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  openMessages();
-                }}
-              >
-                Messages
-              </button>
-              <Link
-                href="/technician/products"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                My Products
-              </Link>
-              <Link
-                href="/technician/profile"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Profile
-              </Link>
-            </div>
-          )}
-          {isAuthenticated && userRole === "admin" && (
-            <div className="border-t border-gray-100 pt-2 mt-2">
+          {isAuthenticated && userRole === "admin" ? (
+            <>
               <p className="text-xs font-bold text-gray-400 px-3 py-1.5 uppercase tracking-wider">
                 Admin
               </p>
@@ -599,11 +549,18 @@ export default function Navbar() {
                 Dashboard
               </Link>
               <Link
+                href="/admin/users"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Users
+              </Link>
+              <Link
                 href="/admin/products"
                 className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Products
+                Listings
               </Link>
               <Link
                 href="/admin/requests"
@@ -613,32 +570,18 @@ export default function Navbar() {
                 Requests
               </Link>
               <Link
-                href="/admin/users"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Users
-              </Link>
-              <Link
                 href="/admin/device-management"
                 className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Device Management
-              </Link>
-              <Link
-                href="/admin/settings"
-                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Profile / Settings
+                Devices
               </Link>
               <Link
                 href="/admin/support"
                 className="flex items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <span>Support Inbox</span>
+                <span>Support</span>
                 <UnreadBadge count={supportUnread} />
               </Link>
               <Link
@@ -648,7 +591,87 @@ export default function Navbar() {
               >
                 Chat disputes
               </Link>
-            </div>
+              <Link
+                href="/admin/settings"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Control center
+              </Link>
+            </>
+          ) : (
+            <>
+              {isAuthenticated && userRole === "technician" && (
+                <Link
+                  href="/technician/dashboard"
+                  className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
+              <Link
+                href="/products"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Products
+              </Link>
+              <Link
+                href="/requests"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Requests
+              </Link>
+              {isAuthenticated && (
+                <Link
+                  href="/requests/mine"
+                  className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  My requests
+                </Link>
+              )}
+              {isAuthenticated && userRole === "technician" && (
+                <Link
+                  href="/technician/products"
+                  className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  My Products
+                </Link>
+              )}
+              <Link
+                href="/support"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Support
+              </Link>
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    openMessages();
+                  }}
+                >
+                  <span>Messages</span>
+                  <UnreadBadge count={chatUnread} />
+                </button>
+              )}
+              {isAuthenticated && userRole === "technician" && (
+                <Link
+                  href="/technician/profile"
+                  className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Profile
+                </Link>
+              )}
+            </>
           )}
           <div className="border-t border-gray-100 pt-2 mt-2">
             {!isAuthenticated ? (

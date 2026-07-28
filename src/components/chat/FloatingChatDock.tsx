@@ -294,7 +294,7 @@ export default function FloatingChatDock() {
   const activePeer = peerOf(activeConv, chat.userId);
 
   return (
-    <>
+    <div className="chat-ui">
       {/* Minimized bubbles */}
       <div className="fixed bottom-24 right-4 z-[91] hidden md:flex flex-col gap-2 items-end">
         {chat.floatingIds
@@ -483,6 +483,6 @@ export default function FloatingChatDock() {
       <span className="sr-only">
         <Link href="/messages">Messages</Link>
       </span>
-    </>
+    </div>
   );
 }
