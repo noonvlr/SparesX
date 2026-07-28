@@ -152,8 +152,14 @@ export default function ProductDetail({
 
   const handleChatClick = () => {
     if (!requireAuth()) return;
-    // In-app chat coming later
-    alert("In-app chat is coming soon. Please use WhatsApp for now.");
+    const sellerId = seller?._id;
+    if (!sellerId) {
+      alert("Seller is not available for chat.");
+      return;
+    }
+    router.push(
+      `/messages?peer=${encodeURIComponent(sellerId)}&product=${encodeURIComponent(product._id)}`,
+    );
   };
 
   const handleWhatsAppClick = () => {

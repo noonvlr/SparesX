@@ -1,0 +1,15 @@
+"use client";
+
+export default function TypingIndicator({ visible }: { visible: boolean }) {
+  if (!visible) return null;
+  return (
+    <div className="px-4 py-1 text-xs text-gray-500 flex items-center gap-1">
+      <span className="inline-flex gap-0.5">
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0ms]" />
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]" />
+        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]" />
+      </span>
+      typing…
+    </div>
+  );
+}

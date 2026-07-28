@@ -58,6 +58,7 @@ export default function ProductCard({
   const [authPrompt, setAuthPrompt] = useState(false);
   const [loadingContact, setLoadingContact] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [sellerId, setSellerId] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,6 +89,7 @@ export default function ProductCard({
     setLoadingContact(true);
     setContactError(null);
     setWhatsappUrl(null);
+    setSellerId(null);
 
     try {
       const res = await fetch(`/api/products/${product._id}`, {
@@ -103,6 +105,7 @@ export default function ProductCard({
         setContactError("Seller contact unavailable");
         return;
       }
+      if (seller._id) setSellerId(String(seller._id));
       const url = buildWhatsAppLink(
         seller.countryCode,
         seller.whatsappNumber,
@@ -244,10 +247,15 @@ export default function ProductCard({
                 </button>
                 <button
                   type="button"
-                  onClick={() =>
-                    alert("In-app chat is coming soon. Please use WhatsApp for now.")
-                  }
-                  className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+                  disabled={!sellerId}
+                  onClick={() => {
+                    if (!sellerId) return;
+                    setContactOpen(false);
+                    router.push(
+                      `/messages?peer=${encodeURIComponent(sellerId)}&product=${encodeURIComponent(product._id)}`,
+                    );
+                  }}
+                  className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
                 >
                   In-app chat
                 </button>

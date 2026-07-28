@@ -11,6 +11,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [supportUnread, setSupportUnread] = useState(0);
+  const [chatUnread, setChatUnread] = useState(0);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -115,6 +116,40 @@ export default function Navbar() {
     };
   }, [isAuthenticated, userRole, pathname]);
 
+  // Chat unread badge for any authenticated user
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setChatUnread(0);
+      return;
+    }
+
+    const fetchUnread = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/chat/unread-count", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setChatUnread(data.unreadTotal || 0);
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    const onUpdated = () => fetchUnread();
+    window.addEventListener("chat-unread-updated", onUpdated);
+    window.addEventListener("focus", fetchUnread);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("chat-unread-updated", onUpdated);
+      window.removeEventListener("focus", fetchUnread);
+    };
+  }, [isAuthenticated, pathname]);
+
   function handleLogout() {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
@@ -122,6 +157,7 @@ export default function Navbar() {
     setUserName(null);
     setProfilePicture(null);
     setSupportUnread(0);
+    setChatUnread(0);
     setProfileOpen(false);
     router.push("/");
   }
@@ -180,6 +216,15 @@ export default function Navbar() {
               >
                 Support
               </Link>
+              {isAuthenticated && (
+                <Link
+                  href="/messages"
+                  className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
+                >
+                  Messages
+                  <UnreadBadge count={chatUnread} />
+                </Link>
+              )}
               {isAuthenticated && userRole === "technician" && (
                 <>
                   <Link
@@ -314,6 +359,29 @@ export default function Navbar() {
                       Profile
                     </Link>
                     <Link
+                      href="/messages"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        Messages
+                      </span>
+                      <UnreadBadge count={chatUnread} />
+                    </Link>
+                    <Link
                       href="/support"
                       onClick={() => setProfileOpen(false)}
                       className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
@@ -433,6 +501,16 @@ export default function Navbar() {
           >
             Support
           </Link>
+          {isAuthenticated && (
+            <Link
+              href="/messages"
+              className="flex items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span>Messages</span>
+              <UnreadBadge count={chatUnread} />
+            </Link>
+          )}
           {isAuthenticated && userRole === "technician" && (
             <div className="border-t border-gray-100 pt-2 mt-2">
               <p className="text-xs font-bold text-gray-400 px-3 py-1.5 uppercase tracking-wider">
