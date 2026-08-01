@@ -76,7 +76,13 @@ export default function ConversationList({
                       <TrustBadges
                         phoneVerified={peer?.phoneVerified}
                         emailVerified={peer?.emailVerified}
+                        kycVerified={peer?.kycVerified}
+                        businessVerified={peer?.businessVerified}
+                        addressVerified={peer?.addressVerified}
                         isTrusted={peer?.isTrusted}
+                        trustScore={peer?.trustScore}
+                        badges={peer?.badges}
+                        activeBadgeKeys={peer?.activeBadgeKeys}
                       />
                     </div>
                     {unread > 0 && (

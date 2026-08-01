@@ -4,6 +4,7 @@ import Cropper from "react-easy-crop";
 import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 import type { AdminUser } from "@/app/admin/users/_components/types";
+import TrustBadges from "@/components/TrustBadges";
 
 interface UserDetailsModalProps {
   user: AdminUser;
@@ -39,6 +40,19 @@ export default function UserDetailsModal({
     profilePicture: user.profilePicture || "",
     isBlocked: user.isBlocked,
     isTrusted: !!user.isTrusted,
+    phoneVerified: !!user.phoneVerified,
+    emailVerified: !!user.emailVerified,
+    kycVerified: !!user.kycVerified,
+    businessVerified: !!user.businessVerified,
+    addressVerified: !!user.addressVerified,
+    eliteApproved: !!user.eliteApproved,
+    special_official_store: (user.specialBadgeKeys || []).includes(
+      "official_store",
+    ),
+    special_verified_technician: (user.specialBadgeKeys || []).includes(
+      "verified_technician",
+    ),
+    special_moderator: (user.specialBadgeKeys || []).includes("moderator"),
     role: user.role,
   });
 
@@ -146,13 +160,25 @@ export default function UserDetailsModal({
         setLoading(false);
         return;
       }
+      const {
+        special_official_store,
+        special_verified_technician,
+        special_moderator,
+        ...rest
+      } = editData;
+      const specialBadgeKeys = [
+        special_official_store ? "official_store" : null,
+        special_verified_technician ? "verified_technician" : null,
+        special_moderator ? "moderator" : null,
+      ].filter(Boolean);
+
       const response = await fetch(`/api/admin/users/${user._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(editData),
+        body: JSON.stringify({ ...rest, specialBadgeKeys }),
       });
 
       const data = await response.json();
@@ -275,31 +301,18 @@ export default function UserDetailsModal({
                     {user.countryCode} {user.mobile}
                   </p>
                   <p className="text-xs mt-2">
-                    {user.phoneVerified ? (
-                      <span className="text-emerald-700 font-semibold">
-                        Phone verified
-                      </span>
-                    ) : (
-                      <span className="text-amber-700 font-semibold">
-                        Phone not verified
-                      </span>
-                    )}
-                    {" · "}
-                    {user.emailVerified ? (
-                      <span className="text-sky-700 font-semibold">
-                        Email verified
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">Email not verified</span>
-                    )}
-                    {" · "}
-                    {user.isTrusted ? (
-                      <span className="text-amber-700 font-semibold">
-                        Trusted seller
-                      </span>
-                    ) : (
-                      <span className="text-gray-500">Standard</span>
-                    )}
+                    <TrustBadges
+                      phoneVerified={user.phoneVerified}
+                      emailVerified={user.emailVerified}
+                      kycVerified={user.kycVerified}
+                      businessVerified={user.businessVerified}
+                      addressVerified={user.addressVerified}
+                      isTrusted={user.isTrusted}
+                      trustScore={user.trustScore}
+                      activeBadgeKeys={user.activeBadgeKeys}
+                      showScore
+                      size="md"
+                    />
                   </p>
                 </div>
 
@@ -681,8 +694,67 @@ export default function UserDetailsModal({
                     htmlFor="isTrusted"
                     className="text-sm font-medium text-amber-950"
                   >
-                    Mark as Trusted seller (admin badge shown publicly)
+                    Grant Trusted Seller reputation badge
                   </label>
+                </div>
+
+                {/* Verification badges */}
+                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-3">
+                  <p className="text-sm font-semibold text-blue-950">
+                    Verification badges
+                  </p>
+                  {(
+                    [
+                      ["phoneVerified", "Mobile verified"],
+                      ["emailVerified", "Email verified"],
+                      ["kycVerified", "KYC verified"],
+                      ["businessVerified", "Business verified"],
+                      ["addressVerified", "Address verified"],
+                    ] as const
+                  ).map(([name, label]) => (
+                    <div key={name} className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id={name}
+                        name={name}
+                        checked={!!editData[name]}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                      />
+                      <label htmlFor={name} className="text-sm text-blue-950">
+                        {label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Special recognition */}
+                <div className="p-4 bg-violet-50 border border-violet-100 rounded-lg space-y-3">
+                  <p className="text-sm font-semibold text-violet-950">
+                    Special recognition
+                  </p>
+                  {(
+                    [
+                      ["special_official_store", "Official Store"],
+                      ["special_verified_technician", "Verified Technician"],
+                      ["special_moderator", "Moderator"],
+                      ["eliteApproved", "Elite Seller admin approval"],
+                    ] as const
+                  ).map(([name, label]) => (
+                    <div key={name} className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id={name}
+                        name={name}
+                        checked={!!editData[name]}
+                        onChange={handleChange}
+                        className="w-4 h-4 text-violet-600 border-gray-300 rounded"
+                      />
+                      <label htmlFor={name} className="text-sm text-violet-950">
+                        {label}
+                      </label>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Buttons */}

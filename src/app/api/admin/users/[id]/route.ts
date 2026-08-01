@@ -117,6 +117,30 @@ export async function PATCH(
       }
     }
 
+    // Verification timestamps
+    for (const [flag, at] of [
+      ["kycVerified", "kycVerifiedAt"],
+      ["businessVerified", "businessVerifiedAt"],
+      ["addressVerified", "addressVerifiedAt"],
+      ["phoneVerified", "phoneVerifiedAt"],
+      ["emailVerified", "emailVerifiedAt"],
+    ] as const) {
+      if (typeof updateData[flag] === "boolean") {
+        updateData[at] = updateData[flag] ? new Date() : null;
+      }
+    }
+
+    if (Array.isArray(updateData.specialBadgeKeys)) {
+      const allowed = new Set([
+        "official_store",
+        "verified_technician",
+        "moderator",
+      ]);
+      updateData.specialBadgeKeys = (updateData.specialBadgeKeys as string[]).filter(
+        (k) => allowed.has(k),
+      );
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       id,
       { $set: updateData },
@@ -127,9 +151,14 @@ export async function PATCH(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    const { recomputeUserBadges } = await import("@/lib/badges/engine");
+    const trust = await recomputeUserBadges(id);
+    const fresh = await User.findById(id).select("-password");
+
     return NextResponse.json({
       message: "User updated successfully",
-      user: updatedUser,
+      user: fresh || updatedUser,
+      trust,
     });
   } catch {
     return NextResponse.json(

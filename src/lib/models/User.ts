@@ -21,6 +21,23 @@ export interface IUser extends Document {
   phoneVerified: boolean;
   /** Admin-granted trusted seller status (shown as Trusted badge) */
   isTrusted: boolean;
+  kycVerified: boolean;
+  businessVerified: boolean;
+  addressVerified: boolean;
+  kycVerifiedAt?: Date;
+  businessVerifiedAt?: Date;
+  addressVerifiedAt?: Date;
+  /** Admin-approved elite seller review */
+  eliteApproved: boolean;
+  completedSales: number;
+  averageRating: number;
+  responseRate: number;
+  complaintRate: number;
+  trustScore: number;
+  /** Snapshot of active badge keys for fast public reads */
+  activeBadgeKeys: string[];
+  /** Manually awarded special badges (official_store, verified_technician, moderator) */
+  specialBadgeKeys: string[];
   emailVerifiedAt?: Date;
   phoneVerifiedAt?: Date;
   trustedAt?: Date;
@@ -56,6 +73,20 @@ const UserSchema: Schema<IUser> = new Schema({
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
   isTrusted: { type: Boolean, default: false },
+  kycVerified: { type: Boolean, default: false },
+  businessVerified: { type: Boolean, default: false },
+  addressVerified: { type: Boolean, default: false },
+  kycVerifiedAt: { type: Date },
+  businessVerifiedAt: { type: Date },
+  addressVerifiedAt: { type: Date },
+  eliteApproved: { type: Boolean, default: false },
+  completedSales: { type: Number, default: 0 },
+  averageRating: { type: Number, default: 0 },
+  responseRate: { type: Number, default: 0 },
+  complaintRate: { type: Number, default: 0 },
+  trustScore: { type: Number, default: 0 },
+  activeBadgeKeys: { type: [String], default: [] },
+  specialBadgeKeys: { type: [String], default: [] },
   emailVerifiedAt: { type: Date },
   phoneVerifiedAt: { type: Date },
   trustedAt: { type: Date },

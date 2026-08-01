@@ -75,7 +75,14 @@ export default function ChatWindow({
             <TrustBadges
               phoneVerified={peer?.phoneVerified}
               emailVerified={peer?.emailVerified}
+              kycVerified={peer?.kycVerified}
+              businessVerified={peer?.businessVerified}
+              addressVerified={peer?.addressVerified}
               isTrusted={peer?.isTrusted}
+              trustScore={peer?.trustScore}
+              trustLabel={peer?.trustLabel}
+              badges={peer?.badges}
+              activeBadgeKeys={peer?.activeBadgeKeys}
             />
           </div>
           <OnlineStatus online={online} lastSeen={peer?.lastSeen} />

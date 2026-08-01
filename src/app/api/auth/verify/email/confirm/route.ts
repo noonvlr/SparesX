@@ -49,6 +49,9 @@ export async function POST(req: NextRequest) {
   user.emailVerifyOTPExpiry = undefined;
   await user.save();
 
+  const { recomputeUserBadges } = await import("@/lib/badges/engine");
+  await recomputeUserBadges(String(user._id));
+
   return NextResponse.json({
     message: "Email verified successfully",
     emailVerified: true,

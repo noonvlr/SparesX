@@ -9,6 +9,7 @@ import {
   conversationCreateLimiter,
   messageRateLimiter,
 } from "@/lib/chat/rateLimit";
+import { pickTrustFields } from "@/lib/trust";
 
 void User;
 void Product;
@@ -117,7 +118,7 @@ export async function listConversations(userId: string, page = 1, limit = 30) {
       .sort({ lastMessageTime: -1, updatedAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("participants", "name profilePicture lastSeen role phoneVerified emailVerified isTrusted")
+      .populate("participants", "name profilePicture lastSeen role phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys createdAt")
       .populate("productId", "name images price brand deviceModel slug status")
       .lean(),
     Conversation.countDocuments(filter),
@@ -151,6 +152,7 @@ export async function listConversations(userId: string, page = 1, limit = 30) {
       peer: peer
         ? {
             ...peer,
+            ...pickTrustFields(peer),
             _id: peerId,
             online: isRecentlyOnline(peer.lastSeen),
           }
@@ -173,7 +175,7 @@ export async function getConversationForUser(
 ) {
   await connectDB();
   const conversation = await Conversation.findById(conversationId)
-    .populate("participants", "name profilePicture lastSeen role phoneVerified emailVerified isTrusted")
+    .populate("participants", "name profilePicture lastSeen role phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys createdAt")
     .populate("productId", "name images price brand deviceModel slug status")
     .lean();
   if (!conversation) return null;
@@ -199,6 +201,7 @@ export async function getConversationForUser(
     peer: peer
       ? {
           ...peer,
+          ...pickTrustFields(peer),
           _id: peerId,
           online: isRecentlyOnline(peer.lastSeen),
         }
@@ -518,7 +521,7 @@ export async function adminListConversations(params: {
       .sort({ lastMessageTime: -1, updatedAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("participants", "name email profilePicture role lastSeen isBlocked phoneVerified emailVerified isTrusted")
+      .populate("participants", "name email profilePicture role lastSeen isBlocked phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys createdAt")
       .populate("productId", "name images price brand deviceModel status")
       .lean(),
     Conversation.countDocuments(filter),
@@ -571,7 +574,7 @@ export async function adminListConversations(params: {
 export async function adminGetConversation(conversationId: string) {
   await connectDB();
   const conversation = await Conversation.findById(conversationId)
-    .populate("participants", "name email profilePicture role lastSeen isBlocked phoneVerified emailVerified isTrusted")
+    .populate("participants", "name email profilePicture role lastSeen isBlocked phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys createdAt")
     .populate("productId", "name images price brand deviceModel status slug")
     .lean();
   if (!conversation) return null;

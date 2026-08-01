@@ -14,7 +14,14 @@ export interface AdminUser {
   isBlocked: boolean;
   phoneVerified?: boolean;
   emailVerified?: boolean;
+  kycVerified?: boolean;
+  businessVerified?: boolean;
+  addressVerified?: boolean;
   isTrusted?: boolean;
+  eliteApproved?: boolean;
+  trustScore?: number;
+  specialBadgeKeys?: string[];
+  activeBadgeKeys?: string[];
   createdAt: string;
   updatedAt?: string;
 }

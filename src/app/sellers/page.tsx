@@ -53,8 +53,8 @@ export default async function SellersPage() {
             Sellers
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            Active technicians on SparesX. Look for Phone verified and Trusted
-            seller badges.
+            Look for verification (blue), reputation (gold), and special (purple)
+            badges when choosing a seller.
           </p>
         </header>
 
@@ -73,7 +73,14 @@ export default async function SellersPage() {
                 state?: string;
                 phoneVerified?: boolean;
                 emailVerified?: boolean;
+                kycVerified?: boolean;
+                businessVerified?: boolean;
+                addressVerified?: boolean;
                 isTrusted?: boolean;
+                trustScore?: number;
+                trustLabel?: string;
+                badges?: import("@/lib/badges/catalog").PublicBadge[];
+                activeBadgeKeys?: string[];
               }) => (
                 <article
                   key={seller._id}
@@ -86,7 +93,15 @@ export default async function SellersPage() {
                     <TrustBadges
                       phoneVerified={seller.phoneVerified}
                       emailVerified={seller.emailVerified}
+                      kycVerified={seller.kycVerified}
+                      businessVerified={seller.businessVerified}
+                      addressVerified={seller.addressVerified}
                       isTrusted={seller.isTrusted}
+                      trustScore={seller.trustScore}
+                      trustLabel={seller.trustLabel}
+                      badges={seller.badges}
+                      activeBadgeKeys={seller.activeBadgeKeys}
+                      showScore
                     />
                   </div>
                   {(seller.city || seller.state) && (

@@ -94,7 +94,13 @@ export default function UsersList({
                   <TrustBadges
                     phoneVerified={user.phoneVerified}
                     emailVerified={user.emailVerified}
+                    kycVerified={user.kycVerified}
+                    businessVerified={user.businessVerified}
+                    addressVerified={user.addressVerified}
                     isTrusted={user.isTrusted}
+                    trustScore={user.trustScore}
+                    activeBadgeKeys={user.activeBadgeKeys}
+                    showScore
                   />
                 </div>
                 <div className="text-xs text-gray-500 truncate">
@@ -195,7 +201,13 @@ export default function UsersList({
                         <TrustBadges
                           phoneVerified={user.phoneVerified}
                           emailVerified={user.emailVerified}
+                          kycVerified={user.kycVerified}
+                          businessVerified={user.businessVerified}
+                          addressVerified={user.addressVerified}
                           isTrusted={user.isTrusted}
+                          trustScore={user.trustScore}
+                          activeBadgeKeys={user.activeBadgeKeys}
+                          showScore
                         />
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>

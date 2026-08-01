@@ -7,7 +7,14 @@ export type ChatUser = {
   online?: boolean;
   phoneVerified?: boolean;
   emailVerified?: boolean;
+  kycVerified?: boolean;
+  businessVerified?: boolean;
+  addressVerified?: boolean;
   isTrusted?: boolean;
+  trustScore?: number;
+  trustLabel?: string;
+  badges?: import("@/lib/badges/catalog").PublicBadge[];
+  activeBadgeKeys?: string[];
 };
 
 export type ChatProduct = {

@@ -38,7 +38,7 @@ export async function GET(
 
     const product = await Product.findById(id).populate(
       "technician",
-      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified isTrusted",
+      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt",
     );
 
     if (!product) {
@@ -58,17 +58,21 @@ export async function GET(
 
     const productObj: any = product.toObject();
 
-    // Only expose seller contact details to logged-in users
-    if (!isAuthenticated && productObj.technician) {
-      productObj.technician = {
-        _id: productObj.technician._id,
-        name: productObj.technician.name,
-        city: productObj.technician.city,
-        state: productObj.technician.state,
-        phoneVerified: !!productObj.technician.phoneVerified,
-        emailVerified: !!productObj.technician.emailVerified,
-        isTrusted: !!productObj.technician.isTrusted,
-      };
+    // Attach public trust badges; hide contact for guests
+    if (productObj.technician && typeof productObj.technician === "object") {
+      const { pickTrustFields } = await import("@/lib/trust");
+      const trust = pickTrustFields(productObj.technician);
+      if (!isAuthenticated) {
+        productObj.technician = {
+          _id: productObj.technician._id,
+          name: productObj.technician.name,
+          city: productObj.technician.city,
+          state: productObj.technician.state,
+          ...trust,
+        };
+      } else {
+        Object.assign(productObj.technician, trust);
+      }
     }
 
     // Similar products: same brand / partType / deviceCategory, exclude self

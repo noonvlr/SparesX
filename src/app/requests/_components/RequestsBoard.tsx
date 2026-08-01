@@ -59,6 +59,12 @@ export default function RequestsBoard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authPromptId, setAuthPromptId] = useState<string | null>(null);
 
+  // Keep local tab in sync when navigating Browse <-> Submit on the same page
+  useEffect(() => {
+    const next = searchParams.get("tab") === "submit" ? "submit" : "browse";
+    setTab(next);
+  }, [searchParams]);
+
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
     return () => clearTimeout(timer);

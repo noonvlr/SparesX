@@ -18,7 +18,14 @@ interface Seller {
   profilePicture?: string;
   phoneVerified?: boolean;
   emailVerified?: boolean;
+  kycVerified?: boolean;
+  businessVerified?: boolean;
+  addressVerified?: boolean;
   isTrusted?: boolean;
+  trustScore?: number;
+  trustLabel?: string;
+  badges?: import("@/lib/badges/catalog").PublicBadge[];
+  activeBadgeKeys?: string[];
 }
 
 interface Product {
@@ -322,7 +329,15 @@ export default function ProductDetail({
                       <TrustBadges
                         phoneVerified={seller.phoneVerified}
                         emailVerified={seller.emailVerified}
+                        kycVerified={seller.kycVerified}
+                        businessVerified={seller.businessVerified}
+                        addressVerified={seller.addressVerified}
                         isTrusted={seller.isTrusted}
+                        trustScore={seller.trustScore}
+                        trustLabel={seller.trustLabel}
+                        badges={seller.badges}
+                        activeBadgeKeys={seller.activeBadgeKeys}
+                        showScore
                       />
                     </div>
                     {(seller.city || seller.state) && (

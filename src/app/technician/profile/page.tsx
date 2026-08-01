@@ -5,6 +5,7 @@ import Image from "next/image";
 import Cropper from "react-easy-crop";
 import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
+import TrustBadges from "@/components/TrustBadges";
 
 export default function TechnicianProfilePage() {
   const router = useRouter();
@@ -273,6 +274,24 @@ export default function TechnicianProfilePage() {
             </svg>
           </button>
           <h1 className="text-xl font-bold text-gray-900">Edit Profile</h1>
+          {profile && (
+            <div className="mt-2">
+              <TrustBadges
+                phoneVerified={profile.phoneVerified}
+                emailVerified={profile.emailVerified}
+                kycVerified={profile.kycVerified}
+                businessVerified={profile.businessVerified}
+                addressVerified={profile.addressVerified}
+                isTrusted={profile.isTrusted}
+                trustScore={profile.trustScore}
+                trustLabel={profile.trustLabel}
+                badges={profile.badges}
+                activeBadgeKeys={profile.activeBadgeKeys}
+                showScore
+                size="md"
+              />
+            </div>
+          )}
           <div className="w-10"></div>
         </div>
 

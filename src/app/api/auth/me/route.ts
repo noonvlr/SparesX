@@ -18,5 +18,27 @@ export async function GET(req: NextRequest) {
   if (!user) {
     return NextResponse.json({ message: 'User not found' }, { status: 404 });
   }
-  return NextResponse.json({ user }, { status: 200 });
+
+  // Lazily compute badge snapshot for accounts that predate the badge system
+  if (
+    (!user.activeBadgeKeys || user.activeBadgeKeys.length === 0) &&
+    (user.phoneVerified || user.emailVerified || user.isTrusted || user.role === 'admin')
+  ) {
+    const { recomputeUserBadges } = await import('@/lib/badges/engine');
+    await recomputeUserBadges(String(user._id));
+    const refreshed = await User.findById(payload.id).select('-password');
+    if (refreshed) {
+      const { pickTrustFields } = await import('@/lib/trust');
+      return NextResponse.json(
+        { user: { ...refreshed.toObject(), ...pickTrustFields(refreshed) } },
+        { status: 200 },
+      );
+    }
+  }
+
+  const { pickTrustFields } = await import('@/lib/trust');
+  return NextResponse.json(
+    { user: { ...user.toObject(), ...pickTrustFields(user) } },
+    { status: 200 },
+  );
 }
