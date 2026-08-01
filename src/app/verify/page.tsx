@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ToastHost";
+import { useOtpResendCooldown } from "@/hooks/useOtpResendCooldown";
 
 type Status = {
   email: string;
@@ -21,6 +22,10 @@ export default function VerifyPage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [phoneSent, setPhoneSent] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const phoneResend = useOtpResendCooldown(120);
+  const emailResend = useOtpResendCooldown(120);
 
   const authHeaders = () => ({
     Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
@@ -69,6 +74,8 @@ export default function VerifyPage() {
         return;
       }
       showToast(data.message || "OTP sent");
+      setPhoneSent(true);
+      phoneResend.restart(120);
     } catch {
       setError("Failed to send OTP");
     } finally {
@@ -116,6 +123,8 @@ export default function VerifyPage() {
         return;
       }
       showToast(data.message || "Email OTP sent");
+      setEmailSent(true);
+      emailResend.restart(120);
     } catch {
       setError("Failed to send email OTP");
     } finally {
@@ -187,14 +196,25 @@ export default function VerifyPage() {
         </p>
         {!status?.phoneVerified && (
           <>
-            <button
-              type="button"
-              onClick={sendPhone}
-              disabled={!!busy}
-              className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
-            >
-              {busy === "phone-send" ? "Sending…" : "Send SMS OTP"}
-            </button>
+            {!phoneSent ? (
+              <button
+                type="button"
+                onClick={sendPhone}
+                disabled={!!busy}
+                className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
+              >
+                {busy === "phone-send" ? "Sending…" : "Send SMS OTP"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={sendPhone}
+                disabled={!!busy || !phoneResend.canResend}
+                className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+              >
+                {busy === "phone-send" ? "Sending…" : phoneResend.label}
+              </button>
+            )}
             <form onSubmit={confirmPhone} className="flex gap-2">
               <input
                 inputMode="numeric"
@@ -233,14 +253,25 @@ export default function VerifyPage() {
         <p className="text-sm text-gray-600">{status?.email}</p>
         {!status?.emailVerified && (
           <>
-            <button
-              type="button"
-              onClick={sendEmail}
-              disabled={!!busy}
-              className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
-            >
-              {busy === "email-send" ? "Sending…" : "Send email OTP"}
-            </button>
+            {!emailSent ? (
+              <button
+                type="button"
+                onClick={sendEmail}
+                disabled={!!busy}
+                className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+              >
+                {busy === "email-send" ? "Sending…" : "Send email OTP"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={sendEmail}
+                disabled={!!busy || !emailResend.canResend}
+                className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+              >
+                {busy === "email-send" ? "Sending…" : emailResend.label}
+              </button>
+            )}
             <form onSubmit={confirmEmail} className="flex gap-2">
               <input
                 inputMode="numeric"

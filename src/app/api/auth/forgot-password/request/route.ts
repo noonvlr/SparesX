@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
 import { User } from '@/lib/models/User';
-import { sendOTPEmail } from '@/lib/services/emailService';
+import { sendOtpEmail } from '@/lib/services/otpMailer';
 import crypto from 'crypto';
 
 const OTP_EXPIRY = 10 * 60 * 1000; // 10 minutes
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: String(email).toLowerCase().trim() });
     if (!user) {
       return NextResponse.json(
         { message: 'No account found with this email address' },
@@ -37,28 +37,32 @@ export async function POST(req: NextRequest) {
     user.passwordResetOTPExpiry = otpExpiry;
     await user.save();
 
-    // Send OTP via email
-    const emailSent = await sendOTPEmail({
+    const emailResult = await sendOtpEmail({
       recipientEmail: user.email,
       recipientName: user.name || user.email.split('@')[0],
       otp,
+      subject: 'Password Reset Verification Code - SparesX',
       expiryMinutes: 10,
     });
 
-    // Even if email fails, we've saved the OTP so the flow can continue
-    // In development, OTP will be logged as fallback
-    if (!emailSent) {
-      console.warn(`[PASSWORD RESET] Email failed for ${email}. OTP: ${otp}`);
-    } else {
-      console.log(`[PASSWORD RESET] OTP sent to ${email}`);
+    if (!emailResult.ok) {
+      console.warn(`[PASSWORD RESET] Email failed for ${email}: ${emailResult.message}`);
+      return NextResponse.json(
+        {
+          message: emailResult.message,
+          success: false,
+        },
+        { status: 502 },
+      );
     }
 
+    console.log(`[PASSWORD RESET] OTP sent to ${email}`);
     return NextResponse.json(
-      { 
+      {
         message: 'OTP sent to email. Please check your inbox and spam folder.',
-        success: true
+        success: true,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error('Error requesting OTP:', error);
