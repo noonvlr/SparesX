@@ -142,7 +142,8 @@ export const BADGE_CATALOG: Record<BadgeKey, BadgeDefinition> = {
     icon: "🌟",
     color: "purple",
     shortDescription: "Joined during SparesX launch",
-    criteria: "Account created during the founding period.",
+    criteria:
+      "Auto-awarded for accounts created during the founding period (on or before 31 Dec 2026), or granted/revoked by an administrator.",
   },
   moderator: {
     key: "moderator",

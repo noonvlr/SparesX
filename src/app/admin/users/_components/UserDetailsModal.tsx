@@ -5,6 +5,7 @@ import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 import type { AdminUser } from "@/app/admin/users/_components/types";
 import TrustBadges from "@/components/TrustBadges";
+import { FOUNDING_MEMBER_UNTIL } from "@/lib/badges/catalog";
 
 interface UserDetailsModalProps {
   user: AdminUser;
@@ -53,6 +54,12 @@ export default function UserDetailsModal({
       "verified_technician",
     ),
     special_moderator: (user.specialBadgeKeys || []).includes("moderator"),
+    special_founding_member:
+      !(user.revokedBadgeKeys || []).includes("founding_member") &&
+      ((user.specialBadgeKeys || []).includes("founding_member") ||
+        (user.activeBadgeKeys || []).includes("founding_member") ||
+        (!!user.createdAt &&
+          new Date(user.createdAt) <= FOUNDING_MEMBER_UNTIL)),
     role: user.role,
   });
 
@@ -164,13 +171,22 @@ export default function UserDetailsModal({
         special_official_store,
         special_verified_technician,
         special_moderator,
+        special_founding_member,
         ...rest
       } = editData;
       const specialBadgeKeys = [
         special_official_store ? "official_store" : null,
         special_verified_technician ? "verified_technician" : null,
         special_moderator ? "moderator" : null,
+        special_founding_member ? "founding_member" : null,
       ].filter(Boolean);
+
+      // Unchecking Founding Member revokes auto re-award for launch-period accounts
+      const revokedBadgeKeys = special_founding_member
+        ? (user.revokedBadgeKeys || []).filter((k) => k !== "founding_member")
+        : Array.from(
+            new Set([...(user.revokedBadgeKeys || []), "founding_member"]),
+          );
 
       const response = await fetch(`/api/admin/users/${user._id}`, {
         method: "PATCH",
@@ -178,7 +194,11 @@ export default function UserDetailsModal({
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ ...rest, specialBadgeKeys }),
+        body: JSON.stringify({
+          ...rest,
+          specialBadgeKeys,
+          revokedBadgeKeys,
+        }),
       });
 
       const data = await response.json();
@@ -314,6 +334,18 @@ export default function UserDetailsModal({
                       size="md"
                     />
                   </p>
+                  {(user.activeBadgeKeys || []).includes("founding_member") && (
+                    <p className="text-xs text-violet-700 mt-2">
+                      Founding Member is auto for launch-period accounts (joined
+                      on/before{" "}
+                      {FOUNDING_MEMBER_UNTIL.toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                      ). Toggle it under Edit → Special recognition.
+                    </p>
+                  )}
                 </div>
 
                 {/* WhatsApp */}
@@ -733,8 +765,14 @@ export default function UserDetailsModal({
                   <p className="text-sm font-semibold text-violet-950">
                     Special recognition
                   </p>
+                  <p className="text-xs text-violet-800/80 leading-relaxed">
+                    Founding Member is auto-assigned for accounts created on or
+                    before 31 Dec 2026 (launch period). Uncheck to revoke; check
+                    to grant manually.
+                  </p>
                   {(
                     [
+                      ["special_founding_member", "Founding Member"],
                       ["special_official_store", "Official Store"],
                       ["special_verified_technician", "Verified Technician"],
                       ["special_moderator", "Moderator"],

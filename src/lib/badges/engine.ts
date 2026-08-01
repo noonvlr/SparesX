@@ -177,18 +177,33 @@ export async function recomputeUserBadges(userId: string) {
   if (trusted) await upsertBadge(userId, "trusted_seller", user.isTrusted ? "admin" : "auto");
   else await deactivateBadge(userId, "trusted_seller");
 
-  // System specials
-  if (user.createdAt && user.createdAt <= FOUNDING_MEMBER_UNTIL) {
-    await upsertBadge(userId, "founding_member", "system");
+  // System specials — Founding Member is auto for launch-period accounts,
+  // unless admin revoked it; admin can also grant it manually after the cutoff.
+  const revoked = new Set(user.revokedBadgeKeys || []);
+  const specials = new Set(user.specialBadgeKeys || []);
+  const foundingEligible =
+    !!user.createdAt && user.createdAt <= FOUNDING_MEMBER_UNTIL;
+  const foundingGranted =
+    !revoked.has("founding_member") &&
+    (specials.has("founding_member") || foundingEligible);
+
+  if (foundingGranted) {
+    await upsertBadge(
+      userId,
+      "founding_member",
+      specials.has("founding_member") ? "admin" : "system",
+    );
+  } else {
+    await deactivateBadge(userId, "founding_member");
   }
+
   if (user.role === "admin") {
     await upsertBadge(userId, "administrator", "system");
   } else {
     await deactivateBadge(userId, "administrator");
   }
 
-  // Preserve / sync admin special keys
-  const specials = new Set(user.specialBadgeKeys || []);
+  // Preserve / sync admin special keys (excluding founding_member — handled above)
   for (const key of MANUAL_SPECIAL_KEYS) {
     if (specials.has(key)) await upsertBadge(userId, key, "admin");
     else await deactivateBadge(userId, key);

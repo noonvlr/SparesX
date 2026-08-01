@@ -78,13 +78,26 @@ export function badgesFromUserDoc(user: any): PublicBadge[] {
     if (user.businessVerified) keys.push("business_verified");
     if (user.addressVerified) keys.push("address_verified");
     if (user.isTrusted) keys.push("trusted_seller");
+    if (user.role === "admin") keys.push("administrator");
+    const revoked = new Set(
+      Array.isArray(user.revokedBadgeKeys) ? user.revokedBadgeKeys : [],
+    );
+    const specials = new Set(
+      Array.isArray(user.specialBadgeKeys) ? user.specialBadgeKeys : [],
+    );
     if (Array.isArray(user.specialBadgeKeys)) {
       for (const k of user.specialBadgeKeys) {
-        if (k in BADGE_CATALOG) keys.push(k as BadgeKey);
+        if (k in BADGE_CATALOG && k !== "founding_member") {
+          keys.push(k as BadgeKey);
+        }
       }
     }
-    if (user.role === "admin") keys.push("administrator");
-    if (user.createdAt && new Date(user.createdAt) <= FOUNDING_MEMBER_UNTIL) {
+    const foundingEligible =
+      user.createdAt && new Date(user.createdAt) <= FOUNDING_MEMBER_UNTIL;
+    if (
+      !revoked.has("founding_member") &&
+      (specials.has("founding_member") || foundingEligible)
+    ) {
       keys.push("founding_member");
     }
   }

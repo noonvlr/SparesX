@@ -36,8 +36,10 @@ export interface IUser extends Document {
   trustScore: number;
   /** Snapshot of active badge keys for fast public reads */
   activeBadgeKeys: string[];
-  /** Manually awarded special badges (official_store, verified_technician, moderator) */
+  /** Manually awarded special badges (official_store, verified_technician, moderator, founding_member) */
   specialBadgeKeys: string[];
+  /** Badges explicitly revoked by admin (blocks auto re-award, e.g. founding_member) */
+  revokedBadgeKeys: string[];
   emailVerifiedAt?: Date;
   phoneVerifiedAt?: Date;
   trustedAt?: Date;
@@ -87,6 +89,7 @@ const UserSchema: Schema<IUser> = new Schema({
   trustScore: { type: Number, default: 0 },
   activeBadgeKeys: { type: [String], default: [] },
   specialBadgeKeys: { type: [String], default: [] },
+  revokedBadgeKeys: { type: [String], default: [] },
   emailVerifiedAt: { type: Date },
   phoneVerifiedAt: { type: Date },
   trustedAt: { type: Date },

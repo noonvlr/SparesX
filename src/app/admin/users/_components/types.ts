@@ -21,6 +21,7 @@ export interface AdminUser {
   eliteApproved?: boolean;
   trustScore?: number;
   specialBadgeKeys?: string[];
+  revokedBadgeKeys?: string[];
   activeBadgeKeys?: string[];
   createdAt: string;
   updatedAt?: string;

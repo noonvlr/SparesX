@@ -135,10 +135,18 @@ export async function PATCH(
         "official_store",
         "verified_technician",
         "moderator",
+        "founding_member",
       ]);
-      updateData.specialBadgeKeys = (updateData.specialBadgeKeys as string[]).filter(
-        (k) => allowed.has(k),
-      );
+      updateData.specialBadgeKeys = (
+        updateData.specialBadgeKeys as string[]
+      ).filter((k) => allowed.has(k));
+    }
+
+    if (Array.isArray(updateData.revokedBadgeKeys)) {
+      const allowed = new Set(["founding_member"]);
+      updateData.revokedBadgeKeys = (
+        updateData.revokedBadgeKeys as string[]
+      ).filter((k) => allowed.has(k));
     }
 
     const updatedUser = await User.findByIdAndUpdate(
