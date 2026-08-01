@@ -8,6 +8,8 @@ export interface ISiteSettings extends Document {
   twilioAccountSid?: string;
   twilioAuthTokenEnc?: string;
   twilioFromNumber?: string;
+  /** Twilio Verify Service SID (VA...). Preferred for OTP, works on trial. */
+  twilioVerifyServiceSid?: string;
   msg91AuthKeyEnc?: string;
   msg91SenderId?: string;
   msg91TemplateId?: string;
@@ -33,6 +35,7 @@ const SiteSettingsSchema: Schema<ISiteSettings> = new Schema(
     twilioAccountSid: { type: String, default: "" },
     twilioAuthTokenEnc: { type: String, default: "" },
     twilioFromNumber: { type: String, default: "" },
+    twilioVerifyServiceSid: { type: String, default: "" },
     msg91AuthKeyEnc: { type: String, default: "" },
     msg91SenderId: { type: String, default: "" },
     msg91TemplateId: { type: String, default: "" },

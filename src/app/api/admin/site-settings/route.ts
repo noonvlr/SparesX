@@ -14,10 +14,11 @@ function publicSettings(doc: Awaited<ReturnType<typeof getOrCreateSiteSettings>>
     twilioAccountSid: doc.twilioAccountSid || "",
     twilioAuthTokenMasked: maskSecret(doc.twilioAuthTokenEnc),
     twilioFromNumber: doc.twilioFromNumber || "",
+    twilioVerifyServiceSid: doc.twilioVerifyServiceSid || "",
     twilioConfigured: !!(
       doc.twilioAccountSid &&
       doc.twilioAuthTokenEnc &&
-      doc.twilioFromNumber
+      (doc.twilioVerifyServiceSid || doc.twilioFromNumber)
     ),
     msg91AuthKeyMasked: maskSecret(doc.msg91AuthKeyEnc),
     msg91SenderId: doc.msg91SenderId || "",
@@ -71,6 +72,9 @@ export async function PATCH(req: NextRequest) {
   }
   if (typeof body.twilioFromNumber === "string") {
     doc.twilioFromNumber = body.twilioFromNumber.trim();
+  }
+  if (typeof body.twilioVerifyServiceSid === "string") {
+    doc.twilioVerifyServiceSid = body.twilioVerifyServiceSid.trim();
   }
   if (typeof body.twilioAuthToken === "string" && body.twilioAuthToken.trim()) {
     doc.twilioAuthTokenEnc = encryptSecret(body.twilioAuthToken.trim());

@@ -7,6 +7,7 @@ type Settings = {
   twilioAccountSid: string;
   twilioAuthTokenMasked: string;
   twilioFromNumber: string;
+  twilioVerifyServiceSid: string;
   twilioConfigured: boolean;
   msg91AuthKeyMasked: string;
   msg91SenderId: string;
@@ -27,6 +28,7 @@ const empty: Settings = {
   twilioAccountSid: "",
   twilioAuthTokenMasked: "",
   twilioFromNumber: "",
+  twilioVerifyServiceSid: "",
   twilioConfigured: false,
   msg91AuthKeyMasked: "",
   msg91SenderId: "",
@@ -96,6 +98,7 @@ export default function SiteSettingsPage() {
           activeSmsProvider: settings.activeSmsProvider,
           twilioAccountSid: settings.twilioAccountSid,
           twilioFromNumber: settings.twilioFromNumber,
+          twilioVerifyServiceSid: settings.twilioVerifyServiceSid,
           twilioAuthToken: twilioAuthToken || undefined,
           msg91SenderId: settings.msg91SenderId,
           msg91TemplateId: settings.msg91TemplateId,
@@ -209,6 +212,12 @@ export default function SiteSettingsPage() {
 
         <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
           <h2 className="text-lg font-semibold text-gray-900">Twilio</h2>
+          <p className="text-xs text-gray-500">
+            Trial accounts cannot send custom SMS text. Create a{" "}
+            <strong>Verify</strong> service in Twilio and paste the Service SID
+            below (starts with <code className="font-mono">VA</code>). OTP will
+            use Verify automatically when this is set.
+          </p>
           <label className="block text-sm">
             <span className="text-gray-600">Account SID</span>
             <input
@@ -238,10 +247,28 @@ export default function SiteSettingsPage() {
             />
           </label>
           <label className="block text-sm">
-            <span className="text-gray-600">From number (E.164)</span>
+            <span className="text-gray-600">
+              Verify Service SID (required for trial OTP)
+            </span>
+            <input
+              className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono"
+              placeholder="VAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              value={settings.twilioVerifyServiceSid}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  twilioVerifyServiceSid: e.target.value,
+                }))
+              }
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-gray-600">
+              From number (optional if Verify SID is set)
+            </span>
             <input
               className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-              placeholder="+91XXXXXXXXXX"
+              placeholder="+1... or leave blank when using Verify"
               value={settings.twilioFromNumber}
               onChange={(e) =>
                 setSettings((s) => ({ ...s, twilioFromNumber: e.target.value }))

@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { requireUser, isAuthError } from "@/lib/auth/requireUser";
 import { generateOtp, hashOtp } from "@/lib/security/secrets";
-import { sendSmsOtp } from "@/lib/services/sms";
+import { sendSmsOtp, TWILIO_VERIFY_SENTINEL } from "@/lib/services/sms";
 import {
   assertOtpSendAllowed,
   bumpOtpSend,
@@ -29,10 +29,8 @@ export async function POST(req: NextRequest) {
   }
 
   const otp = generateOtp();
-  user.phoneVerifyOTP = hashOtp(otp);
-  user.phoneVerifyOTPExpiry = new Date(Date.now() + OTP_EXPIRY_MS);
   bumpOtpSend(user, "phone");
-  await user.save();
+  user.phoneVerifyOTPExpiry = new Date(Date.now() + OTP_EXPIRY_MS);
 
   const result = await sendSmsOtp({
     countryCode: user.countryCode || "+91",
@@ -41,11 +39,21 @@ export async function POST(req: NextRequest) {
   });
 
   if (!result.ok) {
+    await user.save();
     return NextResponse.json({ message: result.message }, { status: 502 });
   }
+
+  if (result.viaTwilioVerify) {
+    // OTP is managed by Twilio Verify — do not store our generated code
+    user.phoneVerifyOTP = TWILIO_VERIFY_SENTINEL;
+  } else {
+    user.phoneVerifyOTP = hashOtp(otp);
+  }
+  await user.save();
 
   return NextResponse.json({
     message: "OTP sent to your mobile number",
     maskedMobile: `${user.countryCode || "+91"} ******${user.mobile.slice(-4)}`,
+    viaTwilioVerify: !!result.viaTwilioVerify,
   });
 }
