@@ -17,6 +17,18 @@ export interface IUser extends Document {
   profilePicture?: string;
   isBlocked: boolean;
   lastSeen?: Date;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  emailVerifiedAt?: Date;
+  phoneVerifiedAt?: Date;
+  emailVerifyOTP?: string;
+  emailVerifyOTPExpiry?: Date;
+  phoneVerifyOTP?: string;
+  phoneVerifyOTPExpiry?: Date;
+  phoneOtpSendCount?: number;
+  phoneOtpSendWindowStart?: Date;
+  emailOtpSendCount?: number;
+  emailOtpSendWindowStart?: Date;
   passwordResetOTP?: string;
   passwordResetOTPExpiry?: Date;
   createdAt: Date;
@@ -38,6 +50,18 @@ const UserSchema: Schema<IUser> = new Schema({
   profilePicture: { type: String, trim: true },
   isBlocked: { type: Boolean, default: false },
   lastSeen: { type: Date },
+  emailVerified: { type: Boolean, default: false },
+  phoneVerified: { type: Boolean, default: false },
+  emailVerifiedAt: { type: Date },
+  phoneVerifiedAt: { type: Date },
+  emailVerifyOTP: { type: String, default: undefined },
+  emailVerifyOTPExpiry: { type: Date, default: undefined },
+  phoneVerifyOTP: { type: String, default: undefined },
+  phoneVerifyOTPExpiry: { type: Date, default: undefined },
+  phoneOtpSendCount: { type: Number, default: 0 },
+  phoneOtpSendWindowStart: { type: Date },
+  emailOtpSendCount: { type: Number, default: 0 },
+  emailOtpSendWindowStart: { type: Date },
   passwordResetOTP: { type: String, default: undefined },
   passwordResetOTPExpiry: { type: Date, default: undefined },
 }, { timestamps: true });

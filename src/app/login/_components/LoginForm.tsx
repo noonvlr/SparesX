@@ -22,12 +22,29 @@ export default function LoginForm() {
       localStorage.setItem("token", data.token);
       window.dispatchEvent(new Event("sparesx-auth-changed"));
       showToast("Logged in successfully");
+
+      const needsVerify =
+        data.role !== "admin" &&
+        (data.phoneVerified === false || data.emailVerified === false);
+      if (needsVerify) {
+        if (!data.phoneVerified) {
+          showToast("Please verify your phone number", "info");
+        } else if (!data.emailVerified) {
+          showToast("You can verify your email anytime", "info");
+        }
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+
       if (data.role === "admin") {
-        router.push("/admin/dashboard");
+        router.push(next || "/admin/dashboard");
+      } else if (!data.phoneVerified) {
+        router.push(next || "/verify");
       } else if (data.role === "technician") {
-        router.push("/technician/dashboard");
+        router.push(next || "/technician/dashboard");
       } else {
-        router.push("/");
+        router.push(next || "/");
       }
     } else {
       setError(data.message || "Login failed");

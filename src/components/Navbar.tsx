@@ -269,6 +269,12 @@ export default function Navbar() {
                   >
                     Chat disputes
                   </Link>
+                  <Link
+                    href="/admin/site-settings"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                  >
+                    Site settings
+                  </Link>
                 </>
               ) : (
                 <>
@@ -575,6 +581,13 @@ export default function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Chat disputes
+              </Link>
+              <Link
+                href="/admin/site-settings"
+                className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Site settings
               </Link>
               <Link
                 href="/admin/settings"

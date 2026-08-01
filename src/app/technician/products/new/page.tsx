@@ -74,6 +74,9 @@ export default function AddProductPage() {
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
+  const [phoneGate, setPhoneGate] = useState<"checking" | "ok" | "blocked">(
+    "checking",
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const {
@@ -81,6 +84,31 @@ export default function AddProductPage() {
     uploading: uploadingImages,
     uploadError,
   } = useImageUpload();
+
+  // Fetch all static data on mount
+  useEffect(() => {
+    const checkPhone = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.replace(`/login?next=${encodeURIComponent("/technician/products/new")}`);
+        return;
+      }
+      try {
+        const res = await fetch("/api/auth/verify/status", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.phoneVerified) {
+          setPhoneGate("blocked");
+          return;
+        }
+        setPhoneGate("ok");
+      } catch {
+        setPhoneGate("blocked");
+      }
+    };
+    void checkPhone();
+  }, [router]);
 
   // Fetch all static data on mount
   useEffect(() => {
@@ -299,6 +327,9 @@ export default function AddProductPage() {
       if (res.ok) {
         setSuccess("Product added successfully!");
         setTimeout(() => router.push("/technician/products"), 1200);
+      } else if (data.code === "PHONE_UNVERIFIED") {
+        setError(data.message || "Verify your phone before posting");
+        setTimeout(() => router.push("/verify"), 800);
       } else {
         setError(data.message || "Failed to add product");
       }
@@ -309,13 +340,33 @@ export default function AddProductPage() {
     }
   }
 
-  if (dataLoading) {
+  if (phoneGate === "checking" || dataLoading) {
     return (
       <div className="max-w-3xl mx-auto py-8 px-3 sm:px-6 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading form options...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (phoneGate === "blocked") {
+    return (
+      <div className="max-w-lg mx-auto py-16 px-4 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          Verify your phone first
+        </h1>
+        <p className="text-sm text-gray-600 mb-6">
+          You must verify your mobile number before posting a listing.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.push("/verify")}
+          className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
+        >
+          Go to verification
+        </button>
       </div>
     );
   }

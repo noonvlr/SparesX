@@ -30,7 +30,16 @@ export async function POST(req: NextRequest) {
     }
     
     const token = signJwt({ _id: user._id, role: user.role });
-    return NextResponse.json({ token, role: user.role, name: user.name }, { status: 200 });
+    return NextResponse.json(
+      {
+        token,
+        role: user.role,
+        name: user.name,
+        emailVerified: !!user.emailVerified,
+        phoneVerified: !!user.phoneVerified,
+      },
+      { status: 200 },
+    );
   } catch (e) {
     return NextResponse.json({ message: 'Server error' }, { status: 500 });
   }

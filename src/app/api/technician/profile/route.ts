@@ -42,12 +42,40 @@ export async function PUT(req: NextRequest) {
   
   // Update allowed fields
   if (body.name) user.name = body.name;
-  if (body.email) user.email = body.email;
+  if (body.email) {
+    const nextEmail = String(body.email).toLowerCase().trim();
+    if (nextEmail && nextEmail !== user.email) {
+      user.email = nextEmail;
+      user.emailVerified = false;
+      user.emailVerifiedAt = undefined;
+      user.emailVerifyOTP = undefined;
+      user.emailVerifyOTPExpiry = undefined;
+    }
+  }
+  if (body.mobile !== undefined) {
+    const nextMobile = String(body.mobile).replace(/\D/g, '');
+    if (nextMobile && nextMobile !== user.mobile) {
+      user.mobile = nextMobile;
+      user.phoneVerified = false;
+      user.phoneVerifiedAt = undefined;
+      user.phoneVerifyOTP = undefined;
+      user.phoneVerifyOTPExpiry = undefined;
+    }
+  }
   if (body.address !== undefined) user.address = body.address;
   if (body.city !== undefined) user.city = body.city;
   if (body.state !== undefined) user.state = body.state;
   if (body.pinCode !== undefined) user.pinCode = body.pinCode;
-  if (body.countryCode !== undefined) user.countryCode = body.countryCode;
+  if (body.countryCode !== undefined) {
+    const nextCc = String(body.countryCode).trim() || '+91';
+    if (nextCc !== user.countryCode) {
+      user.countryCode = nextCc;
+      user.phoneVerified = false;
+      user.phoneVerifiedAt = undefined;
+      user.phoneVerifyOTP = undefined;
+      user.phoneVerifyOTPExpiry = undefined;
+    }
+  }
   if (body.whatsappNumber !== undefined) user.whatsappNumber = body.whatsappNumber;
   if (body.profilePicture !== undefined) user.profilePicture = body.profilePicture;
   

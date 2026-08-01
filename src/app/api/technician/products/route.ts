@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
 import { Product } from '@/lib/models/Product';
+import { User } from '@/lib/models/User';
 import { verifyJwt } from '@/lib/auth/jwt';
 
 // List own products (GET), Create product (POST)
@@ -40,6 +41,20 @@ export async function POST(req: NextRequest) {
   }
   
   await connectDB();
+
+  const technician = await User.findById(payload.id).select('phoneVerified role');
+  if (!technician) {
+    return NextResponse.json({ message: 'User not found' }, { status: 404 });
+  }
+  if (!technician.phoneVerified) {
+    return NextResponse.json(
+      {
+        code: 'PHONE_UNVERIFIED',
+        message: 'Verify your phone number before posting a listing',
+      },
+      { status: 403 },
+    );
+  }
   
   // Generate slug for SEO
   const slug = `${deviceCategory}-${brand}-${deviceModel}-${partType}-${Date.now()}`

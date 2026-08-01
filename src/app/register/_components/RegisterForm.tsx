@@ -266,7 +266,7 @@ export default function RegisterForm() {
       if (res.ok) {
         window.scrollTo({ top: 0, behavior: "smooth" });
         setSuccess("Registration successful! Redirecting to login...");
-        setTimeout(() => router.push("/login"), 2500);
+        setTimeout(() => router.push("/login?next=/verify"), 2500);
       } else {
         setError(data.message || "Registration failed");
       }

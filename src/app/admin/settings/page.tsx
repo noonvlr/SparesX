@@ -46,6 +46,11 @@ const CONTROLS = [
     title: "Reports",
     desc: "Counts across users, products, chats, and support",
   },
+  {
+    href: "/admin/site-settings",
+    title: "Site settings",
+    desc: "SMS provider (Twilio/MSG91), credentials, and email OTP SMTP",
+  },
 ];
 
 export default function AdminSettingsPage() {
