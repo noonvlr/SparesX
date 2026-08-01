@@ -38,6 +38,7 @@ export default function UserDetailsModal({
     whatsappNumber: user.whatsappNumber,
     profilePicture: user.profilePicture || "",
     isBlocked: user.isBlocked,
+    isTrusted: !!user.isTrusted,
     role: user.role,
   });
 
@@ -272,6 +273,33 @@ export default function UserDetailsModal({
                   </label>
                   <p className="text-gray-900 font-medium mt-1">
                     {user.countryCode} {user.mobile}
+                  </p>
+                  <p className="text-xs mt-2">
+                    {user.phoneVerified ? (
+                      <span className="text-emerald-700 font-semibold">
+                        Phone verified
+                      </span>
+                    ) : (
+                      <span className="text-amber-700 font-semibold">
+                        Phone not verified
+                      </span>
+                    )}
+                    {" · "}
+                    {user.emailVerified ? (
+                      <span className="text-sky-700 font-semibold">
+                        Email verified
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">Email not verified</span>
+                    )}
+                    {" · "}
+                    {user.isTrusted ? (
+                      <span className="text-amber-700 font-semibold">
+                        Trusted seller
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">Standard</span>
+                    )}
                   </p>
                 </div>
 
@@ -636,6 +664,24 @@ export default function UserDetailsModal({
                     className="text-sm font-medium text-gray-700"
                   >
                     Block this user
+                  </label>
+                </div>
+
+                {/* Trusted seller */}
+                <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-100 rounded-lg">
+                  <input
+                    type="checkbox"
+                    id="isTrusted"
+                    name="isTrusted"
+                    checked={!!editData.isTrusted}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-amber-600 border-gray-300 rounded focus:ring-amber-500"
+                  />
+                  <label
+                    htmlFor="isTrusted"
+                    className="text-sm font-medium text-amber-950"
+                  >
+                    Mark as Trusted seller (admin badge shown publicly)
                   </label>
                 </div>
 

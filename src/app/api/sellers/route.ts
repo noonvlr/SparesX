@@ -5,7 +5,7 @@ import { User } from "@/lib/models/User";
 export async function GET() {
   await connectDB();
   const sellers = await User.find({ role: "technician", isBlocked: false })
-    .select("name createdAt")
+    .select("name createdAt phoneVerified emailVerified isTrusted city state")
     .sort({ createdAt: -1 })
     .limit(24);
 

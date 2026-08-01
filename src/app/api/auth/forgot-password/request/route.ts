@@ -43,6 +43,7 @@ export async function POST(req: NextRequest) {
       otp,
       subject: 'Password Reset Verification Code - SparesX',
       expiryMinutes: 10,
+      purpose: 'password-reset',
     });
 
     if (!emailResult.ok) {

@@ -38,7 +38,7 @@ export async function GET(
 
     const product = await Product.findById(id).populate(
       "technician",
-      "name city state whatsappNumber countryCode mobile profilePicture",
+      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified isTrusted",
     );
 
     if (!product) {
@@ -65,6 +65,9 @@ export async function GET(
         name: productObj.technician.name,
         city: productObj.technician.city,
         state: productObj.technician.state,
+        phoneVerified: !!productObj.technician.phoneVerified,
+        emailVerified: !!productObj.technician.emailVerified,
+        isTrusted: !!productObj.technician.isTrusted,
       };
     }
 

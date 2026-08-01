@@ -5,6 +5,9 @@ export type ChatUser = {
   lastSeen?: string;
   role?: string;
   online?: boolean;
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
+  isTrusted?: boolean;
 };
 
 export type ChatProduct = {

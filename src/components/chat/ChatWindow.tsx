@@ -7,6 +7,7 @@ import MessageInput from "@/components/chat/MessageInput";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import ProductHeader from "@/components/chat/ProductHeader";
 import OnlineStatus from "@/components/chat/OnlineStatus";
+import TrustBadges from "@/components/TrustBadges";
 
 export default function ChatWindow({
   userId,
@@ -67,9 +68,16 @@ export default function ChatWindow({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-gray-900 truncate">
-            {peer?.name || "Chat"}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <p className="font-semibold text-gray-900 truncate">
+              {peer?.name || "Chat"}
+            </p>
+            <TrustBadges
+              phoneVerified={peer?.phoneVerified}
+              emailVerified={peer?.emailVerified}
+              isTrusted={peer?.isTrusted}
+            />
+          </div>
           <OnlineStatus online={online} lastSeen={peer?.lastSeen} />
         </div>
         <span

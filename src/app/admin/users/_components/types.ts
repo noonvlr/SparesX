@@ -12,6 +12,9 @@ export interface AdminUser {
   whatsappNumber?: string;
   profilePicture?: string;
   isBlocked: boolean;
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
+  isTrusted?: boolean;
   createdAt: string;
   updatedAt?: string;
 }

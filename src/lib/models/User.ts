@@ -19,8 +19,11 @@ export interface IUser extends Document {
   lastSeen?: Date;
   emailVerified: boolean;
   phoneVerified: boolean;
+  /** Admin-granted trusted seller status (shown as Trusted badge) */
+  isTrusted: boolean;
   emailVerifiedAt?: Date;
   phoneVerifiedAt?: Date;
+  trustedAt?: Date;
   emailVerifyOTP?: string;
   emailVerifyOTPExpiry?: Date;
   phoneVerifyOTP?: string;
@@ -52,8 +55,10 @@ const UserSchema: Schema<IUser> = new Schema({
   lastSeen: { type: Date },
   emailVerified: { type: Boolean, default: false },
   phoneVerified: { type: Boolean, default: false },
+  isTrusted: { type: Boolean, default: false },
   emailVerifiedAt: { type: Date },
   phoneVerifiedAt: { type: Date },
+  trustedAt: { type: Date },
   emailVerifyOTP: { type: String, default: undefined },
   emailVerifyOTPExpiry: { type: Date, default: undefined },
   phoneVerifyOTP: { type: String, default: undefined },

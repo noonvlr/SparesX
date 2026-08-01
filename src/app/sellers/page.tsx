@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import TrustBadges from "@/components/TrustBadges";
 
 export const metadata: Metadata = {
-  title: "Verified Sellers",
+  title: "Sellers",
   description:
-    "Browse verified technicians on SparesX. Connect with trusted sellers for mobile spare parts. All sellers are reviewed for quality and reliability.",
+    "Browse technicians on SparesX. Phone-verified and trusted sellers for mobile spare parts across India.",
   keywords: [
     "verified sellers",
     "technician network",
@@ -16,16 +17,16 @@ export const metadata: Metadata = {
     canonical: "/sellers",
   },
   openGraph: {
-    title: "Verified Sellers | SparesX",
+    title: "Sellers | SparesX",
     description:
-      "Browse verified technicians on SparesX. Connect with trusted sellers for mobile spare parts.",
+      "Browse technicians on SparesX. Connect with phone-verified and trusted sellers.",
     type: "website",
     url: "https://spares-x-h1cj.vercel.app/sellers",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Verified Sellers | SparesX",
-    description: "Connect with trusted mobile spare parts sellers.",
+    title: "Sellers | SparesX",
+    description: "Connect with phone-verified mobile spare parts sellers.",
   },
   robots: {
     index: true,
@@ -49,30 +50,51 @@ export default async function SellersPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <header className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-            Verified Sellers
+            Sellers
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            Browse active technicians vetted on SparesX. Connect for reliable
-            parts sourcing.
+            Active technicians on SparesX. Look for Phone verified and Trusted
+            seller badges.
           </p>
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {sellers.length === 0 ? (
             <div className="col-span-full text-center py-16 text-gray-500">
-              No verified sellers found yet.
+              No sellers found yet.
             </div>
           ) : (
             sellers.map(
-              (seller: { _id: string; name: string; createdAt: string }) => (
+              (seller: {
+                _id: string;
+                name: string;
+                createdAt: string;
+                city?: string;
+                state?: string;
+                phoneVerified?: boolean;
+                emailVerified?: boolean;
+                isTrusted?: boolean;
+              }) => (
                 <article
                   key={seller._id}
                   className="bg-white border border-gray-100 rounded-xl shadow-sm p-5"
                 >
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {seller.name}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {seller.name}
+                    </h2>
+                    <TrustBadges
+                      phoneVerified={seller.phoneVerified}
+                      emailVerified={seller.emailVerified}
+                      isTrusted={seller.isTrusted}
+                    />
+                  </div>
+                  {(seller.city || seller.state) && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      {[seller.city, seller.state].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-500 mt-2">
                     Active since{" "}
                     {new Date(seller.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",

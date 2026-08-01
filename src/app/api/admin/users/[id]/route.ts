@@ -109,6 +109,14 @@ export async function PATCH(
       );
     }
 
+    if (typeof updateData.isTrusted === "boolean") {
+      if (updateData.isTrusted) {
+        updateData.trustedAt = new Date();
+      } else {
+        updateData.trustedAt = null;
+      }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       id,
       { $set: updateData },

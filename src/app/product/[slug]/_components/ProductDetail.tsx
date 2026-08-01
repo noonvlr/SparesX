@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { openChatUi } from "@/components/chat/openChat";
+import TrustBadges from "@/components/TrustBadges";
 
 interface Seller {
   _id?: string;
@@ -15,6 +16,9 @@ interface Seller {
   countryCode?: string;
   mobile?: string;
   profilePicture?: string;
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
+  isTrusted?: boolean;
 }
 
 interface Product {
@@ -313,7 +317,14 @@ export default function ProductDetail({
               {seller ? (
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div>
-                    <p className="font-semibold text-gray-900">{seller.name}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-gray-900">{seller.name}</p>
+                      <TrustBadges
+                        phoneVerified={seller.phoneVerified}
+                        emailVerified={seller.emailVerified}
+                        isTrusted={seller.isTrusted}
+                      />
+                    </div>
                     {(seller.city || seller.state) && (
                       <p className="text-sm text-gray-500 mt-1">
                         {[seller.city, seller.state].filter(Boolean).join(", ")}

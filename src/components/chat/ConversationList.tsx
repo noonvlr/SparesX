@@ -2,6 +2,7 @@
 
 import type { ChatConversation } from "@/types/chat";
 import OnlineStatus from "@/components/chat/OnlineStatus";
+import TrustBadges from "@/components/TrustBadges";
 
 export default function ConversationList({
   conversations,
@@ -64,13 +65,20 @@ export default function ConversationList({
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
-                    <p
-                      className={`text-sm truncate ${
-                        unread ? "font-bold text-gray-900" : "font-semibold text-gray-800"
-                      }`}
-                    >
-                      {peer?.name || "User"}
-                    </p>
+                    <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                      <p
+                        className={`text-sm truncate ${
+                          unread ? "font-bold text-gray-900" : "font-semibold text-gray-800"
+                        }`}
+                      >
+                        {peer?.name || "User"}
+                      </p>
+                      <TrustBadges
+                        phoneVerified={peer?.phoneVerified}
+                        emailVerified={peer?.emailVerified}
+                        isTrusted={peer?.isTrusted}
+                      />
+                    </div>
                     {unread > 0 && (
                       <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center">
                         {unread > 99 ? "99+" : unread}

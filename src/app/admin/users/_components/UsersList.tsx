@@ -1,5 +1,6 @@
 "use client";
 import type { AdminUser } from "@/app/admin/users/_components/types";
+import TrustBadges from "@/components/TrustBadges";
 
 interface UsersListProps {
   users: AdminUser[];
@@ -88,6 +89,13 @@ export default function UsersList({
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-gray-900 truncate">
                   {user.name}
+                </div>
+                <div className="mt-1">
+                  <TrustBadges
+                    phoneVerified={user.phoneVerified}
+                    emailVerified={user.emailVerified}
+                    isTrusted={user.isTrusted}
+                  />
                 </div>
                 <div className="text-xs text-gray-500 truncate">
                   {user.email}
@@ -182,6 +190,13 @@ export default function UsersList({
                     <div>
                       <div className="font-semibold text-gray-900 leading-tight">
                         {user.name}
+                      </div>
+                      <div className="mt-1">
+                        <TrustBadges
+                          phoneVerified={user.phoneVerified}
+                          emailVerified={user.emailVerified}
+                          isTrusted={user.isTrusted}
+                        />
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>
