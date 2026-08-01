@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 
 export default function LegalPage({
@@ -24,28 +23,6 @@ export default function LegalPage({
         )}
         <div className="prose prose-slate max-w-none space-y-6 text-gray-700 text-[15px] leading-relaxed">
           {children}
-        </div>
-        <div className="mt-10 pt-6 border-t border-gray-200 text-sm text-gray-500">
-          <p className="mb-2">
-            These documents are a strong starting point for the website and are
-            not a substitute for legal advice. Have an Indian lawyer review them
-            before launch, especially if you later add payments, escrow, or
-            shipping.
-          </p>
-          <p>
-            Questions?{" "}
-            <Link href="/support" className="text-blue-600 hover:underline">
-              Contact support
-            </Link>{" "}
-            or email{" "}
-            <a
-              href="mailto:support@sparesx.in"
-              className="text-blue-600 hover:underline"
-            >
-              support@sparesx.in
-            </a>
-            .
-          </p>
         </div>
       </article>
     </main>
