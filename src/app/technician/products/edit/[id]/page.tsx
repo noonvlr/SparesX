@@ -394,17 +394,28 @@ export default function EditProductPage() {
               </button>
             ))}
           </div>
+          {!form.deviceCategory && (
+            <p className="mt-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--muted)] shadow-[var(--shadow-sm)]">
+              Select a device category to get started
+            </p>
+          )}
         </div>
 
         {/* Step 2: Device Details (Brand & Model) */}
         {form.deviceCategory && (
-          <div className="p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4">
+          <div className="relative z-20 p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4">
             <h3 className="text-sm font-bold text-[var(--brand-hover)] uppercase tracking-wide">
               Step 2: Choose Brand & Model
             </h3>
 
+            {!form.brand && !showBrandDropdown && (
+              <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
+                Choose a brand for your device
+              </p>
+            )}
+
             {/* Brand Dropdown */}
-            <div className="relative">
+            <div className={`relative ${showBrandDropdown ? "z-30" : ""}`}>
               <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                 Brand *
               </label>
@@ -471,7 +482,13 @@ export default function EditProductPage() {
 
             {/* Model Dropdown - Only show when brand is selected */}
             {form.brand && (
-              <div className="relative">
+              <div className="relative z-20 space-y-3">
+                {!form.deviceModel && !showModelDropdown && (
+                  <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
+                    Select a model to continue
+                  </p>
+                )}
+                <div className={`relative ${showModelDropdown ? "z-30" : ""}`}>
                 <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                   Model *
                 </label>
@@ -528,6 +545,7 @@ export default function EditProductPage() {
                     )}
                   </div>
                 )}
+                </div>
               </div>
             )}
           </div>
@@ -739,12 +757,6 @@ export default function EditProductPage() {
               </Button>
             </div>
           </>
-        )}
-
-        {!form.deviceCategory && (
-          <div className="mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
-            Select a device category to get started
-          </div>
         )}
       </form>
     </div>

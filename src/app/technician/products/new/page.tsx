@@ -478,6 +478,11 @@ export default function AddProductPage() {
               ))}
             </div>
           </div>
+          {!form.deviceCategory && (
+            <p className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--muted)] shadow-[var(--shadow-sm)]">
+              Select a device category to get started
+            </p>
+          )}
         </div>
 
         {/* Step 2: Device Details (Brand & Model) */}
@@ -491,6 +496,12 @@ export default function AddProductPage() {
                 Choose Brand & Model
               </h3>
             </div>
+
+            {!form.brand && !showBrandDropdown && (
+              <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
+                Choose a brand for your device
+              </p>
+            )}
 
             {/* Brand Dropdown */}
             <div className={`relative ${showBrandDropdown ? "z-30" : ""}`}>
@@ -559,7 +570,12 @@ export default function AddProductPage() {
 
             {/* Model selector - search existing, suggest close matches, or add new */}
             {form.brand && (
-              <div className="animate-in fade-in duration-200">
+              <div className="relative z-20 space-y-3 animate-in fade-in duration-200">
+                {!form.deviceModel && (
+                  <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
+                    Select a model to continue
+                  </p>
+                )}
                 <ModelSelector
                   models={models}
                   value={form.deviceModel}
@@ -945,12 +961,6 @@ export default function AddProductPage() {
           </>
         )}
 
-        {/* Only before step 1 — later tips were overlapping brand/model dropdowns */}
-        {!form.deviceCategory && (
-          <div className="mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
-            Select a device category to get started
-          </div>
-        )}
       </form>
     </div>
   );
