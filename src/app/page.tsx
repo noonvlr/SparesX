@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import FeaturedProducts from "@/components/FeaturedProducts";
+import AdSlot from "@/components/AdSlot";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
 
@@ -198,6 +199,10 @@ export default async function HomePage() {
             </div>
           </section>
         )}
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <AdSlot id="home-mid" size="leaderboard" className="my-2" />
+        </div>
 
         <FeaturedProducts products={featuredProducts} />
       </main>

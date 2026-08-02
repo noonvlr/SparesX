@@ -202,6 +202,8 @@ export default function FloatingChatDock() {
   const chat = useChatDock();
   const [muted, setMuted] = useState(false);
   const [hasToken, setHasToken] = useState(false);
+  const [fabDismissed, setFabDismissed] = useState(false);
+  const [chatVisited, setChatVisited] = useState(false);
   const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -224,7 +226,11 @@ export default function FloatingChatDock() {
 
   useEffect(() => {
     setMuted(isChatMuted());
-    const sync = () => setHasToken(Boolean(localStorage.getItem("token")));
+    const sync = () => {
+      setHasToken(Boolean(localStorage.getItem("token")));
+      setFabDismissed(localStorage.getItem("sparesx_chat_fab_hidden") === "1");
+      setChatVisited(localStorage.getItem("sparesx_chat_visited") === "1");
+    };
     sync();
     try {
       const raw = localStorage.getItem("sparesx_chat_fab_pos");
@@ -254,6 +260,30 @@ export default function FloatingChatDock() {
       window.removeEventListener("resize", onResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (chat.panelOpen || chat.floatingIds.length > 0) {
+      setChatVisited(true);
+      setFabDismissed(false);
+      try {
+        localStorage.setItem("sparesx_chat_visited", "1");
+        localStorage.removeItem("sparesx_chat_fab_hidden");
+      } catch {
+        // ignore
+      }
+    }
+  }, [chat.panelOpen, chat.floatingIds.length]);
+
+  useEffect(() => {
+    if (chat.unreadTotal > 0 && fabDismissed) {
+      setFabDismissed(false);
+      try {
+        localStorage.removeItem("sparesx_chat_fab_hidden");
+      } catch {
+        // ignore
+      }
+    }
+  }, [chat.unreadTotal, fabDismissed]);
 
   useEffect(() => {
     if (!fabPosition) return;
@@ -313,8 +343,31 @@ export default function FloatingChatDock() {
     else chat.openPanel();
   };
 
-  // Guests: no dock. Logged-in: always show launcher (even before userId hydrates).
+  const dismissFab = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      localStorage.setItem("sparesx_chat_fab_hidden", "1");
+    } catch {
+      // ignore
+    }
+    setFabDismissed(true);
+    if (chat.panelOpen) chat.closePanel();
+  };
+
+  // Guests: no dock
   if (!hasToken && !chat.userId && !chat.panelOpen) return null;
+
+  const hasOpenThread =
+    chat.panelOpen ||
+    chat.floatingIds.length > 0 ||
+    chat.minimizedIds.size > 0;
+  const hasConversationHistory = (chat.conversations?.length || 0) > 0;
+  const showFab =
+    hasOpenThread ||
+    chat.unreadTotal > 0 ||
+    (hasConversationHistory && !fabDismissed) ||
+    (chatVisited && !fabDismissed);
 
   const activeConv = chat.activeId
     ? chat.getConversation(chat.activeId)
@@ -468,42 +521,66 @@ export default function FloatingChatDock() {
         </>
       )}
 
-      {/* Launcher FAB */}
-      <button
-        type="button"
-        onPointerDown={handleFabPointerDown}
-        onPointerMove={handleFabPointerMove}
-        onPointerUp={handleFabPointerUp}
-        onPointerCancel={handleFabPointerUp}
-        onClick={() => {
-          if (suppressClickRef.current) return;
-          togglePanel();
-        }}
-        className={`fixed z-[96] w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-900/20 hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-teal-300 touch-none select-none ${
-          fabPosition ? "" : "chat-fab-default"
-        }`}
-        style={fabPosition ? { left: fabPosition.x, top: fabPosition.y } : undefined}
-        aria-label="Open messages"
-      >
-        <svg
-          className="w-7 h-7"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      {/* Launcher FAB — only when chat is relevant; dismissible */}
+      {showFab && (
+        <div
+          className={`fixed z-[96] ${fabPosition ? "" : "chat-fab-default"}`}
+          style={
+            fabPosition
+              ? { left: fabPosition.x, top: fabPosition.y }
+              : undefined
+          }
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-          />
-        </svg>
-        {chat.unreadTotal > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-rose-500 text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-md animate-pulse">
-            {chat.unreadTotal > 99 ? "99+" : chat.unreadTotal}
-          </span>
-        )}
-      </button>
+          <button
+            type="button"
+            onClick={dismissFab}
+            className="absolute -top-1.5 -left-1.5 z-[97] w-6 h-6 rounded-full bg-white text-slate-600 border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Hide chat bubble"
+            title="Hide"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onPointerDown={handleFabPointerDown}
+            onPointerMove={handleFabPointerMove}
+            onPointerUp={handleFabPointerUp}
+            onPointerCancel={handleFabPointerUp}
+            onClick={() => {
+              if (suppressClickRef.current) return;
+              togglePanel();
+            }}
+            className="relative w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-900/20 hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-teal-300 touch-none select-none"
+            aria-label="Open messages"
+          >
+            <svg
+              className="w-7 h-7"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+            {chat.unreadTotal > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-rose-500 text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-md animate-pulse">
+                {chat.unreadTotal > 99 ? "99+" : chat.unreadTotal}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Login hint never — only when authed */}
       <span className="sr-only">

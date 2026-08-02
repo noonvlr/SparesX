@@ -104,22 +104,36 @@ export async function POST(req: NextRequest) {
     const idPart = userId ? userId.slice(-6) : "anon";
 
     for (const file of files) {
-      const buffer = await file.arrayBuffer();
-      const ext = extensionForMime(file.type.toLowerCase());
+      const raw = Buffer.from(await file.arrayBuffer());
+      let optimized;
+      try {
+        const { optimizeUploadImage } = await import(
+          "@/lib/images/optimizeUpload"
+        );
+        optimized = await optimizeUploadImage(raw, file.type);
+      } catch (optErr) {
+        console.warn("[Upload] optimize failed, storing original:", optErr);
+        optimized = {
+          buffer: raw,
+          contentType: file.type || "image/jpeg",
+          ext: extensionForMime((file.type || "").toLowerCase()),
+        };
+      }
+
       const safeName = `${Date.now()}-${idPart}-${Math.random()
         .toString(36)
-        .slice(2, 8)}.${ext}`;
+        .slice(2, 8)}.${optimized.ext}`;
 
       if (useLocalStorage) {
         const filePath = path.join(uploadsDir, safeName);
-        await fs.writeFile(filePath, Buffer.from(buffer));
+        await fs.writeFile(filePath, optimized.buffer);
         uploadedUrls.push(`/uploads/${safeName}`);
       } else {
-        const blob = await put(safeName, buffer, {
+        const blob = await put(safeName, optimized.buffer, {
           access: "public",
           addRandomSuffix: true,
           token,
-          contentType: file.type,
+          contentType: optimized.contentType,
         });
         uploadedUrls.push(blob.url);
       }

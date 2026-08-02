@@ -377,6 +377,12 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       router.push(`/login?next=${encodeURIComponent("/")}`);
       return;
     }
+    try {
+      localStorage.setItem("sparesx_chat_visited", "1");
+      localStorage.removeItem("sparesx_chat_fab_hidden");
+    } catch {
+      // ignore
+    }
     setUserId(uid);
     setPanelOpen(true);
     setPanelView("list");

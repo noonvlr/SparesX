@@ -7,7 +7,6 @@ import {
   ContactSheet,
   useContactFlow,
 } from "@/components/ContactSheet";
-import { Badge } from "@/components/ui/Card";
 import { cn } from "@/lib/ui/cn";
 
 export interface ProductCardData {
@@ -66,7 +65,7 @@ export default function ProductCard({
   return (
     <>
       <article
-        className="group relative flex flex-col overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] card-hover"
+        className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md origin-top scale-[0.92] sm:scale-[0.95] card-hover"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => {
           setHovered(false);
@@ -83,10 +82,10 @@ export default function ProductCard({
               e.stopPropagation();
               onRemove();
             }}
-            className="absolute top-3 left-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full glass text-[var(--muted)] hover:text-[var(--danger)] disabled:opacity-50"
+            className="absolute top-2 left-2 z-20 inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white/95 text-gray-600 border border-gray-200 shadow-sm hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
           >
             {removing ? (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
             ) : (
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -101,14 +100,13 @@ export default function ProductCard({
         ) : null}
 
         <Link href={`/product/${product._id}`} className="block">
-          <div className="relative aspect-[4/3] overflow-hidden bg-[var(--surface-3)]">
+          <div className="relative aspect-square overflow-hidden bg-gray-50 border-b border-gray-200 flex items-center justify-center">
             {product.priceNegotiable ? (
-              <Badge
-                tone="success"
-                className="absolute top-3 right-3 z-10 shadow-sm"
-              >
-                Negotiable
-              </Badge>
+              <div className="absolute top-0 right-0 z-10 overflow-hidden w-20 h-20 pointer-events-none">
+                <div className="absolute top-2.5 -right-6 w-24 rotate-45 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold tracking-wide text-center py-0.5 shadow-md">
+                  Negotiable
+                </div>
+              </div>
             ) : null}
             {images.length > 0 ? (
               <>
@@ -116,17 +114,17 @@ export default function ProductCard({
                 <img
                   src={resolveImageUrl(images[imageIndex] || images[0])}
                   alt={product.name}
-                  className="card-image-zoom h-full w-full object-cover"
+                  className="card-image-zoom h-full w-full object-contain p-2 sm:p-3"
                   loading="lazy"
                 />
                 {images.length > 1 ? (
-                  <span className="absolute bottom-2 right-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
                     {imageIndex + 1}/{images.length}
                   </span>
                 ) : null}
               </>
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-slate-300">
+              <div className="flex h-full w-full items-center justify-center text-gray-300">
                 <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -140,26 +138,35 @@ export default function ProductCard({
           </div>
         </Link>
 
-        <div className="flex flex-1 flex-col gap-2 p-3.5 sm:p-4">
+        <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <Link href={`/product/${product._id}`}>
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[var(--ink)] transition-colors group-hover:text-[var(--brand)]">
+            <h3 className="mb-1.5 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-gray-900 transition-colors group-hover:text-[var(--brand)]">
               {product.name}
             </h3>
           </Link>
 
-          <div className="flex flex-wrap gap-1.5">
-            {badge ? <Badge tone="brand">{badge}</Badge> : null}
+          <div className="mb-2 flex flex-wrap gap-1">
+            {badge ? (
+              <span className="rounded-full bg-[var(--brand-soft)] px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium text-[var(--brand-hover)]">
+                {badge}
+              </span>
+            ) : null}
             {product.condition ? (
-              <Badge
-                tone={product.condition === "new" ? "success" : "warning"}
+              <span
+                className={cn(
+                  "rounded-full px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium",
+                  product.condition === "new"
+                    ? "bg-green-50 text-green-700"
+                    : "bg-amber-50 text-amber-700",
+                )}
               >
                 {product.condition}
-              </Badge>
+              </span>
             ) : null}
           </div>
 
-          <div className="mt-auto flex items-end justify-between gap-2 pt-1">
-            <p className="text-lg font-semibold tracking-tight text-[var(--ink)]">
+          <div className="mt-auto space-y-2">
+            <p className="text-base sm:text-lg font-bold text-[var(--brand)]">
               ₹{product.price?.toLocaleString()}
             </p>
             <button
@@ -169,11 +176,9 @@ export default function ProductCard({
                 e.stopPropagation();
                 void contact.openContact();
               }}
-              className={cn(
-                "btn-press h-10 min-h-[40px] rounded-[var(--radius)] bg-[var(--brand)] px-3.5 text-xs font-semibold text-white hover:bg-[var(--brand-hover)]",
-              )}
+              className="btn-press w-full rounded-lg bg-gray-900 py-1.5 text-[11px] sm:text-xs font-semibold text-white hover:bg-gray-800"
             >
-              Contact
+              Contact now
             </button>
           </div>
         </div>

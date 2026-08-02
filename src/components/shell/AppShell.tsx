@@ -168,11 +168,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mobileProfileOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileProfileOpen(false);
     };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [mobileProfileOpen]);
 
   const openMobileProfile = () => {
@@ -363,7 +363,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Desktop top navbar */}
       {!hideShell && (
-        <header className="hidden md:block sticky top-0 z-40 glass border-b border-[var(--border)]">
+        <header className="hidden md:block sticky top-0 z-40 glass-nav">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[var(--nav-h)] flex items-center justify-between gap-4">
             <div className="flex items-center gap-6 min-w-0">
               <Link
@@ -501,7 +501,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Mobile top bar */}
       {!hideShell && (
-        <header className="md:hidden sticky top-0 z-40 glass flex items-center justify-between gap-3 px-4 h-[var(--nav-h)] border-b border-[var(--border)]">
+        <header className="md:hidden sticky top-0 z-40 glass-nav relative flex items-center justify-between gap-3 px-4 h-[var(--nav-h)]">
           <Link
             href="/"
             className="text-lg font-semibold tracking-tight text-[var(--brand)]"
@@ -522,6 +522,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 onClick={openMobileProfile}
                 className="inline-flex items-center justify-center min-h-12 min-w-12 rounded-full"
                 aria-label="Account menu"
+                aria-expanded={mobileProfileOpen}
               >
                 <Avatar src={profilePicture} name={userName || "U"} size="sm" />
               </button>
@@ -537,13 +538,94 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </Link>
             )}
           </div>
+
+          {/* Mobile profile dropdown — opens under top bar (top of screen) */}
+          {mobileProfileOpen && isAuthenticated && (
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-[45] bg-transparent"
+                aria-label="Close account menu"
+                onClick={() => setMobileProfileOpen(false)}
+              />
+              <div
+                role="menu"
+                className="absolute right-3 top-[calc(100%-4px)] z-[50] w-64 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)] py-1.5 animate-in"
+              >
+                <div className="px-3 py-2.5 border-b border-[var(--border)] flex items-center gap-3">
+                  <Avatar src={profilePicture} name={userName || "U"} size="sm" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[var(--ink)] truncate">
+                      {userName || "Account"}
+                    </p>
+                    <p className="text-xs text-[var(--muted)] capitalize">
+                      {userRole || "user"}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href={profileHref}
+                  role="menuitem"
+                  className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-11"
+                  onClick={() => setMobileProfileOpen(false)}
+                >
+                  <IconUser className="h-4 w-4 text-[var(--muted)]" />
+                  View profile
+                </Link>
+                {isTechnician && (
+                  <Link
+                    href="/technician/dashboard"
+                    role="menuitem"
+                    className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-11"
+                    onClick={() => setMobileProfileOpen(false)}
+                  >
+                    <IconGrid className="h-4 w-4 text-[var(--muted)]" />
+                    Dashboard
+                  </Link>
+                )}
+                {userRole === "admin" && (
+                  <Link
+                    href="/admin/settings"
+                    role="menuitem"
+                    className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-11"
+                    onClick={() => setMobileProfileOpen(false)}
+                  >
+                    <IconMore className="h-4 w-4 text-[var(--muted)]" />
+                    Control center
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => void onLogout()}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] min-h-11"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    aria-hidden
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.75}
+                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"
+                    />
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            </>
+          )}
         </header>
       )}
 
       {/* Mobile bottom nav */}
       {!hideShell && (
         <nav
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 glass border-t border-[var(--border)] flex items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom,0px)] h-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom,0px))]"
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 glass-nav border-t border-[var(--border)] flex items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom,0px)] h-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom,0px))]"
           aria-label="Primary"
         >
           {mobileItems.map((item) => {
@@ -591,85 +673,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-      )}
-
-      {/* Mobile profile sheet */}
-      {mobileProfileOpen && isAuthenticated && (
-        <div className="md:hidden fixed inset-0 z-[var(--z-modal)]">
-          <button
-            type="button"
-            className="absolute inset-0 bg-slate-900/40"
-            aria-label="Close account menu"
-            onClick={() => setMobileProfileOpen(false)}
-          />
-          <div className="absolute inset-x-0 bottom-0 glass rounded-t-[var(--radius-xl)] shadow-[var(--shadow-lg)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
-            <div className="flex justify-center pt-3 pb-1">
-              <span className="h-1 w-10 rounded-full bg-slate-300" />
-            </div>
-            <div className="px-5 py-3 flex items-center gap-3 border-b border-[var(--border)]">
-              <Avatar src={profilePicture} name={userName || "U"} size="md" />
-              <div className="min-w-0">
-                <p className="text-base font-semibold text-[var(--ink)] truncate">
-                  {userName || "Account"}
-                </p>
-                <p className="text-xs text-[var(--muted)] capitalize">
-                  {userRole || "user"}
-                </p>
-              </div>
-            </div>
-            <div className="p-3 space-y-1">
-              <Link
-                href={profileHref}
-                className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
-                onClick={() => setMobileProfileOpen(false)}
-              >
-                <IconUser className="h-5 w-5 text-[var(--muted)]" />
-                View profile
-              </Link>
-              {isTechnician && (
-                <Link
-                  href="/technician/dashboard"
-                  className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
-                  onClick={() => setMobileProfileOpen(false)}
-                >
-                  <IconGrid className="h-5 w-5 text-[var(--muted)]" />
-                  Dashboard
-                </Link>
-              )}
-              {userRole === "admin" && (
-                <Link
-                  href="/admin/settings"
-                  className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
-                  onClick={() => setMobileProfileOpen(false)}
-                >
-                  <IconMore className="h-5 w-5 text-[var(--muted)]" />
-                  Control center
-                </Link>
-              )}
-              <button
-                type="button"
-                onClick={() => void onLogout()}
-                className="w-full flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] min-h-12"
-              >
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.75}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"
-                  />
-                </svg>
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
       )}
 
       <ToastHost />
