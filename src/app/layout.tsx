@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import ChatShell from "@/components/chat/ChatShell";
 import ToastHost from "@/components/ToastHost";
 import VerificationBanner from "@/components/VerificationBanner";
+import PasswordSetupBanner from "@/components/PasswordSetupBanner";
 
 const siteUrl = "https://spares-x-h1cj.vercel.app";
 
@@ -81,6 +82,7 @@ export default function RootLayout({
           <Navbar />
           <ToastHost />
           <VerificationBanner />
+          <PasswordSetupBanner />
           <div className="flex-1">{children}</div>
           <Footer />
         </ChatShell>

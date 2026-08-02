@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 type Status = {
   phoneVerified: boolean;
   emailVerified: boolean;
-  hasPassword: boolean;
   role?: string;
 };
 
@@ -44,7 +43,6 @@ export default function VerificationBanner() {
         setStatus({
           phoneVerified: !!data.phoneVerified,
           emailVerified: !!data.emailVerified,
-          hasPassword: !!data.hasPassword,
           role: data.role,
         });
       } catch {
@@ -63,40 +61,20 @@ export default function VerificationBanner() {
   }, [pathname]);
 
   if (!status) return null;
-
-  const onProfile = pathname?.startsWith("/technician/profile");
-  const needsPhone = !status.phoneVerified;
-  const needsPassword = !status.hasPassword && !onProfile;
-  const needsEmail =
-    status.phoneVerified && !status.emailVerified && !dismissedEmail;
-
-  if (!needsPhone && !needsPassword && !needsEmail) {
+  if (status.phoneVerified && (status.emailVerified || dismissedEmail)) {
     return null;
   }
 
   let message: ReactNode;
-  let ctaHref = "/verify";
-  let ctaLabel = "Verify now";
   let showDismiss = false;
 
-  if (needsPhone) {
+  if (!status.phoneVerified) {
     message = (
       <>
         Verify your phone number to post listings.{" "}
         {!status.emailVerified && "You can also verify your email."}
-        {needsPassword &&
-          " Also set a password so you can sign in with email."}
       </>
     );
-  } else if (needsPassword) {
-    message = (
-      <>
-        Set a password so you can also sign in with email. Google Sign-In still
-        works.
-      </>
-    );
-    ctaHref = "/technician/profile#security";
-    ctaLabel = "Set password";
   } else {
     message = <>Your email is not verified yet (optional).</>;
     showDismiss = true;
@@ -108,10 +86,10 @@ export default function VerificationBanner() {
         <p>{message}</p>
         <div className="flex items-center gap-3 shrink-0">
           <Link
-            href={ctaHref}
+            href="/verify"
             className="font-semibold text-amber-900 underline underline-offset-2"
           >
-            {ctaLabel}
+            Verify now
           </Link>
           {showDismiss && (
             <button

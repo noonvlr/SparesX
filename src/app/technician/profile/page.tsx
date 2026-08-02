@@ -199,6 +199,17 @@ export default function TechnicianProfilePage() {
   }, [router]);
 
   useEffect(() => {
+    if (loading) return;
+    const hash = typeof window !== "undefined" ? window.location.hash.replace("#", "") : "";
+    if (!hash) return;
+    const t = window.setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(hash);
+    }, 100);
+    return () => window.clearTimeout(t);
+  }, [loading]);
+
+  useEffect(() => {
     const ids = SECTIONS.map((s) => s.id);
     const observers: IntersectionObserver[] = [];
     ids.forEach((id) => {
