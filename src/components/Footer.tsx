@@ -43,6 +43,11 @@ export default function Footer() {
                   How it works
                 </Link>
               </li>
+              <li>
+                <Link href="/trust-score" className="hover:text-white transition">
+                  Trust Score explained
+                </Link>
+              </li>
             </ul>
           </div>
 
