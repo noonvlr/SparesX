@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Link from "next/link";
 import TrustBadges from "@/components/TrustBadges";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 
@@ -91,9 +92,12 @@ export default async function SellersPage() {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
+                      <Link
+                        href={`/u/${seller._id}`}
+                        className="text-lg font-semibold text-gray-900 hover:text-blue-700"
+                      >
                         {seller.name}
-                      </h2>
+                      </Link>
                       <div className="mt-1">
                         <StarRatingDisplay
                           value={seller.averageRating || 0}

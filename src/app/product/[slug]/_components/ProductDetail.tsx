@@ -486,7 +486,16 @@ export default function ProductDetail({
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-semibold text-gray-900">{seller.name}</p>
+                      {seller._id ? (
+                        <Link
+                          href={`/u/${seller._id}`}
+                          className="font-semibold text-gray-900 hover:text-blue-700"
+                        >
+                          {seller.name}
+                        </Link>
+                      ) : (
+                        <p className="font-semibold text-gray-900">{seller.name}</p>
+                      )}
                       <StarRatingDisplay
                         value={sellerRating.averageRating}
                         count={sellerRating.ratingCount}

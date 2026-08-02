@@ -127,7 +127,25 @@ function FloatingWindow({
       aria-label={`Chat with ${peer?.name || "user"}`}
     >
       <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-900 text-white">
-        {peer?.profilePicture ? (
+        {peer?._id ? (
+          <Link
+            href={`/u/${peer._id}`}
+            className="shrink-0 rounded-full"
+            title="View profile"
+          >
+            {peer?.profilePicture ? (
+              <img
+                src={peer.profilePicture}
+                alt=""
+                className="w-8 h-8 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold">
+                {(peer?.name || "?").charAt(0).toUpperCase()}
+              </div>
+            )}
+          </Link>
+        ) : peer?.profilePicture ? (
           <img
             src={peer.profilePicture}
             alt=""
@@ -139,7 +157,16 @@ function FloatingWindow({
           </div>
         )}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold truncate">{peer?.name || "Chat"}</p>
+          {peer?._id ? (
+            <Link
+              href={`/u/${peer._id}`}
+              className="text-sm font-semibold truncate block hover:underline"
+            >
+              {peer?.name || "Chat"}
+            </Link>
+          ) : (
+            <p className="text-sm font-semibold truncate">{peer?.name || "Chat"}</p>
+          )}
           <OnlineStatus
             online={peer?._id ? chat.onlineMap[peer._id] : false}
             lastSeen={peer?.lastSeen}

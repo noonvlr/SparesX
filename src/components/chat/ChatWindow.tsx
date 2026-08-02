@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
 import MessageBubble from "@/components/chat/MessageBubble";
 import MessageInput from "@/components/chat/MessageInput";
@@ -56,7 +57,25 @@ export default function ChatWindow({
   return (
     <div className="flex flex-col h-full min-h-0 bg-[#f0f2f5]">
       <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
-        {peer?.profilePicture ? (
+        {peer?._id ? (
+          <Link
+            href={`/u/${peer._id}`}
+            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-300"
+            title="View profile"
+          >
+            {peer?.profilePicture ? (
+              <img
+                src={peer.profilePicture}
+                alt=""
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
+                {(peer?.name || "?").charAt(0).toUpperCase()}
+              </div>
+            )}
+          </Link>
+        ) : peer?.profilePicture ? (
           <img
             src={peer.profilePicture}
             alt=""
@@ -69,9 +88,18 @@ export default function ChatWindow({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <p className="font-semibold text-gray-900 truncate">
-              {peer?.name || "Chat"}
-            </p>
+            {peer?._id ? (
+              <Link
+                href={`/u/${peer._id}`}
+                className="font-semibold text-gray-900 truncate hover:text-blue-700"
+              >
+                {peer?.name || "Chat"}
+              </Link>
+            ) : (
+              <p className="font-semibold text-gray-900 truncate">
+                {peer?.name || "Chat"}
+              </p>
+            )}
             <TrustBadges
               phoneVerified={peer?.phoneVerified}
               emailVerified={peer?.emailVerified}

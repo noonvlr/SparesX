@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ChatConversation } from "@/types/chat";
 import OnlineStatus from "@/components/chat/OnlineStatus";
 import TrustBadges from "@/components/TrustBadges";
@@ -44,62 +45,81 @@ export default function ConversationList({
         const online = peer?._id ? onlineMap[peer._id] : false;
         return (
           <li key={c._id}>
-            <button
-              type="button"
-              onClick={() => onSelect(c._id)}
-              className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition ${
-                activeId === c._id ? "bg-blue-50" : unread ? "bg-emerald-50/40" : ""
+            <div
+              className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition flex items-start gap-3 ${
+                activeId === c._id
+                  ? "bg-blue-50"
+                  : unread
+                    ? "bg-emerald-50/40"
+                    : ""
               }`}
             >
-              <div className="flex items-start gap-3">
-                {peer?.profilePicture ? (
-                  <img
-                    src={peer.profilePicture}
-                    alt=""
-                    className="w-11 h-11 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold">
-                    {(peer?.name || "?").charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-                      <p
-                        className={`text-sm truncate ${
-                          unread ? "font-bold text-gray-900" : "font-semibold text-gray-800"
-                        }`}
-                      >
-                        {peer?.name || "User"}
-                      </p>
-                      <TrustBadges
-                        phoneVerified={peer?.phoneVerified}
-                        emailVerified={peer?.emailVerified}
-                        kycVerified={peer?.kycVerified}
-                        businessVerified={peer?.businessVerified}
-                        addressVerified={peer?.addressVerified}
-                        isTrusted={peer?.isTrusted}
-                        trustScore={peer?.trustScore}
-                        badges={peer?.badges}
-                        activeBadgeKeys={peer?.activeBadgeKeys}
-                      />
+              {peer?._id ? (
+                <Link
+                  href={`/u/${peer._id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="shrink-0"
+                  title="View profile"
+                >
+                  {peer?.profilePicture ? (
+                    <img
+                      src={peer.profilePicture}
+                      alt=""
+                      className="w-11 h-11 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold">
+                      {(peer?.name || "?").charAt(0).toUpperCase()}
                     </div>
-                    {unread > 0 && (
-                      <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center">
-                        {unread > 99 ? "99+" : unread}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500 truncate mt-0.5">
-                    {c.lastMessage || "No messages yet"}
-                  </p>
-                  <div className="mt-1">
-                    <OnlineStatus online={online} lastSeen={peer?.lastSeen} />
-                  </div>
+                  )}
+                </Link>
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold">
+                  {(peer?.name || "?").charAt(0).toUpperCase()}
                 </div>
-              </div>
-            </button>
+              )}
+              <button
+                type="button"
+                onClick={() => onSelect(c._id)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                    <p
+                      className={`text-sm truncate ${
+                        unread
+                          ? "font-bold text-gray-900"
+                          : "font-semibold text-gray-800"
+                      }`}
+                    >
+                      {peer?.name || "User"}
+                    </p>
+                    <TrustBadges
+                      phoneVerified={peer?.phoneVerified}
+                      emailVerified={peer?.emailVerified}
+                      kycVerified={peer?.kycVerified}
+                      businessVerified={peer?.businessVerified}
+                      addressVerified={peer?.addressVerified}
+                      isTrusted={peer?.isTrusted}
+                      trustScore={peer?.trustScore}
+                      badges={peer?.badges}
+                      activeBadgeKeys={peer?.activeBadgeKeys}
+                    />
+                  </div>
+                  {unread > 0 && (
+                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {unread > 99 ? "99+" : unread}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 truncate mt-0.5">
+                  {c.lastMessage || "No messages yet"}
+                </p>
+                <div className="mt-1">
+                  <OnlineStatus online={online} lastSeen={peer?.lastSeen} />
+                </div>
+              </button>
+            </div>
           </li>
         );
       })}
