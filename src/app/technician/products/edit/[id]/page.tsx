@@ -264,9 +264,9 @@ export default function EditProductPage() {
       // Upload new images if any
       let uploadedImageUrls = existingImages;
       if (imageFiles.length > 0) {
-        const urls = await uploadImages(imageFiles);
-        if (uploadError) {
-          setError(uploadError);
+        const { urls, error: upErr } = await uploadImages(imageFiles);
+        if (upErr || urls.length === 0) {
+          setError(upErr || "Failed to upload images");
           return;
         }
         uploadedImageUrls = [...existingImages, ...urls];

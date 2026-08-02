@@ -4,7 +4,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { verifyJwt } from "@/lib/auth/jwt";
 
-const MAX_FILES_AUTH = 8;
+const MAX_FILES_AUTH = 10;
 const MAX_FILES_ANON = 1;
 const MAX_BYTES_AUTH = 5 * 1024 * 1024;
 const MAX_BYTES_ANON = 2 * 1024 * 1024;

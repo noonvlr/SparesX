@@ -34,9 +34,18 @@ interface Condition {
 }
 
 // Constants
-const IMAGE_UPLOAD_FORMATS = ["image/jpeg", "image/png", "image/webp"];
+const IMAGE_UPLOAD_ACCEPT =
+  "image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp";
+const IMAGE_UPLOAD_FORMATS = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_IMAGES = 10;
+
+function isAllowedImageFile(file: File): boolean {
+  const mime = (file.type || "").toLowerCase();
+  if (mime && IMAGE_UPLOAD_FORMATS.includes(mime)) return true;
+  // Some mobile browsers omit MIME — fall back to extension
+  return /\.(jpe?g|png|webp)$/i.test(file.name);
+}
 
 export default function AddProductPage() {
   const [form, setForm] = useState({
@@ -69,7 +78,6 @@ export default function AddProductPage() {
   const [showPartTypeDropdown, setShowPartTypeDropdown] = useState(false);
 
   const [images, setImages] = useState<string[]>([]);
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,6 +92,7 @@ export default function AddProductPage() {
     uploadImages,
     uploading: uploadingImages,
     uploadError,
+    setUploadError,
   } = useImageUpload();
 
   // Fetch all static data on mount
@@ -249,54 +258,59 @@ export default function AddProductPage() {
     [partTypes, partTypeSearch],
   )();
 
-  const validateImage = (file: File): boolean => {
-    if (!IMAGE_UPLOAD_FORMATS.includes(file.type)) {
-      setError("Only PNG, JPG, and WebP images are allowed");
-      return false;
+  const validateImage = (file: File): string | null => {
+    if (!isAllowedImageFile(file)) {
+      return "Only PNG, JPG, and WebP images are allowed";
     }
     if (file.size > MAX_IMAGE_SIZE) {
-      setError("Image must be less than 5MB");
-      return false;
+      return "Each image must be less than 5MB";
     }
-    return true;
+    return null;
   };
 
   const handleImageChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files) {
-        const validFiles: File[] = [];
-        const newImagePreviews: string[] = [];
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const fileList = e.target.files;
+      if (!fileList?.length) return;
 
-        Array.from(files).forEach((file) => {
-          if (
-            validateImage(file) &&
-            imageFiles.length + validFiles.length < MAX_IMAGES
-          ) {
-            validFiles.push(file);
-          }
-        });
-
-        if (validFiles.length === 0) return;
-
-        let loadedCount = 0;
-        validFiles.forEach((file) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            if (event.target?.result) {
-              newImagePreviews.push(event.target.result as string);
-              loadedCount++;
-              if (loadedCount === validFiles.length) {
-                setImageFiles((prev) => [...prev, ...validFiles]);
-                setImages((prev) => [...prev, ...newImagePreviews]);
-              }
-            }
-          };
-          reader.readAsDataURL(file);
-        });
+      const picked = Array.from(fileList);
+      try {
+        e.target.value = "";
+      } catch {
+        // Drag-drop synthetic events may not allow value writes
       }
+
+      setError("");
+      setUploadError("");
+
+      const remaining = MAX_IMAGES - images.length;
+      if (remaining <= 0) {
+        setError(`Maximum ${MAX_IMAGES} images allowed`);
+        return;
+      }
+
+      const validFiles: File[] = [];
+      for (const file of picked) {
+        if (validFiles.length >= remaining) break;
+        const reason = validateImage(file);
+        if (reason) {
+          setError(reason);
+          continue;
+        }
+        validFiles.push(file);
+      }
+
+      if (validFiles.length === 0) return;
+
+      const { urls, error: upErr } = await uploadImages(validFiles);
+      if (upErr || urls.length === 0) {
+        setError(upErr || "Failed to upload images. Please try again.");
+        return;
+      }
+
+      setImages((prev) => [...prev, ...urls].slice(0, MAX_IMAGES));
     },
-    [imageFiles.length],
+    [images.length, uploadImages, setUploadError],
   );
 
   async function handleSubmit(e: React.FormEvent) {
@@ -323,20 +337,21 @@ export default function AddProductPage() {
       return;
     }
 
+    if (uploadingImages) {
+      setError("Please wait for image uploads to finish");
+      return;
+    }
+
+    const uploadedImageUrls = images.filter(
+      (url) =>
+        url.startsWith("https://") ||
+        url.startsWith("http://") ||
+        url.startsWith("/uploads/"),
+    );
+
     setLoading(true);
 
     try {
-      let uploadedImageUrls = images;
-      if (imageFiles.length > 0) {
-        const urls = await uploadImages(imageFiles);
-        if (uploadError) {
-          setError(uploadError);
-          setLoading(false);
-          return;
-        }
-        uploadedImageUrls = urls;
-      }
-
       const res = await fetch("/api/technician/products", {
         method: "POST",
         headers: {
@@ -736,14 +751,14 @@ export default function AddProductPage() {
                   onDrop={(e) => {
                     e.preventDefault();
                     setDragActive(false);
-                    const files = Array.from(e.dataTransfer.files).filter(
-                      (file) => IMAGE_UPLOAD_FORMATS.includes(file.type),
-                    );
-                    if (files.length > 0) {
-                      handleImageChange({
-                        target: { files: files as unknown as FileList },
-                      } as unknown as React.ChangeEvent<HTMLInputElement>);
-                    }
+                    const dt = e.dataTransfer.files;
+                    if (!dt?.length) return;
+                    handleImageChange({
+                      target: {
+                        files: dt,
+                        value: "",
+                      },
+                    } as unknown as React.ChangeEvent<HTMLInputElement>);
                   }}
                   className={`relative border-2 border-dashed rounded-[var(--radius)] p-8 transition-all duration-300 cursor-pointer ${
                     dragActive
@@ -755,7 +770,7 @@ export default function AddProductPage() {
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept={IMAGE_UPLOAD_FORMATS.join(",")}
+                    accept={IMAGE_UPLOAD_ACCEPT}
                     onChange={handleImageChange}
                     disabled={uploadingImages}
                     className="hidden"
@@ -799,7 +814,7 @@ export default function AddProductPage() {
                 <div className="mt-4 flex gap-3 sm:hidden">
                   <input
                     type="file"
-                    accept={IMAGE_UPLOAD_FORMATS.join(",")}
+                    accept={IMAGE_UPLOAD_ACCEPT}
                     capture="environment"
                     onChange={handleImageChange}
                     className="hidden"
@@ -849,9 +864,8 @@ export default function AddProductPage() {
                             clipRule="evenodd"
                           />
                         </svg>
-                        {imageFiles.length} image
-                        {imageFiles.length !== 1 ? "s" : ""} selected and ready
-                        to upload
+                        {images.length} image
+                        {images.length !== 1 ? "s" : ""} uploaded
                       </p>
                     </div>
 
@@ -874,12 +888,12 @@ export default function AddProductPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setImages(images.filter((_, i) => i !== idx));
-                              setImageFiles(
-                                imageFiles.filter((_, i) => i !== idx),
+                              setImages((prev) =>
+                                prev.filter((_, i) => i !== idx),
                               );
                             }}
-                            className="absolute top-1 right-1 bg-[var(--danger)] hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-[var(--shadow-md)] hover:scale-110"
+                            className="absolute top-1 right-1 bg-[var(--danger)] hover:bg-red-700 text-white rounded-full p-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 shadow-[var(--shadow-md)] hover:scale-110"
+                            aria-label="Remove image"
                           >
                             <svg
                               className="w-4 h-4"
@@ -899,20 +913,18 @@ export default function AddProductPage() {
                   </div>
                 )}
 
-                {uploadingImages && (
+                {(uploadingImages || uploadError) && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-sm text-[var(--brand)] font-semibold">
-                      🔄 Uploading images...
-                    </p>
-                    <div className="w-full bg-[var(--surface-3)] rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-[var(--brand)] h-full rounded-full animate-pulse"
-                        style={{
-                          width: "100%",
-                          animation: "pulse 2s infinite",
-                        }}
-                      />
-                    </div>
+                    {uploadingImages && (
+                      <p className="text-sm text-[var(--brand)] font-semibold">
+                        Uploading images…
+                      </p>
+                    )}
+                    {uploadError && (
+                      <p className="text-sm text-[var(--danger)] font-medium">
+                        {uploadError}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

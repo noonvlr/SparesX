@@ -30,7 +30,7 @@ export default function ModelSelector({
   category,
   onModelsUpdated,
   required,
-  placeholder = "Search or type a new model...",
+  placeholder = "Search model…",
 }: ModelSelectorProps) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -129,31 +129,52 @@ export default function ModelSelector({
 
   return (
     <div className="relative">
-      <label className="block text-sm font-semibold text-gray-800 mb-2">
+      <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
         Model {required ? "*" : ""}
       </label>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={searchValue}
-        onChange={(e) => {
-          onSearchChange(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 220)}
-        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-        required={required}
-      />
+      <div className="relative">
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={searchValue}
+          onChange={(e) => {
+            onSearchChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 220)}
+          className="w-full pl-3.5 pr-10 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+          required={required}
+          autoComplete="off"
+        />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-center text-[var(--muted)]"
+        >
+          <svg
+            className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </span>
+      </div>
 
       {value && (
-        <div className="mt-2 inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+        <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold">
           ✓ {value}
         </div>
       )}
 
       {open && (
-        <div className="absolute z-20 mt-2 w-full max-h-80 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-xl animate-in fade-in duration-200">
+        <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
           {filtered.length > 0 && (
             <div>
               {filtered.map((model, idx) => (
@@ -167,11 +188,11 @@ export default function ModelSelector({
                     setOpen(false);
                     setConfirmNew(false);
                   }}
-                  className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                  className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] active:bg-[var(--brand-muted)] transition font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
                 >
                   {model.name}{" "}
                   {model.modelNumber && (
-                    <span className="text-gray-500 text-sm">
+                    <span className="text-[var(--muted)] text-sm">
                       ({model.modelNumber})
                     </span>
                   )}
@@ -206,7 +227,7 @@ export default function ModelSelector({
           )}
 
           {canCreateNew && (
-            <div className="border-t border-gray-100 p-3 bg-slate-50 space-y-2">
+            <div className="border-t border-[var(--border)] p-3 bg-[var(--surface-2)] space-y-2">
               {!confirmNew ? (
                 <button
                   type="button"
@@ -215,14 +236,14 @@ export default function ModelSelector({
                     handleUseTypedModel();
                   }}
                   disabled={creating}
-                  className="w-full px-3 py-2.5 rounded-lg bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
+                  className="w-full px-3 py-2.5 rounded-[var(--radius)] bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
                 >
                   {suggestions.length > 0
                     ? `Continue with “${searchValue.trim()}”`
                     : `Add “${searchValue.trim()}” as new model`}
                 </button>
               ) : (
-                <div className="space-y-2 animate-in fade-in">
+                <div className="space-y-2">
                   <p className="text-xs text-amber-800">
                     Close matches exist. Use a suggested model above, or confirm
                     adding your typed model to the catalog.
@@ -234,7 +255,7 @@ export default function ModelSelector({
                       createModel(searchValue.trim());
                     }}
                     disabled={creating}
-                    className="w-full px-3 py-2.5 rounded-lg bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
+                    className="w-full px-3 py-2.5 rounded-[var(--radius)] bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
                   >
                     {creating
                       ? "Saving model..."
@@ -246,7 +267,7 @@ export default function ModelSelector({
           )}
 
           {!filtered.length && !canCreateNew && (
-            <div className="px-4 py-3 text-gray-500 text-center text-sm">
+            <div className="px-4 py-3 text-[var(--muted)] text-center text-sm">
               Type at least 2 characters to search or add a model
             </div>
           )}
@@ -254,7 +275,7 @@ export default function ModelSelector({
       )}
 
       {error && (
-        <p className="mt-2 text-sm text-red-600 animate-in fade-in">{error}</p>
+        <p className="mt-2 text-sm text-[var(--danger)]">{error}</p>
       )}
     </div>
   );
