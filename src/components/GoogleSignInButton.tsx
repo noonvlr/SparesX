@@ -48,6 +48,16 @@ export default function GoogleSignInButton({
         } else if (!data.phoneVerified && data.role !== "admin") {
           showToast("Please verify your phone number", "info");
         }
+        if (
+          data.hasPassword === false &&
+          data.role !== "admin" &&
+          data.profileComplete !== false
+        ) {
+          showToast(
+            "Please set a password so you can also sign in with email",
+            "info",
+          );
+        }
 
         router.push(resolvePostAuthPath(data));
       } catch {

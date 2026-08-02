@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   await connectDB();
   const user = await User.findById(auth.id).select(
-    "email mobile countryCode emailVerified phoneVerified emailVerifiedAt phoneVerifiedAt role",
+    "email mobile countryCode emailVerified phoneVerified emailVerifiedAt phoneVerifiedAt role password",
   );
   if (!user) {
     return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
     phoneVerified: !!user.phoneVerified,
     emailVerifiedAt: user.emailVerifiedAt || null,
     phoneVerifiedAt: user.phoneVerifiedAt || null,
+    hasPassword: Boolean(user.password),
     role: user.role,
   });
 }

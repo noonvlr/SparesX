@@ -428,6 +428,7 @@ export default function TechnicianProfilePage() {
       setProfile((p: Record<string, unknown> | null) =>
         p ? { ...p, hasPassword: true } : p,
       );
+      window.dispatchEvent(new Event("sparesx-profile-updated"));
       showToast(
         needsCurrent
           ? "Password updated successfully"

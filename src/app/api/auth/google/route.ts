@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
         name: user.name,
         emailVerified: !!user.emailVerified,
         phoneVerified: !!user.phoneVerified,
+        hasPassword: Boolean(user.password),
         profileComplete: isProfileComplete(user),
       },
       { status: 200 },
