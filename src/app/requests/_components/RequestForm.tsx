@@ -3,6 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ModelSelector from "@/components/ModelSelector";
+import { Alert } from "@/components/ui/Alert";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Field } from "@/components/ui/Field";
+import { Input, Textarea } from "@/components/ui/Input";
+import { LoadingState } from "@/components/feedback";
 
 interface Brand {
   _id: string;
@@ -260,295 +266,289 @@ export default function RequestForm({
 
   if (authChecking || (isAuthenticated && dataLoading)) {
     return (
-      <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 flex items-center justify-center min-h-[280px]">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading...</p>
-        </div>
-      </div>
+      <Card padding="lg" className="min-h-[280px] flex items-center justify-center">
+        <LoadingState label="Loading…" />
+      </Card>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200 animate-in fade-in slide-in-from-bottom-2 duration-300">
+      <Card padding="lg" className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="text-center max-w-md mx-auto py-6">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-[var(--radius-lg)] bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Login required</h3>
-          <p className="text-sm text-gray-600 mb-6">
+          <h3 className="text-xl font-bold text-[var(--ink)] mb-2">Login required</h3>
+          <p className="text-sm text-[var(--muted)] mb-6">
             Sign in or create an account so we can prefill your contact details and notify sellers.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              type="button"
+            <Button
+              size="lg"
               onClick={() =>
                 router.push(`/login?next=${encodeURIComponent("/requests?tab=submit")}`)
               }
-              className="py-3 rounded-xl bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] transition active:scale-95"
             >
               Login
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              size="lg"
+              variant="secondary"
               onClick={() =>
                 router.push(`/register?next=${encodeURIComponent("/requests?tab=submit")}`)
               }
-              className="py-3 rounded-xl border border-gray-300 text-gray-800 font-semibold hover:bg-gray-50 transition active:scale-95"
             >
               Sign up
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200 space-y-6 animate-in fade-in duration-300"
-    >
-      {error && (
-        <div className="p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg font-medium animate-in fade-in">
-          {error}
-        </div>
-      )}
-      {message && (
-        <div className="p-4 text-green-700 bg-green-50 border border-green-200 rounded-lg font-medium animate-in fade-in">
-          {message}
-        </div>
-      )}
+    <Card padding="lg" className="animate-in fade-in duration-300">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error && (
+          <Alert tone="danger">{error}</Alert>
+        )}
+        {message && (
+          <Alert tone="success">{message}</Alert>
+        )}
 
-      {/* Contact details (auto-filled) */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-xs font-bold">
-            0
-          </div>
-          <label className="text-sm font-semibold text-gray-800">
-            Your contact details
-          </label>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Full name"
-            required
-          />
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Email"
-            required
-          />
-          <input
-            value={form.phone}
-            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-            className="w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="WhatsApp / phone"
-          />
-        </div>
-        <p className="text-xs text-gray-500">Prefilled from your account — edit if needed.</p>
-      </div>
-
-      {/* Step 1: Device Category */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
-            1
-          </div>
-          <label className="text-sm font-semibold text-gray-800">
-            Select Device Category <span className="text-red-500">*</span>
-          </label>
-        </div>
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-2 min-w-min pb-1">
-            {deviceCategories.map((cat) => (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => {
-                  setPartTypeSearch("");
-                  setForm((f) => ({
-                    ...f,
-                    deviceCategory: cat.value,
-                    brand: "",
-                    brandSlug: "",
-                    deviceModel: "",
-                    partType: "",
-                  }));
-                }}
-                className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
-                  form.deviceCategory === cat.value
-                    ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-md"
-                    : "border-gray-300 bg-white text-gray-700 hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
-                }`}
-              >
-                <div className="text-base mb-1">{cat.icon}</div>
-                <div className="text-xs font-semibold leading-tight">{cat.label}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Step 2: Brand & Model */}
-      {form.deviceCategory && (
-        <div className="p-6 bg-gradient-to-br from-[var(--brand-soft)] via-[var(--brand-soft)] to-teal-50 rounded-lg border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+        {/* Contact details (auto-filled) */}
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
-              2
+            <div className="w-6 h-6 rounded-full bg-[var(--ink-secondary)] text-[var(--ink-inverse)] flex items-center justify-center text-xs font-bold">
+              0
             </div>
-            <h3 className="text-sm font-semibold text-blue-900">Choose Brand & Model</h3>
+            <span className="text-sm font-semibold text-[var(--ink)]">
+              Your contact details
+            </span>
           </div>
-
-          <div className="relative">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">Brand *</label>
-            <input
-              type="text"
-              placeholder="Search brand..."
-              value={brandSearch}
-              onChange={(e) => {
-                setBrandSearch(e.target.value);
-                setShowBrandDropdown(true);
-              }}
-              onFocus={() => setShowBrandDropdown(true)}
-              onBlur={() => setTimeout(() => setShowBrandDropdown(false), 300)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              required
-            />
-            {form.brand && (
-              <div className="mt-2 inline-block bg-[var(--brand-soft)]0 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                ✓ {form.brand}
-              </div>
-            )}
-            {showBrandDropdown && (
-              <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-xl animate-in fade-in duration-200">
-                {filteredBrands.map((brand) => (
-                  <button
-                    key={brand._id}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleBrandSelect(brand);
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
-                  >
-                    {brand.name}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Field htmlFor="req-name">
+              <Input
+                id="req-name"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                placeholder="Full name"
+                required
+                className="bg-[var(--surface-2)]"
+              />
+            </Field>
+            <Field htmlFor="req-email">
+              <Input
+                id="req-email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                placeholder="Email"
+                required
+                className="bg-[var(--surface-2)]"
+              />
+            </Field>
+            <Field htmlFor="req-phone">
+              <Input
+                id="req-phone"
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                placeholder="WhatsApp / phone"
+                className="bg-[var(--surface-2)]"
+              />
+            </Field>
           </div>
+          <p className="text-xs text-[var(--muted)]">Prefilled from your account — edit if needed.</p>
+        </div>
 
-          {form.brand && (
-            <div className="animate-in fade-in duration-200">
-              <ModelSelector
-                models={models}
-                value={form.deviceModel}
-                searchValue={modelSearch}
-                onSearchChange={setModelSearch}
-                onSelect={handleModelSelect}
-                brandSlug={form.brandSlug}
-                category={form.deviceCategory}
-                onModelsUpdated={setModels}
+        {/* Step 1: Device Category */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-[var(--ink-inverse)] flex items-center justify-center text-xs font-bold">
+              1
+            </div>
+            <label className="text-sm font-semibold text-[var(--ink)]">
+              Select Device Category <span className="text-[var(--danger)]">*</span>
+            </label>
+          </div>
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 min-w-min pb-1">
+              {deviceCategories.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => {
+                    setPartTypeSearch("");
+                    setForm((f) => ({
+                      ...f,
+                      deviceCategory: cat.value,
+                      brand: "",
+                      brandSlug: "",
+                      deviceModel: "",
+                      partType: "",
+                    }));
+                  }}
+                  className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
+                    form.deviceCategory === cat.value
+                      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--ink-inverse)] shadow-[var(--shadow-sm)]"
+                      : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
+                  }`}
+                >
+                  <div className="text-base mb-1">{cat.icon}</div>
+                  <div className="text-xs font-semibold leading-tight">{cat.label}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Step 2: Brand & Model */}
+        {form.deviceCategory && (
+          <div className="p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-[var(--ink-inverse)] flex items-center justify-center text-xs font-bold">
+                2
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--brand-hover)]">Choose Brand & Model</h3>
+            </div>
+
+            <Field label="Brand *" className="relative">
+              <Input
+                type="text"
+                placeholder="Search brand..."
+                value={brandSearch}
+                onChange={(e) => {
+                  setBrandSearch(e.target.value);
+                  setShowBrandDropdown(true);
+                }}
+                onFocus={() => setShowBrandDropdown(true)}
+                onBlur={() => setTimeout(() => setShowBrandDropdown(false), 300)}
                 required
               />
-            </div>
-          )}
-        </div>
-      )}
+              {form.brand && (
+                <div className="mt-2 inline-block bg-[var(--brand)] text-[var(--ink-inverse)] px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                  ✓ {form.brand}
+                </div>
+              )}
+              {showBrandDropdown && (
+                <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-dropdown)] animate-in fade-in duration-200">
+                  {filteredBrands.map((brand) => (
+                    <button
+                      key={brand._id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleBrandSelect(brand);
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
+                    >
+                      {brand.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Field>
 
-      {/* Step 3: Part + description */}
-      {form.deviceCategory && form.brand && form.deviceModel && (
-        <div className="border-t-2 border-gray-100 pt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-gray-700 text-white flex items-center justify-center text-xs font-bold">
-              3
-            </div>
-            <h3 className="text-sm font-semibold text-gray-800">Part details</h3>
-          </div>
-
-          <div className="relative">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              Part Type *
-            </label>
-            <input
-              type="text"
-              placeholder="Search part type (e.g., Screen, Battery)..."
-              value={partTypeSearch}
-              onChange={(e) => {
-                setPartTypeSearch(e.target.value);
-                setShowPartTypeDropdown(true);
-              }}
-              onFocus={() => setShowPartTypeDropdown(true)}
-              onBlur={() => setTimeout(() => setShowPartTypeDropdown(false), 300)}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-              required
-            />
-            {form.partType && (
-              <div className="mt-2 inline-block bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                ✓ {form.partTypeLabel || form.partType}
-              </div>
-            )}
-            {showPartTypeDropdown && (
-              <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-xl">
-                {filteredPartTypes.map((part) => (
-                  <button
-                    key={part.value}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handlePartTypeSelect(part);
-                    }}
-                    className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center gap-2"
-                  >
-                    <span>{part.icon}</span>
-                    <span>{part.label}</span>
-                  </button>
-                ))}
+            {form.brand && (
+              <div className="animate-in fade-in duration-200">
+                <ModelSelector
+                  models={models}
+                  value={form.deviceModel}
+                  searchValue={modelSearch}
+                  onSearchChange={setModelSearch}
+                  onSelect={handleModelSelect}
+                  brandSlug={form.brandSlug}
+                  category={form.deviceCategory}
+                  onModelsUpdated={setModels}
+                  required
+                />
               </div>
             )}
           </div>
+        )}
 
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              Request Details *
-            </label>
-            <textarea
-              value={form.description}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, description: e.target.value }))
-              }
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[140px]"
-              placeholder="Describe the part condition needed, urgency, and any notes for sellers."
-              required
-            />
+        {/* Step 3: Part + description */}
+        {form.deviceCategory && form.brand && form.deviceModel && (
+          <div className="border-t-2 border-[var(--border)] pt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-[var(--ink-secondary)] text-[var(--ink-inverse)] flex items-center justify-center text-xs font-bold">
+                3
+              </div>
+              <h3 className="text-sm font-semibold text-[var(--ink)]">Part details</h3>
+            </div>
+
+            <Field label="Part Type *" className="relative">
+              <Input
+                type="text"
+                placeholder="Search part type (e.g., Screen, Battery)..."
+                value={partTypeSearch}
+                onChange={(e) => {
+                  setPartTypeSearch(e.target.value);
+                  setShowPartTypeDropdown(true);
+                }}
+                onFocus={() => setShowPartTypeDropdown(true)}
+                onBlur={() => setTimeout(() => setShowPartTypeDropdown(false), 300)}
+                required
+              />
+              {form.partType && (
+                <div className="mt-2 inline-block bg-[var(--brand-hover)] text-[var(--ink-inverse)] px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                  ✓ {form.partTypeLabel || form.partType}
+                </div>
+              )}
+              {showPartTypeDropdown && (
+                <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-dropdown)]">
+                  {filteredPartTypes.map((part) => (
+                    <button
+                      key={part.value}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handlePartTypeSelect(part);
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0 flex items-center gap-2"
+                    >
+                      <span>{part.icon}</span>
+                      <span>{part.label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </Field>
+
+            <Field label="Request Details *" htmlFor="req-desc" required>
+              <Textarea
+                id="req-desc"
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, description: e.target.value }))
+                }
+                className="min-h-[140px]"
+                placeholder="Describe the part condition needed, urgency, and any notes for sellers."
+                required
+              />
+            </Field>
           </div>
-        </div>
-      )}
+        )}
 
-      <button
-        type="submit"
-        disabled={
-          loading ||
-          !form.deviceCategory ||
-          !form.brand ||
-          !form.deviceModel ||
-          !form.partType
-        }
-        className="w-full rounded-lg bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] text-white py-3.5 font-semibold hover:shadow-lg transition disabled:opacity-50 active:scale-[0.99]"
-      >
-        {loading ? "Submitting..." : "Submit Request"}
-      </button>
-    </form>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full"
+          loading={loading}
+          disabled={
+            loading ||
+            !form.deviceCategory ||
+            !form.brand ||
+            !form.deviceModel ||
+            !form.partType
+          }
+        >
+          {loading ? "Submitting..." : "Submit Request"}
+        </Button>
+      </form>
+    </Card>
   );
 }

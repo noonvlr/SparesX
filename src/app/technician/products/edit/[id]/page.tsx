@@ -2,7 +2,13 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Card, PageHeader, Badge } from "@/components/ui/Card";
+import { Field } from "@/components/ui/Field";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { LoadingState } from "@/components/feedback";
 
 interface Brand {
   _id: string;
@@ -298,56 +304,40 @@ export default function EditProductPage() {
 
   if (loading)
     return (
-      <div className="max-w-2xl mx-auto py-8 px-4 text-center text-[var(--muted)]">
-        Loading...
+      <div className="max-w-2xl mx-auto py-8 px-4">
+        <LoadingState label="Loading…" />
       </div>
     );
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold mb-2 text-[var(--ink)]">
-            Edit Product
-          </h1>
-          <p className="text-[var(--muted)]">Update your device parts listing</p>
-        </div>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="inline-flex items-center justify-center px-4 py-2.5 text-[var(--ink-secondary)] bg-[var(--surface-3)] hover:bg-[var(--border)] rounded-[var(--radius)] transition-colors duration-200 font-medium"
-        >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back
-        </button>
-      </div>
+      <PageHeader
+        title="Edit Product"
+        description="Update your device parts listing"
+        actions={
+          <Button variant="secondary" onClick={() => router.back()}>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+            Back
+          </Button>
+        }
+      />
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-[var(--surface)] p-6 sm:p-8 rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--border)] space-y-6"
-      >
-        {error && (
-          <div className="p-4 text-[var(--danger)] bg-[var(--danger-soft)] border border-[var(--danger)]/20 rounded-[var(--radius)] font-medium">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="p-4 text-[var(--success)] bg-[var(--success-soft)] border border-[var(--success)]/20 rounded-[var(--radius)] font-medium">
-            {success}
-          </div>
-        )}
+      <Card padding="lg">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error ? <Alert tone="danger">{error}</Alert> : null}
+        {success ? <Alert tone="success">{success}</Alert> : null}
 
         {/* Step 1: Device Category Selection */}
         <div>
@@ -408,10 +398,8 @@ export default function EditProductPage() {
               <div
                 className={`relative min-w-0 flex-1 ${showBrandDropdown ? "z-30" : ""}`}
               >
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Brand *
-                </label>
-                <input
+                <Field label="Brand" required>
+                <Input
                   type="text"
                   placeholder="Search brand..."
                   value={brandSearch}
@@ -438,13 +426,12 @@ export default function EditProductPage() {
                   onBlur={() =>
                     setTimeout(() => setShowBrandDropdown(false), 300)
                   }
-                  className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required={!!form.deviceCategory}
                 />
                 {form.brand && (
-                  <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                  <Badge tone="brand" className="mt-2 bg-[var(--brand)] text-[var(--ink-inverse)]">
                     ✓ {form.brand}
-                  </div>
+                  </Badge>
                 )}
                 {showBrandDropdown && (
                   <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
@@ -469,6 +456,7 @@ export default function EditProductPage() {
                     )}
                   </div>
                 )}
+                </Field>
               </div>
               {!form.brand && (
                 <p className="sm:mt-8 shrink-0 text-sm font-medium text-[var(--ink-secondary)] sm:max-w-[10.5rem] sm:pt-1">
@@ -483,10 +471,8 @@ export default function EditProductPage() {
                 <div
                   className={`relative min-w-0 flex-1 ${showModelDropdown ? "z-30" : ""}`}
                 >
-                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                    Model *
-                  </label>
-                  <input
+                  <Field label="Model" required>
+                  <Input
                     type="text"
                     placeholder="Search model..."
                     value={modelSearch}
@@ -503,13 +489,12 @@ export default function EditProductPage() {
                     onBlur={() =>
                       setTimeout(() => setShowModelDropdown(false), 300)
                     }
-                    className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                     required={!!form.brand}
                   />
                   {form.deviceModel && (
-                    <div className="mt-2 inline-block bg-[var(--success)] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    <Badge tone="success" className="mt-2 bg-[var(--success)] text-[var(--ink-inverse)]">
                       ✓ {form.deviceModel}
-                    </div>
+                    </Badge>
                   )}
                   {showModelDropdown && (
                     <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
@@ -539,6 +524,7 @@ export default function EditProductPage() {
                       )}
                     </div>
                   )}
+                  </Field>
                 </div>
                 {!form.deviceModel && (
                   <p className="sm:mt-8 shrink-0 text-sm font-medium text-[var(--ink-secondary)] sm:max-w-[10.5rem] sm:pt-1">
@@ -565,32 +551,26 @@ export default function EditProductPage() {
               </h3>
 
               {/* Product Name (Auto-populated) */}
-              <div>
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Product Name *
-                </label>
-                <input
+              <Field
+                label="Product Name"
+                required
+                hint="💡 Auto-populated from model selection"
+              >
+                <Input
                   type="text"
                   placeholder="e.g., iPhone 15 Pro Screen"
                   value={form.name}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required
                 />
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  💡 Auto-populated from model selection
-                </p>
-              </div>
+              </Field>
 
               {/* Part Type BEFORE Description */}
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Part Type *
-                </label>
-                <div className="relative">
-                  <input
+                <Field label="Part Type" required className="relative">
+                  <Input
                     type="text"
                     placeholder="Search part type (e.g., Screen, Battery, Camera)..."
                     value={partTypeSearch}
@@ -602,13 +582,12 @@ export default function EditProductPage() {
                     onBlur={() =>
                       setTimeout(() => setShowPartTypeDropdown(false), 300)
                     }
-                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   />
                   {form.partType && (
-                    <div className="mt-2 inline-block bg-[var(--brand-hover)] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    <Badge tone="brand" className="mt-2 bg-[var(--brand-hover)] text-[var(--ink-inverse)]">
                       ✓{" "}
                       {partTypes.find((p) => p.value === form.partType)?.label}
-                    </div>
+                    </Badge>
                   )}
                   {showPartTypeDropdown && (
                     <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)]">
@@ -634,48 +613,38 @@ export default function EditProductPage() {
                       )}
                     </div>
                   )}
-                </div>
+                </Field>
               </div>
 
               {/* Description */}
-              <div className="mt-4">
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Description *
-                </label>
-                <textarea
+              <Field label="Description" required className="mt-4">
+                <Textarea
                   placeholder="Describe the product, condition, and any special features..."
                   value={form.description}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, description: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition resize-none h-32"
+                  className="h-32 resize-none"
                   required
                 />
-              </div>
+              </Field>
 
               {/* Price & Condition */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                    Price (₹) *
-                  </label>
-                  <input
+                <Field label="Price (₹)" required>
+                  <Input
                     type="number"
                     placeholder="0"
                     value={form.price}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, price: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                     required
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                    Condition *
-                  </label>
-                  <select
+                <Field label="Condition" required>
+                  <Select
                     value={form.condition}
                     onChange={(e) =>
                       setForm((f) => ({
@@ -683,12 +652,11 @@ export default function EditProductPage() {
                         condition: e.target.value as "new" | "used",
                       }))
                     }
-                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   >
                     <option value="new">New</option>
                     <option value="used">Used</option>
-                  </select>
-                </div>
+                  </Select>
+                </Field>
               </div>
 
               {/* Current Images */}
@@ -757,6 +725,7 @@ export default function EditProductPage() {
                 type="submit"
                 className="flex-1"
                 disabled={uploadingImages}
+                loading={uploadingImages}
               >
                 {uploadingImages ? "Uploading..." : "Update Product"}
               </Button>
@@ -764,6 +733,7 @@ export default function EditProductPage() {
           </>
         )}
       </form>
+      </Card>
     </div>
   );
 }

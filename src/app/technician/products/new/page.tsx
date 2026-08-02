@@ -3,7 +3,15 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import ModelSelector from "@/components/ModelSelector";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Card, PageHeader, Badge } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Field } from "@/components/ui/Field";
+import { IconButton } from "@/components/ui/IconButton";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { LoadingState } from "@/components/feedback";
 
 interface Brand {
   _id: string;
@@ -385,11 +393,8 @@ export default function AddProductPage() {
 
   if (phoneGate === "checking" || dataLoading) {
     return (
-      <div className="max-w-3xl mx-auto py-8 px-3 sm:px-6 flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-[var(--muted)] font-medium">Loading form options...</p>
-        </div>
+      <div className="max-w-3xl mx-auto py-8 px-3 sm:px-6 min-h-[50vh] flex items-center justify-center">
+        <LoadingState label="Loading form options…" />
       </div>
     );
   }
@@ -412,29 +417,15 @@ export default function AddProductPage() {
 
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold mb-1 sm:mb-2 text-[var(--ink)]">
-          Add New Product
-        </h1>
-        <p className="text-xs sm:text-sm lg:text-base text-[var(--muted)]">
-          List your device parts for sale
-        </p>
-      </div>
+      <PageHeader
+        title="Add New Product"
+        description="List your device parts for sale"
+      />
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-[var(--surface)] p-6 sm:p-8 rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--border)] space-y-6"
-      >
-        {error && (
-          <div className="p-4 text-[var(--danger)] bg-[var(--danger-soft)] border border-[var(--danger)]/20 rounded-[var(--radius)] font-medium animate-in fade-in">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="p-4 text-[var(--success)] bg-[var(--success-soft)] border border-[var(--success)]/20 rounded-[var(--radius)] font-medium animate-in fade-in">
-            {success}
-          </div>
-        )}
+      <Card padding="lg">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {error ? <Alert tone="danger">{error}</Alert> : null}
+        {success ? <Alert tone="success">{success}</Alert> : null}
 
         {/* Step 1: Device Category Selection */}
         <div className="space-y-3">
@@ -497,10 +488,8 @@ export default function AddProductPage() {
               <div
                 className={`relative min-w-0 flex-1 ${showBrandDropdown ? "z-30" : ""}`}
               >
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Brand *
-                </label>
-                <input
+                <Field label="Brand" required>
+                <Input
                   type="text"
                   placeholder="Search brand..."
                   value={brandSearch}
@@ -525,14 +514,13 @@ export default function AddProductPage() {
                   onBlur={() =>
                     setTimeout(() => setShowBrandDropdown(false), 300)
                   }
-                  className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required={!!form.deviceCategory}
                   autoComplete="off"
                 />
                 {form.brand && (
-                  <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                  <Badge tone="brand" className="mt-2 bg-[var(--brand)] text-[var(--ink-inverse)]">
                     ✓ {form.brand}
-                  </div>
+                  </Badge>
                 )}
                 {showBrandDropdown && (
                   <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
@@ -558,6 +546,7 @@ export default function AddProductPage() {
                     )}
                   </div>
                 )}
+                </Field>
               </div>
               {!form.brand && (
                 <p className="sm:mt-8 shrink-0 text-sm font-medium text-[var(--ink-secondary)] sm:max-w-[10.5rem] sm:pt-1">
@@ -614,32 +603,26 @@ export default function AddProductPage() {
               </div>
 
               {/* Product Name (Auto-populated) */}
-              <div>
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Product Name *
-                </label>
-                <input
+              <Field
+                label="Product Name"
+                required
+                hint="💡 Auto-populated from model selection"
+              >
+                <Input
                   type="text"
                   placeholder="e.g., iPhone 15 Pro Screen"
                   value={form.name}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required
                 />
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  💡 Auto-populated from model selection
-                </p>
-              </div>
+              </Field>
 
               {/* Part Type */}
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Part Type *
-                </label>
-                <div className="relative">
-                  <input
+                <Field label="Part Type" required className="relative">
+                  <Input
                     type="text"
                     placeholder="Search part type (e.g., Screen, Battery, Camera)..."
                     value={partTypeSearch}
@@ -651,13 +634,12 @@ export default function AddProductPage() {
                     onBlur={() =>
                       setTimeout(() => setShowPartTypeDropdown(false), 300)
                     }
-                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   />
                   {form.partType && (
-                    <div className="mt-2 inline-block bg-[var(--brand-hover)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                    <Badge tone="brand" className="mt-2 bg-[var(--brand-hover)] text-[var(--ink-inverse)]">
                       ✓{" "}
                       {partTypes.find((p) => p.value === form.partType)?.label}
-                    </div>
+                    </Badge>
                   )}
                   {showPartTypeDropdown && (
                     <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)]">
@@ -684,44 +666,36 @@ export default function AddProductPage() {
                       )}
                     </div>
                   )}
-                </div>
+                </Field>
               </div>
 
               {/* Description */}
-              <div className="mt-4">
-                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                  Description *
-                </label>
-                <textarea
+              <Field label="Description" required className="mt-4">
+                <Textarea
                   placeholder="Describe the product, condition, and any special features..."
                   value={form.description}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, description: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition resize-none h-32"
+                  className="h-32 resize-none"
                   required
                 />
-              </div>
+              </Field>
 
               {/* Price & Condition */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                    Price (₹) *
-                  </label>
-                  <input
+                <Field label="Price (₹)" required>
+                  <Input
                     type="number"
                     placeholder="0"
                     value={form.price}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, price: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                     required
                   />
                   <label className="mt-3 flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       checked={form.priceNegotiable}
                       onChange={(e) =>
                         setForm((f) => ({
@@ -729,32 +703,27 @@ export default function AddProductPage() {
                           priceNegotiable: e.target.checked,
                         }))
                       }
-                      className="w-4 h-4 rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
                     />
                     <span className="text-sm text-[var(--ink-secondary)]">
                       Price is negotiable
                     </span>
                   </label>
-                </div>
+                </Field>
 
-                <div>
-                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                    Condition *
-                  </label>
-                  <select
+                <Field label="Condition" required>
+                  <Select
                     value={form.condition}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, condition: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   >
                     {conditions.map((cond) => (
                       <option key={cond.value} value={cond.value}>
                         {cond.label}
                       </option>
                     ))}
-                  </select>
-                </div>
+                  </Select>
+                </Field>
               </div>
 
               {/* Image Upload */}
@@ -908,14 +877,16 @@ export default function AddProductPage() {
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                             />
                           </div>
-                          <button
+                          <IconButton
                             type="button"
+                            variant="danger"
+                            size="sm"
                             onClick={() => {
                               setImages((prev) =>
                                 prev.filter((_, i) => i !== idx),
                               );
                             }}
-                            className="absolute top-1 right-1 bg-[var(--danger)] hover:bg-red-700 text-white rounded-full p-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 shadow-[var(--shadow-md)] hover:scale-110"
+                            className="absolute top-1 right-1 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 shadow-[var(--shadow-md)]"
                             aria-label="Remove image"
                           >
                             <svg
@@ -929,7 +900,7 @@ export default function AddProductPage() {
                                 clipRule="evenodd"
                               />
                             </svg>
-                          </button>
+                          </IconButton>
                         </div>
                       ))}
                     </div>
@@ -957,6 +928,7 @@ export default function AddProductPage() {
             <Button
               type="submit"
               disabled={loading || uploadingImages}
+              loading={loading || uploadingImages}
               size="lg"
               className="w-full mt-2"
             >
@@ -970,6 +942,7 @@ export default function AddProductPage() {
         )}
 
       </form>
+      </Card>
     </div>
   );
 }

@@ -11,6 +11,14 @@ import { showToast } from "@/components/ToastHost";
 import { MAX_ABOUT_LENGTH } from "@/lib/validation/userContact";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { Alert } from "@/components/ui/Alert";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Field } from "@/components/ui/Field";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
+import { LoadingState } from "@/components/feedback";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/ui/cn";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -80,29 +88,6 @@ function SectionCard({
     </Card>
   );
 }
-
-function Field({
-  label,
-  children,
-  hint,
-}: {
-  label: string;
-  children: React.ReactNode;
-  hint?: string;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
-        {label}
-      </label>
-      {children}
-      {hint && <p className="mt-1.5 text-xs text-[var(--muted)]">{hint}</p>}
-    </div>
-  );
-}
-
-const inputClass =
-  "w-full px-3.5 py-2.5 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]";
 
 const SECTIONS = [
   { id: "about", label: "About" },
@@ -453,7 +438,7 @@ export default function TechnicianProfilePage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-[var(--surface-2)] flex items-center justify-center p-4">
-        <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
+        <LoadingState label="Loading profile…" />
       </main>
     );
   }
@@ -463,22 +448,24 @@ export default function TechnicianProfilePage() {
   return (
     <main className="min-h-screen bg-[var(--surface-2)] pb-28">
       <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           type="button"
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] mb-4"
+          className="mb-4 px-0 hover:bg-transparent"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back
-        </button>
+        </Button>
 
-        {error && (
-          <div className="mb-4 p-3 rounded-[var(--radius)] border border-[var(--danger)]/20 bg-[var(--danger-soft)] text-[var(--danger)] text-sm">
+        {error ? (
+          <Alert tone="danger" className="mb-4">
             {error}
-          </div>
-        )}
+          </Alert>
+        ) : null}
 
         {/* Channel-style header */}
         <Card className="overflow-hidden mb-6">
@@ -538,7 +525,7 @@ export default function TechnicianProfilePage() {
                 {profile?._id && (
                   <Link
                     href={`/u/${profile._id}`}
-                    className="px-4 py-2 rounded-full border border-[var(--border-strong)] text-sm font-semibold text-[var(--ink-secondary)] hover:bg-[var(--surface-2)]"
+                    className={cn(buttonVariants({ variant: "outline", size: "sm" }), "rounded-full")}
                   >
                     View public profile
                   </Link>
@@ -581,8 +568,8 @@ export default function TechnicianProfilePage() {
             title="About"
             description="Shown on your public profile. Tell buyers who you are."
           >
-            <textarea
-              className={`${inputClass} resize-y min-h-[120px]`}
+            <Textarea
+              className="resize-y min-h-[120px]"
               value={form.about}
               onChange={(e) =>
                 setField("about", e.target.value.slice(0, MAX_ABOUT_LENGTH))
@@ -602,8 +589,7 @@ export default function TechnicianProfilePage() {
           >
             <div className="space-y-4 max-w-xl">
               <Field label="Full name">
-                <input
-                  className={inputClass}
+                <Input
                   value={form.name}
                   onChange={(e) => setField("name", e.target.value)}
                   required
@@ -617,9 +603,8 @@ export default function TechnicianProfilePage() {
                     : undefined
                 }
               >
-                <input
+                <Input
                   type="email"
-                  className={inputClass}
                   value={form.email}
                   onChange={(e) => setField("email", e.target.value)}
                   required
@@ -627,8 +612,7 @@ export default function TechnicianProfilePage() {
               </Field>
               <div className="grid grid-cols-3 gap-3">
                 <Field label="Code">
-                  <select
-                    className={inputClass}
+                  <Select
                     value={form.countryCode}
                     onChange={(e) => setField("countryCode", e.target.value)}
                   >
@@ -637,7 +621,7 @@ export default function TechnicianProfilePage() {
                         {c.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </Field>
                 <div className="col-span-2">
                   <Field
@@ -648,9 +632,8 @@ export default function TechnicianProfilePage() {
                         : "10-digit Indian mobile starting with 6–9"
                     }
                   >
-                    <input
+                    <Input
                       type="tel"
-                      className={inputClass}
                       value={form.mobile}
                       onChange={(e) =>
                         setField(
@@ -670,8 +653,7 @@ export default function TechnicianProfilePage() {
           <SectionCard id="contact" title="WhatsApp contact">
             <div className="max-w-xl space-y-4">
               <label className="flex items-center gap-2 text-sm text-[var(--ink-secondary)]">
-                <input
-                  type="checkbox"
+                <Checkbox
                   checked={waSameAsMobile}
                   onChange={(e) => {
                     const checked = e.target.checked;
@@ -683,14 +665,12 @@ export default function TechnicianProfilePage() {
                       );
                     }
                   }}
-                  className="rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
                 />
                 Same as mobile number
               </label>
               <Field label="WhatsApp number">
-                <input
+                <Input
                   type="tel"
-                  className={inputClass}
                   value={form.whatsappNumber}
                   onChange={(e) => {
                     setWaSameAsMobile(false);
@@ -710,8 +690,8 @@ export default function TechnicianProfilePage() {
           <SectionCard id="address" title="Address">
             <div className="space-y-4 max-w-xl">
               <Field label="Street address">
-                <textarea
-                  className={`${inputClass} resize-none`}
+                <Textarea
+                  className="resize-none min-h-[72px]"
                   rows={2}
                   value={form.address}
                   onChange={(e) => setField("address", e.target.value)}
@@ -722,8 +702,7 @@ export default function TechnicianProfilePage() {
                 label="PIN code"
                 hint={pinLoading ? "Looking up city & state…" : undefined}
               >
-                <input
-                  className={inputClass}
+                <Input
                   value={form.pinCode}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -736,16 +715,14 @@ export default function TechnicianProfilePage() {
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="City">
-                  <input
-                    className={inputClass}
+                  <Input
                     value={form.city}
                     onChange={(e) => setField("city", e.target.value)}
                     required
                   />
                 </Field>
                 <Field label="State">
-                  <input
-                    className={inputClass}
+                  <Input
                     value={form.state}
                     onChange={(e) => setField("state", e.target.value)}
                     required
@@ -816,9 +793,8 @@ export default function TechnicianProfilePage() {
             <form onSubmit={handlePasswordChange} className="space-y-4 max-w-xl">
               {profile?.hasPassword ? (
                 <Field label="Current password">
-                  <input
+                  <Input
                     type="password"
-                    className={inputClass}
                     value={pwCurrent}
                     onChange={(e) => setPwCurrent(e.target.value)}
                     autoComplete="current-password"
@@ -829,9 +805,8 @@ export default function TechnicianProfilePage() {
               <Field
                 label={profile?.hasPassword ? "New password" : "Password"}
               >
-                <input
+                <Input
                   type="password"
-                  className={inputClass}
                   value={pwNew}
                   onChange={(e) => setPwNew(e.target.value)}
                   autoComplete="new-password"
@@ -846,9 +821,8 @@ export default function TechnicianProfilePage() {
                     : "Confirm password"
                 }
               >
-                <input
+                <Input
                   type="password"
-                  className={inputClass}
                   value={pwConfirm}
                   onChange={(e) => setPwConfirm(e.target.value)}
                   autoComplete="new-password"
@@ -881,8 +855,10 @@ export default function TechnicianProfilePage() {
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
             <p className="text-sm text-[var(--muted)]">You have unsaved changes</p>
             <div className="flex gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="rounded-full"
                 onClick={() => {
                   setForm(initialForm);
                   setWaSameAsMobile(
@@ -891,10 +867,9 @@ export default function TechnicianProfilePage() {
                         initialForm.whatsappNumber.replace(/\D/g, ""),
                   );
                 }}
-                className="px-4 py-2 rounded-full border border-[var(--border-strong)] text-sm font-semibold text-[var(--ink-secondary)] hover:bg-[var(--surface-2)]"
               >
                 Discard
-              </button>
+              </Button>
               <Button
                 className="rounded-full"
                 onClick={() => handleUpdate()}
@@ -908,7 +883,7 @@ export default function TechnicianProfilePage() {
       )}
 
       {cropOpen && (
-        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-[var(--overlay)] z-50 flex items-center justify-center p-4">
           <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] w-full max-w-md overflow-hidden border border-[var(--border)]">
             <div className="px-6 py-4 border-b border-[var(--border)]">
               <h3 className="text-lg font-semibold text-[var(--ink)]">
@@ -955,18 +930,20 @@ export default function TechnicianProfilePage() {
               </div>
             )}
             <div className="px-6 py-4 flex gap-3">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                className="flex-1 rounded-full"
                 onClick={handleCropCancel}
                 disabled={uploading}
-                className="flex-1 py-3 rounded-full border border-[var(--border-strong)] font-semibold text-[var(--ink-secondary)] disabled:opacity-50"
               >
                 Cancel
-              </button>
+              </Button>
               <Button
                 className="flex-1 rounded-full"
                 onClick={handleCropConfirm}
                 disabled={uploading}
+                loading={uploading}
               >
                 {uploading ? "Uploading…" : "Upload"}
               </Button>

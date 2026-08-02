@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import DashboardStats from "./_components/DashboardStats";
-import { PageHeader, Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
+import { DashboardPage } from "@/components/layout";
 
 export const metadata: Metadata = {
   title: "Technician Dashboard - SparesX",
@@ -88,68 +89,64 @@ const TIPS = [
 
 export default function TechnicianDashboard() {
   return (
-    <main className="min-h-screen bg-[var(--surface-2)] p-4 md:p-8">
-      <section className="max-w-6xl mx-auto">
-        <PageHeader
-          title="Technician Dashboard"
-          description="Manage your spare part listings and seller profile."
-        />
+    <DashboardPage
+      title="Technician Dashboard"
+      description="Manage your spare part listings and seller profile."
+    >
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+        {QUICK_LINKS.map((item) => (
+          <Link key={item.href} href={item.href} className="block">
+            <Card
+              hover
+              className="p-3 md:p-4 h-full transition-colors duration-200 hover:border-[var(--brand-muted)]"
+            >
+              <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--brand-soft)] flex items-center justify-center mb-2">
+                <svg
+                  className="w-5 h-5 text-[var(--brand)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {item.icon}
+                </svg>
+              </div>
+              <h3 className="text-sm md:text-base font-semibold text-[var(--ink)] mb-2">
+                {item.label}
+              </h3>
+              <div className="pt-2 border-t border-[var(--border)]">
+                <p className="text-xs text-[var(--brand)] font-semibold flex items-center gap-1">
+                  {item.cta} <span>→</span>
+                </p>
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
-          {QUICK_LINKS.map((item) => (
-            <Link key={item.href} href={item.href} className="block">
-              <Card
-                hover
-                className="p-3 md:p-4 h-full transition-colors duration-200 hover:border-[var(--brand-muted)]"
-              >
-                <div className="w-10 h-10 rounded-[var(--radius)] bg-[var(--brand-soft)] flex items-center justify-center mb-2">
-                  <svg
-                    className="w-5 h-5 text-[var(--brand)]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    {item.icon}
-                  </svg>
-                </div>
-                <h3 className="text-sm md:text-base font-semibold text-[var(--ink)] mb-2">
-                  {item.label}
-                </h3>
-                <div className="pt-2 border-t border-[var(--border)]">
-                  <p className="text-xs text-[var(--brand)] font-semibold flex items-center gap-1">
-                    {item.cta} <span>→</span>
-                  </p>
-                </div>
-              </Card>
-            </Link>
+      <DashboardStats />
+
+      <Card className="hidden md:block p-8">
+        <h3 className="text-xl font-semibold text-[var(--ink)] mb-6">
+          Quick Tips to Boost Sales
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {TIPS.map((tip) => (
+            <div key={tip.n} className="flex gap-4">
+              <div className="w-8 h-8 rounded-full bg-[var(--brand-soft)] flex items-center justify-center flex-shrink-0 text-sm font-bold text-[var(--brand-hover)]">
+                {tip.n}
+              </div>
+              <div>
+                <p className="font-semibold text-[var(--ink)]">
+                  {tip.title}
+                </p>
+                <p className="text-sm text-[var(--muted)] mt-1">
+                  {tip.desc}
+                </p>
+              </div>
+            </div>
           ))}
         </div>
-
-        <DashboardStats />
-
-        <Card className="hidden md:block p-8">
-          <h3 className="text-xl font-semibold text-[var(--ink)] mb-6">
-            Quick Tips to Boost Sales
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {TIPS.map((tip) => (
-              <div key={tip.n} className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-[var(--brand-soft)] flex items-center justify-center flex-shrink-0 text-sm font-bold text-[var(--brand-hover)]">
-                  {tip.n}
-                </div>
-                <div>
-                  <p className="font-semibold text-[var(--ink)]">
-                    {tip.title}
-                  </p>
-                  <p className="text-sm text-[var(--muted)] mt-1">
-                    {tip.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </section>
-    </main>
+      </Card>
+    </DashboardPage>
   );
 }

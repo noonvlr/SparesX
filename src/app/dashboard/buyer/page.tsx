@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SavedCountStat from "./_components/SavedCountStat";
-import { PageHeader, Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/Card";
+import { DashboardPage } from "@/components/layout";
 
 export const metadata: Metadata = {
   title: "Buyer Dashboard - SparesX",
@@ -70,93 +71,88 @@ const QUICK_LINKS = [
 
 export default function BuyerDashboardPage() {
   return (
-    <main className="min-h-screen bg-[var(--surface-2)] p-4 md:p-8">
-      <section className="max-w-6xl mx-auto">
-        <PageHeader
-          title="Buyer Dashboard"
-          description="Manage your enquiries, requests, and saved parts."
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {QUICK_LINKS.map((item) => (
-            <Link key={item.href} href={item.href} className="block">
-              <Card hover className="p-6 h-full">
-                <div className="w-12 h-12 rounded-[var(--radius)] bg-[var(--brand-soft)] flex items-center justify-center mb-4">
-                  <svg
-                    className="w-6 h-6 text-[var(--brand)]"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    {item.icon}
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-[var(--ink)] mb-2">
-                  {item.label}
-                </h3>
-                <p className="text-sm text-[var(--muted)]">{item.desc}</p>
-              </Card>
-            </Link>
-          ))}
-        </div>
-
-        {/* Quick Stats Section */}
-        <Card className="p-8">
-          <h2 className="text-2xl font-semibold text-[var(--ink)] mb-6">
-            Quick Overview
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="p-5 rounded-[var(--radius)] bg-[var(--brand-soft)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-[var(--brand-hover)]">
-                  Active Requests
-                </p>
-                <div className="p-2 bg-[var(--brand-muted)] rounded-[var(--radius-sm)]">
-                  <svg
-                    className="w-5 h-5 text-[var(--brand-hover)]"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                    <path
-                      fillRule="evenodd"
-                      d="M4 5a2 2 0 012-2 1 1 0 100 2H3a1 1 0 00-1 1v12a1 1 0 001 1h14a1 1 0 001-1V6a1 1 0 00-1-1h-3a1 1 0 100 2h2v11H4V5z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
+    <DashboardPage
+      title="Buyer Dashboard"
+      description="Manage your enquiries, requests, and saved parts."
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {QUICK_LINKS.map((item) => (
+          <Link key={item.href} href={item.href} className="block">
+            <Card hover className="p-6 h-full">
+              <div className="w-12 h-12 rounded-[var(--radius)] bg-[var(--brand-soft)] flex items-center justify-center mb-4">
+                <svg
+                  className="w-6 h-6 text-[var(--brand)]"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  {item.icon}
+                </svg>
               </div>
-              <p className="text-3xl font-semibold text-[var(--ink)]">0</p>
-              <p className="text-xs text-[var(--brand-hover)] mt-2">No pending requests</p>
-            </div>
+              <h3 className="text-lg font-semibold text-[var(--ink)] mb-2">
+                {item.label}
+              </h3>
+              <p className="text-sm text-[var(--muted)]">{item.desc}</p>
+            </Card>
+          </Link>
+        ))}
+      </div>
 
-            <SavedCountStat />
-
-            <div className="p-5 rounded-[var(--radius)] bg-[var(--surface-3)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-[var(--ink-secondary)]">
-                  Open Chats
-                </p>
-                <div className="p-2 bg-[var(--border)] rounded-[var(--radius-sm)]">
-                  <svg
-                    className="w-5 h-5 text-[var(--ink-secondary)]"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0L10 9.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
+      <Card className="p-8">
+        <h2 className="text-2xl font-semibold text-[var(--ink)] mb-6">
+          Quick Overview
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="p-5 rounded-[var(--radius)] bg-[var(--brand-soft)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-[var(--brand-hover)]">
+                Active Requests
+              </p>
+              <div className="p-2 bg-[var(--brand-muted)] rounded-[var(--radius-sm)]">
+                <svg
+                  className="w-5 h-5 text-[var(--brand-hover)]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                  <path
+                    fillRule="evenodd"
+                    d="M4 5a2 2 0 012-2 1 1 0 100 2H3a1 1 0 00-1 1v12a1 1 0 001 1h14a1 1 0 001-1V6a1 1 0 00-1-1h-3a1 1 0 100 2h2v11H4V5z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
-              <p className="text-3xl font-semibold text-[var(--ink)]">0</p>
-              <p className="text-xs text-[var(--muted)] mt-2">Start enquiries</p>
             </div>
+            <p className="text-3xl font-semibold text-[var(--ink)]">0</p>
+            <p className="text-xs text-[var(--brand-hover)] mt-2">No pending requests</p>
           </div>
-        </Card>
-      </section>
-    </main>
+
+          <SavedCountStat />
+
+          <div className="p-5 rounded-[var(--radius)] bg-[var(--surface-3)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-[var(--ink-secondary)]">
+                Open Chats
+              </p>
+              <div className="p-2 bg-[var(--border)] rounded-[var(--radius-sm)]">
+                <svg
+                  className="w-5 h-5 text-[var(--ink-secondary)]"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0L10 9.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-semibold text-[var(--ink)]">0</p>
+            <p className="text-xs text-[var(--muted)] mt-2">Start enquiries</p>
+          </div>
+        </div>
+      </Card>
+    </DashboardPage>
   );
 }

@@ -6,7 +6,9 @@ import { useRouter } from "next/navigation";
 import ProductCard, { type ProductCardData } from "@/components/ProductCard";
 import { showToast } from "@/components/ToastHost";
 import { Card, EmptyState } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { LoadingState } from "@/components/feedback";
+import { cn } from "@/lib/ui/cn";
 
 type SavedRow = {
   _id: string;
@@ -89,11 +91,7 @@ export default function SavedItemsClient() {
   };
 
   if (loading) {
-    return (
-      <Card className="p-10 text-center text-[var(--muted)]">
-        Loading saved items…
-      </Card>
-    );
+    return <LoadingState label="Loading saved items…" />;
   }
 
   if (!items.length) {
@@ -103,8 +101,8 @@ export default function SavedItemsClient() {
           title="No saved parts yet"
           description="Browse the catalog and tap Save for later."
           action={
-            <Link href="/products">
-              <Button>Browse products</Button>
+            <Link href="/products" className={cn(buttonVariants())}>
+              Browse products
             </Link>
           }
         />
