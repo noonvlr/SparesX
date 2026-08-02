@@ -47,9 +47,14 @@ function buildWhatsAppLink(
 export default function ProductCard({
   product,
   rotateOnHover = true,
+  onRemove,
+  removing = false,
 }: {
   product: ProductCardData;
   rotateOnHover?: boolean;
+  /** Optional remove / unsave control rendered on the card image */
+  onRemove?: () => void;
+  removing?: boolean;
 }) {
   const router = useRouter();
   const images = (product.images || []).filter(Boolean);
@@ -125,13 +130,46 @@ export default function ProductCard({
   return (
     <>
       <div
-        className="group bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col scale-[0.92] sm:scale-[0.95] origin-top"
+        className="group relative bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col scale-[0.92] sm:scale-[0.95] origin-top"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => {
           setHovered(false);
           setImageIndex(0);
         }}
       >
+        {onRemove && (
+          <button
+            type="button"
+            aria-label="Remove from saved"
+            title="Remove"
+            disabled={removing}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onRemove();
+            }}
+            className="absolute top-2 left-2 z-20 inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/95 text-gray-600 border border-gray-200 shadow-sm hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition disabled:opacity-50"
+          >
+            {removing ? (
+              <span className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+            ) : (
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            )}
+          </button>
+        )}
+
         <Link href={`/product/${product._id}`} className="block">
           <div className="relative w-full aspect-square bg-gray-50 overflow-hidden flex items-center justify-center border-b border-gray-200">
             {product.priceNegotiable && (

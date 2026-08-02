@@ -10,7 +10,7 @@ export default function RequestsTabs({
   const items: { key: typeof active; label: string; href: string }[] = [
     { key: "browse", label: "Browse requests", href: "/requests" },
     { key: "submit", label: "Submit request", href: "/requests?tab=submit" },
-    { key: "mine", label: "My requests", href: "/requests/mine" },
+    { key: "mine", label: "My requests", href: "/requests?tab=mine" },
   ];
 
   return (
@@ -20,6 +20,7 @@ export default function RequestsTabs({
           key={item.key}
           href={item.href}
           scroll={false}
+          prefetch
           className={`px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
             active === item.key
               ? "bg-blue-600 text-white shadow-md scale-[1.02]"

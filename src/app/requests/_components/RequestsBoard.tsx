@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import RequestForm from "./RequestForm";
 import RequestsTabs from "./RequestsTabs";
+import MyRequestsPanel from "./MyRequestsPanel";
 
 interface PartRequest {
   _id: string;
@@ -18,6 +19,15 @@ interface PartRequest {
   status: string;
   createdAt: string;
   hasContact?: boolean;
+}
+
+type RequestsTab = "browse" | "submit" | "mine";
+
+function tabFromSearchParams(searchParams: URLSearchParams): RequestsTab {
+  const t = searchParams.get("tab");
+  if (t === "submit") return "submit";
+  if (t === "mine") return "mine";
+  return "browse";
 }
 
 function highlightText(text: string, query: string) {
@@ -47,10 +57,9 @@ function highlightText(text: string, query: string) {
 export default function RequestsBoard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialTab =
-    searchParams.get("tab") === "submit" ? "submit" : "browse";
+  const initialTab = tabFromSearchParams(searchParams);
 
-  const [tab, setTab] = useState<"browse" | "submit">(initialTab);
+  const [tab, setTab] = useState<RequestsTab>(initialTab);
   const [requests, setRequests] = useState<PartRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -59,10 +68,9 @@ export default function RequestsBoard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authPromptId, setAuthPromptId] = useState<string | null>(null);
 
-  // Keep local tab in sync when navigating Browse <-> Submit on the same page
+  // Keep local tab in sync when switching Browse / Submit / Mine on the same page
   useEffect(() => {
-    const next = searchParams.get("tab") === "submit" ? "submit" : "browse";
-    setTab(next);
+    setTab(tabFromSearchParams(searchParams));
   }, [searchParams]);
 
   useEffect(() => {
@@ -137,7 +145,7 @@ export default function RequestsBoard() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-in fade-in duration-300">
-        <RequestsTabs active={tab === "submit" ? "submit" : "browse"} />
+        <RequestsTabs active={tab} />
         {tab === "browse" && (
           <p className="text-sm text-gray-500 animate-in fade-in">
             {loading ? "Searching…" : `${total} open request${total === 1 ? "" : "s"}`}
@@ -185,6 +193,8 @@ export default function RequestsBoard() {
             </div>
           </aside>
         </div>
+      ) : tab === "mine" ? (
+        <MyRequestsPanel />
       ) : (
         <div className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
           {/* Marketplace-style search hero */}

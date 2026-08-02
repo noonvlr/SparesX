@@ -96,8 +96,25 @@ export default function SavedItemsClient() {
 
   if (!items.length) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-600">
-        <p className="mb-4">No saved parts yet. Browse the catalog and save items for later.</p>
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 sm:p-12 text-center text-gray-600">
+        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.8}
+              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+            />
+          </svg>
+        </div>
+        <p className="mb-5 text-sm sm:text-base">
+          No saved parts yet. Browse the catalog and tap Save for later.
+        </p>
         <Link
           href="/products"
           className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
@@ -109,48 +126,67 @@ export default function SavedItemsClient() {
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-gray-500">
-        {items.length} saved {items.length === 1 ? "item" : "items"}
-      </p>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-gray-500">
+          {items.length} saved {items.length === 1 ? "item" : "items"}
+        </p>
+        <Link
+          href="/products"
+          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+        >
+          Browse more
+        </Link>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
         {items.map((row) => {
           if (!row.product) {
             return (
               <div
                 key={row._id}
-                className="bg-white rounded-xl border border-dashed border-gray-200 p-4 text-sm text-gray-500 flex flex-col gap-3"
+                className="relative bg-white rounded-lg shadow-md border border-dashed border-gray-200 overflow-hidden scale-[0.92] sm:scale-[0.95] origin-top aspect-square flex flex-col items-center justify-center p-4 text-center"
               >
-                <p>Listing no longer available</p>
                 <button
                   type="button"
+                  aria-label="Remove unavailable item"
                   disabled={removingId === row.productId}
                   onClick={() => removeSaved(row.productId)}
-                  className="py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700"
+                  className="absolute top-2 left-2 z-20 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-gray-600 border border-gray-200 shadow-sm hover:bg-red-50 hover:text-red-600"
                 >
-                  Remove
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
                 </button>
+                <p className="text-xs sm:text-sm text-gray-500 px-2">
+                  Listing no longer available
+                </p>
               </div>
             );
           }
 
-          const productId = row.productId;
           return (
-            <div key={row._id} className="relative group">
+            <div key={row._id} className="relative">
               {!row.available && (
-                <div className="absolute inset-x-2 top-2 z-10 rounded-lg bg-amber-50 border border-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-800 text-center">
+                <div className="absolute inset-x-3 top-10 sm:top-11 z-10 rounded-lg bg-amber-50/95 border border-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-800 text-center pointer-events-none">
                   Unavailable
                 </div>
               )}
-              <ProductCard product={row.product} />
-              <button
-                type="button"
-                disabled={removingId === productId}
-                onClick={() => removeSaved(productId)}
-                className="mt-2 w-full py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition disabled:opacity-50"
-              >
-                {removingId === productId ? "Removing…" : "Remove"}
-              </button>
+              <ProductCard
+                product={row.product}
+                onRemove={() => removeSaved(row.productId)}
+                removing={removingId === row.productId}
+              />
             </div>
           );
         })}
