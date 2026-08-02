@@ -358,16 +358,14 @@ export default function FloatingChatDock() {
   // Guests: no dock
   if (!hasToken && !chat.userId && !chat.panelOpen) return null;
 
-  const hasOpenThread =
+  const chatUiOpen =
     chat.panelOpen ||
     chat.floatingIds.length > 0 ||
     chat.minimizedIds.size > 0;
-  const hasConversationHistory = (chat.conversations?.length || 0) > 0;
-  const showFab =
-    hasOpenThread ||
-    chat.unreadTotal > 0 ||
-    (hasConversationHistory && !fabDismissed) ||
-    (chatVisited && !fabDismissed);
+  const hasMessages =
+    (chat.conversations?.length || 0) > 0 || chat.unreadTotal > 0;
+  // Hide while chat UI is open; show only when there are messages and not dismissed
+  const showFab = !chatUiOpen && hasMessages && !fabDismissed;
 
   const activeConv = chat.activeId
     ? chat.getConversation(chat.activeId)
@@ -521,7 +519,7 @@ export default function FloatingChatDock() {
         </>
       )}
 
-      {/* Launcher FAB — only when chat is relevant; dismissible */}
+      {/* Launcher FAB — hidden while chat open; only if messages exist */}
       {showFab && (
         <div
           className={`fixed z-[96] ${fabPosition ? "" : "chat-fab-default"}`}
@@ -531,22 +529,6 @@ export default function FloatingChatDock() {
               : undefined
           }
         >
-          <button
-            type="button"
-            onClick={dismissFab}
-            className="absolute -top-1.5 -left-1.5 z-[97] w-6 h-6 rounded-full bg-white text-slate-600 border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 hover:text-slate-900"
-            aria-label="Hide chat bubble"
-            title="Hide"
-          >
-            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2.5}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
           <button
             type="button"
             onPointerDown={handleFabPointerDown}
@@ -574,10 +556,26 @@ export default function FloatingChatDock() {
               />
             </svg>
             {chat.unreadTotal > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-rose-500 text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-md animate-pulse">
+              <span className="absolute -top-1 -left-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-rose-500 text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-md animate-pulse">
                 {chat.unreadTotal > 99 ? "99+" : chat.unreadTotal}
               </span>
             )}
+          </button>
+          <button
+            type="button"
+            onClick={dismissFab}
+            className="absolute -top-1.5 -right-1.5 z-[97] w-6 h-6 rounded-full bg-white text-slate-600 border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 hover:text-slate-900"
+            aria-label="Hide chat bubble"
+            title="Hide"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
         </div>
       )}

@@ -133,6 +133,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const [desktopProfileOpen, setDesktopProfileOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const desktopProfileRef = useRef<HTMLDivElement>(null);
 
   const hideShell = HIDE_SHELL_ROUTES.some(
@@ -153,6 +154,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setDesktopProfileOpen(false);
     setMobileProfileOpen(false);
+    setMobileMoreOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -167,18 +169,101 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [desktopProfileOpen]);
 
   useEffect(() => {
-    if (!mobileProfileOpen) return;
+    if (!mobileProfileOpen && !mobileMoreOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMobileProfileOpen(false);
+      if (e.key === "Escape") {
+        setMobileProfileOpen(false);
+        setMobileMoreOpen(false);
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [mobileProfileOpen]);
+  }, [mobileProfileOpen, mobileMoreOpen]);
 
   const openMobileProfile = () => {
     if (!isAuthenticated) return;
+    setMobileMoreOpen(false);
     setMobileProfileOpen(true);
   };
+
+  const openMobileMore = () => {
+    setMobileProfileOpen(false);
+    setMobileMoreOpen((v) => !v);
+  };
+
+  const onLogout = async () => {
+    setDesktopProfileOpen(false);
+    setMobileProfileOpen(false);
+    setMobileMoreOpen(false);
+    await handleLogout();
+  };
+
+  type MoreLink = {
+    href?: string;
+    label: string;
+    icon: ReactNode;
+    badge?: number;
+    onClick?: () => void;
+    danger?: boolean;
+  };
+
+  const moreLinks: MoreLink[] = (() => {
+    if (isAdminUser) {
+      return [
+        { href: "/admin/requests", label: "Requests", icon: <IconGrid className="h-5 w-5" /> },
+        { href: "/admin/device-management", label: "Devices", icon: <IconSearch className="h-5 w-5" /> },
+        { href: "/admin/chat", label: "Chat disputes", icon: <IconChat className="h-5 w-5" /> },
+        { href: "/admin/site-settings", label: "Site settings", icon: <IconMore className="h-5 w-5" /> },
+        { href: "/admin/settings", label: "Control center", icon: <IconUser className="h-5 w-5" /> },
+        {
+          label: "Logout",
+          icon: <IconUser className="h-5 w-5" />,
+          onClick: () => void onLogout(),
+          danger: true,
+        },
+      ];
+    }
+    if (!isAuthenticated) {
+      return [
+        { href: "/login", label: "Login", icon: <IconUser className="h-5 w-5" /> },
+        { href: "/register", label: "Register", icon: <IconGrid className="h-5 w-5" /> },
+        { href: "/requests", label: "Requests", icon: <IconBookmark className="h-5 w-5" /> },
+        { href: "/support", label: "Support", icon: <IconChat className="h-5 w-5" /> },
+      ];
+    }
+    const links: MoreLink[] = [
+      { href: profileHref, label: "Profile", icon: <IconUser className="h-5 w-5" /> },
+    ];
+    if (isTechnician) {
+      links.push({
+        href: "/technician/products",
+        label: "My Products",
+        icon: <IconGrid className="h-5 w-5" />,
+      });
+    }
+    links.push(
+      { href: "/requests", label: "Requests", icon: <IconBookmark className="h-5 w-5" /> },
+      {
+        href: "/dashboard/buyer/saved",
+        label: "Saved",
+        icon: <IconBookmark className="h-5 w-5" />,
+      },
+      {
+        href: "/whatsapp-connect",
+        label: "WhatsApp",
+        icon: <IconChat className="h-5 w-5" />,
+        badge: waPending,
+      },
+      { href: "/support", label: "Support", icon: <IconChat className="h-5 w-5" /> },
+      {
+        label: "Logout",
+        icon: <IconUser className="h-5 w-5" />,
+        onClick: () => void onLogout(),
+        danger: true,
+      },
+    );
+    return links;
+  })();
 
   const mobileItems: NavItem[] = (() => {
     if (isAdminUser) {
@@ -210,10 +295,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         },
         {
           kind: "action",
-          label: "Profile",
-          icon: <IconUser className="h-5 w-5" />,
-          onClick: openMobileProfile,
-          active: mobileProfileOpen || isActivePath(pathname, profileHref),
+          label: "More",
+          icon: <IconMore className="h-5 w-5" />,
+          onClick: openMobileMore,
+          active: mobileMoreOpen,
         },
       ];
     }
@@ -240,10 +325,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           icon: <IconGrid className="h-5 w-5" />,
         },
         {
-          kind: "link",
-          href: "/login",
-          label: "Profile",
-          icon: <IconUser className="h-5 w-5" />,
+          kind: "action",
+          label: "More",
+          icon: <IconMore className="h-5 w-5" />,
+          onClick: openMobileMore,
+          active: mobileMoreOpen,
         },
       ];
     }
@@ -267,15 +353,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         {
           kind: "link",
           href: "/technician/dashboard",
-          label: "Sell",
+          label: "Dashboard",
           icon: <IconGrid className="h-5 w-5" />,
         },
         {
           kind: "action",
-          label: "Profile",
-          icon: <IconUser className="h-5 w-5" />,
-          onClick: openMobileProfile,
-          active: mobileProfileOpen || isActivePath(pathname, profileHref),
+          label: "More",
+          icon: <IconMore className="h-5 w-5" />,
+          onClick: openMobileMore,
+          active: mobileMoreOpen,
         },
       ];
     }
@@ -303,10 +389,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       },
       {
         kind: "action",
-        label: "Profile",
-        icon: <IconUser className="h-5 w-5" />,
-        onClick: openMobileProfile,
-        active: mobileProfileOpen || isActivePath(pathname, profileHref),
+        label: "More",
+        icon: <IconMore className="h-5 w-5" />,
+        onClick: openMobileMore,
+        active: mobileMoreOpen,
       },
     ];
   })();
@@ -341,12 +427,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     links.push({ href: "/support", label: "Support" });
     return links;
   })();
-
-  const onLogout = async () => {
-    setDesktopProfileOpen(false);
-    setMobileProfileOpen(false);
-    await handleLogout();
-  };
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
@@ -673,6 +753,71 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+      )}
+
+      {/* Mobile More sheet — remaining nav items */}
+      {mobileMoreOpen && !hideShell && (
+        <div className="md:hidden fixed inset-0 z-[var(--z-modal)]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/40"
+            aria-label="Close more menu"
+            onClick={() => setMobileMoreOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--surface)] shadow-[var(--shadow-lg)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
+            <div className="flex justify-center pt-3 pb-1">
+              <span className="h-1 w-10 rounded-full bg-slate-300" />
+            </div>
+            <p className="px-5 pb-2 text-sm font-semibold text-[var(--ink)]">
+              More
+            </p>
+            <div className="px-3 pb-3 space-y-0.5 max-h-[60dvh] overflow-y-auto">
+              {moreLinks.map((item) => {
+                const className = cn(
+                  "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium min-h-12",
+                  item.danger
+                    ? "text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                    : "text-[var(--ink)] hover:bg-[var(--surface-3)]",
+                );
+                if (item.onClick) {
+                  return (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className={className}
+                      onClick={() => {
+                        setMobileMoreOpen(false);
+                        item.onClick?.();
+                      }}
+                    >
+                      <span className="text-[var(--muted)]">{item.icon}</span>
+                      {item.label}
+                    </button>
+                  );
+                }
+                return (
+                  <Link
+                    key={`${item.label}-${item.href}`}
+                    href={item.href || "/"}
+                    className={className}
+                    onClick={() => setMobileMoreOpen(false)}
+                  >
+                    <span className="text-[var(--muted)]">{item.icon}</span>
+                    <span className="flex-1">{item.label}</span>
+                    {item.badge && item.badge > 0 ? (
+                      <Badge
+                        tone="success"
+                        className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-white border-0"
+                      >
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </Badge>
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
 
       <ToastHost />

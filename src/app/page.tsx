@@ -141,13 +141,13 @@ export default async function HomePage() {
             </div>
 
             <h1 className="text-balance text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[var(--ink)] mb-5 sm:mb-6">
-              Mobile spare parts, sourced directly from verified technicians
+              The spare parts marketplace, built for technicians.
             </h1>
 
-            <p className="mx-auto max-w-xl text-base sm:text-lg text-[var(--muted)] mb-9 sm:mb-10 px-2">
-              India&apos;s marketplace for mobile spare parts. SparesX connects
-              buyers and sellers — we are not the seller, and there are no
-              in-app payments yet.
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-[var(--muted)] mb-9 sm:mb-10 px-2">
+              SparesX is the dedicated marketplace where mobile repair
+              technicians list, find, and request spare parts — searchable,
+              organized, and built just for the trade.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
