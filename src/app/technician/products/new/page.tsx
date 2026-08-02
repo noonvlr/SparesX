@@ -492,105 +492,113 @@ export default function AddProductPage() {
               </h3>
             </div>
 
-            {/* Brand Dropdown */}
-            <div className={`relative ${showBrandDropdown ? "z-30" : ""}`}>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                Brand *
-              </label>
-              <input
-                type="text"
-                placeholder="Search brand..."
-                value={brandSearch}
-                onChange={(e) => {
-                  setBrandSearch(e.target.value);
-                  setShowBrandDropdown(true);
-                }}
-                onFocus={() => {
-                  if (form.brand) {
-                    setForm((f) => ({
-                      ...f,
-                      brand: "",
-                      brandSlug: "",
-                      deviceModel: "",
-                      modelNumber: "",
-                    }));
-                    setBrandSearch("");
-                    setModelSearch("");
+            {/* Brand field + side tip (tip sits to the right of the input) */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3">
+              <div
+                className={`relative min-w-0 flex-1 ${showBrandDropdown ? "z-30" : ""}`}
+              >
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                  Brand *
+                </label>
+                <input
+                  type="text"
+                  placeholder="Search brand..."
+                  value={brandSearch}
+                  onChange={(e) => {
+                    setBrandSearch(e.target.value);
+                    setShowBrandDropdown(true);
+                  }}
+                  onFocus={() => {
+                    if (form.brand) {
+                      setForm((f) => ({
+                        ...f,
+                        brand: "",
+                        brandSlug: "",
+                        deviceModel: "",
+                        modelNumber: "",
+                      }));
+                      setBrandSearch("");
+                      setModelSearch("");
+                    }
+                    setShowBrandDropdown(true);
+                  }}
+                  onBlur={() =>
+                    setTimeout(() => setShowBrandDropdown(false), 300)
                   }
-                  setShowBrandDropdown(true);
-                }}
-                onBlur={() =>
-                  setTimeout(() => setShowBrandDropdown(false), 300)
-                }
-                className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
-                required={!!form.deviceCategory}
-                autoComplete="off"
-              />
-              {form.brand && (
-                <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                  ✓ {form.brand}
-                </div>
-              )}
-              {showBrandDropdown && (
-                <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
-                  {filteredBrands.length > 0 ? (
-                    filteredBrands.map((brand) => (
-                      <button
-                        key={brand._id}
-                        type="button"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          handleBrandSelect(brand);
-                        }}
-                        onClick={(e) => e.preventDefault()}
-                        className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] active:bg-[var(--brand-muted)] transition font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
-                      >
-                        {brand.name}
-                      </button>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2.5 text-[var(--muted)] text-center">
-                      No brands found
-                    </div>
-                  )}
-                </div>
+                  className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+                  required={!!form.deviceCategory}
+                  autoComplete="off"
+                />
+                {form.brand && (
+                  <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                    ✓ {form.brand}
+                  </div>
+                )}
+                {showBrandDropdown && (
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+                    {filteredBrands.length > 0 ? (
+                      filteredBrands.map((brand) => (
+                        <button
+                          key={brand._id}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            handleBrandSelect(brand);
+                          }}
+                          onClick={(e) => e.preventDefault()}
+                          className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] active:bg-[var(--brand-muted)] transition font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
+                        >
+                          {brand.name}
+                        </button>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2.5 text-[var(--muted)] text-center">
+                        No brands found
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+              {!form.brand && (
+                <p className="sm:mt-8 shrink-0 text-sm font-medium text-[var(--ink-secondary)] sm:max-w-[10.5rem] sm:pt-1">
+                  👈 Choose a brand
+                </p>
               )}
             </div>
 
-            {/* Model selector - search existing, suggest close matches, or add new */}
+            {/* Model selector + side tip */}
             {form.brand && (
-              <div className="relative z-20 animate-in fade-in duration-200">
-                <ModelSelector
-                  models={models}
-                  value={form.deviceModel}
-                  searchValue={modelSearch}
-                  onSearchChange={setModelSearch}
-                  onSelect={handleModelSelect}
-                  brandSlug={form.brandSlug}
-                  category={form.deviceCategory}
-                  onModelsUpdated={setModels}
-                  required
-                />
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-3 animate-in fade-in duration-200">
+                <div className="relative z-20 min-w-0 flex-1">
+                  <ModelSelector
+                    models={models}
+                    value={form.deviceModel}
+                    searchValue={modelSearch}
+                    onSearchChange={setModelSearch}
+                    onSelect={handleModelSelect}
+                    brandSlug={form.brandSlug}
+                    category={form.deviceCategory}
+                    onModelsUpdated={setModels}
+                    required
+                  />
+                </div>
+                {!form.deviceModel && (
+                  <p className="sm:mt-8 shrink-0 text-sm font-medium text-[var(--ink-secondary)] sm:max-w-[10.5rem] sm:pt-1">
+                    👈 Select a model
+                  </p>
+                )}
               </div>
             )}
           </div>
         )}
 
-        {/* Next-step tip below the active fields (points up at the input) */}
-        {(!form.deviceCategory || !form.brand || !form.deviceModel) &&
-          !showBrandDropdown && (
-            <div className="relative z-0 mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
-              {!form.deviceCategory &&
-                "👈 Select a device category to get started"}
-              {form.deviceCategory &&
-                !form.brand &&
-                "👈 Choose a brand for your device"}
-              {form.deviceCategory &&
-                form.brand &&
-                !form.deviceModel &&
-                "👈 Select a model to continue"}
-            </div>
-          )}
+        {!form.deviceCategory && (
+          <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            <p className="text-sm font-medium text-[var(--muted)]">
+              👈 Select a device category to get started
+            </p>
+          </div>
+        )}
 
         {/* Step 3: Product Details (only show after device is fully selected) */}
         {form.deviceCategory && form.brand && form.deviceModel && (
