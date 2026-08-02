@@ -12,8 +12,14 @@ export function useImageUpload() {
       const formData = new FormData();
       files.forEach((file) => formData.append("files", file));
 
+      const headers: HeadersInit = {};
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      if (token) headers.Authorization = `Bearer ${token}`;
+
       const response = await fetch("/api/upload", {
         method: "POST",
+        headers,
         body: formData,
       });
 

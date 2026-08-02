@@ -72,7 +72,32 @@ export async function PATCH(
     void updatedAt;
     void _id;
 
-    const updateData: Record<string, unknown> = { ...rest };
+    /** Whitelist admin-editable fields from residual body (block OTP/secret mass-assignment). */
+    const ALLOWED_REST = new Set([
+      "profilePicture",
+      "isBlocked",
+      "isTrusted",
+      "phoneVerified",
+      "emailVerified",
+      "kycVerified",
+      "businessVerified",
+      "addressVerified",
+      "eliteApproved",
+      "specialBadgeKeys",
+      "revokedBadgeKeys",
+      "completedSales",
+      "responseRate",
+      "complaintRate",
+      "averageRating",
+      "ratingCount",
+      "trustScore",
+      "activeBadgeKeys",
+    ]);
+
+    const updateData: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(rest as Record<string, unknown>)) {
+      if (ALLOWED_REST.has(key)) updateData[key] = value;
+    }
 
     const contactInput = {
       name,

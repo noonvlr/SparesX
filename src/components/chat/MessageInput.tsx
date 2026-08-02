@@ -33,7 +33,14 @@ export default function MessageInput({
     try {
       const formData = new FormData();
       formData.append("files", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem("token");
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers,
+        body: formData,
+      });
       const data = await res.json();
       const url = data.urls?.[0];
       if (!url) throw new Error("Upload failed");

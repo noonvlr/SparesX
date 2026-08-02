@@ -307,6 +307,9 @@ export default function TechnicianProfilePage() {
       setUploadProgress(60);
       const response = await fetch("/api/upload", {
         method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+        },
         body: formData,
       });
       setUploadProgress(80);
