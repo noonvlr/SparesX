@@ -20,12 +20,14 @@ export type PublicTrustInfo = {
   isTrusted?: boolean;
   trustScore?: number;
   trustLabel?: string;
+  averageRating?: number;
+  ratingCount?: number;
   badges?: PublicBadge[];
   activeBadgeKeys?: string[];
 };
 
 export const USER_PUBLIC_TRUST_SELECT =
-  "phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt";
+  "phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount";
 
 function orderBadgeKeys(keys: BadgeKey[]): BadgeKey[] {
   const set = new Set(keys);
@@ -137,6 +139,10 @@ export function pickTrustFields(user: any): PublicTrustInfo {
     isTrusted: !!user.isTrusted,
     trustScore,
     trustLabel: band?.label || user.trustLabel,
+    averageRating:
+      typeof user.averageRating === "number" ? user.averageRating : undefined,
+    ratingCount:
+      typeof user.ratingCount === "number" ? user.ratingCount : undefined,
     badges,
     activeBadgeKeys: user.activeBadgeKeys,
   };

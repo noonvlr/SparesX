@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import TrustBadges from "@/components/TrustBadges";
+import StarRatingDisplay from "@/components/StarRatingDisplay";
 
 export const metadata: Metadata = {
   title: "Sellers",
@@ -79,6 +80,8 @@ export default async function SellersPage() {
                 isTrusted?: boolean;
                 trustScore?: number;
                 trustLabel?: string;
+                averageRating?: number;
+                ratingCount?: number;
                 badges?: import("@/lib/badges/catalog").PublicBadge[];
                 activeBadgeKeys?: string[];
               }) => (
@@ -87,9 +90,17 @@ export default async function SellersPage() {
                   className="bg-white border border-gray-100 rounded-xl shadow-sm p-5"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-2">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      {seller.name}
-                    </h2>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">
+                        {seller.name}
+                      </h2>
+                      <div className="mt-1">
+                        <StarRatingDisplay
+                          value={seller.averageRating || 0}
+                          count={seller.ratingCount || 0}
+                        />
+                      </div>
+                    </div>
                     <TrustBadges
                       phoneVerified={seller.phoneVerified}
                       emailVerified={seller.emailVerified}

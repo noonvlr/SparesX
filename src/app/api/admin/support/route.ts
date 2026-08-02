@@ -27,6 +27,8 @@ export async function GET(req: NextRequest) {
     const [tickets, unreadCount] = await Promise.all([
       SupportRequest.find(query)
         .populate("user", "name email profilePicture role")
+        .populate("reportedUser", "name email mobile")
+        .populate("product", "name status")
         .sort({ adminUnread: -1, createdAt: -1 })
         .lean(),
       SupportRequest.countDocuments({ adminUnread: { $ne: false } }),

@@ -5,6 +5,7 @@ export type SupportType =
   | "feature"
   | "change_request"
   | "issue"
+  | "abuse"
   | "other";
 
 export type SupportStatus = "open" | "in_progress" | "resolved" | "closed";
@@ -18,6 +19,10 @@ export interface ISupportRequest extends Document {
   message: string;
   status: SupportStatus;
   adminReply?: string;
+  /** Listed seller / user being reported */
+  reportedUser?: Types.ObjectId;
+  /** Product context for abuse reports */
+  product?: Types.ObjectId;
   /** Unread for admin (new ticket / new user activity) */
   adminUnread: boolean;
   adminReadAt?: Date;
@@ -34,7 +39,7 @@ const SupportRequestSchema: Schema<ISupportRequest> = new Schema(
     email: { type: String, required: true, lowercase: true, trim: true },
     type: {
       type: String,
-      enum: ["bug", "feature", "change_request", "issue", "other"],
+      enum: ["bug", "feature", "change_request", "issue", "abuse", "other"],
       required: true,
       default: "issue",
     },
@@ -47,6 +52,8 @@ const SupportRequestSchema: Schema<ISupportRequest> = new Schema(
       index: true,
     },
     adminReply: { type: String, trim: true, maxlength: 4000 },
+    reportedUser: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    product: { type: Schema.Types.ObjectId, ref: "Product", index: true },
     adminUnread: { type: Boolean, default: true, index: true },
     adminReadAt: { type: Date },
     userUnread: { type: Boolean, default: false, index: true },

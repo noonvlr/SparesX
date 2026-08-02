@@ -7,6 +7,8 @@ import ProductCard from "@/components/ProductCard";
 import { openChatUi } from "@/components/chat/openChat";
 import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
+import StarRatingDisplay from "@/components/StarRatingDisplay";
+import RateSellerModal from "@/components/RateSellerModal";
 
 interface Seller {
   _id?: string;
@@ -25,6 +27,8 @@ interface Seller {
   isTrusted?: boolean;
   trustScore?: number;
   trustLabel?: string;
+  averageRating?: number;
+  ratingCount?: number;
   badges?: import("@/lib/badges/catalog").PublicBadge[];
   activeBadgeKeys?: string[];
 }
@@ -115,6 +119,17 @@ export default function ProductDetail({
   const [authPromptReason, setAuthPromptReason] = useState<"contact" | "save">(
     "contact",
   );
+  const [showRateModal, setShowRateModal] = useState(false);
+  const [sellerRating, setSellerRating] = useState({
+    averageRating: initialProduct.technician &&
+    typeof initialProduct.technician === "object"
+      ? Number(initialProduct.technician.averageRating || 0)
+      : 0,
+    ratingCount:
+      initialProduct.technician && typeof initialProduct.technician === "object"
+        ? Number(initialProduct.technician.ratingCount || 0)
+        : 0,
+  });
 
   useEffect(() => {
     const userId = getUserIdFromToken();
@@ -132,6 +147,13 @@ export default function ProductDetail({
           setProduct(data.product);
           if (data.product.images?.[0]) {
             setSelectedImage(resolveImageUrl(data.product.images[0]));
+          }
+          const tech = data.product.technician;
+          if (tech && typeof tech === "object") {
+            setSellerRating({
+              averageRating: Number(tech.averageRating || 0),
+              ratingCount: Number(tech.ratingCount || 0),
+            });
           }
         }
         if (data.similarProducts) setSimilarProducts(data.similarProducts);
@@ -224,6 +246,23 @@ export default function ProductDetail({
     } finally {
       setSaveLoading(false);
     }
+  };
+
+  const handleRateClick = () => {
+    if (!requireAuth("contact")) return;
+    setShowRateModal(true);
+  };
+
+  const handleReportClick = () => {
+    if (!requireAuth("contact")) return;
+    const sellerId = seller?._id || "";
+    const params = new URLSearchParams({
+      type: "abuse",
+      productId: product._id,
+      reportedUserId: sellerId,
+      subject: `Report: ${product.name}`.slice(0, 140),
+    });
+    router.push(`/support?${params.toString()}`);
   };
 
   const handleChatClick = () => {
@@ -416,12 +455,44 @@ export default function ProductDetail({
 
             {/* Seller + contact */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7">
-              <h2 className="text-lg font-bold text-gray-900 mb-3">Seller</h2>
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h2 className="text-lg font-bold text-gray-900">Seller</h2>
+                {!isOwner && seller && (
+                  <button
+                    type="button"
+                    onClick={handleReportClick}
+                    title="Report misbehaviour"
+                    aria-label="Report seller"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1 rounded-lg hover:bg-rose-50 transition"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
+                      />
+                    </svg>
+                    Report
+                  </button>
+                )}
+              </div>
               {seller ? (
                 <div className="flex items-start justify-between gap-4 flex-wrap">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="font-semibold text-gray-900">{seller.name}</p>
+                      <StarRatingDisplay
+                        value={sellerRating.averageRating}
+                        count={sellerRating.ratingCount}
+                      />
+                    </div>
+                    <div className="mt-2">
                       <TrustBadges
                         phoneVerified={seller.phoneVerified}
                         emailVerified={seller.emailVerified}
@@ -458,6 +529,13 @@ export default function ProductDetail({
                       >
                         In-app chat
                       </button>
+                      <button
+                        type="button"
+                        onClick={handleRateClick}
+                        className="px-4 py-2.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-sm font-semibold hover:bg-amber-100 transition"
+                      >
+                        Rate seller
+                      </button>
                     </div>
                   )}
                 </div>
@@ -468,6 +546,13 @@ export default function ProductDetail({
               {!isLoggedIn && !isOwner && (
                 <p className="mt-4 text-sm text-gray-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
                   Login or sign up to contact the seller.
+                </p>
+              )}
+              {isLoggedIn && !isOwner && (
+                <p className="mt-4 text-xs text-gray-500">
+                  After chatting with the seller, you can rate their behaviour and
+                  response. Spot misuse? Use Report — it opens Support with your
+                  details prefilled for admin review.
                 </p>
               )}
             </div>
@@ -498,13 +583,13 @@ export default function ProductDetail({
 
       {/* Mobile sticky CTAs */}
       {!isOwner && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-4 py-3">
-          <div className="max-w-7xl mx-auto grid grid-cols-3 gap-2">
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-3 py-3">
+          <div className="max-w-7xl mx-auto grid grid-cols-4 gap-1.5">
             <button
               type="button"
               onClick={handleToggleSave}
               disabled={saveLoading}
-              className={`py-3 rounded-xl font-semibold text-sm border ${
+              className={`py-3 rounded-xl font-semibold text-xs border ${
                 isSaved
                   ? "bg-amber-50 text-amber-900 border-amber-200"
                   : "bg-white text-gray-800 border-gray-200"
@@ -515,19 +600,37 @@ export default function ProductDetail({
             <button
               type="button"
               onClick={handleWhatsAppClick}
-              className="py-3 rounded-xl bg-green-600 text-white font-semibold text-sm"
+              className="py-3 rounded-xl bg-green-600 text-white font-semibold text-xs"
             >
               WhatsApp
             </button>
             <button
               type="button"
               onClick={handleChatClick}
-              className="py-3 rounded-xl bg-blue-600 text-white font-semibold text-sm"
+              className="py-3 rounded-xl bg-blue-600 text-white font-semibold text-xs"
             >
               Chat
             </button>
+            <button
+              type="button"
+              onClick={handleRateClick}
+              className="py-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 font-semibold text-xs"
+            >
+              Rate
+            </button>
           </div>
         </div>
+      )}
+
+      {seller?._id && (
+        <RateSellerModal
+          open={showRateModal}
+          onClose={() => setShowRateModal(false)}
+          sellerId={String(seller._id)}
+          sellerName={seller.name}
+          productId={product._id}
+          onSubmitted={(stats) => setSellerRating(stats)}
+        />
       )}
 
       {/* Auth modal */}

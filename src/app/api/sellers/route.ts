@@ -6,7 +6,7 @@ export async function GET() {
   await connectDB();
   const sellers = await User.find({ role: "technician", isBlocked: false })
     .select(
-      "name createdAt phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role city state",
+      "name createdAt phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role city state averageRating ratingCount",
     )
     .sort({ createdAt: -1 })
     .limit(24);

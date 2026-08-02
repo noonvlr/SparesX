@@ -31,6 +31,7 @@ export interface IUser extends Document {
   eliteApproved: boolean;
   completedSales: number;
   averageRating: number;
+  ratingCount: number;
   responseRate: number;
   complaintRate: number;
   trustScore: number;
@@ -84,6 +85,7 @@ const UserSchema: Schema<IUser> = new Schema({
   eliteApproved: { type: Boolean, default: false },
   completedSales: { type: Number, default: 0 },
   averageRating: { type: Number, default: 0 },
+  ratingCount: { type: Number, default: 0 },
   responseRate: { type: Number, default: 0 },
   complaintRate: { type: Number, default: 0 },
   trustScore: { type: Number, default: 0 },

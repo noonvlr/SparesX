@@ -38,7 +38,7 @@ export async function GET(
 
     const product = await Product.findById(id).populate(
       "technician",
-      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt",
+      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount",
     );
 
     if (!product) {

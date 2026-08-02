@@ -291,6 +291,32 @@ export default function AdminSupportPage() {
                     {String(selected.type).replace("_", " ")}
                   </span>
                 </p>
+                {(selected.reportedUser || selected.product) && (
+                  <div className="mt-2 rounded-lg bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-900 space-y-1">
+                    {selected.reportedUser && (
+                      <p>
+                        Reported user:{" "}
+                        <span className="font-semibold">
+                          {selected.reportedUser.name || "Unknown"}
+                        </span>
+                        {selected.reportedUser.email
+                          ? ` · ${selected.reportedUser.email}`
+                          : ""}
+                        {selected.reportedUser.mobile
+                          ? ` · ${selected.reportedUser.mobile}`
+                          : ""}
+                      </p>
+                    )}
+                    {selected.product && (
+                      <p>
+                        Product:{" "}
+                        <span className="font-semibold">
+                          {selected.product.name || selected.product._id}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
                 <p className="text-sm text-gray-800 whitespace-pre-wrap">

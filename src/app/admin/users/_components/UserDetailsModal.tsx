@@ -1,11 +1,12 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Cropper from "react-easy-crop";
 import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 import type { AdminUser } from "@/app/admin/users/_components/types";
 import TrustBadges from "@/components/TrustBadges";
 import { FOUNDING_MEMBER_UNTIL } from "@/lib/badges/catalog";
+import StarRatingDisplay from "@/components/StarRatingDisplay";
 
 interface UserDetailsModalProps {
   user: AdminUser;
@@ -60,8 +61,35 @@ export default function UserDetailsModal({
         (user.activeBadgeKeys || []).includes("founding_member") ||
         (!!user.createdAt &&
           new Date(user.createdAt) <= FOUNDING_MEMBER_UNTIL)),
+    completedSales: user.completedSales ?? 0,
+    responseRate: user.responseRate ?? 0,
+    complaintRate: user.complaintRate ?? 0,
     role: user.role,
   });
+  const [ratings, setRatings] = useState<any[]>([]);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+
+  const loadRatings = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setRatingsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user._id}/ratings`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) setRatings(data.ratings || []);
+    } catch {
+      setRatings([]);
+    } finally {
+      setRatingsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadRatings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user._id]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -172,6 +200,9 @@ export default function UserDetailsModal({
         special_verified_technician,
         special_moderator,
         special_founding_member,
+        completedSales,
+        responseRate,
+        complaintRate,
         ...rest
       } = editData;
       const specialBadgeKeys = [
@@ -198,6 +229,9 @@ export default function UserDetailsModal({
           ...rest,
           specialBadgeKeys,
           revokedBadgeKeys,
+          completedSales: Number(completedSales) || 0,
+          responseRate: Math.max(0, Math.min(100, Number(responseRate) || 0)),
+          complaintRate: Math.max(0, Math.min(100, Number(complaintRate) || 0)),
         }),
       });
 
@@ -346,6 +380,133 @@ export default function UserDetailsModal({
                       ). Toggle it under Edit → Special recognition.
                     </p>
                   )}
+                </div>
+
+                {/* Reputation */}
+                <div className="p-4 bg-amber-50/60 border border-amber-100 rounded-lg md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 uppercase">
+                    Seller reputation
+                  </label>
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <StarRatingDisplay
+                      value={user.averageRating || 0}
+                      count={user.ratingCount || 0}
+                      size="md"
+                    />
+                    <span className="text-xs text-gray-600">
+                      Sales: {user.completedSales ?? 0} · Response:{" "}
+                      {user.responseRate ?? 0}% · Complaints:{" "}
+                      {user.complaintRate ?? 0}%
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-2 max-h-48 overflow-y-auto">
+                    {ratingsLoading ? (
+                      <p className="text-xs text-gray-500">Loading ratings…</p>
+                    ) : ratings.length === 0 ? (
+                      <p className="text-xs text-gray-500">No ratings yet.</p>
+                    ) : (
+                      ratings.map((r) => (
+                        <div
+                          key={r._id}
+                          className={`rounded-lg border px-3 py-2 text-xs ${
+                            r.isHidden
+                              ? "bg-gray-50 border-gray-200 opacity-70"
+                              : "bg-white border-amber-100"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {r.rater?.name || "User"} · ★{r.stars} (B
+                                {r.behaviour}/R{r.response})
+                              </p>
+                              {r.comment && (
+                                <p className="text-gray-600 mt-0.5">{r.comment}</p>
+                              )}
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <button
+                                type="button"
+                                className="text-[10px] font-semibold text-blue-700 px-2 py-1 rounded border border-blue-100"
+                                onClick={async () => {
+                                  const stars = prompt(
+                                    "Stars 1–5",
+                                    String(r.stars),
+                                  );
+                                  if (!stars) return;
+                                  const token = localStorage.getItem("token");
+                                  if (!token) return;
+                                  await fetch(
+                                    `/api/admin/users/${user._id}/ratings`,
+                                    {
+                                      method: "PATCH",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        ratingId: r._id,
+                                        stars: Number(stars),
+                                      }),
+                                    },
+                                  );
+                                  await loadRatings();
+                                }}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                className="text-[10px] font-semibold text-amber-800 px-2 py-1 rounded border border-amber-200"
+                                onClick={async () => {
+                                  const token = localStorage.getItem("token");
+                                  if (!token) return;
+                                  await fetch(
+                                    `/api/admin/users/${user._id}/ratings`,
+                                    {
+                                      method: "PATCH",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({
+                                        ratingId: r._id,
+                                        isHidden: !r.isHidden,
+                                      }),
+                                    },
+                                  );
+                                  await loadRatings();
+                                }}
+                              >
+                                {r.isHidden ? "Show" : "Hide"}
+                              </button>
+                              <button
+                                type="button"
+                                className="text-[10px] font-semibold text-rose-700 px-2 py-1 rounded border border-rose-200"
+                                onClick={async () => {
+                                  if (!confirm("Delete this rating?")) return;
+                                  const token = localStorage.getItem("token");
+                                  if (!token) return;
+                                  await fetch(
+                                    `/api/admin/users/${user._id}/ratings?ratingId=${r._id}`,
+                                    {
+                                      method: "DELETE",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    },
+                                  );
+                                  await loadRatings();
+                                }}
+                              >
+                                Del
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
 
                 {/* WhatsApp */}
@@ -793,6 +954,60 @@ export default function UserDetailsModal({
                       </label>
                     </div>
                   ))}
+                </div>
+
+                {/* Reputation metrics */}
+                <div className="p-4 bg-amber-50 border border-amber-100 rounded-lg space-y-3">
+                  <p className="text-sm font-semibold text-amber-950">
+                    Reputation metrics
+                  </p>
+                  <p className="text-xs text-amber-900/80">
+                    Average rating is computed from buyer reviews. Adjust sales /
+                    response / complaint rates for trust scoring.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600">
+                        Completed sales
+                      </label>
+                      <input
+                        type="number"
+                        name="completedSales"
+                        min={0}
+                        value={editData.completedSales}
+                        onChange={handleChange}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600">
+                        Response rate %
+                      </label>
+                      <input
+                        type="number"
+                        name="responseRate"
+                        min={0}
+                        max={100}
+                        value={editData.responseRate}
+                        onChange={handleChange}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600">
+                        Complaint rate %
+                      </label>
+                      <input
+                        type="number"
+                        name="complaintRate"
+                        min={0}
+                        max={100}
+                        value={editData.complaintRate}
+                        onChange={handleChange}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Buttons */}

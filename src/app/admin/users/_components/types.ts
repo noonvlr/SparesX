@@ -20,6 +20,11 @@ export interface AdminUser {
   isTrusted?: boolean;
   eliteApproved?: boolean;
   trustScore?: number;
+  averageRating?: number;
+  ratingCount?: number;
+  completedSales?: number;
+  responseRate?: number;
+  complaintRate?: number;
   specialBadgeKeys?: string[];
   revokedBadgeKeys?: string[];
   activeBadgeKeys?: string[];
