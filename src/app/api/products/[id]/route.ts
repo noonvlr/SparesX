@@ -58,21 +58,35 @@ export async function GET(
 
     const productObj: any = product.toObject();
 
-    // Attach public trust badges; hide contact for guests
+    // Attach public trust badges; never expose WhatsApp/mobile unless owner
+    // or WhatsApp is unlocked between viewer and seller (per user pair).
     if (productObj.technician && typeof productObj.technician === "object") {
       const { pickTrustFields } = await import("@/lib/trust");
       const trust = pickTrustFields(productObj.technician);
-      if (!isAuthenticated) {
-        productObj.technician = {
-          _id: productObj.technician._id,
-          name: productObj.technician.name,
-          city: productObj.technician.city,
-          state: productObj.technician.state,
-          ...trust,
-        };
-      } else {
-        Object.assign(productObj.technician, trust);
+      const tech = productObj.technician;
+
+      let whatsappUnlocked = isOwner;
+      if (isAuthenticated && userId && !isOwner) {
+        const { isWhatsAppUnlocked } = await import("@/lib/whatsapp/connect");
+        whatsappUnlocked = await isWhatsAppUnlocked(userId, ownerId);
       }
+
+      productObj.technician = {
+        _id: tech._id,
+        name: tech.name,
+        city: tech.city,
+        state: tech.state,
+        profilePicture: tech.profilePicture,
+        ...trust,
+      };
+
+      if (whatsappUnlocked) {
+        productObj.technician.whatsappNumber = tech.whatsappNumber;
+        productObj.technician.countryCode = tech.countryCode;
+        productObj.technician.mobile = tech.mobile;
+      }
+
+      productObj.whatsappUnlocked = whatsappUnlocked && !isOwner;
     }
 
     // Similar products: same brand / partType / deviceCategory, exclude self

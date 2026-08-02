@@ -84,19 +84,14 @@ function getUserIdFromToken(): string | null {
   }
 }
 
-function buildWhatsAppLink(seller: Seller, productName: string) {
-  const code = (seller.countryCode || "+91").replace(/\D/g, "");
-  const number = (seller.whatsappNumber || seller.mobile || "").replace(
-    /\D/g,
-    "",
-  );
-  if (!number) return null;
-  const phone = `${code}${number}`.replace(/^0+/, "");
-  const text = encodeURIComponent(
-    `Hi, I'm interested in your listing "${productName}" on SparesX.`,
-  );
-  return `https://wa.me/${phone}?text=${text}`;
-}
+type WaConnectStatus = {
+  status: string;
+  unlocked: boolean;
+  canRequest: boolean;
+  reason?: string;
+  whatsappUrl?: string | null;
+  maskedNumber?: string | null;
+};
 
 export default function ProductDetail({
   product: initialProduct,
@@ -120,6 +115,9 @@ export default function ProductDetail({
     "contact",
   );
   const [showRateModal, setShowRateModal] = useState(false);
+  const [waConnect, setWaConnect] = useState<WaConnectStatus | null>(null);
+  const [waLoading, setWaLoading] = useState(false);
+  const [waActionLoading, setWaActionLoading] = useState(false);
   const [sellerRating, setSellerRating] = useState({
     averageRating: initialProduct.technician &&
     typeof initialProduct.technician === "object"
@@ -183,6 +181,7 @@ export default function ProductDetail({
         .catch(() => {});
     } else {
       setIsSaved(false);
+      setWaConnect(null);
     }
   }, [initialProduct._id]);
 
@@ -193,9 +192,43 @@ export default function ProductDetail({
     return product.technician;
   }, [product.technician]);
 
-  const whatsappUrl = seller
-    ? buildWhatsAppLink(seller, product.name)
-    : null;
+  const loadWaConnect = async (sellerId: string, productId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setWaConnect(null);
+      return;
+    }
+    setWaLoading(true);
+    try {
+      const res = await fetch(
+        `/api/whatsapp-connect?sellerId=${encodeURIComponent(sellerId)}&productId=${encodeURIComponent(productId)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setWaConnect({
+          status: data.status || "none",
+          unlocked: !!data.unlocked,
+          canRequest: !!data.canRequest,
+          reason: data.reason,
+          whatsappUrl: data.whatsappUrl || null,
+          maskedNumber: data.maskedNumber || null,
+        });
+      }
+    } catch {
+      // ignore
+    } finally {
+      setWaLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoggedIn || isOwner || !seller?._id) {
+      setWaConnect(null);
+      return;
+    }
+    void loadWaConnect(String(seller._id), product._id);
+  }, [isLoggedIn, isOwner, seller?._id, product._id]);
 
   const requireAuth = (reason: "contact" | "save" = "contact") => {
     if (isLoggedIn) return true;
@@ -278,14 +311,79 @@ export default function ProductDetail({
     });
   };
 
-  const handleWhatsAppClick = () => {
+  const handleWhatsAppClick = async () => {
     if (!requireAuth("contact")) return;
-    if (!whatsappUrl) {
-      alert("Seller WhatsApp number is not available.");
+    const sellerId = seller?._id;
+    if (!sellerId) {
+      showToast("Seller is not available", "error");
       return;
     }
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+
+    if (waConnect?.unlocked && waConnect.whatsappUrl) {
+      window.open(waConnect.whatsappUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (waConnect?.status === "pending") {
+      showToast("Waiting for the seller to approve your WhatsApp request");
+      return;
+    }
+
+    if (waConnect && !waConnect.canRequest) {
+      showToast(waConnect.reason || "Cannot request WhatsApp right now", "error");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setWaActionLoading(true);
+    try {
+      const res = await fetch("/api/whatsapp-connect", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sellerId,
+          productId: product._id,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data.message || "Could not send WhatsApp request", "error");
+        return;
+      }
+      if (data.unlocked || data.status === "approved") {
+        await loadWaConnect(String(sellerId), product._id);
+        showToast(
+          "WhatsApp unlocked — you can message this seller for any of their listings",
+        );
+        return;
+      }
+      setWaConnect({
+        status: "pending",
+        unlocked: false,
+        canRequest: false,
+        reason: "Waiting for the seller to approve your WhatsApp request",
+      });
+      showToast(
+        "Request sent. Once approved, WhatsApp stays unlocked for all their listings.",
+      );
+    } catch {
+      showToast("Something went wrong. Try again.", "error");
+    } finally {
+      setWaActionLoading(false);
+    }
   };
+
+  const waButtonLabel = (() => {
+    if (waLoading || waActionLoading) return "…";
+    if (waConnect?.unlocked) return "Open WhatsApp";
+    if (waConnect?.status === "pending") return "WA pending";
+    return "Request WhatsApp";
+  })();
 
   const images = (product.images || []).map(resolveImageUrl).filter(Boolean);
 
@@ -527,9 +625,16 @@ export default function ProductDetail({
                       <button
                         type="button"
                         onClick={handleWhatsAppClick}
-                        className="px-4 py-2.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition"
+                        disabled={waLoading || waActionLoading}
+                        className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition disabled:opacity-60 ${
+                          waConnect?.unlocked
+                            ? "bg-green-600 text-white hover:bg-green-700"
+                            : waConnect?.status === "pending"
+                              ? "bg-amber-50 text-amber-900 border border-amber-200"
+                              : "bg-green-600 text-white hover:bg-green-700"
+                        }`}
                       >
-                        WhatsApp
+                        {waButtonLabel}
                       </button>
                       <button
                         type="button"
@@ -558,11 +663,29 @@ export default function ProductDetail({
                 </p>
               )}
               {isLoggedIn && !isOwner && (
-                <p className="mt-4 text-xs text-gray-500">
-                  After chatting with the seller, you can rate their behaviour and
-                  response. Spot misuse? Use Report — it opens Support with your
-                  details prefilled for admin review.
-                </p>
+                <div className="mt-4 space-y-1.5">
+                  {waConnect?.unlocked && (
+                    <p className="text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                      WhatsApp unlocked with this seller
+                      {waConnect.maskedNumber
+                        ? ` (${waConnect.maskedNumber})`
+                        : ""}
+                      . You can message them on WhatsApp for any of their
+                      listings.
+                    </p>
+                  )}
+                  {waConnect?.status === "pending" && (
+                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                      WhatsApp request pending. Once they approve, unlock applies
+                      to all their products.
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    After chatting with the seller, you can rate their behaviour
+                    and response. Spot misuse? Use Report — it opens Support with
+                    your details prefilled for admin review.
+                  </p>
+                </div>
               )}
             </div>
           </section>
@@ -609,9 +732,14 @@ export default function ProductDetail({
             <button
               type="button"
               onClick={handleWhatsAppClick}
-              className="py-3 rounded-xl bg-green-600 text-white font-semibold text-xs"
+              disabled={waLoading || waActionLoading}
+              className={`py-3 rounded-xl font-semibold text-xs disabled:opacity-60 ${
+                waConnect?.status === "pending" && !waConnect.unlocked
+                  ? "bg-amber-50 text-amber-900 border border-amber-200"
+                  : "bg-green-600 text-white"
+              }`}
             >
-              WhatsApp
+              {waButtonLabel}
             </button>
             <button
               type="button"

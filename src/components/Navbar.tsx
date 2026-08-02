@@ -17,6 +17,7 @@ export default function Navbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [supportUnread, setSupportUnread] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
+  const [waPending, setWaPending] = useState(0);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const pathname = usePathname();
@@ -118,6 +119,46 @@ export default function Navbar() {
       clearInterval(interval);
       window.removeEventListener("support-unread-updated", onUpdated);
       window.removeEventListener("focus", fetchUnread);
+    };
+  }, [isAuthenticated, userRole, pathname]);
+
+  // Pending WhatsApp connect requests (incoming)
+  useEffect(() => {
+    if (!isAuthenticated || userRole === "admin") {
+      setWaPending(0);
+      return;
+    }
+
+    const fetchPending = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/whatsapp-connect?box=incoming", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const count =
+            typeof data.pendingIncoming === "number"
+              ? data.pendingIncoming
+              : (data.items || []).filter(
+                  (i: { status: string }) => i.status === "pending",
+                ).length;
+          setWaPending(count);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchPending();
+    const interval = setInterval(fetchPending, 30000);
+    window.addEventListener("sparesx-wa-connect-changed", fetchPending);
+    window.addEventListener("focus", fetchPending);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("sparesx-wa-connect-changed", fetchPending);
+      window.removeEventListener("focus", fetchPending);
     };
   }, [isAuthenticated, userRole, pathname]);
 
@@ -330,6 +371,15 @@ export default function Navbar() {
                       <UnreadBadge count={chatUnread} />
                     </button>
                   )}
+                  {isAuthenticated && (
+                    <Link
+                      href="/whatsapp-connect"
+                      className="relative text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition inline-flex items-center gap-1.5"
+                    >
+                      WhatsApp
+                      <UnreadBadge count={waPending} />
+                    </Link>
+                  )}
                 </>
               )}
             </div>
@@ -457,6 +507,31 @@ export default function Navbar() {
                       </span>
                       <UnreadBadge count={chatUnread} />
                     </button>
+                    )}
+                    {userRole !== "admin" && (
+                    <Link
+                      href="/whatsapp-connect"
+                      onClick={() => setProfileOpen(false)}
+                      className="w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <span className="flex items-center gap-2">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        WhatsApp requests
+                      </span>
+                      <UnreadBadge count={waPending} />
+                    </Link>
                     )}
                     <Link
                       href={userRole === "admin" ? "/admin/support" : "/support"}
@@ -689,6 +764,16 @@ export default function Navbar() {
                   <span>Messages</span>
                   <UnreadBadge count={chatUnread} />
                 </button>
+              )}
+              {isAuthenticated && (
+                <Link
+                  href="/whatsapp-connect"
+                  className="flex items-center justify-between text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span>WhatsApp requests</span>
+                  <UnreadBadge count={waPending} />
+                </Link>
               )}
               {isAuthenticated && userRole === "technician" && (
                 <Link

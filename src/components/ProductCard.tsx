@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { openChatUi } from "@/components/chat/openChat";
+import { showToast } from "@/components/ToastHost";
 
 export interface ProductCardData {
   _id: string;
@@ -18,6 +19,14 @@ export interface ProductCardData {
   priceNegotiable?: boolean;
 }
 
+type WaState = {
+  status: string;
+  unlocked: boolean;
+  canRequest: boolean;
+  reason?: string;
+  whatsappUrl?: string | null;
+};
+
 function resolveImageUrl(url?: string) {
   if (!url) return "";
   if (url.startsWith("data:")) return url;
@@ -26,22 +35,6 @@ function resolveImageUrl(url?: string) {
   if (url.startsWith("//")) return `https:${url}`;
   if (url.startsWith("/")) return url;
   return `/${url}`;
-}
-
-function buildWhatsAppLink(
-  countryCode: string | undefined,
-  whatsappNumber: string | undefined,
-  mobile: string | undefined,
-  productName: string,
-) {
-  const code = (countryCode || "+91").replace(/\D/g, "");
-  const number = (whatsappNumber || mobile || "").replace(/\D/g, "");
-  if (!number) return null;
-  const phone = `${code}${number}`.replace(/^0+/, "");
-  const text = encodeURIComponent(
-    `Hi, I'm interested in your listing "${productName}" on SparesX.`,
-  );
-  return `https://wa.me/${phone}?text=${text}`;
 }
 
 export default function ProductCard({
@@ -63,7 +56,8 @@ export default function ProductCard({
   const [contactOpen, setContactOpen] = useState(false);
   const [authPrompt, setAuthPrompt] = useState(false);
   const [loadingContact, setLoadingContact] = useState(false);
-  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [waState, setWaState] = useState<WaState | null>(null);
+  const [waActionLoading, setWaActionLoading] = useState(false);
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
 
@@ -94,7 +88,7 @@ export default function ProductCard({
     setContactOpen(true);
     setLoadingContact(true);
     setContactError(null);
-    setWhatsappUrl(null);
+    setWaState(null);
     setSellerId(null);
 
     try {
@@ -107,25 +101,116 @@ export default function ProductCard({
         return;
       }
       const seller = data.product?.technician;
-      if (!seller || typeof seller !== "object") {
+      if (!seller || typeof seller !== "object" || !seller._id) {
         setContactError("Seller contact unavailable");
         return;
       }
-      if (seller._id) setSellerId(String(seller._id));
-      const url = buildWhatsAppLink(
-        seller.countryCode,
-        seller.whatsappNumber,
-        seller.mobile,
-        product.name,
+      const sid = String(seller._id);
+      setSellerId(sid);
+
+      const waRes = await fetch(
+        `/api/whatsapp-connect?sellerId=${encodeURIComponent(sid)}&productId=${encodeURIComponent(product._id)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      setWhatsappUrl(url);
-      if (!url) setContactError("Seller WhatsApp number is not available");
+      const waData = await waRes.json().catch(() => ({}));
+      if (waRes.ok) {
+        setWaState({
+          status: waData.status || "none",
+          unlocked: !!waData.unlocked,
+          canRequest: !!waData.canRequest,
+          reason: waData.reason,
+          whatsappUrl: waData.whatsappUrl || null,
+        });
+      } else {
+        setContactError(waData.message || "Could not load WhatsApp status");
+      }
     } catch {
       setContactError("Failed to load contact options");
     } finally {
       setLoadingContact(false);
     }
   };
+
+  const handleWhatsAppAction = async () => {
+    if (!sellerId) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    if (waState?.unlocked && waState.whatsappUrl) {
+      window.open(waState.whatsappUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    if (waState?.status === "pending") {
+      showToast("Waiting for the seller to approve your WhatsApp request");
+      return;
+    }
+
+    if (waState && !waState.canRequest) {
+      showToast(waState.reason || "Cannot request WhatsApp right now", "error");
+      return;
+    }
+
+    setWaActionLoading(true);
+    try {
+      const res = await fetch("/api/whatsapp-connect", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sellerId,
+          productId: product._id,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data.message || "Could not send request", "error");
+        return;
+      }
+      if (data.unlocked || data.status === "approved") {
+        const waRes = await fetch(
+          `/api/whatsapp-connect?sellerId=${encodeURIComponent(sellerId)}&productId=${encodeURIComponent(product._id)}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const waData = await waRes.json().catch(() => ({}));
+        if (waRes.ok) {
+          setWaState({
+            status: waData.status || "approved",
+            unlocked: !!waData.unlocked,
+            canRequest: false,
+            whatsappUrl: waData.whatsappUrl || null,
+          });
+          if (waData.whatsappUrl) {
+            window.open(waData.whatsappUrl, "_blank", "noopener,noreferrer");
+          }
+        }
+        showToast("WhatsApp unlocked for all listings from this seller");
+        return;
+      }
+      setWaState({
+        status: "pending",
+        unlocked: false,
+        canRequest: false,
+        reason: "Waiting for approval",
+      });
+      showToast(
+        "Request sent. Once approved, WhatsApp stays unlocked for all their listings.",
+      );
+    } catch {
+      showToast("Something went wrong. Try again.", "error");
+    } finally {
+      setWaActionLoading(false);
+    }
+  };
+
+  const waLabel = (() => {
+    if (waActionLoading) return "…";
+    if (waState?.unlocked) return "Open WhatsApp";
+    if (waState?.status === "pending") return "WhatsApp pending";
+    return "Request WhatsApp";
+  })();
 
   return (
     <>
@@ -275,15 +360,27 @@ export default function ProductCard({
               <div className="space-y-2">
                 <button
                   type="button"
-                  disabled={!whatsappUrl}
-                  onClick={() => {
-                    if (whatsappUrl)
-                      window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-                  }}
-                  className="w-full py-3 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 disabled:opacity-50 transition"
+                  disabled={waActionLoading || !waState}
+                  onClick={handleWhatsAppAction}
+                  className={`w-full py-3 rounded-xl font-semibold disabled:opacity-50 transition ${
+                    waState?.status === "pending" && !waState.unlocked
+                      ? "bg-amber-50 text-amber-900 border border-amber-200"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
                 >
-                  WhatsApp
+                  {waLabel}
                 </button>
+                {waState?.status === "pending" && !waState.unlocked && (
+                  <p className="text-xs text-amber-800">
+                    Once approved, WhatsApp unlocks for all of this seller&apos;s
+                    listings.
+                  </p>
+                )}
+                {waState?.unlocked && (
+                  <p className="text-xs text-green-700">
+                    Already unlocked — works for any of their products.
+                  </p>
+                )}
                 <button
                   type="button"
                   disabled={!sellerId}
