@@ -394,11 +394,6 @@ export default function EditProductPage() {
               </button>
             ))}
           </div>
-          {!form.deviceCategory && (
-            <p className="mt-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--muted)] shadow-[var(--shadow-sm)]">
-              Select a device category to get started
-            </p>
-          )}
         </div>
 
         {/* Step 2: Device Details (Brand & Model) */}
@@ -407,12 +402,6 @@ export default function EditProductPage() {
             <h3 className="text-sm font-bold text-[var(--brand-hover)] uppercase tracking-wide">
               Step 2: Choose Brand & Model
             </h3>
-
-            {!form.brand && !showBrandDropdown && (
-              <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
-                Choose a brand for your device
-              </p>
-            )}
 
             {/* Brand Dropdown */}
             <div className={`relative ${showBrandDropdown ? "z-30" : ""}`}>
@@ -482,13 +471,7 @@ export default function EditProductPage() {
 
             {/* Model Dropdown - Only show when brand is selected */}
             {form.brand && (
-              <div className="relative z-20 space-y-3">
-                {!form.deviceModel && !showModelDropdown && (
-                  <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
-                    Select a model to continue
-                  </p>
-                )}
-                <div className={`relative ${showModelDropdown ? "z-30" : ""}`}>
+              <div className={`relative ${showModelDropdown ? "z-30" : ""}`}>
                 <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                   Model *
                 </label>
@@ -545,11 +528,26 @@ export default function EditProductPage() {
                     )}
                   </div>
                 )}
-                </div>
               </div>
             )}
           </div>
         )}
+
+        {(!form.deviceCategory || !form.brand || !form.deviceModel) &&
+          !showBrandDropdown &&
+          !showModelDropdown && (
+            <div className="relative z-0 mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
+              {!form.deviceCategory &&
+                "👈 Select a device category to get started"}
+              {form.deviceCategory &&
+                !form.brand &&
+                "👈 Choose a brand for your device"}
+              {form.deviceCategory &&
+                form.brand &&
+                !form.deviceModel &&
+                "👈 Select a model to continue"}
+            </div>
+          )}
 
         {/* Step 3: Product Details (only show after device is fully selected) */}
         {form.deviceCategory && form.brand && form.deviceModel && (

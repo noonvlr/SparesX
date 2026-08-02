@@ -478,11 +478,6 @@ export default function AddProductPage() {
               ))}
             </div>
           </div>
-          {!form.deviceCategory && (
-            <p className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--muted)] shadow-[var(--shadow-sm)]">
-              Select a device category to get started
-            </p>
-          )}
         </div>
 
         {/* Step 2: Device Details (Brand & Model) */}
@@ -496,12 +491,6 @@ export default function AddProductPage() {
                 Choose Brand & Model
               </h3>
             </div>
-
-            {!form.brand && !showBrandDropdown && (
-              <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
-                Choose a brand for your device
-              </p>
-            )}
 
             {/* Brand Dropdown */}
             <div className={`relative ${showBrandDropdown ? "z-30" : ""}`}>
@@ -570,12 +559,7 @@ export default function AddProductPage() {
 
             {/* Model selector - search existing, suggest close matches, or add new */}
             {form.brand && (
-              <div className="relative z-20 space-y-3 animate-in fade-in duration-200">
-                {!form.deviceModel && (
-                  <p className="rounded-[var(--radius)] border border-[var(--brand-muted)] bg-[var(--surface)] px-4 py-3 text-center text-sm text-[var(--ink-secondary)] shadow-[var(--shadow-sm)]">
-                    Select a model to continue
-                  </p>
-                )}
+              <div className="relative z-20 animate-in fade-in duration-200">
                 <ModelSelector
                   models={models}
                   value={form.deviceModel}
@@ -591,6 +575,22 @@ export default function AddProductPage() {
             )}
           </div>
         )}
+
+        {/* Next-step tip below the active fields (points up at the input) */}
+        {(!form.deviceCategory || !form.brand || !form.deviceModel) &&
+          !showBrandDropdown && (
+            <div className="relative z-0 mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
+              {!form.deviceCategory &&
+                "👈 Select a device category to get started"}
+              {form.deviceCategory &&
+                !form.brand &&
+                "👈 Choose a brand for your device"}
+              {form.deviceCategory &&
+                form.brand &&
+                !form.deviceModel &&
+                "👈 Select a model to continue"}
+            </div>
+          )}
 
         {/* Step 3: Product Details (only show after device is fully selected) */}
         {form.deviceCategory && form.brand && form.deviceModel && (
