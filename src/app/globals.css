@@ -1,106 +1,254 @@
 @import "tailwindcss";
 
-/* Shared card hover/zoom effects (server-safe, CSS only) */
-.card-hover {
-	transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
-	will-change: transform;
+/* ── SparesX design tokens (teal primary, 8pt rhythm) ── */
+:root {
+  --brand: #0d9488;
+  --brand-hover: #0f766e;
+  --brand-soft: #f0fdfa;
+  --brand-muted: #ccfbf1;
+  --ink: #0f172a;
+  --ink-secondary: #334155;
+  --muted: #64748b;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --surface-3: #f1f5f9;
+  --border: rgba(226, 232, 240, 0.9);
+  --border-strong: #cbd5e1;
+  --success: #059669;
+  --success-soft: #ecfdf5;
+  --warning: #ea580c;
+  --warning-soft: #fff7ed;
+  --danger: #dc2626;
+  --danger-soft: #fef2f2;
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow: 0 4px 16px -4px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 12px 32px -8px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 20px 48px -12px rgba(15, 23, 42, 0.16);
+  --space: 8px;
+  --nav-h: 56px;
+  --bottom-nav-h: 64px;
+  --sidebar-w: 240px;
+  --z-nav: 40;
+  --z-banner: 35;
+  --z-sheet: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-chat: 55;
+  --motion: 200ms;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --chat-thread: #f0ebe3;
 }
 
-.card-hover:hover {
-	transform: translateY(-6px);
-	box-shadow: 0 18px 40px -12px rgba(15, 23, 42, 0.16);
-	border-color: rgb(191 219 254);
+@theme inline {
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-muted: var(--brand-muted);
+  --color-ink: var(--ink);
+  --color-ink-secondary: var(--ink-secondary);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans);
+  --radius-sx: var(--radius-sm);
+  --radius-box: var(--radius);
+  --radius-card: var(--radius-lg);
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background: var(--surface-2);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--brand-muted);
+    color: var(--ink);
+  }
+}
+
+/* Glass — prefer solid fallback when reduced motion / no hover */
+.glass {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--border);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+.card-hover {
+  transition:
+    transform var(--motion) var(--ease),
+    box-shadow var(--motion) var(--ease),
+    border-color var(--motion) var(--ease);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--brand-muted);
+  }
+
+  .card-hover:hover .card-image-zoom {
+    transform: scale(1.03);
+  }
 }
 
 .card-image-zoom {
-	transition: transform 250ms ease;
-	will-change: transform;
+  transition: transform var(--motion) var(--ease);
 }
 
-.card-hover:hover .card-image-zoom {
-	transform: scale(1.03);
-}
-
-/* Image Upload Animations */
 @keyframes fadeInZoom {
-	from {
-		opacity: 0;
-		transform: scale(0.95);
-	}
-	to {
-		opacity: 1;
-		transform: scale(1);
-	}
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
-.animate-in {
-	animation: fadeInZoom 0.3s ease-out forwards;
-}
-
-.fade-in {
-	animation: fadeInZoom 0.3s ease-out;
-}
-
+.animate-in,
+.fade-in,
 .zoom-in {
-	animation: fadeInZoom 0.3s ease-out;
+  animation: fadeInZoom var(--motion) var(--ease) forwards;
 }
 
-/* Image Carousel Animation - Smooth Fade In */
 @keyframes imageCarouselFadeIn {
-	0% {
-		opacity: 0.7;
-	}
-	100% {
-		opacity: 1;
-	}
+  from {
+    opacity: 0.7;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .animate-fadeInScale {
-	animation: imageCarouselFadeIn 0.6s ease-in-out;
+  animation: imageCarouselFadeIn 0.35s var(--ease);
 }
 
-/* Progress bar animation */
 @keyframes shimmer {
-	0% {
-		background-position: -1000px 0;
-	}
-	100% {
-		background-position: 1000px 0;
-	}
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
 }
 
 .animate-shimmer {
-	animation: shimmer 2s infinite;
-	background: linear-gradient(90deg, #3b82f6 25%, #60a5fa 50%, #3b82f6 75%);
-	background-size: 1000px 100%;
-	animation: shimmer 2s infinite;
+  background: linear-gradient(
+    90deg,
+    var(--brand) 25%,
+    #2dd4bf 50%,
+    var(--brand) 75%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
 }
 
-/* Hide scrollbar while keeping functionality */
 .scrollbar-hide {
-	-ms-overflow-style: none;
-	scrollbar-width: none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-	display: none;
+  display: none;
 }
 
-/* Chat-only typography (Plus Jakarta Sans via --font-chat) */
+/* Chat typography */
 .chat-ui {
-	font-family: var(--font-chat), "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-	letter-spacing: -0.01em;
+  font-family: var(--font-sans);
+  letter-spacing: -0.01em;
 }
 
 .chat-ui .chat-input,
 .chat-ui textarea,
 .chat-ui input[type="text"] {
-	font-size: 16px !important; /* prevent iOS focus zoom */
-	line-height: 1.35;
+  font-size: 16px !important;
+  line-height: 1.35;
 }
 
 .chat-bubble-text {
-	font-size: 0.95rem;
-	line-height: 1.45;
+  font-size: 0.95rem;
+  line-height: 1.45;
 }
 
+/* Button press / ripple feel */
+.btn-press {
+  transition:
+    transform 150ms var(--ease),
+    background-color var(--motion) var(--ease),
+    box-shadow var(--motion) var(--ease);
+}
+
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-hover,
+  .card-image-zoom,
+  .btn-press,
+  .animate-in,
+  .fade-in,
+  .zoom-in {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
+/* App shell offsets */
+.app-main {
+  padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    padding-bottom: 0;
+    padding-left: var(--sidebar-w);
+  }
+}
+
+.app-main--flush {
+  padding-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .app-main--flush {
+    padding-left: 0;
+  }
+}

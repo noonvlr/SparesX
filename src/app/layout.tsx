@@ -1,21 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+import AppShell from "@/components/shell/AppShell";
 import ChatShell from "@/components/chat/ChatShell";
-import ToastHost from "@/components/ToastHost";
-import VerificationBanner from "@/components/VerificationBanner";
-import PasswordSetupBanner from "@/components/PasswordSetupBanner";
 
 const siteUrl = "https://spares-x-h1cj.vercel.app";
-
-const chatFont = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-chat",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -76,15 +65,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={chatFont.variable}>
-      <body className="antialiased min-h-screen flex flex-col">
+    <html lang="en" className={GeistSans.variable}>
+      <body className="antialiased min-h-screen flex flex-col font-sans">
         <ChatShell>
-          <Navbar />
-          <ToastHost />
-          <VerificationBanner />
-          <PasswordSetupBanner />
-          <div className="flex-1">{children}</div>
-          <Footer />
+          <AppShell>{children}</AppShell>
         </ChatShell>
       </body>
     </html>

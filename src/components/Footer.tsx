@@ -8,7 +8,10 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10">
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="text-2xl font-bold text-white">
+            <Link
+              href="/"
+              className="text-2xl font-bold text-[var(--brand)] hover:text-teal-300 transition"
+            >
               SparesX
             </Link>
             <p className="mt-3 text-sm leading-relaxed text-slate-400 max-w-xs">

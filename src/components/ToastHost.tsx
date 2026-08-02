@@ -39,10 +39,10 @@ export default function ToastHost() {
 
   const colors =
     toast.type === "error"
-      ? "bg-rose-600"
+      ? "bg-[var(--danger)]"
       : toast.type === "info"
-        ? "bg-slate-800"
-        : "bg-emerald-600";
+        ? "bg-[var(--ink)]"
+        : "bg-[var(--success)]";
 
   return (
     <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] px-4 w-full max-w-sm pointer-events-none">
