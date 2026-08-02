@@ -104,7 +104,9 @@ export async function POST(req: NextRequest) {
     const idPart = userId ? userId.slice(-6) : "anon";
 
     for (const file of files) {
-      const raw = Buffer.from(await file.arrayBuffer());
+      // Copy bytes into a plain Buffer — File.arrayBuffer() can be SharedArrayBuffer
+      const ab = await file.arrayBuffer();
+      const raw = Buffer.from(new Uint8Array(ab));
       let optimized;
       try {
         const { optimizeUploadImage } = await import(
@@ -120,16 +122,19 @@ export async function POST(req: NextRequest) {
         };
       }
 
+      // Final copy for Blob/fetch (rejects SharedArrayBuffer-backed views)
+      const uploadBody = Buffer.from(optimized.buffer);
+
       const safeName = `${Date.now()}-${idPart}-${Math.random()
         .toString(36)
         .slice(2, 8)}.${optimized.ext}`;
 
       if (useLocalStorage) {
         const filePath = path.join(uploadsDir, safeName);
-        await fs.writeFile(filePath, optimized.buffer);
+        await fs.writeFile(filePath, uploadBody);
         uploadedUrls.push(`/uploads/${safeName}`);
       } else {
-        const blob = await put(safeName, optimized.buffer, {
+        const blob = await put(safeName, uploadBody, {
           access: "public",
           addRandomSuffix: true,
           token,

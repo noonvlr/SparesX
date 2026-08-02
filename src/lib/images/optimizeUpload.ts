@@ -9,6 +9,13 @@ export type OptimizedImage = {
   ext: string;
 };
 
+/** Copy into a plain ArrayBuffer-backed Buffer (Blob/fetch reject SharedArrayBuffer). */
+function toPlainBuffer(data: Uint8Array): Buffer {
+  const copy = new Uint8Array(data.byteLength);
+  copy.set(data);
+  return Buffer.from(copy);
+}
+
 /**
  * Auto-orient, resize to fit within MAX_EDGE (no upscale), convert to WebP
  * (GIF kept as GIF to preserve animation).
@@ -17,10 +24,13 @@ export async function optimizeUploadImage(
   input: Buffer,
   mime: string,
 ): Promise<OptimizedImage> {
+  // Ensure sharp input is also a plain buffer copy
+  const source = Buffer.from(input);
+
   const normalizedMime = (mime || "").toLowerCase();
 
   if (normalizedMime === "image/gif") {
-    const buffer = await sharp(input, { animated: true })
+    const { data } = await sharp(source, { animated: true })
       .rotate()
       .resize({
         width: MAX_EDGE,
@@ -29,11 +39,15 @@ export async function optimizeUploadImage(
         withoutEnlargement: true,
       })
       .gif()
-      .toBuffer();
-    return { buffer, contentType: "image/gif", ext: "gif" };
+      .toUint8Array();
+    return {
+      buffer: toPlainBuffer(data),
+      contentType: "image/gif",
+      ext: "gif",
+    };
   }
 
-  const buffer = await sharp(input)
+  const { data } = await sharp(source)
     .rotate()
     .resize({
       width: MAX_EDGE,
@@ -42,7 +56,11 @@ export async function optimizeUploadImage(
       withoutEnlargement: true,
     })
     .webp({ quality: WEBP_QUALITY })
-    .toBuffer();
+    .toUint8Array();
 
-  return { buffer, contentType: "image/webp", ext: "webp" };
+  return {
+    buffer: toPlainBuffer(data),
+    contentType: "image/webp",
+    ext: "webp",
+  };
 }
