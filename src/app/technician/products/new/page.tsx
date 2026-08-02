@@ -482,7 +482,7 @@ export default function AddProductPage() {
 
         {/* Step 2: Device Details (Brand & Model) */}
         {form.deviceCategory && (
-          <div className="p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="relative z-20 p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
                 2
@@ -493,7 +493,7 @@ export default function AddProductPage() {
             </div>
 
             {/* Brand Dropdown */}
-            <div className="relative">
+            <div className={`relative ${showBrandDropdown ? "z-30" : ""}`}>
               <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                 Brand *
               </label>
@@ -516,16 +516,15 @@ export default function AddProductPage() {
                     }));
                     setBrandSearch("");
                     setModelSearch("");
-                  } else {
-                    setBrandSearch("");
                   }
                   setShowBrandDropdown(true);
                 }}
                 onBlur={() =>
                   setTimeout(() => setShowBrandDropdown(false), 300)
                 }
-                className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+                className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required={!!form.deviceCategory}
+                autoComplete="off"
               />
               {form.brand && (
                 <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
@@ -533,7 +532,7 @@ export default function AddProductPage() {
                 </div>
               )}
               {showBrandDropdown && (
-                <div className="absolute z-10 mt-2 w-full max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)] animate-in fade-in duration-200">
+                <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
                   {filteredBrands.length > 0 ? (
                     filteredBrands.map((brand) => (
                       <button
@@ -637,7 +636,7 @@ export default function AddProductPage() {
                     </div>
                   )}
                   {showPartTypeDropdown && (
-                    <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)] animate-in fade-in duration-200">
+                    <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)]">
                       {filteredPartTypes.length > 0 ? (
                         filteredPartTypes.map((partType) => (
                           <button
@@ -946,18 +945,10 @@ export default function AddProductPage() {
           </>
         )}
 
-        {/* Helper text when not fully configured */}
-        {(!form.deviceCategory || !form.brand || !form.deviceModel) && (
-          <div className="mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)] animate-in fade-in">
-            {!form.deviceCategory &&
-              "👈 Select a device category to get started"}
-            {form.deviceCategory &&
-              !form.brand &&
-              "👈 Choose a brand for your device"}
-            {form.deviceCategory &&
-              form.brand &&
-              !form.deviceModel &&
-              "👈 Select a model to continue"}
+        {/* Only before step 1 — later tips were overlapping brand/model dropdowns */}
+        {!form.deviceCategory && (
+          <div className="mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
+            Select a device category to get started
           </div>
         )}
       </form>

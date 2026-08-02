@@ -174,7 +174,7 @@ export default function ModelSelector({
       )}
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
           {filtered.length > 0 && (
             <div>
               {filtered.map((model, idx) => (

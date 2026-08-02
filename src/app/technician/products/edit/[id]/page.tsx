@@ -445,7 +445,7 @@ export default function EditProductPage() {
                 </div>
               )}
               {showBrandDropdown && (
-                <div className="absolute z-10 mt-2 w-full max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+                <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
                   {filteredBrands.map((brand) => (
                     <button
                       key={brand._id}
@@ -501,7 +501,7 @@ export default function EditProductPage() {
                   </div>
                 )}
                 {showModelDropdown && (
-                  <div className="absolute z-10 mt-2 w-full max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+                  <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
                     {filteredModels.map((model, idx) => (
                       <button
                         key={idx}
@@ -588,7 +588,7 @@ export default function EditProductPage() {
                     </div>
                   )}
                   {showPartTypeDropdown && (
-                    <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)]">
+                    <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)]">
                       {filteredPartTypes.map((partType) => (
                         <button
                           key={partType.value}
@@ -741,18 +741,9 @@ export default function EditProductPage() {
           </>
         )}
 
-        {/* Helper text when not fully configured */}
-        {(!form.deviceCategory || !form.brand || !form.deviceModel) && (
+        {!form.deviceCategory && (
           <div className="mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)]">
-            {!form.deviceCategory &&
-              "👈 Select a device category to get started"}
-            {form.deviceCategory &&
-              !form.brand &&
-              "👈 Choose a brand for your device"}
-            {form.deviceCategory &&
-              form.brand &&
-              !form.deviceModel &&
-              "👈 Select a model to continue"}
+            Select a device category to get started
           </div>
         )}
       </form>
