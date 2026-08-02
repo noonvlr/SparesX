@@ -239,7 +239,7 @@
 @media (min-width: 768px) {
   .app-main {
     padding-bottom: 0;
-    padding-left: var(--sidebar-w);
+    padding-left: 0;
   }
 }
 

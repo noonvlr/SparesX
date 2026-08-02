@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Footer from "@/components/Footer";
 import ToastHost from "@/components/ToastHost";
 import VerificationBanner from "@/components/VerificationBanner";
@@ -95,8 +95,21 @@ function UnreadCount({ count }: { count: number }) {
 }
 
 type NavItem =
-  | { kind: "link"; href: string; label: string; icon: ReactNode; badge?: number; match?: (path: string) => boolean }
-  | { kind: "action"; label: string; icon: ReactNode; onClick: () => void; badge?: number };
+  | {
+      kind: "link";
+      href: string;
+      label: string;
+      icon: ReactNode;
+      badge?: number;
+    }
+  | {
+      kind: "action";
+      label: string;
+      icon: ReactNode;
+      onClick: () => void;
+      badge?: number;
+      active?: boolean;
+    };
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -118,6 +131,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     openMessages,
   } = auth;
 
+  const [desktopProfileOpen, setDesktopProfileOpen] = useState(false);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const desktopProfileRef = useRef<HTMLDivElement>(null);
+
   const hideShell = HIDE_SHELL_ROUTES.some(
     (r) => pathname === r || pathname.startsWith(`${r}/`),
   );
@@ -133,12 +150,57 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           ? "/technician/profile"
           : "/login";
 
+  useEffect(() => {
+    setDesktopProfileOpen(false);
+    setMobileProfileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!desktopProfileOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!desktopProfileRef.current?.contains(e.target as Node)) {
+        setDesktopProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [desktopProfileOpen]);
+
+  useEffect(() => {
+    if (!mobileProfileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileProfileOpen]);
+
+  const openMobileProfile = () => {
+    if (!isAuthenticated) return;
+    setMobileProfileOpen(true);
+  };
+
   const mobileItems: NavItem[] = (() => {
     if (isAdminUser) {
       return [
-        { kind: "link", href: "/admin/dashboard", label: "Dashboard", icon: <IconGrid className="h-5 w-5" /> },
-        { kind: "link", href: "/admin/users", label: "Users", icon: <IconUsers className="h-5 w-5" /> },
-        { kind: "link", href: "/admin/products", label: "Listings", icon: <IconSearch className="h-5 w-5" /> },
+        {
+          kind: "link",
+          href: "/admin/dashboard",
+          label: "Dashboard",
+          icon: <IconGrid className="h-5 w-5" />,
+        },
+        {
+          kind: "link",
+          href: "/admin/users",
+          label: "Users",
+          icon: <IconUsers className="h-5 w-5" />,
+        },
+        {
+          kind: "link",
+          href: "/admin/products",
+          label: "Listings",
+          icon: <IconSearch className="h-5 w-5" />,
+        },
         {
           kind: "link",
           href: "/admin/support",
@@ -146,29 +208,55 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           icon: <IconChat className="h-5 w-5" />,
           badge: supportUnread,
         },
-        { kind: "link", href: "/admin/settings", label: "More", icon: <IconMore className="h-5 w-5" /> },
+        {
+          kind: "action",
+          label: "Profile",
+          icon: <IconUser className="h-5 w-5" />,
+          onClick: openMobileProfile,
+          active: mobileProfileOpen || isActivePath(pathname, profileHref),
+        },
       ];
     }
 
     if (!isAuthenticated) {
       return [
         { kind: "link", href: "/", label: "Home", icon: <IconHome className="h-5 w-5" /> },
-        { kind: "link", href: "/products", label: "Browse", icon: <IconSearch className="h-5 w-5" /> },
+        {
+          kind: "link",
+          href: "/products",
+          label: "Browse",
+          icon: <IconSearch className="h-5 w-5" />,
+        },
         {
           kind: "link",
           href: "/login",
           label: "Messages",
           icon: <IconChat className="h-5 w-5" />,
         },
-        { kind: "link", href: "/register", label: "Sell", icon: <IconGrid className="h-5 w-5" /> },
-        { kind: "link", href: "/login", label: "Profile", icon: <IconUser className="h-5 w-5" /> },
+        {
+          kind: "link",
+          href: "/register",
+          label: "Sell",
+          icon: <IconGrid className="h-5 w-5" />,
+        },
+        {
+          kind: "link",
+          href: "/login",
+          label: "Profile",
+          icon: <IconUser className="h-5 w-5" />,
+        },
       ];
     }
 
     if (isTechnician) {
       return [
         { kind: "link", href: "/", label: "Home", icon: <IconHome className="h-5 w-5" /> },
-        { kind: "link", href: "/products", label: "Browse", icon: <IconSearch className="h-5 w-5" /> },
+        {
+          kind: "link",
+          href: "/products",
+          label: "Browse",
+          icon: <IconSearch className="h-5 w-5" />,
+        },
         {
           kind: "action",
           label: "Messages",
@@ -183,18 +271,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           icon: <IconGrid className="h-5 w-5" />,
         },
         {
-          kind: "link",
-          href: "/technician/profile",
+          kind: "action",
           label: "Profile",
           icon: <IconUser className="h-5 w-5" />,
+          onClick: openMobileProfile,
+          active: mobileProfileOpen || isActivePath(pathname, profileHref),
         },
       ];
     }
 
-    // Buyer-like authenticated non-admin
     return [
       { kind: "link", href: "/", label: "Home", icon: <IconHome className="h-5 w-5" /> },
-      { kind: "link", href: "/products", label: "Browse", icon: <IconSearch className="h-5 w-5" /> },
+      {
+        kind: "link",
+        href: "/products",
+        label: "Browse",
+        icon: <IconSearch className="h-5 w-5" />,
+      },
       {
         kind: "action",
         label: "Messages",
@@ -209,15 +302,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         icon: <IconBookmark className="h-5 w-5" />,
       },
       {
-        kind: "link",
-        href: profileHref,
+        kind: "action",
         label: "Profile",
         icon: <IconUser className="h-5 w-5" />,
+        onClick: openMobileProfile,
+        active: mobileProfileOpen || isActivePath(pathname, profileHref),
       },
     ];
   })();
 
-  const sidebarLinks: { href: string; label: string; badge?: number }[] = (() => {
+  const topLinks: { href: string; label: string; badge?: number }[] = (() => {
     if (isAuthenticated && userRole === "admin") {
       return [
         { href: "/admin/dashboard", label: "Dashboard" },
@@ -228,7 +322,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/admin/support", label: "Support", badge: supportUnread },
         { href: "/admin/chat", label: "Chat disputes" },
         { href: "/admin/site-settings", label: "Site settings" },
-        { href: "/admin/settings", label: "Control center" },
       ];
     }
 
@@ -243,17 +336,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     }
     if (isAuthenticated) {
       links.push({ href: "/dashboard/buyer/saved", label: "Saved" });
-    }
-    links.push({ href: "/support", label: "Support" });
-    if (isAuthenticated) {
       links.push({ href: "/whatsapp-connect", label: "WhatsApp", badge: waPending });
     }
+    links.push({ href: "/support", label: "Support" });
     return links;
   })();
 
+  const onLogout = async () => {
+    setDesktopProfileOpen(false);
+    setMobileProfileOpen(false);
+    await handleLogout();
+  };
+
   return (
     <div className="flex flex-1 flex-col min-h-0">
-      {/* Minimal logo bar on auth/hide routes */}
       {hideShell && (
         <header className="sticky top-0 z-40 glass h-[var(--nav-h)] flex items-center px-4">
           <Link
@@ -265,9 +361,147 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </header>
       )}
 
+      {/* Desktop top navbar */}
+      {!hideShell && (
+        <header className="hidden md:block sticky top-0 z-40 glass border-b border-[var(--border)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[var(--nav-h)] flex items-center justify-between gap-4">
+            <div className="flex items-center gap-6 min-w-0">
+              <Link
+                href="/"
+                className="text-xl font-semibold tracking-tight text-[var(--brand)] shrink-0"
+              >
+                SparesX
+              </Link>
+              <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
+                {topLinks.map((item) => {
+                  const active = isActivePath(pathname, item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-[var(--radius)] px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                        active
+                          ? "bg-[var(--brand-soft)] text-[var(--brand-hover)]"
+                          : "text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]",
+                      )}
+                    >
+                      {item.label}
+                      {item.badge && item.badge > 0 ? (
+                        <Badge
+                          tone="success"
+                          className="min-w-[1.15rem] justify-center px-1 py-0 text-[10px] bg-[var(--success)] text-white border-0"
+                        >
+                          {item.badge > 99 ? "99+" : item.badge}
+                        </Badge>
+                      ) : null}
+                    </Link>
+                  );
+                })}
+                {isAuthenticated && userRole !== "admin" && (
+                  <button
+                    type="button"
+                    onClick={openMessages}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-[var(--radius)] px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors",
+                      "text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]",
+                    )}
+                  >
+                    Messages
+                    {chatUnread > 0 ? (
+                      <Badge
+                        tone="success"
+                        className="min-w-[1.15rem] justify-center px-1 py-0 text-[10px] bg-[var(--success)] text-white border-0"
+                      >
+                        {chatUnread > 99 ? "99+" : chatUnread}
+                      </Badge>
+                    ) : null}
+                  </button>
+                )}
+              </nav>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              {!isAuthenticated ? (
+                <>
+                  <Link
+                    href="/login"
+                    className="rounded-[var(--radius)] px-3 py-2 text-sm font-medium text-[var(--ink-secondary)] hover:bg-[var(--surface-3)]"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="rounded-[var(--radius)] px-3.5 py-2 text-sm font-semibold bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] transition-colors"
+                  >
+                    Register
+                  </Link>
+                </>
+              ) : (
+                <div className="relative" ref={desktopProfileRef}>
+                  <button
+                    type="button"
+                    onClick={() => setDesktopProfileOpen((v) => !v)}
+                    className="inline-flex items-center gap-2 rounded-full p-1 pr-2.5 hover:bg-[var(--surface-3)] transition-colors"
+                    aria-expanded={desktopProfileOpen}
+                    aria-haspopup="menu"
+                  >
+                    <Avatar src={profilePicture} name={userName || "U"} size="sm" />
+                    <span className="text-sm font-medium text-[var(--ink)] max-w-[9rem] truncate">
+                      {userName || "Account"}
+                    </span>
+                  </button>
+                  {desktopProfileOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 mt-2 w-56 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)] py-1.5 z-50"
+                    >
+                      <div className="px-3 py-2 border-b border-[var(--border)]">
+                        <p className="text-sm font-semibold text-[var(--ink)] truncate">
+                          {userName || "Account"}
+                        </p>
+                        <p className="text-xs text-[var(--muted)] capitalize">
+                          {userRole || "user"}
+                        </p>
+                      </div>
+                      <Link
+                        href={profileHref}
+                        role="menuitem"
+                        className="block px-3 py-2.5 text-sm text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]"
+                        onClick={() => setDesktopProfileOpen(false)}
+                      >
+                        Profile
+                      </Link>
+                      {userRole === "admin" && (
+                        <Link
+                          href="/admin/settings"
+                          role="menuitem"
+                          className="block px-3 py-2.5 text-sm text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]"
+                          onClick={() => setDesktopProfileOpen(false)}
+                        >
+                          Control center
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => void onLogout()}
+                        className="w-full text-left px-3 py-2.5 text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+      )}
+
       {/* Mobile top bar */}
       {!hideShell && (
-        <header className="md:hidden sticky top-0 z-40 glass flex items-center justify-between gap-3 px-4 h-[var(--nav-h)]">
+        <header className="md:hidden sticky top-0 z-40 glass flex items-center justify-between gap-3 px-4 h-[var(--nav-h)] border-b border-[var(--border)]">
           <Link
             href="/"
             className="text-lg font-semibold tracking-tight text-[var(--brand)]"
@@ -282,127 +516,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             >
               <IconSearch className="h-5 w-5" />
             </Link>
-            <Link
-              href={profileHref}
-              className="inline-flex items-center justify-center min-h-12 min-w-12 rounded-full"
-              aria-label="Profile"
-            >
-              {isAuthenticated ? (
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={openMobileProfile}
+                className="inline-flex items-center justify-center min-h-12 min-w-12 rounded-full"
+                aria-label="Account menu"
+              >
                 <Avatar src={profilePicture} name={userName || "U"} size="sm" />
-              ) : (
+              </button>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center min-h-12 min-w-12 rounded-full"
+                aria-label="Login"
+              >
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-soft)] text-[var(--brand-hover)]">
                   <IconUser className="h-4 w-4" />
                 </span>
-              )}
-            </Link>
+              </Link>
+            )}
           </div>
         </header>
-      )}
-
-      {/* Desktop sidebar */}
-      {!hideShell && (
-        <aside
-          className="hidden md:flex fixed left-0 top-0 bottom-0 z-40 flex-col glass border-r border-[var(--border)] w-[var(--sidebar-w)]"
-        >
-          <div className="h-[var(--nav-h)] flex items-center px-5 shrink-0">
-            <Link
-              href="/"
-              className="text-xl font-semibold tracking-tight text-[var(--brand)]"
-            >
-              SparesX
-            </Link>
-          </div>
-
-          <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
-            {sidebarLinks.map((item) => {
-              const active = isActivePath(pathname, item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center justify-between gap-2 rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-[var(--brand-soft)] text-[var(--brand-hover)]"
-                      : "text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]",
-                    userRole === "admin" && "py-2 text-[13px]",
-                  )}
-                >
-                  <span>{item.label}</span>
-                  {item.badge && item.badge > 0 ? (
-                    <Badge
-                      tone="success"
-                      className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-white border-0"
-                    >
-                      {item.badge > 99 ? "99+" : item.badge}
-                    </Badge>
-                  ) : null}
-                </Link>
-              );
-            })}
-
-            {isAuthenticated && userRole !== "admin" && (
-              <button
-                type="button"
-                onClick={openMessages}
-                className="w-full flex items-center justify-between gap-2 rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)] transition-colors"
-              >
-                <span>Messages</span>
-                {chatUnread > 0 ? (
-                  <Badge
-                    tone="success"
-                    className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-white border-0"
-                  >
-                    {chatUnread > 99 ? "99+" : chatUnread}
-                  </Badge>
-                ) : null}
-              </button>
-            )}
-          </nav>
-
-          <div className="shrink-0 border-t border-[var(--border)] p-3 space-y-1">
-            {!isAuthenticated ? (
-              <>
-                <Link
-                  href="/login"
-                  className="block rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium text-[var(--ink-secondary)] hover:bg-[var(--surface-3)]"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="block rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium text-center bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] transition-colors"
-                >
-                  Register
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href={profileHref}
-                  className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 hover:bg-[var(--surface-3)] transition-colors"
-                >
-                  <Avatar src={profilePicture} name={userName || "U"} size="sm" />
-                  <div className="min-w-0 text-left">
-                    <p className="text-sm font-semibold text-[var(--ink)] truncate">
-                      {userName || "Account"}
-                    </p>
-                    <p className="text-xs text-[var(--muted)] capitalize">
-                      {userRole || "user"}
-                    </p>
-                  </div>
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full rounded-[var(--radius)] px-3 py-2.5 text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-soft)] transition-colors text-left"
-                >
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
-        </aside>
       )}
 
       {/* Mobile bottom nav */}
@@ -413,12 +548,18 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         >
           {mobileItems.map((item) => {
             if (item.kind === "action") {
+              const active = !!item.active;
               return (
                 <button
                   key={item.label}
                   type="button"
                   onClick={item.onClick}
-                  className="relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-12 min-w-[48px] text-[10px] font-medium text-[var(--muted)] hover:text-[var(--brand)] transition-colors"
+                  className={cn(
+                    "relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-12 min-w-[48px] text-[10px] font-medium transition-colors",
+                    active
+                      ? "text-[var(--brand)]"
+                      : "text-[var(--muted)] hover:text-[var(--brand)]",
+                  )}
                 >
                   <span className="relative inline-flex">
                     {item.icon}
@@ -450,6 +591,85 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
+      )}
+
+      {/* Mobile profile sheet */}
+      {mobileProfileOpen && isAuthenticated && (
+        <div className="md:hidden fixed inset-0 z-[var(--z-modal)]">
+          <button
+            type="button"
+            className="absolute inset-0 bg-slate-900/40"
+            aria-label="Close account menu"
+            onClick={() => setMobileProfileOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-0 glass rounded-t-[var(--radius-xl)] shadow-[var(--shadow-lg)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
+            <div className="flex justify-center pt-3 pb-1">
+              <span className="h-1 w-10 rounded-full bg-slate-300" />
+            </div>
+            <div className="px-5 py-3 flex items-center gap-3 border-b border-[var(--border)]">
+              <Avatar src={profilePicture} name={userName || "U"} size="md" />
+              <div className="min-w-0">
+                <p className="text-base font-semibold text-[var(--ink)] truncate">
+                  {userName || "Account"}
+                </p>
+                <p className="text-xs text-[var(--muted)] capitalize">
+                  {userRole || "user"}
+                </p>
+              </div>
+            </div>
+            <div className="p-3 space-y-1">
+              <Link
+                href={profileHref}
+                className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
+                onClick={() => setMobileProfileOpen(false)}
+              >
+                <IconUser className="h-5 w-5 text-[var(--muted)]" />
+                View profile
+              </Link>
+              {isTechnician && (
+                <Link
+                  href="/technician/dashboard"
+                  className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
+                  onClick={() => setMobileProfileOpen(false)}
+                >
+                  <IconGrid className="h-5 w-5 text-[var(--muted)]" />
+                  Dashboard
+                </Link>
+              )}
+              {userRole === "admin" && (
+                <Link
+                  href="/admin/settings"
+                  className="flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
+                  onClick={() => setMobileProfileOpen(false)}
+                >
+                  <IconMore className="h-5 w-5 text-[var(--muted)]" />
+                  Control center
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={() => void onLogout()}
+                className="w-full flex items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] min-h-12"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.75}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h5a2 2 0 012 2v1"
+                  />
+                </svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <ToastHost />
