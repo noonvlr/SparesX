@@ -53,9 +53,9 @@ async function migrateCategoriesDeviceId() {
     console.log(`   Device-specific categories: ${deviceSpecificCategories}`);
 
     console.log('\n📝 Notes:');
-    console.log('   - Global categories (deviceId: null) appear for ALL device types');
-    console.log('   - To make a category device-specific, update deviceId to ObjectId of DeviceType');
-    console.log('   - Example: Update "Mobile Screen" with deviceId of "Mobile" device type');
+    console.log('   - Global categories (deviceId: null) appear for ALL device types as fallbacks');
+    console.log('   - Device-scoped categories appear on /api/categories (all) and ?device=<slug>');
+    console.log('   - Public API must include both scopes; never filter out deviceId by default');
 
   } catch (error) {
     console.error('❌ Migration failed:', error);

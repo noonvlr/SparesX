@@ -1,7 +1,18 @@
 import mongoose, { Schema, Types } from "mongoose";
 
+/**
+ * Part categories used on homepage, product forms, filters, and requests.
+ *
+ * Two scopes share this collection:
+ * - Global: `deviceId` null/absent — created via `/admin/categories`;
+ *   available for every device as a fallback.
+ * - Device-scoped: `deviceId` set — created via device-management;
+ *   returned by `/api/categories?device=<slug>` and by unfiltered listing.
+ *
+ * Public reads must never exclude device-scoped docs by default.
+ */
 export interface ICategory {
-  deviceId?: Types.ObjectId;
+  deviceId?: Types.ObjectId | null;
   name: string;
   icon: string;
   slug: string;
@@ -19,6 +30,7 @@ const CategorySchema = new mongoose.Schema<ICategory>(
       ref: "DeviceType",
       index: true,
       required: false,
+      default: null,
     },
     name: {
       type: String,
@@ -29,6 +41,7 @@ const CategorySchema = new mongoose.Schema<ICategory>(
       type: String,
       required: true,
       default: "📦",
+      trim: true,
     },
     slug: {
       type: String,
@@ -44,16 +57,19 @@ const CategorySchema = new mongoose.Schema<ICategory>(
     isActive: {
       type: Boolean,
       default: true,
+      index: true,
     },
     order: {
       type: Number,
       default: 0,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 CategorySchema.index({ deviceId: 1, slug: 1 });
+CategorySchema.index({ isActive: 1, order: 1, name: 1 });
+CategorySchema.index({ deviceId: 1, name: 1 });
 
 const Category =
   mongoose.models.Category ||

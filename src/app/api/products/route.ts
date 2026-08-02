@@ -73,13 +73,17 @@ export async function GET(req: NextRequest) {
     if (deviceCategory) {
       query.deviceCategory = deviceCategory.toLowerCase();
     } else if (category) {
+      // Legacy `category` may be a device slug or a part-type slug
       andClauses.push({
         $or: [
           { deviceCategory: category.toLowerCase() },
           { category },
+          { partType: category },
         ],
       });
     }
+
+    if (partType) query.partType = partType;
 
     if (brand) {
       query.brand = {
@@ -92,7 +96,6 @@ export async function GET(req: NextRequest) {
       andClauses.push(buildModelFilter(deviceModel, brand));
     }
 
-    if (partType) query.partType = partType;
     if (condition) query.condition = condition;
 
     if (minPrice || maxPrice) {

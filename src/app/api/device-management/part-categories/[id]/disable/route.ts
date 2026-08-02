@@ -3,6 +3,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import Category from "@/lib/models/Category";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 async function requireAdmin(req: NextRequest) {
   const token = req.headers.get("authorization")?.split(" ")[1];
@@ -51,6 +52,8 @@ export async function PATCH(
       { $set: { isActive: false, updatedAt: new Date() } },
       { new: true },
     );
+
+    revalidateCategoryCaches();
 
     return NextResponse.json({ category: updated }, { status: 200 });
   } catch (error: any) {

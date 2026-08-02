@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/connect";
 import Category from "@/lib/models/Category";
 import DeviceType from "@/lib/models/DeviceType";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 const slugify = (value: string) =>
   value
@@ -120,6 +121,8 @@ export async function PATCH(
       },
       { new: true },
     );
+
+    revalidateCategoryCaches();
 
     return NextResponse.json({ category: updated }, { status: 200 });
   } catch (error: any) {

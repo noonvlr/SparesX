@@ -333,24 +333,11 @@ export default function ProductFilters() {
     max: searchParams.get("maxPrice") || "",
   });
 
-  // Load static filter options
+  // Load device types + conditions on mount
   useEffect(() => {
     fetch("/api/device-categories")
       .then((res) => res.json())
       .then((data) => setDeviceCategories(data.categories || []))
-      .catch(() => {});
-
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => {
-        const mappedPartTypes =
-          data.categories?.map((cat: any) => ({
-            value: cat.slug,
-            label: cat.name,
-            icon: cat.icon,
-          })) || [];
-        setPartTypes(mappedPartTypes);
-      })
       .catch(() => {});
 
     fetch("/api/conditions")
@@ -358,6 +345,43 @@ export default function ProductFilters() {
       .then((data) => setConditions(data.conditions || []))
       .catch(() => {});
   }, []);
+
+  // Part categories: all when no device, device-scoped (+ global) when selected
+  useEffect(() => {
+    let cancelled = false;
+    const url = selectedDeviceCategory
+      ? `/api/categories?device=${encodeURIComponent(selectedDeviceCategory)}`
+      : "/api/categories";
+
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        const mappedPartTypes =
+          data.categories?.map((cat: any) => ({
+            value: cat.slug,
+            label: cat.name,
+            icon: cat.icon,
+          })) || [];
+        setPartTypes(mappedPartTypes);
+        setSelectedPartType((current) => {
+          if (
+            current &&
+            !mappedPartTypes.some((pt: PartType) => pt.value === current)
+          ) {
+            return "";
+          }
+          return current;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setPartTypes([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDeviceCategory]);
 
   // Load brands for selected device type (or all brands if none selected)
   useEffect(() => {

@@ -96,21 +96,50 @@ export default function RequestForm({
 
     Promise.all([
       fetch("/api/device-categories").then((r) => r.json()),
-      fetch("/api/categories").then((r) => r.json()),
     ])
-      .then(([deviceData, partData]) => {
+      .then(([deviceData]) => {
         setDeviceCategories(deviceData.categories || []);
-        setPartTypes(
-          (partData.categories || []).map((cat: any) => ({
-            value: cat.slug,
-            label: cat.name,
-            icon: cat.icon,
-          })),
-        );
       })
       .catch(() => setError("Failed to load form options"))
       .finally(() => setDataLoading(false));
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!form.deviceCategory) {
+      setPartTypes([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(
+      `/api/categories?device=${encodeURIComponent(form.deviceCategory)}`,
+    )
+      .then((r) => r.json())
+      .then((partData) => {
+        if (cancelled) return;
+        const mapped = (partData.categories || []).map((cat: any) => ({
+          value: cat.slug,
+          label: cat.name,
+          icon: cat.icon,
+        }));
+        setPartTypes(mapped);
+        setForm((f) => {
+          if (
+            f.partType &&
+            !mapped.some((p: { value: string }) => p.value === f.partType)
+          ) {
+            setPartTypeSearch("");
+            return { ...f, partType: "" };
+          }
+          return f;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setPartTypes([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.deviceCategory]);
 
   useEffect(() => {
     if (!form.deviceCategory) {
@@ -346,15 +375,17 @@ export default function RequestForm({
               <button
                 key={cat.value}
                 type="button"
-                onClick={() =>
+                onClick={() => {
+                  setPartTypeSearch("");
                   setForm((f) => ({
                     ...f,
                     deviceCategory: cat.value,
                     brand: "",
                     brandSlug: "",
                     deviceModel: "",
-                  }))
-                }
+                    partType: "",
+                  }));
+                }}
                 className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
                   form.deviceCategory === cat.value
                     ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-md"

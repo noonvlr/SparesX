@@ -111,28 +111,15 @@ export default function AddProductPage() {
     void checkPhone();
   }, [router]);
 
-  // Fetch all static data on mount
+  // Fetch device types + conditions on mount; part types load per device
   useEffect(() => {
     const fetchStaticData = async () => {
       setDataLoading(true);
       try {
-        const [partsRes, categoriesRes, conditionsRes] = await Promise.all([
-          fetch("/api/categories"),
+        const [categoriesRes, conditionsRes] = await Promise.all([
           fetch("/api/device-categories"),
           fetch("/api/conditions"),
         ]);
-
-        if (partsRes.ok) {
-          const data = await partsRes.json();
-          // Map categories to partTypes format for backward compatibility
-          const mappedPartTypes =
-            data.categories?.map((cat: any) => ({
-              value: cat.slug,
-              label: cat.name,
-              icon: cat.icon,
-            })) || [];
-          setPartTypes(mappedPartTypes);
-        }
 
         if (categoriesRes.ok) {
           const data = await categoriesRes.json();
@@ -142,7 +129,6 @@ export default function AddProductPage() {
         if (conditionsRes.ok) {
           const data = await conditionsRes.json();
           setConditions(data.conditions || []);
-          // Set first condition as default if available
           if (data.conditions?.length > 0) {
             setForm((f) => ({ ...f, condition: data.conditions[0].value }));
           }
@@ -156,6 +142,47 @@ export default function AddProductPage() {
 
     fetchStaticData();
   }, []);
+
+  // Part categories for selected device (device-scoped + global fallbacks)
+  useEffect(() => {
+    if (!form.deviceCategory) {
+      setPartTypes([]);
+      return;
+    }
+
+    let cancelled = false;
+    fetch(
+      `/api/categories?device=${encodeURIComponent(form.deviceCategory)}`,
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        const mappedPartTypes =
+          data.categories?.map((cat: any) => ({
+            value: cat.slug,
+            label: cat.name,
+            icon: cat.icon,
+          })) || [];
+        setPartTypes(mappedPartTypes);
+        setForm((f) => {
+          if (
+            f.partType &&
+            !mappedPartTypes.some((pt: PartType) => pt.value === f.partType)
+          ) {
+            setPartTypeSearch("");
+            return { ...f, partType: "" };
+          }
+          return f;
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setPartTypes([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.deviceCategory]);
 
   // Fetch brands when category is selected
   useEffect(() => {
@@ -410,7 +437,8 @@ export default function AddProductPage() {
                 <button
                   key={cat.value}
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    setPartTypeSearch("");
                     setForm((f) => ({
                       ...f,
                       deviceCategory: cat.value,
@@ -418,8 +446,9 @@ export default function AddProductPage() {
                       brandSlug: "",
                       deviceModel: "",
                       modelNumber: "",
-                    }))
-                  }
+                      partType: "",
+                    }));
+                  }}
                   className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
                     form.deviceCategory === cat.value
                       ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)] hover:border-[var(--brand-hover)]"

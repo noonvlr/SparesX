@@ -70,9 +70,9 @@ export default async function HomePage() {
     : { products: [] };
   const featuredProducts = productsData.products || [];
 
-  // Fetch categories with caching (ISR)
+  // Fetch categories with short-lived cache + on-demand tag invalidation
   const categoriesRes = await fetch(`${baseUrl}/api/categories`, {
-    next: { revalidate: 3600 }, // Revalidate every hour
+    next: { revalidate: 60, tags: ["categories"] },
   });
   const categoriesData = categoriesRes.ok
     ? await categoriesRes.json()
@@ -81,7 +81,7 @@ export default async function HomePage() {
     categoriesData.categories?.map((cat: any) => ({
       name: cat.name,
       icon: cat.icon,
-      href: `/products?category=${cat.slug}`,
+      href: `/products?partType=${encodeURIComponent(cat.slug)}`,
     })) || [];
 
   // JSON-LD structured data for SEO

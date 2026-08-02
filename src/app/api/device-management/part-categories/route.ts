@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
 import Category from "@/lib/models/Category";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 const slugify = (value: string) =>
   value
@@ -133,6 +134,8 @@ export async function POST(req: NextRequest) {
     }
 
     const category = await Category.create(categoryPayload);
+
+    revalidateCategoryCaches();
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error: any) {

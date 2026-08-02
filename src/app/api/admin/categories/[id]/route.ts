@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import Category from "@/lib/models/Category";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 // PUT update category
 export async function PUT(
@@ -75,6 +76,8 @@ export async function PUT(
       );
     }
 
+    revalidateCategoryCaches();
+
     return NextResponse.json({ category }, { status: 200 });
   } catch (error: any) {
     return NextResponse.json(
@@ -120,6 +123,8 @@ export async function DELETE(
     }
 
     await Category.findByIdAndDelete(id);
+
+    revalidateCategoryCaches();
 
     return NextResponse.json(
       { message: "Category deleted successfully" },

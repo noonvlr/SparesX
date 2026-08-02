@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import Category from "@/lib/models/Category";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 // GET all categories (admin)
 export async function GET(req: NextRequest) {
@@ -74,7 +75,10 @@ export async function POST(req: NextRequest) {
       description,
       isActive: isActive ?? true,
       order: order ?? 0,
+      deviceId: null,
     });
+
+    revalidateCategoryCaches();
 
     return NextResponse.json({ category }, { status: 201 });
   } catch (error: any) {

@@ -21,6 +21,12 @@ interface PartType {
   icon: string;
 }
 
+interface DeviceCategoryOption {
+  value: string;
+  label: string;
+  icon: string;
+}
+
 export default function EditProductPage() {
   const params = useParams();
   const [form, setForm] = useState({
@@ -39,6 +45,9 @@ export default function EditProductPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
   const [partTypes, setPartTypes] = useState<PartType[]>([]);
+  const [deviceCategories, setDeviceCategories] = useState<
+    DeviceCategoryOption[]
+  >([]);
 
   const [brandSearch, setBrandSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
@@ -131,12 +140,28 @@ export default function EditProductPage() {
       });
   }, [params]);
 
-  // Fetch part types (categories) on mount
+  // Fetch device types on mount
   useEffect(() => {
-    fetch("/api/categories")
+    fetch("/api/device-categories")
+      .then((res) => res.json())
+      .then((data) => setDeviceCategories(data.categories || []))
+      .catch(() => setError("Failed to load device types"));
+  }, []);
+
+  // Fetch part types for selected device
+  useEffect(() => {
+    if (!form.deviceCategory) {
+      setPartTypes([]);
+      return;
+    }
+
+    let cancelled = false;
+    fetch(
+      `/api/categories?device=${encodeURIComponent(form.deviceCategory)}`,
+    )
       .then((res) => res.json())
       .then((data) => {
-        // Map categories to partTypes format for backward compatibility
+        if (cancelled) return;
         const mappedPartTypes =
           data.categories?.map((cat: any) => ({
             value: cat.slug,
@@ -145,8 +170,14 @@ export default function EditProductPage() {
           })) || [];
         setPartTypes(mappedPartTypes);
       })
-      .catch(() => setError("Failed to load part types"));
-  }, []);
+      .catch(() => {
+        if (!cancelled) setError("Failed to load part types");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.deviceCategory]);
 
   // Fetch brands when category is selected
   useEffect(() => {
@@ -324,34 +355,42 @@ export default function EditProductPage() {
             Step 1: Device Category *
           </label>
           <div className="grid grid-cols-3 gap-3">
-            {["mobile", "laptop", "desktop"].map((cat) => (
+            {(deviceCategories.length > 0
+              ? deviceCategories
+              : [
+                  {
+                    value: form.deviceCategory,
+                    label: form.deviceCategory,
+                    icon: "📱",
+                  },
+                ].filter((c) => c.value)
+            ).map((cat) => (
               <button
-                key={cat}
+                key={cat.value}
                 type="button"
                 onClick={() =>
                   setForm((f) => ({
                     ...f,
-                    deviceCategory: cat,
-                    // Only clear brand/model if category is being CHANGED
-                    ...(f.deviceCategory !== cat
+                    deviceCategory: cat.value,
+                    ...(f.deviceCategory !== cat.value
                       ? {
                           brand: "",
                           brandSlug: "",
                           deviceModel: "",
                           modelNumber: "",
+                          partType: "",
                         }
                       : {}),
                   }))
                 }
                 className={`p-4 rounded-[var(--radius)] border-2 transition font-medium capitalize text-center ${
-                  form.deviceCategory === cat
+                  form.deviceCategory === cat.value
                     ? "border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand-hover)] ring-2 ring-[var(--brand-muted)]"
                     : "border-[var(--border)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--brand-muted)]"
                 }`}
               >
-                {cat === "mobile" && "📱"} {cat === "laptop" && "💻"}{" "}
-                {cat === "desktop" && "🖥️"}
-                <div className="text-sm capitalize">{cat}</div>
+                <div className="text-lg mb-1">{cat.icon}</div>
+                <div className="text-sm capitalize">{cat.label}</div>
               </button>
             ))}
           </div>
