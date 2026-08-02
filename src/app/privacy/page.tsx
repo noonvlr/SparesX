@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPage title="Privacy Policy" updated="28 July 2026">
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">1. Introduction</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">1. Introduction</h2>
         <p>
           Welcome to SparesX. We respect your privacy and are committed to
           protecting your personal information. This Privacy Policy explains how
@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           2. Information We Collect
         </h2>
         <p>We may collect:</p>
@@ -47,7 +47,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           3. How We Use Your Information
         </h2>
         <p>We use your information to:</p>
@@ -63,7 +63,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           4. Information Sharing
         </h2>
         <p>We do not sell your personal information.</p>
@@ -79,7 +79,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">5. User Content</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">5. User Content</h2>
         <p>
           Listings, product images, profile information, and other content you
           choose to publish may be visible to other users.
@@ -87,7 +87,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">6. Data Security</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">6. Data Security</h2>
         <p>
           We use reasonable administrative, technical, and organizational
           safeguards to protect your information. However, no method of
@@ -96,7 +96,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">7. Cookies</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">7. Cookies</h2>
         <p>SparesX may use cookies and similar technologies to:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Keep users signed in</li>
@@ -107,7 +107,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           8. Data Retention
         </h2>
         <p>
@@ -118,7 +118,7 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">9. Your Rights</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">9. Your Rights</h2>
         <p>You may:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Update your profile information</li>
@@ -131,14 +131,14 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           10. Children&apos;s Privacy
         </h2>
         <p>SparesX is intended for users who are at least 18 years old.</p>
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">11. Changes</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">11. Changes</h2>
         <p>
           We may update this Privacy Policy from time to time. Continued use of
           the platform constitutes acceptance of the updated policy.
@@ -146,20 +146,20 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">12. Contact</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">12. Contact</h2>
         <ul className="list-none space-y-1 mt-2">
           <li>
             <strong>Business name:</strong> SparesX
           </li>
           <li>
             <strong>Email:</strong>{" "}
-            <a href="mailto:support@sparesx.in" className="text-blue-600">
+            <a href="mailto:support@sparesx.in" className="text-[var(--brand)] hover:text-[var(--brand-hover)]">
               support@sparesx.in
             </a>
           </li>
           <li>
             <strong>Phone:</strong> Available via{" "}
-            <a href="/support" className="text-blue-600">
+            <a href="/support" className="text-[var(--brand)] hover:text-[var(--brand-hover)]">
               Support
             </a>
           </li>

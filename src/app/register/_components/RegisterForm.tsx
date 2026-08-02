@@ -281,14 +281,18 @@ export default function RegisterForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden"
+      className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] w-full max-w-3xl overflow-hidden"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-8">
+      <div className="bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] px-8 py-8">
+        <span className="inline-flex items-center gap-1.5 text-sm font-bold tracking-tight text-white/90 mb-3">
+          <span>Spares</span>
+          <span className="text-white">X</span>
+        </span>
         <h2 className="text-4xl font-bold text-white mb-2">
           Create Your Account
         </h2>
-        <p className="text-blue-100">
+        <p className="text-white/85">
           Join SparesX and start connecting with verified sellers
         </p>
       </div>
@@ -301,10 +305,10 @@ export default function RegisterForm() {
 
           <div className="relative mt-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-[var(--border-strong)]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500 font-medium">
+              <span className="px-4 bg-[var(--surface)] text-[var(--muted)] font-medium">
                 Or register with email
               </span>
             </div>
@@ -313,9 +317,9 @@ export default function RegisterForm() {
 
         {/* Error & Success Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg flex gap-3">
+          <div className="mb-6 p-4 bg-[var(--danger-soft)] border-l-4 border-[var(--danger)] rounded-[var(--radius)] flex gap-3">
             <svg
-              className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -325,14 +329,14 @@ export default function RegisterForm() {
                 clipRule="evenodd"
               />
             </svg>
-            <p className="text-red-700 font-medium">{error}</p>
+            <p className="text-[var(--danger)] font-medium">{error}</p>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg flex gap-3">
+          <div className="mb-6 p-4 bg-[var(--success-soft)] border-l-4 border-[var(--success)] rounded-[var(--radius)] flex gap-3">
             <svg
-              className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5"
+              className="w-5 h-5 text-[var(--success)] flex-shrink-0 mt-0.5"
               fill="currentColor"
               viewBox="0 0 20 20"
             >
@@ -342,22 +346,22 @@ export default function RegisterForm() {
                 clipRule="evenodd"
               />
             </svg>
-            <p className="text-green-700 font-medium">{success}</p>
+            <p className="text-[var(--success)] font-medium">{success}</p>
           </div>
         )}
 
         {/* Section 1: Personal Info */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+          <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
+            <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
               1
             </span>
             Personal Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Full Name <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                Full Name <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 type="text"
@@ -365,14 +369,14 @@ export default function RegisterForm() {
                 placeholder="Your name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Email Address <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                Email Address <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 type="email"
@@ -380,13 +384,13 @@ export default function RegisterForm() {
                 placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                 Profile Picture (Optional)
               </label>
 
@@ -396,14 +400,14 @@ export default function RegisterForm() {
                   <img
                     src={formData.profilePicture}
                     alt="Profile preview"
-                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-[var(--border)]"
                   />
                   <button
                     type="button"
                     onClick={() =>
                       setFormData((prev) => ({ ...prev, profilePicture: "" }))
                     }
-                    className="text-red-600 text-sm hover:text-red-700 font-medium"
+                    className="text-[var(--danger)] text-sm hover:opacity-80 font-medium"
                   >
                     Remove
                   </button>
@@ -422,14 +426,14 @@ export default function RegisterForm() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploadingImage}
-                className="px-4 py-2.5 bg-blue-100 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-200 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+                className="px-4 py-2.5 bg-[var(--brand-soft)] border border-[var(--brand-muted)] text-[var(--brand-hover)] rounded-[var(--radius)] hover:bg-[var(--brand-muted)] transition font-medium disabled:opacity-50 disabled:cursor-not-allowed mb-3"
               >
                 {uploadingImage ? "Uploading..." : "Upload Image"}
               </button>
 
               {/* Or enter URL */}
               <div className="mt-2">
-                <label className="text-xs text-gray-600 font-medium">
+                <label className="text-xs text-[var(--muted)] font-medium">
                   Or enter image URL:
                 </label>
                 <input
@@ -438,11 +442,11 @@ export default function RegisterForm() {
                   placeholder="https://example.com/photo.jpg"
                   value={formData.profilePicture}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition mt-1"
+                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition mt-1"
                 />
               </div>
 
-              <p className="text-xs text-gray-500 mt-1.5">
+              <p className="text-xs text-[var(--muted)] mt-1.5">
                 Max file size: 5MB. You can also add or update your profile
                 picture later
               </p>
@@ -452,16 +456,16 @@ export default function RegisterForm() {
 
         {/* Section 2: Security */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+          <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
+            <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
               2
             </span>
             Security
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Password <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                Password <span className="text-[var(--danger)]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -470,14 +474,14 @@ export default function RegisterForm() {
                   placeholder="Create a strong password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition pr-12"
+                  className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition pr-12"
                   required
                   minLength={6}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink-secondary)] transition"
                 >
                   {showPassword ? (
                     <svg
@@ -507,14 +511,14 @@ export default function RegisterForm() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">
+              <p className="text-xs text-[var(--muted)] mt-1.5">
                 Minimum 6 characters
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Confirm Password <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                Confirm Password <span className="text-[var(--danger)]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -523,10 +527,10 @@ export default function RegisterForm() {
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent transition pr-12 ${
+                  className={`w-full px-4 py-3 border rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:border-transparent transition pr-12 ${
                     passwordMatch
-                      ? "border-gray-300 focus:ring-blue-500"
-                      : "border-red-500 focus:ring-red-500"
+                      ? "border-[var(--border-strong)] focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
+                      : "border-[var(--danger)] focus:ring-[var(--danger)]/30"
                   }`}
                   required
                   minLength={6}
@@ -534,7 +538,7 @@ export default function RegisterForm() {
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink-secondary)] transition"
                 >
                   {showConfirmPassword ? (
                     <svg
@@ -565,7 +569,7 @@ export default function RegisterForm() {
                 </button>
               </div>
               {!passwordMatch && formData.confirmPassword && (
-                <p className="text-xs text-red-500 mt-1.5">
+                <p className="text-xs text-[var(--danger)] mt-1.5">
                   Passwords do not match
                 </p>
               )}
@@ -575,8 +579,8 @@ export default function RegisterForm() {
 
         {/* Section 3: Contact Information */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+          <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
+            <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
               3
             </span>
             Contact Information
@@ -584,15 +588,15 @@ export default function RegisterForm() {
 
           {/* Mobile with Country Code */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Mobile Number <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+              Mobile Number <span className="text-[var(--danger)]">*</span>
             </label>
             <div className="flex gap-2">
               <select
                 name="countryCode"
                 value={formData.countryCode}
                 onChange={handleChange}
-                className="px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white min-w-fit font-medium text-gray-700"
+                className="px-3 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition bg-[var(--surface)] min-w-fit font-medium text-[var(--ink-secondary)]"
               >
                 {COUNTRY_CODES.map((item) => (
                   <option key={item.code} value={item.code}>
@@ -607,16 +611,16 @@ export default function RegisterForm() {
                 value={formData.mobile}
                 onChange={handleMobileChange}
                 maxLength={10}
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="flex-1 px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required
               />
             </div>
           </div>
 
           {/* WhatsApp Toggle */}
-          <div className="mt-4 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-200">
+          <div className="mt-4 p-4 bg-gradient-to-br from-[var(--brand-soft)] to-emerald-50 rounded-[var(--radius)] border border-[var(--brand-muted)]">
             <div className="mb-3">
-              <label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <label className="text-sm font-semibold text-[var(--ink)] flex items-center gap-2">
                 <svg
                   className="w-5 h-5 text-green-600"
                   fill="currentColor"
@@ -632,15 +636,15 @@ export default function RegisterForm() {
               <button
                 type="button"
                 onClick={() => handleWhatsappToggle(true)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all flex-1 justify-center ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius)] font-medium transition-all flex-1 justify-center ${
                   isMobileWhatsapp
                     ? "bg-green-600 text-white shadow-sm"
-                    : "bg-white text-gray-600 border-2 border-gray-200 hover:border-green-300"
+                    : "bg-[var(--surface)] text-[var(--ink-secondary)] border-2 border-[var(--border)] hover:border-green-300"
                 }`}
               >
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    isMobileWhatsapp ? "border-white" : "border-gray-400"
+                    isMobileWhatsapp ? "border-white" : "border-[var(--border-strong)]"
                   }`}
                 >
                   {isMobileWhatsapp && (
@@ -652,15 +656,15 @@ export default function RegisterForm() {
               <button
                 type="button"
                 onClick={() => handleWhatsappToggle(false)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all flex-1 justify-center ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius)] font-medium transition-all flex-1 justify-center ${
                   !isMobileWhatsapp
                     ? "bg-green-600 text-white shadow-sm"
-                    : "bg-white text-gray-600 border-2 border-gray-200 hover:border-green-300"
+                    : "bg-[var(--surface)] text-[var(--ink-secondary)] border-2 border-[var(--border)] hover:border-green-300"
                 }`}
               >
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    !isMobileWhatsapp ? "border-white" : "border-gray-400"
+                    !isMobileWhatsapp ? "border-white" : "border-[var(--border-strong)]"
                   }`}
                 >
                   {!isMobileWhatsapp && (
@@ -672,7 +676,7 @@ export default function RegisterForm() {
             </div>
 
             {isMobileWhatsapp && formData.mobile && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border border-green-200">
+              <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface)] rounded-[var(--radius)] border border-green-200">
                 <svg
                   className="w-4 h-4 text-green-600 flex-shrink-0"
                   fill="currentColor"
@@ -684,7 +688,7 @@ export default function RegisterForm() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span className="text-sm text-gray-700 font-medium">
+                <span className="text-sm text-[var(--ink-secondary)] font-medium">
                   {formData.countryCode} {formData.mobile}
                 </span>
               </div>
@@ -696,7 +700,7 @@ export default function RegisterForm() {
                   name="countryCode"
                   value={formData.countryCode}
                   onChange={handleChange}
-                  className="px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition bg-white min-w-fit font-medium text-gray-700 text-sm"
+                  className="px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition bg-[var(--surface)] min-w-fit font-medium text-[var(--ink-secondary)] text-sm"
                 >
                   {COUNTRY_CODES.map((item) => (
                     <option key={item.code} value={item.code}>
@@ -711,7 +715,7 @@ export default function RegisterForm() {
                   value={formData.whatsappNumber}
                   onChange={handleChange}
                   maxLength={10}
-                  className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-sm"
+                  className="flex-1 px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-sm"
                   required={!isMobileWhatsapp}
                 />
               </div>
@@ -721,23 +725,23 @@ export default function RegisterForm() {
 
         {/* Section 4: Address & Location */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <span className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+          <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
+            <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
               4
             </span>
             Address & Location
           </h3>
 
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Street Address <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+              Street Address <span className="text-[var(--danger)]">*</span>
             </label>
             <textarea
               name="address"
               placeholder="Enter your complete address"
               value={formData.address}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+              className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition resize-none"
               rows={3}
               required
             />
@@ -746,8 +750,8 @@ export default function RegisterForm() {
           {/* PIN Code with Auto-fetch */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                PIN Code <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                PIN Code <span className="text-[var(--danger)]">*</span>
               </label>
               <div className="relative">
                 <input
@@ -757,20 +761,20 @@ export default function RegisterForm() {
                   value={formData.pinCode}
                   onChange={handlePincodeChange}
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required
                 />
                 {loadingLocation && (
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                    <div className="animate-spin h-5 w-5 border-2 border-[var(--brand)] border-t-transparent rounded-full"></div>
                   </div>
                 )}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                City <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                City <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 type="text"
@@ -778,14 +782,14 @@ export default function RegisterForm() {
                 placeholder="Auto-filled"
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 readOnly={formData.pinCode.length === 6}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                State <span className="text-red-500">*</span>
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                State <span className="text-[var(--danger)]">*</span>
               </label>
               <input
                 type="text"
@@ -793,37 +797,37 @@ export default function RegisterForm() {
                 placeholder="Auto-filled"
                 value={formData.state}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 readOnly={formData.pinCode.length === 6}
               />
             </div>
           </div>
 
           {loadingLocation && (
-            <p className="text-xs text-blue-600 flex items-center gap-1">
-              <span className="inline-block h-1.5 w-1.5 bg-blue-600 rounded-full animate-pulse"></span>
+            <p className="text-xs text-[var(--brand-hover)] flex items-center gap-1">
+              <span className="inline-block h-1.5 w-1.5 bg-[var(--brand)] rounded-full animate-pulse"></span>
               Fetching location details...
             </p>
           )}
         </div>
 
         {/* Submit Button */}
-        <div className="pt-6 border-t border-gray-200 space-y-4">
+        <div className="pt-6 border-t border-[var(--border)] space-y-4">
           <label className="flex items-start gap-3 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
               required
             />
-            <span className="text-sm text-gray-600 leading-relaxed">
+            <span className="text-sm text-[var(--muted)] leading-relaxed">
               I agree to the{" "}
               <a
                 href="/terms"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 font-semibold hover:underline"
+                className="text-[var(--brand)] font-semibold hover:underline"
               >
                 Terms of Service
               </a>{" "}
@@ -832,7 +836,7 @@ export default function RegisterForm() {
                 href="/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 font-semibold hover:underline"
+                className="text-[var(--brand)] font-semibold hover:underline"
               >
                 Privacy Policy
               </a>
@@ -844,7 +848,7 @@ export default function RegisterForm() {
           <button
             type="submit"
             disabled={loading || !passwordMatch || !acceptedTerms}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-4 rounded-lg font-bold text-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+            className="w-full bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] text-white py-4 rounded-[var(--radius)] font-bold text-lg hover:brightness-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)]"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
@@ -856,11 +860,11 @@ export default function RegisterForm() {
             )}
           </button>
 
-          <p className="mt-6 text-center text-gray-600">
+          <p className="mt-6 text-center text-[var(--muted)]">
             Already have an account?{" "}
             <a
               href="/login"
-              className="text-blue-600 font-semibold hover:text-blue-700 transition"
+              className="text-[var(--brand)] font-semibold hover:text-[var(--brand-hover)] transition"
             >
               Login here
             </a>
@@ -870,20 +874,20 @@ export default function RegisterForm() {
 
       {cropOpen && cropImageSrc && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] w-full max-w-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[var(--ink)]">
                 Adjust Profile Picture
               </h3>
               <button
                 type="button"
                 onClick={handleCropCancel}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-[var(--muted)] hover:text-[var(--ink-secondary)]"
               >
                 ✕
               </button>
             </div>
-            <div className="relative w-full h-[360px] bg-gray-100">
+            <div className="relative w-full h-[360px] bg-[var(--surface-3)]">
               <Cropper
                 image={cropImageSrc}
                 crop={crop}
@@ -894,9 +898,9 @@ export default function RegisterForm() {
                 onCropComplete={onCropComplete}
               />
             </div>
-            <div className="px-6 py-4 border-t border-gray-200">
+            <div className="px-6 py-4 border-t border-[var(--border)]">
               <div className="flex items-center gap-3">
-                <label className="text-sm text-gray-600">Zoom</label>
+                <label className="text-sm text-[var(--muted)]">Zoom</label>
                 <input
                   type="range"
                   min={1}
@@ -904,14 +908,14 @@ export default function RegisterForm() {
                   step={0.1}
                   value={zoom}
                   onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full"
+                  className="w-full accent-[var(--brand)]"
                 />
               </div>
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleCropCancel}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                  className="px-4 py-2 bg-[var(--surface-3)] text-[var(--ink-secondary)] rounded-[var(--radius)] hover:bg-[var(--border)]"
                 >
                   Cancel
                 </button>
@@ -919,7 +923,7 @@ export default function RegisterForm() {
                   type="button"
                   onClick={handleCropConfirm}
                   disabled={uploadingImage}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-[var(--brand)] text-white rounded-[var(--radius)] hover:bg-[var(--brand-hover)] disabled:opacity-50"
                 >
                   {uploadingImage ? "Uploading..." : "Save"}
                 </button>

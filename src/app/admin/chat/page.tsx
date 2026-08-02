@@ -170,7 +170,7 @@ export default function AdminChatPage() {
           </p>
         </div>
         <div className="flex gap-2 text-xs">
-          <span className="px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-semibold">
+          <span className="px-3 py-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand-hover)] border border-[var(--brand-muted)] font-semibold">
             {stats.conversationCount} conversations
           </span>
           <span className="px-3 py-1.5 rounded-full bg-slate-50 text-slate-700 border border-slate-200 font-semibold">
@@ -190,11 +190,11 @@ export default function AdminChatPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search by name, email, user id, or conversation id"
-          className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
         />
         <button
           type="submit"
-          className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+          className="px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)]"
         >
           Search
         </button>
@@ -219,7 +219,7 @@ export default function AdminChatPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
           {loading ? (
             <div className="p-6 text-sm text-gray-500">Loading chats…</div>
           ) : conversations.length === 0 ? (
@@ -235,7 +235,7 @@ export default function AdminChatPage() {
                       type="button"
                       onClick={() => void openConversation(c._id)}
                       className={`w-full text-left p-4 transition ${
-                        active ? "bg-blue-50" : "hover:bg-gray-50"
+                        active ? "bg-[var(--brand-soft)]" : "hover:bg-gray-50"
                       }`}
                     >
                       <p className="text-sm font-semibold text-gray-900 truncate">
@@ -265,7 +265,7 @@ export default function AdminChatPage() {
           )}
         </div>
 
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[420px] flex flex-col overflow-hidden">
+        <div className="lg:col-span-3 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm min-h-[420px] flex flex-col overflow-hidden">
           {!selectedId ? (
             <div className="flex-1 flex items-center justify-center text-sm text-gray-500 p-8">
               Select a conversation to review the full thread.
@@ -290,7 +290,7 @@ export default function AdminChatPage() {
                           className="w-8 h-8 rounded-full object-cover"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
                           {(p.name || "?").charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -309,7 +309,7 @@ export default function AdminChatPage() {
                         </p>
                         <Link
                           href={`/admin/users`}
-                          className="text-[11px] text-blue-600 hover:underline"
+                          className="text-[11px] text-[var(--brand)] hover:underline"
                         >
                           Manage in Users
                         </Link>
@@ -332,7 +332,7 @@ export default function AdminChatPage() {
                     {" · "}
                     <Link
                       href={`/product/${selected.productId._id}`}
-                      className="text-blue-600 hover:underline"
+                      className="text-[var(--brand)] hover:underline"
                     >
                       Open listing
                     </Link>
@@ -366,13 +366,13 @@ export default function AdminChatPage() {
                           className={`max-w-[88%] sm:max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm border ${
                             isFirst
                               ? "bg-white border-gray-100 rounded-bl-md"
-                              : "bg-blue-600 text-white border-blue-600 rounded-br-md"
+                              : "bg-[var(--brand)] text-white border-[var(--brand)] rounded-br-md"
                           }`}
                         >
                           {showName && (
                             <div
                               className={`flex items-center justify-between gap-3 mb-1 ${
-                                isFirst ? "text-blue-700" : "text-blue-100"
+                                isFirst ? "text-[var(--brand-hover)]" : "text-[var(--brand-muted)]"
                               }`}
                             >
                               <p className="text-xs font-semibold truncate">

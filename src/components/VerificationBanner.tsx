@@ -81,20 +81,20 @@ export default function VerificationBanner() {
   }
 
   return (
-    <div className="bg-amber-50 border-b border-amber-100">
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-amber-950">
+    <div className="bg-[var(--warning-soft)] border-b border-orange-100">
+      <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-[var(--warning)]">
         <p>{message}</p>
         <div className="flex items-center gap-3 shrink-0">
           <Link
             href="/verify"
-            className="font-semibold text-amber-900 underline underline-offset-2"
+            className="font-semibold underline underline-offset-2"
           >
             Verify now
           </Link>
           {showDismiss && (
             <button
               type="button"
-              className="text-amber-800/70 hover:text-amber-900"
+              className="opacity-70 hover:opacity-100"
               onClick={() => setDismissedEmail(true)}
             >
               Dismiss

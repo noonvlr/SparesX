@@ -12,9 +12,9 @@ const colorClasses: Record<
   { pill: string; modal: string; ring: string }
 > = {
   blue: {
-    pill: "bg-blue-50 text-blue-800 border-blue-200",
-    modal: "bg-blue-50 border-blue-200 text-blue-900",
-    ring: "ring-blue-100",
+    pill: "bg-[var(--brand-soft)] text-[var(--brand-hover)] border-[var(--brand-muted)]",
+    modal: "bg-[var(--brand-soft)] border-[var(--brand-muted)] text-[var(--ink)]",
+    ring: "ring-[var(--brand-muted)]",
   },
   gold: {
     pill: "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-100",

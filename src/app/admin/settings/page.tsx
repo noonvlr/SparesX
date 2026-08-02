@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-blue-200 hover:shadow transition"
+            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-teal-200 hover:shadow transition"
           >
             <p className="font-semibold text-gray-900">{item.title}</p>
             <p className="text-sm text-gray-500 mt-1">{item.desc}</p>

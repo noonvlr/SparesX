@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard, { type ProductCardData } from "@/components/ProductCard";
 import { showToast } from "@/components/ToastHost";
+import { Card, EmptyState } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 type SavedRow = {
   _id: string;
@@ -88,52 +90,37 @@ export default function SavedItemsClient() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-10 text-center text-gray-500">
+      <Card className="p-10 text-center text-[var(--muted)]">
         Loading saved items…
-      </div>
+      </Card>
     );
   }
 
   if (!items.length) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 sm:p-12 text-center text-gray-600">
-        <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.8}
-              d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-            />
-          </svg>
-        </div>
-        <p className="mb-5 text-sm sm:text-base">
-          No saved parts yet. Browse the catalog and tap Save for later.
-        </p>
-        <Link
-          href="/products"
-          className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
-        >
-          Browse products
-        </Link>
-      </div>
+      <Card>
+        <EmptyState
+          title="No saved parts yet"
+          description="Browse the catalog and tap Save for later."
+          action={
+            <Link href="/products">
+              <Button>Browse products</Button>
+            </Link>
+          }
+        />
+      </Card>
     );
   }
 
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[var(--muted)]">
           {items.length} saved {items.length === 1 ? "item" : "items"}
         </p>
         <Link
           href="/products"
-          className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+          className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
         >
           Browse more
         </Link>
@@ -145,14 +132,14 @@ export default function SavedItemsClient() {
             return (
               <div
                 key={row._id}
-                className="relative bg-white rounded-lg shadow-md border border-dashed border-gray-200 overflow-hidden scale-[0.92] sm:scale-[0.95] origin-top aspect-square flex flex-col items-center justify-center p-4 text-center"
+                className="relative bg-[var(--surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-dashed border-[var(--border-strong)] overflow-hidden scale-[0.92] sm:scale-[0.95] origin-top aspect-square flex flex-col items-center justify-center p-4 text-center"
               >
                 <button
                   type="button"
                   aria-label="Remove unavailable item"
                   disabled={removingId === row.productId}
                   onClick={() => removeSaved(row.productId)}
-                  className="absolute top-2 left-2 z-20 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white text-gray-600 border border-gray-200 shadow-sm hover:bg-red-50 hover:text-red-600"
+                  className="absolute top-2 left-2 z-20 inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)] shadow-[var(--shadow-sm)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                 >
                   <svg
                     className="w-4 h-4"
@@ -168,7 +155,7 @@ export default function SavedItemsClient() {
                     />
                   </svg>
                 </button>
-                <p className="text-xs sm:text-sm text-gray-500 px-2">
+                <p className="text-xs sm:text-sm text-[var(--muted)] px-2">
                   Listing no longer available
                 </p>
               </div>
@@ -178,7 +165,7 @@ export default function SavedItemsClient() {
           return (
             <div key={row._id} className="relative">
               {!row.available && (
-                <div className="absolute inset-x-3 top-10 sm:top-11 z-10 rounded-lg bg-amber-50/95 border border-amber-200 px-2 py-1 text-[10px] font-semibold text-amber-800 text-center pointer-events-none">
+                <div className="absolute inset-x-3 top-10 sm:top-11 z-10 rounded-[var(--radius)] bg-[var(--warning-soft)]/95 border border-[var(--warning)]/30 px-2 py-1 text-[10px] font-semibold text-[var(--warning)] text-center pointer-events-none">
                   Unavailable
                 </div>
               )}

@@ -12,7 +12,7 @@ export default function RefundPolicyPage() {
   return (
     <LegalPage title="Refund & Cancellation Policy" updated="28 July 2026">
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Current Policy</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Current Policy</h2>
         <p>SparesX does not collect payments or process orders.</p>
         <p className="mt-2">Accordingly:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
@@ -27,7 +27,7 @@ export default function RefundPolicyPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Platform Fees</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Platform Fees</h2>
         <p>
           If SparesX introduces paid subscriptions, listing fees, or other
           platform charges in the future, the applicable refund terms will be

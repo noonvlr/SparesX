@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import FeaturedProducts from "@/components/FeaturedProducts";
+import { buttonVariants } from "@/components/ui/Button";
+import { cn } from "@/lib/ui/cn";
 
 export const metadata: Metadata = {
   title: "Buy & Sell Mobile Spare Parts Online",
@@ -111,89 +113,91 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        {/* Hero Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
-          <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4 sm:mb-6">
-              Welcome to SparesX
+      <main className="min-h-screen bg-[var(--surface-2)]">
+        {/* Hero — full-bleed teal/slate atmosphere, brand-first */}
+        <section className="relative overflow-hidden">
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-20 bg-gradient-to-b from-[var(--brand-soft)] via-white to-[var(--surface-2)]"
+          />
+          <div
+            aria-hidden
+            className="absolute -top-40 left-1/2 -z-10 h-[420px] w-[780px] -translate-x-1/2 rounded-full bg-[var(--brand)]/15 blur-[100px]"
+          />
+          <div
+            aria-hidden
+            className="absolute top-24 right-[-120px] -z-10 h-72 w-72 rounded-full bg-slate-400/10 blur-3xl"
+          />
+
+          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
+            <div className="mb-6 flex items-center justify-center gap-2.5">
+              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--brand)] text-white text-lg sm:text-xl font-bold shadow-[var(--shadow-sm)]">
+                S
+              </span>
+              <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--ink)]">
+                Spares<span className="text-[var(--brand)]">X</span>
+              </span>
+            </div>
+
+            <h1 className="text-balance text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[var(--ink)] mb-5 sm:mb-6">
+              Mobile spare parts, sourced directly from verified technicians
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+
+            <p className="mx-auto max-w-xl text-base sm:text-lg text-[var(--muted)] mb-9 sm:mb-10 px-2">
               India&apos;s marketplace for mobile spare parts. SparesX connects
               buyers and sellers — we are not the seller, and there are no
               in-app payments yet.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-12 sm:mb-16 px-4">
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
               <Link
                 href="/products"
-                className="bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-lg text-base sm:text-lg font-semibold hover:bg-blue-700 transition shadow-lg hover:shadow-xl"
+                className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
               >
-                Browse Products
+                Browse Parts
               </Link>
               <Link
                 href="/register"
-                className="bg-green-600 text-white px-6 sm:px-8 py-3 rounded-lg text-base sm:text-lg font-semibold hover:bg-green-700 transition shadow-lg hover:shadow-xl"
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "lg" }),
+                  "w-full sm:w-auto",
+                )}
               >
                 Become a Seller
               </Link>
             </div>
           </div>
-
-          {/* Features Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-16">
-            <article className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">📱</div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">
-                Quality Parts
-              </h2>
-              <p className="text-sm sm:text-base text-gray-600">
-                Find genuine and tested spare parts for all mobile brands
-              </p>
-            </article>
-            <article className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">✅</div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">
-                Anyone Can Sell
-              </h2>
-              <p className="text-sm sm:text-base text-gray-600">
-                Anyone in India can register and list spare parts on the
-                platform
-              </p>
-            </article>
-            <article className="bg-white p-5 sm:p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow sm:col-span-2 lg:col-span-1">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">🚀</div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">
-                Fast Listings
-              </h2>
-              <p className="text-sm sm:text-base text-gray-600">
-                List your spare parts quickly and reach buyers instantly
-              </p>
-            </article>
-          </div>
         </section>
 
         {/* Categories Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
-            Browse by Category
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            {categories.map((category: any) => (
-              <Link
-                key={category.name}
-                href={category.href}
-                className="bg-white p-4 sm:p-6 rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border border-gray-100 group"
-              >
-                <div className="text-3xl sm:text-4xl mb-2 sm:mb-3 group-hover:scale-110 transition-transform duration-300">
-                  {category.icon}
-                </div>
-                <h3 className="text-xs sm:text-sm font-semibold text-gray-800 text-center">
-                  {category.name}
-                </h3>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {categories.length > 0 && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+            <div className="text-center mb-8 sm:mb-10">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-hover)] mb-2">
+                Categories
+              </p>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)]">
+                Browse by category
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+              {categories.map((category: any) => (
+                <Link
+                  key={category.name}
+                  href={category.href}
+                  className="card-hover group flex flex-col items-center gap-2 sm:gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6 shadow-[var(--shadow-sm)]"
+                >
+                  <div className="flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-[var(--radius)] bg-[var(--brand-soft)] text-2xl sm:text-3xl transition-transform duration-300 group-hover:scale-110">
+                    {category.icon}
+                  </div>
+                  <h3 className="text-xs sm:text-sm font-semibold text-[var(--ink)] text-center">
+                    {category.name}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         <FeaturedProducts products={featuredProducts} />
       </main>

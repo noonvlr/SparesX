@@ -50,7 +50,7 @@ export default function MessagesClient() {
           </p>
           <Link
             href={`/login?next=${encodeURIComponent("/messages")}`}
-            className="inline-block px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold"
+            className="inline-block px-5 py-2.5 rounded-xl bg-[var(--brand)] text-white font-semibold"
           >
             Login
           </Link>

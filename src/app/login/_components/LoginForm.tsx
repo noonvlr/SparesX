@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ToastHost";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { resolvePostAuthPath } from "@/lib/auth/postAuthRedirect";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -40,10 +42,18 @@ export default function LoginForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md"
+      className="glass p-8 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] w-full max-w-md"
     >
-      <h2 className="text-2xl font-bold mb-6 text-center">Welcome Back</h2>
-      <p className="text-gray-600 text-center mb-6">
+      <div className="text-center mb-6">
+        <span className="inline-flex items-center gap-1.5 text-xl font-bold tracking-tight">
+          <span className="text-[var(--brand)]">Spares</span>
+          <span className="text-[var(--ink)]">X</span>
+        </span>
+      </div>
+      <h2 className="text-2xl font-bold mb-1.5 text-center text-[var(--ink)]">
+        Welcome Back
+      </h2>
+      <p className="text-[var(--muted)] text-center mb-6">
         Login to your SparesX account
       </p>
 
@@ -51,33 +61,34 @@ export default function LoginForm() {
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
+          <div className="w-full border-t border-[var(--border-strong)]"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-white text-gray-500 font-medium">
+          <span className="px-4 bg-[var(--surface)] text-[var(--muted)] font-medium">
             Or login with email
           </span>
         </div>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 text-red-700 bg-red-100 rounded">{error}</div>
+        <div className="mb-4 p-3 text-[var(--danger)] bg-[var(--danger-soft)] rounded-[var(--radius)] text-sm font-medium">
+          {error}
+        </div>
       )}
 
       <div className="mb-4">
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700 mb-2"
+          className="block text-sm font-medium text-[var(--ink-secondary)] mb-2"
         >
           Email Address
         </label>
-        <input
+        <Input
           id="email"
           type="email"
           placeholder="your.email@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
       </div>
@@ -86,39 +97,35 @@ export default function LoginForm() {
         <div className="flex items-center justify-between mb-2">
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-[var(--ink-secondary)]"
           >
             Password
           </label>
           <a
             href="/forgot-password"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium transition"
+            className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)] font-medium transition"
           >
             Forgot password?
           </a>
         </div>
-        <input
+        <Input
           id="password"
           type="password"
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           required
         />
       </div>
 
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-      >
+      <Button type="submit" className="w-full" size="lg">
         Login
-      </button>
-      <p className="mt-4 text-center text-gray-600">
+      </Button>
+      <p className="mt-4 text-center text-[var(--muted)]">
         Don&apos;t have an account?{" "}
         <a
           href="/register"
-          className="text-blue-600 hover:underline font-medium"
+          className="text-[var(--brand)] hover:text-[var(--brand-hover)] hover:underline font-medium"
         >
           Register
         </a>

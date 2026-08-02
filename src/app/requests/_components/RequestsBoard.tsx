@@ -176,19 +176,19 @@ export default function RequestsBoard() {
             <h2 className="text-lg font-semibold text-gray-900">What happens next?</h2>
             <ul className="space-y-3 text-sm text-gray-600">
               <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">1.</span>
+                <span className="text-[var(--brand)] font-bold">1.</span>
                 Your request is shared with verified sellers.
               </li>
               <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">2.</span>
+                <span className="text-[var(--brand)] font-bold">2.</span>
                 Sellers contact you with availability and pricing.
               </li>
               <li className="flex gap-2">
-                <span className="text-blue-600 font-bold">3.</span>
+                <span className="text-[var(--brand)] font-bold">3.</span>
                 Compare offers and proceed with the best match.
               </li>
             </ul>
-            <div className="rounded-lg bg-blue-50 text-blue-700 px-4 py-3 text-sm">
+            <div className="rounded-lg bg-[var(--brand-soft)] text-[var(--brand-hover)] px-4 py-3 text-sm">
               Tip: mention condition, urgency, and city in the description for faster replies.
             </div>
           </aside>
@@ -198,7 +198,7 @@ export default function RequestsBoard() {
       ) : (
         <div className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
           {/* Marketplace-style search hero */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-800 text-white p-5 sm:p-8 shadow-xl">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-teal-900 to-teal-800 text-white p-5 sm:p-8 shadow-xl">
             <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl" />
             <div className="absolute -left-8 bottom-0 w-32 h-32 rounded-full bg-blue-400/20 blur-2xl" />
             <div className="relative">
@@ -271,7 +271,7 @@ export default function RequestsBoard() {
             <button
               type="button"
               onClick={() => setTab("submit")}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              className="text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
             >
               + Post a request
             </button>
@@ -288,7 +288,7 @@ export default function RequestsBoard() {
             </div>
           ) : requests.length === 0 ? (
             <div className="bg-white rounded-3xl border border-dashed border-gray-200 p-12 text-center">
-              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+              <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center">
                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -297,7 +297,7 @@ export default function RequestsBoard() {
               <button
                 type="button"
                 onClick={() => setTab("submit")}
-                className="mt-2 inline-flex px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+                className="mt-2 inline-flex px-5 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)]"
               >
                 Submit a request
               </button>
@@ -314,10 +314,10 @@ export default function RequestsBoard() {
                 return (
                   <article
                     key={request._id}
-                    className="group relative bg-white rounded-2xl border border-gray-100/80 shadow-sm hover:shadow-md hover:border-blue-100 transition-all duration-300 overflow-hidden"
+                    className="group relative bg-white rounded-2xl border border-gray-100/80 shadow-sm hover:shadow-md hover:border-[var(--brand-muted)] transition-all duration-300 overflow-hidden"
                     style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                   >
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition" />
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--brand)] to-teal-700 opacity-0 group-hover:opacity-100 transition" />
                     <div className="p-4 sm:p-5 flex flex-col sm:flex-row gap-4">
                       <div className="flex gap-3 flex-1 min-w-0">
                         <div className="w-11 h-11 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700 flex items-center justify-center text-sm font-bold flex-shrink-0 border border-slate-200">
@@ -400,7 +400,7 @@ export default function RequestsBoard() {
                 onClick={() =>
                   router.push(`/login?next=${encodeURIComponent("/requests")}`)
                 }
-                className="py-3 rounded-xl bg-blue-600 text-white font-semibold"
+                className="py-3 rounded-xl bg-[var(--brand)] text-white font-semibold"
               >
                 Login
               </button>

@@ -12,12 +12,12 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Service" updated="28 July 2026">
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">1. Acceptance</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">1. Acceptance</h2>
         <p>By using SparesX, you agree to these Terms.</p>
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           2. Nature of the Platform
         </h2>
         <p>
@@ -32,7 +32,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">3. Eligibility</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">3. Eligibility</h2>
         <p>Users must:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Be at least 18 years old</li>
@@ -47,7 +47,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">4. User Accounts</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">4. User Accounts</h2>
         <p>Users are responsible for:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Maintaining account security</li>
@@ -57,7 +57,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">5. Listings</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">5. Listings</h2>
         <p>Sellers are responsible for ensuring that:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Product descriptions are accurate</li>
@@ -69,7 +69,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           6. Buyer Responsibilities
         </h2>
         <p>Buyers should:</p>
@@ -81,7 +81,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">7. Payments</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">7. Payments</h2>
         <p>Currently, SparesX does not process or collect payments.</p>
         <p className="mt-2">
           All payments are arranged directly between buyers and sellers. SparesX
@@ -90,7 +90,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">8. Shipping</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">8. Shipping</h2>
         <p>
           Shipping arrangements are the responsibility of buyers and sellers
           unless otherwise stated.
@@ -98,7 +98,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           9. Prohibited Activities
         </h2>
         <p>Users must not:</p>
@@ -115,7 +115,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           10. Intellectual Property
         </h2>
         <p>
@@ -126,7 +126,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">11. Suspension</h2>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">11. Suspension</h2>
         <p>
           We may suspend or terminate accounts that violate these Terms or
           engage in fraudulent or abusive activity.
@@ -134,7 +134,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           12. Limitation of Liability
         </h2>
         <p>SparesX provides the platform &quot;as is&quot; without warranties.</p>
@@ -151,7 +151,7 @@ export default function TermsPage() {
       </section>
 
       <section>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
           13. Governing Law
         </h2>
         <p>

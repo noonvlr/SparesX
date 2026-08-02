@@ -106,7 +106,7 @@ export default function DeviceHierarchyTree({
   };
   const typeDots: Record<NodeType, string> = {
     device: "bg-slate-900",
-    brand: "bg-blue-500",
+    brand: "bg-[var(--brand)]",
     model: "bg-emerald-500",
     "parts-root": "bg-amber-500",
     "part-category": "bg-purple-500",
@@ -193,7 +193,7 @@ export default function DeviceHierarchyTree({
             Device
           </span>
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-blue-500" />
+            <span className="h-2 w-2 rounded-full bg-[var(--brand)]" />
             Brand
           </span>
           <span className="flex items-center gap-2">

@@ -1,6 +1,10 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Card";
+import { cn } from "@/lib/ui/cn";
 
 interface Brand {
   _id: string;
@@ -30,6 +34,269 @@ interface Condition {
   label: string;
 }
 
+const RECENT_SEARCHES_KEY = "sparesx:recentSearches";
+const MAX_RECENT_SEARCHES = 6;
+
+function loadRecentSearches(): string[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RECENT_SEARCHES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((s) => typeof s === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentSearch(term: string) {
+  if (typeof window === "undefined") return;
+  const trimmed = term.trim();
+  if (!trimmed) return;
+  const existing = loadRecentSearches().filter(
+    (s) => s.toLowerCase() !== trimmed.toLowerCase(),
+  );
+  const next = [trimmed, ...existing].slice(0, MAX_RECENT_SEARCHES);
+  try {
+    window.localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
+  } catch {
+    // ignore quota / privacy-mode errors
+  }
+}
+
+const selectClasses = cn(
+  "w-full h-11 px-3 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-sm text-[var(--ink)]",
+  "transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]",
+  "disabled:bg-[var(--surface-3)] disabled:text-[var(--muted)]",
+);
+
+const fieldLabelClasses =
+  "block text-xs font-semibold text-[var(--ink-secondary)] mb-2 uppercase tracking-wide";
+
+function IconFilter({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+      />
+    </svg>
+  );
+}
+
+function IconSearch({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
+      />
+    </svg>
+  );
+}
+
+function IconClock({ className }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Floating/sticky search bar with a client-only autocomplete dropdown built
+ * from the currently loaded product names plus recent local searches.
+ * Manages only the `search` query param, merging with whatever other
+ * params `ProductFilters` currently owns.
+ */
+export function ProductSearchBar({
+  productNames = [],
+}: {
+  productNames?: string[];
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isFirstRender = useRef(true);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const [searchInput, setSearchInput] = useState(
+    searchParams.get("search") || "",
+  );
+  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  useEffect(() => {
+    setRecentSearches(loadRecentSearches());
+  }, []);
+
+  // Debounce so typing doesn't spam navigation
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Push only the `search` param, preserving whatever else is in the URL
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const params = new URLSearchParams(searchParams.toString());
+    if (search) params.set("search", search);
+    else params.delete("search");
+
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      router.push(next ? `/products?${next}` : "/products");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  const suggestions = useMemo(() => {
+    const query = searchInput.trim().toLowerCase();
+    if (!query) return [];
+    const uniqueNames = Array.from(new Set(productNames.filter(Boolean)));
+    return uniqueNames
+      .filter((name) => name.toLowerCase().includes(query))
+      .slice(0, 6);
+  }, [searchInput, productNames]);
+
+  const matchingRecent = useMemo(() => {
+    const query = searchInput.trim().toLowerCase();
+    return recentSearches
+      .filter((term) => !query || term.toLowerCase().includes(query))
+      .slice(0, query ? 3 : MAX_RECENT_SEARCHES);
+  }, [recentSearches, searchInput]);
+
+  const commitSearch = (term: string) => {
+    setSearchInput(term);
+    setSearch(term.trim());
+    if (term.trim()) {
+      saveRecentSearch(term);
+      setRecentSearches(loadRecentSearches());
+    }
+    setShowSuggestions(false);
+  };
+
+  const clearRecent = () => {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(RECENT_SEARCHES_KEY);
+    }
+    setRecentSearches([]);
+  };
+
+  const hasDropdownContent = suggestions.length > 0 || matchingRecent.length > 0;
+
+  return (
+    <div
+      ref={containerRef}
+      className="sticky top-[calc(var(--nav-h)+8px)] z-30 md:top-4"
+    >
+      <div className="relative">
+        <div className="glass flex items-center gap-2.5 rounded-[var(--radius-lg)] px-4 py-3 shadow-[var(--shadow-md)]">
+          <IconSearch className="h-5 w-5 shrink-0 text-[var(--muted)]" />
+          <input
+            type="search"
+            inputMode="search"
+            placeholder="Search by name, brand, or model…"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onFocus={() => setShowSuggestions(true)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitSearch(searchInput);
+              if (e.key === "Escape") setShowSuggestions(false);
+            }}
+            className="w-full min-w-0 bg-transparent text-sm sm:text-base text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
+          />
+          {searchInput ? (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => commitSearch("")}
+              className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
+            >
+              <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          ) : null}
+        </div>
+
+        {showSuggestions && hasDropdownContent ? (
+          <div className="glass absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
+            {matchingRecent.length > 0 ? (
+              <div className="px-2 pt-2.5">
+                <div className="flex items-center justify-between px-2 pb-1.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    Recent
+                  </p>
+                  <button
+                    type="button"
+                    onClick={clearRecent}
+                    className="text-[11px] font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {matchingRecent.map((term) => (
+                  <button
+                    key={`recent-${term}`}
+                    type="button"
+                    onClick={() => commitSearch(term)}
+                    className="flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2.5 py-2 text-left text-sm text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand-hover)] transition-colors"
+                  >
+                    <IconClock className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+                    <span className="truncate">{term}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            {suggestions.length > 0 ? (
+              <div className="px-2 pb-2.5 pt-1.5">
+                <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                  Products
+                </p>
+                {suggestions.map((name) => (
+                  <button
+                    key={`suggestion-${name}`}
+                    type="button"
+                    onClick={() => commitSearch(name)}
+                    className="flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2.5 py-2 text-left text-sm text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand-hover)] transition-colors"
+                  >
+                    <IconSearch className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+                    <span className="truncate">{name}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export default function ProductFilters() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,10 +312,6 @@ export default function ProductFilters() {
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [isOpen, setIsOpen] = useState(false);
 
-  const [searchInput, setSearchInput] = useState(
-    searchParams.get("search") || "",
-  );
-  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [selectedDeviceCategory, setSelectedDeviceCategory] = useState(
     searchParams.get("deviceCategory") || searchParams.get("category") || "",
   );
@@ -95,12 +358,6 @@ export default function ProductFilters() {
       .then((data) => setConditions(data.conditions || []))
       .catch(() => {});
   }, []);
-
-  // Debounce search so typing doesn't spam navigation
-  useEffect(() => {
-    const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
 
   // Load brands for selected device type (or all brands if none selected)
   useEffect(() => {
@@ -178,15 +435,18 @@ export default function ProductFilters() {
     };
   }, [selectedBrandSlug, selectedDeviceCategory]);
 
-  // Push filter state into the URL (skip first render to avoid wiping URL)
+  // Push filter state into the URL (skip first render to avoid wiping URL).
+  // Preserves `search`, which is owned by ProductSearchBar.
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
 
+    const searchValue = searchParams.get("search");
     const params = new URLSearchParams();
-    if (search.trim()) params.set("search", search.trim());
+    if (searchValue) params.set("search", searchValue);
+
     if (selectedDeviceCategory)
       params.set("deviceCategory", selectedDeviceCategory);
     if (selectedBrand) params.set("brand", selectedBrand);
@@ -201,20 +461,17 @@ export default function ProductFilters() {
     if (next !== current) {
       router.push(next ? `/products?${next}` : "/products");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    search,
     selectedDeviceCategory,
     selectedBrand,
     selectedModel,
     selectedPartType,
     selectedCondition,
     priceRange,
-    router,
-    searchParams,
   ]);
 
   const activeFilterCount = [
-    search,
     selectedDeviceCategory,
     selectedBrand,
     selectedModel,
@@ -225,8 +482,6 @@ export default function ProductFilters() {
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
-    setSearchInput("");
-    setSearch("");
     setSelectedDeviceCategory("");
     setSelectedBrand("");
     setSelectedBrandSlug("");
@@ -257,302 +512,217 @@ export default function ProductFilters() {
     setSelectedBrandSlug(match?.slug || "");
   };
 
-  return (
-    <>
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed bottom-6 left-6 z-50 bg-gradient-to-br from-blue-500 to-blue-700 text-white px-3.5 py-2.5 rounded-full shadow-lg hover:shadow-xl hover:scale-110 hover:from-blue-600 hover:to-blue-800 transition-all duration-300 flex items-center gap-2 font-semibold animate-in fade-in slide-in-from-bottom-2 ease-out"
+  const FilterFields = () => (
+    <div className="space-y-5">
+      <div>
+        <label className={fieldLabelClasses}>Device type</label>
+        <select
+          value={selectedDeviceCategory}
+          onChange={(e) => handleDeviceCategoryChange(e.target.value)}
+          className={selectClasses}
         >
-          <svg
-            className="w-4.5 h-4.5 transition-transform duration-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-            />
-          </svg>
-          {activeFilterCount > 0 && (
-            <span className="bg-white text-blue-600 px-2 py-0.5 rounded-full text-xs font-bold animate-bounce">
-              {activeFilterCount}
-            </span>
-          )}
-        </button>
-      )}
+          <option value="">All devices</option>
+          {deviceCategories.map((cat) => (
+            <option key={cat.value} value={cat.value}>
+              {cat.icon ? `${cat.icon} ` : ""}
+              {cat.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
-          onClick={() => setIsOpen(false)}
-          aria-hidden="true"
-        />
-      )}
+      <div>
+        <label className={fieldLabelClasses}>Brand</label>
+        <select
+          value={selectedBrand}
+          onChange={(e) => handleBrandChange(e.target.value)}
+          className={selectClasses}
+        >
+          <option value="">All brands</option>
+          {brands.map((brand) => (
+            <option key={brand._id} value={brand.name}>
+              {brand.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <div
-        className={`
-          fixed lg:static top-0 left-0 h-auto max-h-[calc(100vh)] lg:h-auto w-64 
-          bg-white shadow-xl lg:shadow-md border-r border-gray-200 lg:border
-          z-50 lg:z-0 transition-transform duration-300 ease-out overflow-y-auto
-          lg:rounded-lg lg:border-gray-200 rounded-r-2xl
-          ${isOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
-        `}
-      >
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
-              <svg
-                className="w-4 h-4 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                />
-              </svg>
-              Filters
-            </h2>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1.5 hover:bg-gray-100 rounded-lg"
-              aria-label="Close filters"
+      <div>
+        <label className={fieldLabelClasses}>Model</label>
+        <select
+          value={selectedModel}
+          onChange={(e) => setSelectedModel(e.target.value)}
+          disabled={!selectedBrandSlug}
+          className={selectClasses}
+        >
+          <option value="">
+            {!selectedBrand
+              ? "Select brand first"
+              : modelsLoading
+                ? "Loading models…"
+                : models.length === 0
+                  ? "No models found"
+                  : "All models"}
+          </option>
+          {models.map((model) => (
+            <option
+              key={`${model.name}-${model.modelNumber || ""}`}
+              value={model.name}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+              {model.name}
+              {model.modelNumber ? ` (${model.modelNumber})` : ""}
+            </option>
+          ))}
+        </select>
+      </div>
 
-          {/* Search */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Search
-            </label>
-            <input
-              type="search"
-              placeholder="Name, brand, model..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
-            />
-          </div>
-
-          {/* Device Type */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Device Type
-            </label>
-            <select
-              value={selectedDeviceCategory}
-              onChange={(e) => handleDeviceCategoryChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
-            >
-              <option value="">All Devices</option>
-              {deviceCategories.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.icon ? `${cat.icon} ` : ""}
-                  {cat.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Brand */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Brand
-            </label>
-            <select
-              value={selectedBrand}
-              onChange={(e) => handleBrandChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400"
-            >
-              <option value="">All Brands</option>
-              {brands.map((brand) => (
-                <option key={brand._id} value={brand.name}>
-                  {brand.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Model */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Model
-            </label>
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              disabled={!selectedBrandSlug}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white text-sm text-gray-900 hover:border-gray-400 disabled:bg-gray-50 disabled:text-gray-400"
-            >
-              <option value="">
-                {!selectedBrand
-                  ? "Select brand first"
-                  : modelsLoading
-                    ? "Loading models..."
-                    : models.length === 0
-                      ? "No models found"
-                      : "All Models"}
-              </option>
-              {models.map((model) => (
-                <option
-                  key={`${model.name}-${model.modelNumber || ""}`}
-                  value={model.name}
-                >
-                  {model.name}
-                  {model.modelNumber ? ` (${model.modelNumber})` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Part Type */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Part Type
-            </label>
-            <div className="space-y-1 max-h-48 overflow-y-auto pr-2">
-              {partTypes.length > 1 && (
-                <label className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition">
-                  <input
-                    type="radio"
-                    name="partType"
-                    value=""
-                    checked={selectedPartType === ""}
-                    onChange={(e) => setSelectedPartType(e.target.value)}
-                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">All Types</span>
-                </label>
-              )}
-              {partTypes.map((partType) => (
-                <label
-                  key={partType.value}
-                  className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition"
-                >
-                  <input
-                    type="radio"
-                    name="partType"
-                    value={partType.value}
-                    checked={selectedPartType === partType.value}
-                    onChange={(e) => setSelectedPartType(e.target.value)}
-                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-base">{partType.icon}</span>
-                  <span className="text-sm text-gray-700">
-                    {partType.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Condition */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Condition
-            </label>
-            <div className="space-y-1">
-              <label className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition">
-                <input
-                  type="radio"
-                  name="condition"
-                  value=""
-                  checked={selectedCondition === ""}
-                  onChange={(e) => setSelectedCondition(e.target.value)}
-                  className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">All</span>
-              </label>
-              {conditions.map((condition) => (
-                <label
-                  key={condition.value}
-                  className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-blue-50/80 cursor-pointer transition"
-                >
-                  <input
-                    type="radio"
-                    name="condition"
-                    value={condition.value}
-                    checked={selectedCondition === condition.value}
-                    onChange={(e) => setSelectedCondition(e.target.value)}
-                    className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {condition.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Price Range */}
-          <div className="mb-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Price Range (₹)
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+      <div>
+        <label className={fieldLabelClasses}>Part type</label>
+        <div className="space-y-0.5 max-h-48 overflow-y-auto pr-1">
+          {partTypes.length > 1 && (
+            <label className="flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors">
               <input
-                type="number"
-                placeholder="Min"
-                value={priceRange.min}
-                onChange={(e) =>
-                  setPriceRange({ ...priceRange, min: e.target.value })
-                }
-                className="px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm placeholder-gray-500"
+                type="radio"
+                name="partType"
+                value=""
+                checked={selectedPartType === ""}
+                onChange={(e) => setSelectedPartType(e.target.value)}
+                className="h-4 w-4 accent-[var(--brand)]"
               />
-              <input
-                type="number"
-                placeholder="Max"
-                value={priceRange.max}
-                onChange={(e) =>
-                  setPriceRange({ ...priceRange, max: e.target.value })
-                }
-                className="px-2.5 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm placeholder-gray-500"
-              />
-            </div>
-          </div>
-
-          {activeFilterCount > 0 && (
-            <div className="pt-6 border-t border-gray-200">
-              <button
-                onClick={clearAllFilters}
-                className="w-full text-blue-600 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors duration-200"
-              >
-                Clear All Filters
-              </button>
-            </div>
+              <span className="text-sm text-[var(--ink-secondary)]">All types</span>
+            </label>
           )}
-
-          <div className="pt-6 border-t border-gray-200 lg:hidden">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-200"
+          {partTypes.map((partType) => (
+            <label
+              key={partType.value}
+              className="flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors"
             >
-              Apply Filters
-            </button>
-          </div>
+              <input
+                type="radio"
+                name="partType"
+                value={partType.value}
+                checked={selectedPartType === partType.value}
+                onChange={(e) => setSelectedPartType(e.target.value)}
+                className="h-4 w-4 accent-[var(--brand)]"
+              />
+              <span className="text-base">{partType.icon}</span>
+              <span className="text-sm text-[var(--ink-secondary)]">
+                {partType.label}
+              </span>
+            </label>
+          ))}
         </div>
       </div>
+
+      <div>
+        <label className={fieldLabelClasses}>Condition</label>
+        <div className="space-y-0.5">
+          <label className="flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors">
+            <input
+              type="radio"
+              name="condition"
+              value=""
+              checked={selectedCondition === ""}
+              onChange={(e) => setSelectedCondition(e.target.value)}
+              className="h-4 w-4 accent-[var(--brand)]"
+            />
+            <span className="text-sm font-medium text-[var(--ink-secondary)]">All</span>
+          </label>
+          {conditions.map((condition) => (
+            <label
+              key={condition.value}
+              className="flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors"
+            >
+              <input
+                type="radio"
+                name="condition"
+                value={condition.value}
+                checked={selectedCondition === condition.value}
+                onChange={(e) => setSelectedCondition(e.target.value)}
+                className="h-4 w-4 accent-[var(--brand)]"
+              />
+              <span className="text-sm text-[var(--ink-secondary)]">
+                {condition.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className={fieldLabelClasses}>Price range (₹)</label>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="number"
+            placeholder="Min"
+            value={priceRange.min}
+            onChange={(e) =>
+              setPriceRange({ ...priceRange, min: e.target.value })
+            }
+            className="h-11 px-3 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
+          />
+          <input
+            type="number"
+            placeholder="Max"
+            value={priceRange.max}
+            onChange={(e) =>
+              setPriceRange({ ...priceRange, max: e.target.value })
+            }
+            className="h-11 px-3 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
+          />
+        </div>
+      </div>
+
+      {activeFilterCount > 0 && (
+        <div className="pt-4 border-t border-[var(--border)]">
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            onClick={clearAllFilters}
+          >
+            Clear all filters
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="hidden lg:block rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] p-5">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)] mb-5">
+          <IconFilter className="h-4 w-4 text-[var(--brand)]" />
+          Filters
+        </h2>
+        <FilterFields />
+      </div>
+
+      {/* Mobile floating trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(true)}
+        className="btn-press lg:hidden fixed bottom-[calc(var(--bottom-nav-h)+16px)] right-4 z-40 inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-lg)] hover:bg-[var(--brand-hover)]"
+      >
+        <IconFilter className="h-4.5 w-4.5" />
+        Filters
+        {activeFilterCount > 0 && (
+          <Badge className="border-0 bg-white/25 text-white">
+            {activeFilterCount}
+          </Badge>
+        )}
+      </button>
+
+      {/* Mobile filter sheet */}
+      <Modal open={isOpen} onClose={() => setIsOpen(false)} title="Filters">
+        <FilterFields />
+        <div className="pt-5 mt-5 border-t border-[var(--border)]">
+          <Button type="button" className="w-full" onClick={() => setIsOpen(false)}>
+            Show results
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

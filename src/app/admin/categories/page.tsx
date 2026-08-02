@@ -170,7 +170,7 @@ export default function AdminCategoriesPage() {
           </div>
           <button
             onClick={handleAddNew}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-lg hover:shadow-xl"
+            className="bg-[var(--brand)] text-white px-6 py-3 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold shadow-lg hover:shadow-xl"
           >
             + Add Category
           </button>
@@ -210,7 +210,7 @@ export default function AdminCategoriesPage() {
                       });
                     }}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="e.g., Mobile Screens"
                   />
                 </div>
@@ -226,7 +226,7 @@ export default function AdminCategoriesPage() {
                       setFormData({ ...formData, icon: e.target.value })
                     }
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="📱"
                   />
                 </div>
@@ -242,7 +242,7 @@ export default function AdminCategoriesPage() {
                       setFormData({ ...formData, slug: e.target.value })
                     }
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="mobile-screens"
                   />
                 </div>
@@ -260,7 +260,7 @@ export default function AdminCategoriesPage() {
                         order: parseInt(e.target.value),
                       })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   />
                 </div>
               </div>
@@ -275,7 +275,7 @@ export default function AdminCategoriesPage() {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   placeholder="Optional description"
                 />
               </div>
@@ -288,7 +288,7 @@ export default function AdminCategoriesPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, isActive: e.target.checked })
                   }
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-5 h-5 text-[var(--brand)] border-gray-300 rounded focus:ring-[var(--brand)]"
                 />
                 <label
                   htmlFor="isActive"
@@ -301,7 +301,7 @@ export default function AdminCategoriesPage() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+                  className="bg-[var(--brand)] text-white px-6 py-2 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold"
                 >
                   {editingCategory ? "Update Category" : "Create Category"}
                 </button>
@@ -383,7 +383,7 @@ export default function AdminCategoriesPage() {
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
                         onClick={() => handleEdit(category)}
-                        className="text-blue-600 hover:text-blue-800 font-medium transition"
+                        className="text-[var(--brand)] hover:text-teal-800 font-medium transition"
                       >
                         Edit
                       </button>

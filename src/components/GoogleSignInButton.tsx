@@ -114,11 +114,11 @@ export default function GoogleSignInButton({
         <button
           type="button"
           disabled
-          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 text-gray-400 py-3 rounded-lg font-semibold text-base cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-3 bg-[var(--surface)] border-2 border-[var(--border)] text-[var(--muted)] py-3 rounded-[var(--radius)] font-semibold text-base cursor-not-allowed"
         >
           Continue with Google
         </button>
-        <p className="mt-2 text-xs text-center text-amber-700">
+        <p className="mt-2 text-xs text-center text-[var(--warning)]">
           Set NEXT_PUBLIC_GOOGLE_CLIENT_ID to enable Google Sign-In.
         </p>
       </div>
@@ -128,8 +128,8 @@ export default function GoogleSignInButton({
   return (
     <div className={`relative ${className}`}>
       {busy && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-white/70">
-          <span className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[var(--radius)] bg-[var(--surface)]/70">
+          <span className="w-5 h-5 border-2 border-[var(--border-strong)] border-t-[var(--brand)] rounded-full animate-spin" />
         </div>
       )}
       <div
@@ -137,10 +137,12 @@ export default function GoogleSignInButton({
         className="w-full flex justify-center min-h-[44px] [&>div]:w-full!"
       />
       {!ready && !error && (
-        <p className="text-xs text-center text-gray-400 mt-1">Loading Google…</p>
+        <p className="text-xs text-center text-[var(--muted)] mt-1">
+          Loading Google…
+        </p>
       )}
       {error && (
-        <p className="text-xs text-center text-red-600 mt-1">{error}</p>
+        <p className="text-xs text-center text-[var(--danger)] mt-1">{error}</p>
       )}
     </div>
   );

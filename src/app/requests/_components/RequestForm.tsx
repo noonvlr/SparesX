@@ -233,7 +233,7 @@ export default function RequestForm({
     return (
       <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 flex items-center justify-center min-h-[280px]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+          <div className="w-12 h-12 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading...</p>
         </div>
       </div>
@@ -244,7 +244,7 @@ export default function RequestForm({
     return (
       <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div className="text-center max-w-md mx-auto py-6">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-4">
+          <div className="w-14 h-14 rounded-2xl bg-[var(--brand-soft)] text-[var(--brand)] flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
@@ -259,7 +259,7 @@ export default function RequestForm({
               onClick={() =>
                 router.push(`/login?next=${encodeURIComponent("/requests?tab=submit")}`)
               }
-              className="py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition active:scale-95"
+              className="py-3 rounded-xl bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] transition active:scale-95"
             >
               Login
             </button>
@@ -333,7 +333,7 @@ export default function RequestForm({
       {/* Step 1: Device Category */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+          <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
             1
           </div>
           <label className="text-sm font-semibold text-gray-800">
@@ -357,8 +357,8 @@ export default function RequestForm({
                 }
                 className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
                   form.deviceCategory === cat.value
-                    ? "border-blue-600 bg-blue-600 text-white shadow-md"
-                    : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50"
+                    ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-md"
+                    : "border-gray-300 bg-white text-gray-700 hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
                 }`}
               >
                 <div className="text-base mb-1">{cat.icon}</div>
@@ -371,9 +371,9 @@ export default function RequestForm({
 
       {/* Step 2: Brand & Model */}
       {form.deviceCategory && (
-        <div className="p-6 bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 rounded-lg border-2 border-blue-300 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="p-6 bg-gradient-to-br from-[var(--brand-soft)] via-[var(--brand-soft)] to-teal-50 rounded-lg border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+            <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
               2
             </div>
             <h3 className="text-sm font-semibold text-blue-900">Choose Brand & Model</h3>
@@ -395,7 +395,7 @@ export default function RequestForm({
               required
             />
             {form.brand && (
-              <div className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+              <div className="mt-2 inline-block bg-[var(--brand-soft)]0 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
                 ✓ {form.brand}
               </div>
             )}
@@ -409,7 +409,7 @@ export default function RequestForm({
                       e.preventDefault();
                       handleBrandSelect(brand);
                     }}
-                    className="w-full px-4 py-3 text-left hover:bg-blue-50 font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                    className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
                   >
                     {brand.name}
                   </button>
@@ -478,7 +478,7 @@ export default function RequestForm({
                       e.preventDefault();
                       handlePartTypeSelect(part);
                     }}
-                    className="w-full px-4 py-3 text-left hover:bg-blue-50 font-medium text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center gap-2"
+                    className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-gray-700 border-b border-gray-100 last:border-b-0 flex items-center gap-2"
                   >
                     <span>{part.icon}</span>
                     <span>{part.label}</span>
@@ -514,7 +514,7 @@ export default function RequestForm({
           !form.deviceModel ||
           !form.partType
         }
-        className="w-full rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 font-semibold hover:shadow-lg transition disabled:opacity-50 active:scale-[0.99]"
+        className="w-full rounded-lg bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] text-white py-3.5 font-semibold hover:shadow-lg transition disabled:opacity-50 active:scale-[0.99]"
       >
         {loading ? "Submitting..." : "Submit Request"}
       </button>

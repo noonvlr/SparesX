@@ -1,9 +1,10 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import ProductFilters from "./ProductFilters";
+import ProductFilters, { ProductSearchBar } from "./ProductFilters";
 import ProductCard from "@/components/ProductCard";
+import { EmptyState, PageHeader, Skeleton } from "@/components/ui/Card";
 
 export default function ProductPageContent() {
   const searchParams = useSearchParams();
@@ -38,56 +39,66 @@ export default function ProductPageContent() {
     fetchProducts();
   }, [searchParams]);
 
+  const productNames = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          products.map((p) => p?.name).filter((name): name is string => Boolean(name)),
+        ),
+      ),
+    [products],
+  );
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 text-gray-900">
-            Browse Products
-          </h1>
-          <p className="text-gray-600 text-base sm:text-lg">
-            Discover quality mobile spare parts from verified technicians
-          </p>
+    <main className="min-h-screen bg-[var(--surface-2)]">
+      <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        <PageHeader
+          title="Browse products"
+          description="Discover quality mobile spare parts from verified technicians"
+        />
+
+        <div className="mb-6">
+          <ProductSearchBar productNames={productNames} />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="lg:w-80 lg:flex-shrink-0">
-            <div className="lg:sticky lg:top-8">
-              <Suspense fallback={null}>
-                <ProductFilters />
-              </Suspense>
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <div className="lg:w-72 lg:flex-shrink-0">
+            <div className="lg:sticky lg:top-4">
+              <ProductFilters />
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="mb-6 flex items-center justify-between">
-              <p className="text-gray-600">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-[var(--muted)]">
                 {loading
-                  ? "Loading..."
+                  ? "Loading…"
                   : `${total} product${total !== 1 ? "s" : ""} found`}
               </p>
             </div>
 
             {loading ? (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
+                {Array.from({ length: 6 }).map((_, i) => (
                   <div
                     key={i}
-                    className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 animate-pulse"
+                    className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
                   >
-                    <div className="w-full aspect-square bg-gray-200" />
-                    <div className="p-4 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded" />
-                      <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                    <div className="p-3.5 sm:p-4 space-y-2.5">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-2/3" />
+                      <Skeleton className="h-6 w-1/2 mt-1" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : products.length === 0 ? (
-              <div className="text-center py-16 text-gray-500 bg-white rounded-xl shadow-md border border-gray-100">
-                <p className="text-lg font-medium">No products match your filters</p>
-                <p className="text-sm mt-2">Try adjusting your search criteria</p>
-              </div>
+              <EmptyState
+                className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+                title="No products match your filters"
+                description="Try adjusting your search criteria or clearing some filters."
+              />
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
                 {products.map((product: any) => (

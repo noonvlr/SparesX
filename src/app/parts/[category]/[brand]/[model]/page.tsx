@@ -77,7 +77,7 @@ export default async function PartsPage({
                 <div className="text-sm text-gray-500 mt-1">
                   {product.category} • {product.condition}
                 </div>
-                <div className="text-blue-600 font-bold mt-2">
+                <div className="text-[var(--brand)] font-bold mt-2">
                   ₹{product.price?.toLocaleString()}
                 </div>
               </Link>

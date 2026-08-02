@@ -178,7 +178,7 @@ export default function RateSellerModal({
               type="button"
               disabled={submitting}
               onClick={submit}
-              className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+              className="w-full py-3 rounded-xl bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50"
             >
               {submitting
                 ? "Submitting…"

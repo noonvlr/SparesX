@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card } from "@/components/ui/Card";
 
 export default function DashboardStats() {
   const [stats, setStats] = useState({
@@ -36,30 +37,36 @@ export default function DashboardStats() {
   const display = (value: number) => (stats.loading ? "…" : value);
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-5 md:p-8 mb-6 md:mb-8">
-      <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-100">
+    <Card className="p-5 md:p-8 mb-6 md:mb-8">
+      <h2 className="text-lg md:text-2xl font-semibold text-[var(--ink)] mb-6 pb-4 border-b border-[var(--border)]">
         Your Statistics
       </h2>
       <div className="grid grid-cols-3 gap-3 md:gap-4">
-        <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200">
-          <p className="text-xs font-semibold text-blue-700 mb-2">Listings</p>
-          <p className="text-2xl md:text-3xl font-bold text-blue-900">
+        <div className="p-3 md:p-4 rounded-[var(--radius)] bg-[var(--brand-soft)] border border-[var(--border)]">
+          <p className="text-xs font-semibold text-[var(--brand-hover)] mb-2">
+            Listings
+          </p>
+          <p className="text-2xl md:text-3xl font-semibold text-[var(--ink)]">
             {display(stats.listings)}
           </p>
         </div>
-        <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-green-50 to-green-100 border border-green-200">
-          <p className="text-xs font-semibold text-green-700 mb-2">Active</p>
-          <p className="text-2xl md:text-3xl font-bold text-green-900">
+        <div className="p-3 md:p-4 rounded-[var(--radius)] bg-[var(--success-soft)] border border-[var(--border)]">
+          <p className="text-xs font-semibold text-[var(--success)] mb-2">
+            Active
+          </p>
+          <p className="text-2xl md:text-3xl font-semibold text-[var(--ink)]">
             {display(stats.active)}
           </p>
         </div>
-        <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200">
-          <p className="text-xs font-semibold text-purple-700 mb-2">Pending</p>
-          <p className="text-2xl md:text-3xl font-bold text-purple-900">
+        <div className="p-3 md:p-4 rounded-[var(--radius)] bg-[var(--warning-soft)] border border-[var(--border)]">
+          <p className="text-xs font-semibold text-[var(--warning)] mb-2">
+            Pending
+          </p>
+          <p className="text-2xl md:text-3xl font-semibold text-[var(--ink)]">
             {display(stats.pending)}
           </p>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

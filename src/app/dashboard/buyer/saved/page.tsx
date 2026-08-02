@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SavedItemsClient from "./SavedItemsClient";
+import { PageHeader } from "@/components/ui/Card";
 
 export const metadata: Metadata = {
   title: "Saved Items - SparesX",
@@ -13,14 +14,12 @@ export const metadata: Metadata = {
 
 export default function BuyerSavedPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <main className="min-h-screen bg-[var(--surface-2)]">
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Saved Items</h1>
-          <p className="text-gray-600">
-            Listings you saved for later. Remove anytime or open a product to contact the seller.
-          </p>
-        </header>
+        <PageHeader
+          title="Saved Items"
+          description="Listings you saved for later. Remove anytime or open a product to contact the seller."
+        />
         <SavedItemsClient />
       </section>
     </main>

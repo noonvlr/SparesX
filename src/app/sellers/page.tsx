@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import TrustBadges from "@/components/TrustBadges";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
+import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
 
 export const metadata: Metadata = {
   title: "Sellers",
@@ -48,23 +49,20 @@ export default async function SellersPage() {
   const sellers = data.sellers || [];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-            Sellers
-          </h1>
-          <p className="text-gray-600 text-base sm:text-lg">
-            Look for verification (blue), reputation (gold), and special (purple)
-            badges when choosing a seller.
-          </p>
-        </header>
+    <main className="min-h-screen bg-[var(--surface-2)]">
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+        <PageHeader
+          title="Sellers"
+          description="Look for verification (teal), reputation (gold), and special (purple) badges when choosing a seller."
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {sellers.length === 0 ? (
-            <div className="col-span-full text-center py-16 text-gray-500">
-              No sellers found yet.
-            </div>
+            <EmptyState
+              className="col-span-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+              title="No sellers found yet"
+              description="Check back soon as verified technicians join SparesX."
+            />
           ) : (
             sellers.map(
               (seller: {
@@ -86,15 +84,12 @@ export default async function SellersPage() {
                 badges?: import("@/lib/badges/catalog").PublicBadge[];
                 activeBadgeKeys?: string[];
               }) => (
-                <article
-                  key={seller._id}
-                  className="bg-white border border-gray-100 rounded-xl shadow-sm p-5"
-                >
+                <Card key={seller._id} hover className="p-5">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div>
                       <Link
                         href={`/u/${seller._id}`}
-                        className="text-lg font-semibold text-gray-900 hover:text-blue-700"
+                        className="text-lg font-semibold text-[var(--ink)] hover:text-[var(--brand-hover)]"
                       >
                         {seller.name}
                       </Link>
@@ -120,11 +115,11 @@ export default async function SellersPage() {
                     />
                   </div>
                   {(seller.city || seller.state) && (
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-[var(--muted)] mt-1">
                       {[seller.city, seller.state].filter(Boolean).join(", ")}
                     </p>
                   )}
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-[var(--muted)] mt-2">
                     Active since{" "}
                     {new Date(seller.createdAt).toLocaleDateString("en-US", {
                       year: "numeric",
@@ -133,7 +128,7 @@ export default async function SellersPage() {
                       timeZone: "UTC",
                     })}
                   </p>
-                </article>
+                </Card>
               ),
             )
           )}

@@ -61,14 +61,14 @@ export default function PasswordSetupBanner() {
   return (
     <Link
       href="/technician/profile#security"
-      className="block bg-sky-50 border-b border-sky-100 hover:bg-sky-100/80 transition-colors"
+      className="block bg-[var(--brand-soft)] border-b border-[var(--brand-muted)] hover:bg-[var(--brand-muted)]/60 transition-colors"
     >
-      <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-sky-950">
+      <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-[var(--brand-hover)]">
         <p>
           Set a password so you can also sign in with email. Google Sign-In
           still works.
         </p>
-        <span className="font-semibold text-sky-900 underline underline-offset-2 shrink-0">
+        <span className="font-semibold underline underline-offset-2 shrink-0">
           Set password
         </span>
       </div>

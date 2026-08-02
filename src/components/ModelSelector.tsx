@@ -167,7 +167,7 @@ export default function ModelSelector({
                     setOpen(false);
                     setConfirmNew(false);
                   }}
-                  className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                  className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
                 >
                   {model.name}{" "}
                   {model.modelNumber && (
@@ -215,7 +215,7 @@ export default function ModelSelector({
                     handleUseTypedModel();
                   }}
                   disabled={creating}
-                  className="w-full px-3 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-60"
+                  className="w-full px-3 py-2.5 rounded-lg bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
                 >
                   {suggestions.length > 0
                     ? `Continue with “${searchValue.trim()}”`
@@ -234,7 +234,7 @@ export default function ModelSelector({
                       createModel(searchValue.trim());
                     }}
                     disabled={creating}
-                    className="w-full px-3 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-60"
+                    className="w-full px-3 py-2.5 rounded-lg bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
                   >
                     {creating
                       ? "Saving model..."

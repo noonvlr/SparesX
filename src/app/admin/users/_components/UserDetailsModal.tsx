@@ -263,7 +263,7 @@ export default function UserDetailsModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] text-white p-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             {user.profilePicture ? (
               <img
@@ -272,13 +272,13 @@ export default function UserDetailsModal({
                 className="w-16 h-16 rounded-full object-cover border-4 border-white"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-white text-blue-600 flex items-center justify-center text-2xl font-bold">
+              <div className="w-16 h-16 rounded-full bg-white text-[var(--brand)] flex items-center justify-center text-2xl font-bold">
                 {user.name.charAt(0).toUpperCase()}
               </div>
             )}
             <div>
               <h2 className="text-2xl font-bold">{user.name}</h2>
-              <p className="text-blue-100">{user.email}</p>
+              <p className="text-[var(--brand-muted)]">{user.email}</p>
             </div>
           </div>
           <button
@@ -429,7 +429,7 @@ export default function UserDetailsModal({
                             <div className="flex gap-1 shrink-0">
                               <button
                                 type="button"
-                                className="text-[10px] font-semibold text-blue-700 px-2 py-1 rounded border border-blue-100"
+                                className="text-[10px] font-semibold text-[var(--brand-hover)] px-2 py-1 rounded border border-[var(--brand-muted)]"
                                 onClick={async () => {
                                   const stars = prompt(
                                     "Stars 1–5",
@@ -579,7 +579,7 @@ export default function UserDetailsModal({
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="flex-1 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                  className="flex-1 px-6 py-2.5 bg-[var(--brand)] text-white font-medium rounded-lg hover:bg-[var(--brand-hover)] transition"
                 >
                   Edit User
                 </button>
@@ -722,7 +722,7 @@ export default function UserDetailsModal({
                       value={editData.profilePicture}
                       onChange={handleChange}
                       placeholder="https://example.com/image.jpg"
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-1"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent mt-1"
                     />
                   </div>
                 </div>
@@ -738,7 +738,7 @@ export default function UserDetailsModal({
                     value={editData.name}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   />
                 </div>
 
@@ -753,7 +753,7 @@ export default function UserDetailsModal({
                     value={editData.email}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Changing email clears email verification until re-confirmed.
@@ -770,7 +770,7 @@ export default function UserDetailsModal({
                       name="countryCode"
                       value={editData.countryCode}
                       onChange={handleChange}
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     >
                       <option value="+91">🇮🇳 +91</option>
                       <option value="+1">🇺🇸 +1</option>
@@ -789,7 +789,7 @@ export default function UserDetailsModal({
                       onChange={handleChange}
                       maxLength={10}
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -806,7 +806,7 @@ export default function UserDetailsModal({
                     onChange={handleChange}
                     maxLength={10}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   />
                 </div>
 
@@ -822,7 +822,7 @@ export default function UserDetailsModal({
                     rows={3}
                     maxLength={500}
                     placeholder="Public bio shown on their profile"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     {(editData.about || "").length}/500
@@ -840,7 +840,7 @@ export default function UserDetailsModal({
                     onChange={handleChange}
                     rows={3}
                     required
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   />
                 </div>
 
@@ -857,7 +857,7 @@ export default function UserDetailsModal({
                       onChange={handleChange}
                       maxLength={6}
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -870,7 +870,7 @@ export default function UserDetailsModal({
                       value={editData.city}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -883,7 +883,7 @@ export default function UserDetailsModal({
                       value={editData.state}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -897,7 +897,7 @@ export default function UserDetailsModal({
                     name="role"
                     value={editData.role}
                     onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                   >
                     <option value="technician">Technician</option>
                     <option value="admin">Admin</option>
@@ -912,7 +912,7 @@ export default function UserDetailsModal({
                     name="isBlocked"
                     checked={editData.isBlocked}
                     onChange={handleChange}
-                    className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-5 h-5 text-[var(--brand)] border-gray-300 rounded focus:ring-[var(--brand)]"
                   />
                   <label
                     htmlFor="isBlocked"
@@ -941,8 +941,8 @@ export default function UserDetailsModal({
                 </div>
 
                 {/* Verification badges */}
-                <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-3">
-                  <p className="text-sm font-semibold text-blue-950">
+                <div className="p-4 bg-[var(--brand-soft)] border border-[var(--brand-muted)] rounded-lg space-y-3">
+                  <p className="text-sm font-semibold text-teal-950">
                     Verification badges
                   </p>
                   {(
@@ -961,9 +961,9 @@ export default function UserDetailsModal({
                         name={name}
                         checked={!!editData[name]}
                         onChange={handleChange}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded"
+                        className="w-4 h-4 text-[var(--brand)] border-gray-300 rounded"
                       />
-                      <label htmlFor={name} className="text-sm text-blue-950">
+                      <label htmlFor={name} className="text-sm text-teal-950">
                         {label}
                       </label>
                     </div>
@@ -1072,7 +1072,7 @@ export default function UserDetailsModal({
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-6 py-2.5 bg-[var(--brand)] text-white font-medium rounded-lg hover:bg-[var(--brand-hover)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? "Saving..." : "Save Changes"}
                   </button>
@@ -1133,7 +1133,7 @@ export default function UserDetailsModal({
                     type="button"
                     onClick={handleCropConfirm}
                     disabled={uploadingImage}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-[var(--brand)] text-white rounded-lg hover:bg-[var(--brand-hover)] disabled:opacity-50"
                   >
                     {uploadingImage ? "Uploading..." : "Save"}
                   </button>

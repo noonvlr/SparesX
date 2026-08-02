@@ -8,7 +8,7 @@ export default function MessagesPage() {
     <Suspense
       fallback={
         <main className="min-h-[50vh] flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
         </main>
       }
     >

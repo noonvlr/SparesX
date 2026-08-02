@@ -65,7 +65,7 @@ export default function AdminReportsPage() {
           <Link
             key={row.label}
             href={row.href}
-            className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 hover:border-blue-200 transition"
+            className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 hover:border-teal-200 transition"
           >
             <div className="text-sm text-gray-500">{row.label}</div>
             <div className="text-3xl font-bold mt-2 text-gray-900">

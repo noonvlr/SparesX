@@ -23,7 +23,7 @@ export default function RequestsTabs({
           prefetch
           className={`px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
             active === item.key
-              ? "bg-blue-600 text-white shadow-md scale-[1.02]"
+              ? "bg-[var(--brand)] text-white shadow-md scale-[1.02]"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
           }`}
         >

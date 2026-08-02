@@ -3,6 +3,8 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { PageHeader, Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 const TYPES = [
   { value: "bug", label: "Bug / Error" },
@@ -15,7 +17,8 @@ const TYPES = [
 
 const STATUS_STYLE: Record<string, string> = {
   open: "bg-amber-50 text-amber-700 border-amber-200",
-  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
+  in_progress:
+    "bg-[var(--brand-soft)] text-[var(--brand-hover)] border-[var(--brand-muted)]",
   resolved: "bg-green-50 text-green-700 border-green-200",
   closed: "bg-gray-50 text-gray-600 border-gray-200",
 };
@@ -163,7 +166,7 @@ function SupportPageInner() {
   if (!authChecked) {
     return (
       <main className="min-h-[50vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
       </main>
     );
   }
@@ -173,63 +176,60 @@ function SupportPageInner() {
       typeof window !== "undefined" ? window.location.search : "";
     const next = `/support${qs}`;
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12 px-4">
-        <div className="max-w-lg mx-auto bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Contact Admin</h1>
-          <p className="text-gray-600 mb-6">
+      <main className="min-h-screen bg-[var(--surface-2)] py-12 px-4">
+        <Card className="max-w-lg mx-auto p-8 text-center">
+          <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">
+            Contact Admin
+          </h1>
+          <p className="text-[var(--muted)] mb-6">
             Login to raise a bug report, change request, or issue with the SparesX
             team.
           </p>
           <div className="grid grid-cols-2 gap-3">
-            <button
+            <Button
               type="button"
               onClick={() =>
                 router.push(`/login?next=${encodeURIComponent(next)}`)
               }
-              className="py-3 rounded-xl bg-blue-600 text-white font-semibold"
             >
               Login
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
               onClick={() =>
                 router.push(`/register?next=${encodeURIComponent(next)}`)
               }
-              className="py-3 rounded-xl border border-gray-300 font-semibold"
             >
               Sign up
-            </button>
+            </Button>
           </div>
-        </div>
+        </Card>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8 sm:py-10 px-4">
+    <main className="min-h-screen bg-[var(--surface-2)] py-8 sm:py-10 px-4">
       <div className="max-w-5xl mx-auto space-y-8">
-        <header>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Support & Admin
-          </h1>
-          <p className="text-gray-600">
-            Report bugs, request changes, or flag misuse. Admins will reply on
-            this page.
-          </p>
-        </header>
+        <PageHeader
+          title="Support & Admin"
+          description="Report bugs, request changes, or flag misuse. Admins will reply on this page."
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           <form
             onSubmit={handleSubmit}
-            className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6 space-y-4"
+            className="lg:col-span-3 space-y-4"
           >
-            <h2 className="text-lg font-bold text-gray-900">New request</h2>
+            <Card className="p-5 sm:p-6 space-y-4">
+            <h2 className="text-lg font-bold text-[var(--ink)]">New request</h2>
             {reporter && (
-              <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3 text-sm text-gray-700">
-                <p className="font-semibold text-gray-900 mb-0.5">
+              <div className="rounded-[var(--radius)] bg-[var(--surface-2)] border border-[var(--border)] px-4 py-3 text-sm text-[var(--ink-secondary)]">
+                <p className="font-semibold text-[var(--ink)] mb-0.5">
                   Sending as {reporter.name}
                 </p>
-                <p className="text-gray-500">{reporter.email}</p>
+                <p className="text-[var(--muted)]">{reporter.email}</p>
               </div>
             )}
             {form.type === "abuse" &&
@@ -265,7 +265,7 @@ function SupportPageInner() {
             )}
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
                 Type
               </label>
               <select
@@ -273,7 +273,7 @@ function SupportPageInner() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, type: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--ink)]"
               >
                 {TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -284,7 +284,7 @@ function SupportPageInner() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
                 Subject
               </label>
               <input
@@ -292,7 +292,7 @@ function SupportPageInner() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, subject: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--ink)]"
                 placeholder="Short summary"
                 maxLength={140}
                 required
@@ -300,7 +300,7 @@ function SupportPageInner() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
                 Details
               </label>
               <textarea
@@ -308,7 +308,7 @@ function SupportPageInner() {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, message: e.target.value }))
                 }
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm min-h-[140px]"
+                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2.5 text-sm min-h-[140px] bg-[var(--surface)] text-[var(--ink)]"
                 placeholder={
                   form.type === "abuse"
                     ? "Describe the misuse: what happened, when, and any evidence…"
@@ -319,30 +319,31 @@ function SupportPageInner() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
-            >
+            <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? "Sending…" : "Send to admin"}
-            </button>
+            </Button>
+            </Card>
           </form>
 
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Your tickets</h2>
+          <Card className="lg:col-span-2 p-5 sm:p-6">
+            <h2 className="text-lg font-bold text-[var(--ink)] mb-4">
+              Your tickets
+            </h2>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading…</p>
+              <p className="text-sm text-[var(--muted)]">Loading…</p>
             ) : tickets.length === 0 ? (
-              <p className="text-sm text-gray-500">No support requests yet.</p>
+              <p className="text-sm text-[var(--muted)]">
+                No support requests yet.
+              </p>
             ) : (
               <ul className="space-y-3 max-h-[28rem] overflow-y-auto pr-1">
                 {tickets.map((t) => (
                   <li
                     key={t._id}
-                    className="rounded-xl border border-gray-100 p-3 text-sm"
+                    className="rounded-[var(--radius)] border border-[var(--border)] p-3 text-sm"
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="font-semibold text-gray-900 line-clamp-2">
+                      <p className="font-semibold text-[var(--ink)] line-clamp-2">
                         {t.subject}
                       </p>
                       <span
@@ -353,11 +354,11 @@ function SupportPageInner() {
                         {String(t.status || "").replace("_", " ")}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 capitalize mb-2">
+                    <p className="text-xs text-[var(--muted)] capitalize mb-2">
                       {String(t.type || "").replace("_", " ")}
                     </p>
                     {t.adminReply && (
-                      <div className="rounded-lg bg-blue-50 text-blue-900 px-3 py-2 text-xs">
+                      <div className="rounded-lg bg-[var(--brand-soft)] text-[var(--brand-hover)] px-3 py-2 text-xs">
                         <span className="font-semibold">Admin:</span>{" "}
                         {t.adminReply}
                       </div>
@@ -366,7 +367,7 @@ function SupportPageInner() {
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     </main>
@@ -378,7 +379,7 @@ export default function SupportPage() {
     <Suspense
       fallback={
         <main className="min-h-[50vh] flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+          <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
         </main>
       }
     >

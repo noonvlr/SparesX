@@ -9,6 +9,10 @@ import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 import RateSellerModal from "@/components/RateSellerModal";
+import { AuthPromptSheet } from "@/components/ContactSheet";
+import { Card, Badge } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/ui/cn";
 
 interface Seller {
   _id?: string;
@@ -388,19 +392,19 @@ export default function ProductDetail({
   const images = (product.images || []).map(resolveImageUrl).filter(Boolean);
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50 pb-28 lg:pb-10">
+    <main className="min-h-screen bg-[var(--surface-2)] pb-28 lg:pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
           <Link
             href="/products"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+            className="inline-flex items-center text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors"
           >
-            ← Back to Products
+            ← Back to products
           </Link>
           {isOwner && (
             <Link
               href={`/technician/products/edit/${product._id}`}
-              className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+              className="inline-flex items-center gap-2 rounded-[var(--radius)] bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)] transition-colors"
             >
               Edit listing
             </Link>
@@ -409,14 +413,15 @@ export default function ProductDetail({
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           {/* Gallery */}
-          <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-6">
-            <div className="relative aspect-square rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 overflow-hidden flex items-center justify-center">
+          <Card className="p-4 sm:p-6">
+            <div className="relative aspect-square rounded-[var(--radius)] bg-[var(--surface-3)] border border-[var(--border)] overflow-hidden flex items-center justify-center">
               {product.priceNegotiable && (
-                <div className="absolute top-0 right-0 z-10 overflow-hidden w-28 h-28 pointer-events-none">
-                  <div className="absolute top-4 -right-8 w-32 rotate-45 bg-emerald-500 text-white text-xs font-bold tracking-wide text-center py-1.5 shadow-md">
-                    Negotiable
-                  </div>
-                </div>
+                <Badge
+                  tone="success"
+                  className="absolute top-3 right-3 z-10 shadow-sm"
+                >
+                  Negotiable
+                </Badge>
               )}
               {selectedImage ? (
                 <img
@@ -425,7 +430,7 @@ export default function ProductDetail({
                   className="w-full h-full object-contain p-4"
                 />
               ) : (
-                <p className="text-gray-400">No image available</p>
+                <p className="text-[var(--muted)]">No image available</p>
               )}
             </div>
             {images.length > 1 && (
@@ -435,66 +440,54 @@ export default function ProductDetail({
                     key={`${img}-${idx}`}
                     type="button"
                     onClick={() => setSelectedImage(img)}
-                    className={`aspect-square rounded-lg border-2 overflow-hidden bg-white ${
+                    className={cn(
+                      "aspect-square rounded-[var(--radius-sm)] border-2 overflow-hidden bg-[var(--surface)] transition-colors",
                       selectedImage === img
-                        ? "border-blue-600 ring-2 ring-blue-200"
-                        : "border-gray-200"
-                    }`}
+                        ? "border-[var(--brand)] ring-2 ring-[var(--brand-muted)]"
+                        : "border-[var(--border)]",
+                    )}
                   >
                     <img
                       src={img}
                       alt={`${product.name} ${idx + 1}`}
                       className="w-full h-full object-contain p-1"
+                      loading="lazy"
                     />
                   </button>
                 ))}
               </div>
             )}
-          </section>
+          </Card>
 
           {/* Details */}
           <section className="space-y-5">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7">
-              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+            <Card className="p-5 sm:p-7">
+              <h1 className="text-2xl sm:text-4xl font-semibold text-[var(--ink)] leading-tight mb-4 tracking-tight">
                 {product.name}
               </h1>
 
               <div className="flex flex-wrap gap-2 mb-5">
-                {product.brand && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                    {product.brand}
-                  </span>
-                )}
+                {product.brand && <Badge tone="brand">{product.brand}</Badge>}
                 {product.deviceModel && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    {product.deviceModel}
-                  </span>
+                  <Badge tone="brand">{product.deviceModel}</Badge>
                 )}
                 {product.partType && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100">
-                    {product.partType}
-                  </span>
+                  <Badge tone="neutral">{product.partType}</Badge>
                 )}
                 {(product.deviceCategory || product.category) && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200">
+                  <Badge tone="neutral">
                     {product.deviceCategory || product.category}
-                  </span>
+                  </Badge>
                 )}
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    product.condition === "new"
-                      ? "bg-green-50 text-green-700 border-green-200"
-                      : "bg-amber-50 text-amber-700 border-amber-200"
-                  }`}
-                >
+                <Badge tone={product.condition === "new" ? "success" : "warning"}>
                   {product.condition}
-                </span>
+                </Badge>
               </div>
 
-              <div className="rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white p-5 mb-5">
-                <p className="text-sm text-blue-100 mb-1">Price</p>
+              <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-white p-5 mb-5">
+                <p className="text-sm text-white/80 mb-1">Price</p>
                 <div className="flex items-baseline gap-3 flex-wrap">
-                  <p className="text-3xl sm:text-4xl font-bold">
+                  <p className="text-3xl sm:text-4xl font-semibold tracking-tight">
                     ₹{product.price?.toLocaleString()}
                   </p>
                 </div>
@@ -505,11 +498,12 @@ export default function ProductDetail({
                   type="button"
                   onClick={handleToggleSave}
                   disabled={saveLoading}
-                  className={`mb-5 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition disabled:opacity-60 ${
+                  className={cn(
+                    "btn-press mb-5 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[var(--radius)] text-sm font-semibold border transition-colors disabled:opacity-60",
                     isSaved
-                      ? "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
-                      : "bg-white text-gray-800 border-gray-200 hover:border-blue-300 hover:text-blue-700"
-                  }`}
+                      ? "bg-[var(--warning-soft)] text-[var(--warning)] border-orange-200 hover:bg-orange-100"
+                      : "bg-[var(--surface)] text-[var(--ink-secondary)] border-[var(--border-strong)] hover:border-[var(--brand)] hover:text-[var(--brand-hover)]",
+                  )}
                 >
                   <svg
                     className="w-4 h-4"
@@ -533,15 +527,15 @@ export default function ProductDetail({
               )}
 
               <div className="mb-5">
-                <h2 className="text-lg font-bold text-gray-900 mb-2">
+                <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">
                   Description
                 </h2>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                <p className="text-[var(--ink-secondary)] leading-relaxed whitespace-pre-wrap">
                   {product.description}
                 </p>
               </div>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[var(--muted)]">
                 Listed on{" "}
                 {new Date(product.createdAt).toLocaleDateString("en-IN", {
                   year: "numeric",
@@ -549,19 +543,19 @@ export default function ProductDetail({
                   day: "numeric",
                 })}
               </p>
-            </div>
+            </Card>
 
             {/* Seller + contact */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-7">
+            <Card className="p-5 sm:p-7">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <h2 className="text-lg font-bold text-gray-900">Seller</h2>
+                <h2 className="text-lg font-semibold text-[var(--ink)]">Seller</h2>
                 {!isOwner && seller && (
                   <button
                     type="button"
                     onClick={handleReportClick}
                     title="Report misbehaviour"
                     aria-label="Report seller"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 px-2 py-1 rounded-lg hover:bg-rose-50 transition"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--danger)] hover:opacity-80 px-2 py-1 rounded-[var(--radius)] hover:bg-[var(--danger-soft)] transition-colors"
                   >
                     <svg
                       className="w-4 h-4"
@@ -587,12 +581,12 @@ export default function ProductDetail({
                       {seller._id ? (
                         <Link
                           href={`/u/${seller._id}`}
-                          className="font-semibold text-gray-900 hover:text-blue-700"
+                          className="font-semibold text-[var(--ink)] hover:text-[var(--brand-hover)]"
                         >
                           {seller.name}
                         </Link>
                       ) : (
-                        <p className="font-semibold text-gray-900">{seller.name}</p>
+                        <p className="font-semibold text-[var(--ink)]">{seller.name}</p>
                       )}
                       <StarRatingDisplay
                         value={sellerRating.averageRating}
@@ -615,7 +609,7 @@ export default function ProductDetail({
                       />
                     </div>
                     {(seller.city || seller.state) && (
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-[var(--muted)] mt-1">
                         {[seller.city, seller.state].filter(Boolean).join(", ")}
                       </p>
                     )}
@@ -626,46 +620,37 @@ export default function ProductDetail({
                         type="button"
                         onClick={handleWhatsAppClick}
                         disabled={waLoading || waActionLoading}
-                        className={`px-4 py-2.5 rounded-lg text-sm font-semibold transition disabled:opacity-60 ${
-                          waConnect?.unlocked
-                            ? "bg-green-600 text-white hover:bg-green-700"
-                            : waConnect?.status === "pending"
-                              ? "bg-amber-50 text-amber-900 border border-amber-200"
-                              : "bg-green-600 text-white hover:bg-green-700"
-                        }`}
+                        className={cn(
+                          "btn-press px-4 py-2.5 rounded-[var(--radius)] text-sm font-semibold transition-colors disabled:opacity-60",
+                          waConnect?.status === "pending" && !waConnect.unlocked
+                            ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-orange-200"
+                            : "bg-[#25D366] text-white hover:bg-[#1ebe57]",
+                        )}
                       >
                         {waButtonLabel}
                       </button>
-                      <button
-                        type="button"
-                        onClick={handleChatClick}
-                        className="px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition"
-                      >
+                      <Button type="button" onClick={handleChatClick}>
                         In-app chat
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRateClick}
-                        className="px-4 py-2.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-900 text-sm font-semibold hover:bg-amber-100 transition"
-                      >
+                      </Button>
+                      <Button type="button" variant="soft" onClick={handleRateClick}>
                         Rate seller
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Seller details unavailable.</p>
+                <p className="text-sm text-[var(--muted)]">Seller details unavailable.</p>
               )}
 
               {!isLoggedIn && !isOwner && (
-                <p className="mt-4 text-sm text-gray-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                <p className="mt-4 text-sm text-[var(--ink-secondary)] bg-[var(--warning-soft)] border border-orange-100 rounded-[var(--radius)] px-3 py-2">
                   Login or sign up to contact the seller.
                 </p>
               )}
               {isLoggedIn && !isOwner && (
                 <div className="mt-4 space-y-1.5">
                   {waConnect?.unlocked && (
-                    <p className="text-xs text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+                    <p className="text-xs text-[var(--success)] bg-[var(--success-soft)] border border-emerald-100 rounded-[var(--radius)] px-3 py-2">
                       WhatsApp unlocked with this seller
                       {waConnect.maskedNumber
                         ? ` (${waConnect.maskedNumber})`
@@ -675,19 +660,19 @@ export default function ProductDetail({
                     </p>
                   )}
                   {waConnect?.status === "pending" && (
-                    <p className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                    <p className="text-xs text-[var(--warning)] bg-[var(--warning-soft)] border border-orange-100 rounded-[var(--radius)] px-3 py-2">
                       WhatsApp request pending. Once they approve, unlock applies
                       to all their products.
                     </p>
                   )}
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-[var(--muted)]">
                     After chatting with the seller, you can rate their behaviour
                     and response. Spot misuse? Use Report — it opens Support with
                     your details prefilled for admin review.
                   </p>
                 </div>
               )}
-            </div>
+            </Card>
           </section>
         </div>
 
@@ -696,10 +681,10 @@ export default function ProductDetail({
           <section className="mt-10 sm:mt-14">
             <div className="flex items-end justify-between mb-5 gap-3">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+                <h2 className="text-xl sm:text-2xl font-semibold text-[var(--ink)] tracking-tight">
                   Similar products
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[var(--muted)] mt-1">
                   Based on brand, model, part type, and device category
                 </p>
               </div>
@@ -715,17 +700,18 @@ export default function ProductDetail({
 
       {/* Mobile sticky CTAs */}
       {!isOwner && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-3 py-3">
+        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 glass px-3 py-3">
           <div className="max-w-7xl mx-auto grid grid-cols-4 gap-1.5">
             <button
               type="button"
               onClick={handleToggleSave}
               disabled={saveLoading}
-              className={`py-3 rounded-xl font-semibold text-xs border ${
+              className={cn(
+                "btn-press py-3 rounded-[var(--radius)] font-semibold text-xs border",
                 isSaved
-                  ? "bg-amber-50 text-amber-900 border-amber-200"
-                  : "bg-white text-gray-800 border-gray-200"
-              }`}
+                  ? "bg-[var(--warning-soft)] text-[var(--warning)] border-orange-200"
+                  : "bg-[var(--surface)] text-[var(--ink-secondary)] border-[var(--border-strong)]",
+              )}
             >
               {isSaved ? "Saved" : "Save"}
             </button>
@@ -733,25 +719,26 @@ export default function ProductDetail({
               type="button"
               onClick={handleWhatsAppClick}
               disabled={waLoading || waActionLoading}
-              className={`py-3 rounded-xl font-semibold text-xs disabled:opacity-60 ${
+              className={cn(
+                "btn-press py-3 rounded-[var(--radius)] font-semibold text-xs disabled:opacity-60",
                 waConnect?.status === "pending" && !waConnect.unlocked
-                  ? "bg-amber-50 text-amber-900 border border-amber-200"
-                  : "bg-green-600 text-white"
-              }`}
+                  ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-orange-200"
+                  : "bg-[#25D366] text-white",
+              )}
             >
               {waButtonLabel}
             </button>
             <button
               type="button"
               onClick={handleChatClick}
-              className="py-3 rounded-xl bg-blue-600 text-white font-semibold text-xs"
+              className="btn-press py-3 rounded-[var(--radius)] bg-[var(--brand)] text-white font-semibold text-xs hover:bg-[var(--brand-hover)]"
             >
               Chat
             </button>
             <button
               type="button"
               onClick={handleRateClick}
-              className="py-3 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 font-semibold text-xs"
+              className="btn-press py-3 rounded-[var(--radius)] bg-[var(--warning-soft)] text-[var(--warning)] border border-orange-200 font-semibold text-xs"
             >
               Rate
             </button>
@@ -770,52 +757,16 @@ export default function ProductDetail({
         />
       )}
 
-      {/* Auth modal */}
-      {showAuthPrompt && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Login required
-            </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              {authPromptReason === "save"
-                ? "Please login or create an account to save this listing for later."
-                : "Please login or create an account to contact the seller via WhatsApp or in-app chat."}
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    `/login?next=${encodeURIComponent(`/product/${product._id}`)}`,
-                  )
-                }
-                className="py-3 rounded-xl bg-blue-600 text-white font-semibold"
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    `/register?next=${encodeURIComponent(`/product/${product._id}`)}`,
-                  )
-                }
-                className="py-3 rounded-xl border border-gray-300 text-gray-800 font-semibold"
-              >
-                Sign up
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowAuthPrompt(false)}
-              className="mt-4 w-full text-sm text-gray-500 hover:text-gray-700"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      <AuthPromptSheet
+        open={showAuthPrompt}
+        onClose={() => setShowAuthPrompt(false)}
+        nextPath={`/product/${product._id}`}
+        description={
+          authPromptReason === "save"
+            ? "Please login or create an account to save this listing for later."
+            : "Please login or create an account to contact the seller via WhatsApp or in-app chat."
+        }
+      />
     </main>
   );
 }

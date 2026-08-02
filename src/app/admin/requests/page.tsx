@@ -123,7 +123,7 @@ export default function AdminRequestsPage() {
             Moderate spare-part requests — mark fulfilled, close, or delete
           </p>
         </div>
-        <Link href="/requests" className="text-sm text-blue-600 hover:underline">
+        <Link href="/requests" className="text-sm text-[var(--brand)] hover:underline">
           View public board →
         </Link>
       </div>
@@ -143,7 +143,7 @@ export default function AdminRequestsPage() {
             onClick={() => setStatus(value)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
               status === value
-                ? "bg-blue-600 text-white border-blue-600"
+                ? "bg-[var(--brand)] text-white border-[var(--brand)]"
                 : "bg-white text-gray-600 border-gray-200"
             }`}
           >
@@ -167,7 +167,7 @@ export default function AdminRequestsPage() {
         />
         <button
           type="submit"
-          className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold"
+          className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold"
         >
           Search
         </button>
@@ -176,7 +176,7 @@ export default function AdminRequestsPage() {
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
           {loading ? (
             <div className="p-6 text-sm text-gray-500">Loading...</div>
           ) : requests.length === 0 ? (
@@ -189,7 +189,7 @@ export default function AdminRequestsPage() {
                     type="button"
                     onClick={() => setSelected(r)}
                     className={`w-full text-left p-4 hover:bg-gray-50 ${
-                      selected?._id === r._id ? "bg-blue-50" : ""
+                      selected?._id === r._id ? "bg-[var(--brand-soft)]" : ""
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -218,7 +218,7 @@ export default function AdminRequestsPage() {
           )}
         </div>
 
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 min-h-[360px]">
+        <div className="lg:col-span-3 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm p-5 min-h-[360px]">
           {!selected ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">
               Select a request to manage
@@ -250,14 +250,14 @@ export default function AdminRequestsPage() {
                   <p className="font-medium">{selected.name}</p>
                   <a
                     href={`mailto:${selected.email}`}
-                    className="text-blue-600 hover:underline block"
+                    className="text-[var(--brand)] hover:underline block"
                   >
                     {selected.email}
                   </a>
                   {selected.phone && (
                     <a
                       href={`tel:${selected.phone}`}
-                      className="text-blue-600 hover:underline block"
+                      className="text-[var(--brand)] hover:underline block"
                     >
                       {selected.phone}
                     </a>

@@ -130,7 +130,7 @@ export default function ForgotPasswordForm() {
   return (
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="w-16 h-16 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] rounded-[var(--radius-lg)] flex items-center justify-center mx-auto mb-4 shadow-[var(--shadow-md)]">
           <svg
             className="w-8 h-8 text-white"
             fill="none"
@@ -145,8 +145,8 @@ export default function ForgotPasswordForm() {
             />
           </svg>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
-        <p className="text-gray-600">
+        <h1 className="text-3xl font-bold text-[var(--ink)] mb-2">Reset Password</h1>
+        <p className="text-[var(--muted)]">
           {step === "email" && "Enter your email to receive an OTP"}
           {step === "otp" && "Enter the OTP sent to your email"}
           {step === "newPassword" && "Create a new password"}
@@ -154,16 +154,16 @@ export default function ForgotPasswordForm() {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+      <div className="glass rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden">
         <div className="p-6 md:p-8">
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium">
+            <div className="mb-4 p-4 bg-[var(--danger-soft)] border border-[var(--danger)]/20 rounded-[var(--radius)] text-[var(--danger)] text-sm font-medium">
               {error}
             </div>
           )}
 
           {success && step !== "success" && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium">
+            <div className="mb-4 p-4 bg-[var(--success-soft)] border border-[var(--success)]/20 rounded-[var(--radius)] text-[var(--success)] text-sm font-medium">
               {success}
             </div>
           )}
@@ -171,22 +171,22 @@ export default function ForgotPasswordForm() {
           {step === "email" && (
             <form onSubmit={handleRequestOTP} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address <span className="text-red-600">*</span>
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                  Email Address <span className="text-[var(--danger)]">*</span>
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your.email@example.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg"
+                className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] disabled:bg-[var(--muted)] text-white font-semibold py-3 rounded-[var(--radius)] transition-colors"
               >
                 {loading ? "Sending OTP..." : "Send OTP"}
               </button>
@@ -196,8 +196,8 @@ export default function ForgotPasswordForm() {
           {step === "otp" && (
             <form onSubmit={handleVerifyOTP} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  OTP Code <span className="text-red-600">*</span>
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                  OTP Code <span className="text-[var(--danger)]">*</span>
                 </label>
                 <input
                   type="text"
@@ -205,14 +205,14 @@ export default function ForgotPasswordForm() {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                  className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] text-center text-2xl tracking-widest font-mono"
                   required
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg"
+                className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] disabled:bg-[var(--muted)] text-white font-semibold py-3 rounded-[var(--radius)] transition-colors"
               >
                 {loading ? "Verifying..." : "Verify OTP"}
               </button>
@@ -220,7 +220,7 @@ export default function ForgotPasswordForm() {
                 type="button"
                 onClick={handleResendOTP}
                 disabled={!resend.canResend || loading}
-                className="w-full border border-gray-300 text-gray-800 font-medium py-2.5 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full border border-[var(--border-strong)] text-[var(--ink-secondary)] font-medium py-2.5 rounded-[var(--radius)] hover:bg-[var(--surface-2)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {resend.label}
               </button>
@@ -231,7 +231,7 @@ export default function ForgotPasswordForm() {
                   setSuccess("");
                   setError("");
                 }}
-                className="w-full text-blue-600 hover:text-blue-700 font-medium py-2"
+                className="w-full text-[var(--brand)] hover:text-[var(--brand-hover)] font-medium py-2"
               >
                 Back to Email
               </button>
@@ -241,8 +241,8 @@ export default function ForgotPasswordForm() {
           {step === "newPassword" && (
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  New Password <span className="text-red-600">*</span>
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                  New Password <span className="text-[var(--danger)]">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -250,22 +250,22 @@ export default function ForgotPasswordForm() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Create a strong password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg pr-16"
+                    className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] pr-16"
                     minLength={6}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--muted)] text-sm"
                   >
                     {showPassword ? "Hide" : "Show"}
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Confirm Password <span className="text-red-600">*</span>
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
+                  Confirm Password <span className="text-[var(--danger)]">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -273,14 +273,14 @@ export default function ForgotPasswordForm() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg pr-16"
+                    className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] pr-16"
                     minLength={6}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--muted)] text-sm"
                   >
                     {showConfirmPassword ? "Hide" : "Show"}
                   </button>
@@ -289,7 +289,7 @@ export default function ForgotPasswordForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg"
+                className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] disabled:bg-[var(--muted)] text-white font-semibold py-3 rounded-[var(--radius)] transition-colors"
               >
                 {loading ? "Resetting..." : "Reset Password"}
               </button>
@@ -298,15 +298,15 @@ export default function ForgotPasswordForm() {
 
           {step === "success" && (
             <div className="text-center space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-[var(--ink)]">
                 Password Reset Successfully!
               </h2>
-              <p className="text-gray-600">
+              <p className="text-[var(--muted)]">
                 You can now login with your new password.
               </p>
               <button
                 onClick={() => router.push("/login")}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
+                className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] text-white font-semibold py-3 rounded-[var(--radius)] transition-colors"
               >
                 Back to Login
               </button>
@@ -317,9 +317,9 @@ export default function ForgotPasswordForm() {
 
       {step === "email" && (
         <div className="text-center mt-6">
-          <p className="text-gray-600">
+          <p className="text-[var(--muted)]">
             Remember your password?{" "}
-            <a href="/login" className="text-blue-600 font-semibold">
+            <a href="/login" className="text-[var(--brand)] font-semibold hover:text-[var(--brand-hover)]">
               Login here
             </a>
           </p>

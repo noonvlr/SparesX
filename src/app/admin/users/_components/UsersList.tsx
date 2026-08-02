@@ -21,12 +21,12 @@ export default function UsersList({
 }: UsersListProps) {
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
+      <div className="bg-white rounded-[var(--radius-lg)] shadow-sm border border-[var(--border)] p-12 text-center">
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center justify-center">
             <div className="relative w-12 h-12">
-              <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-blue-500 animate-spin"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-teal-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-[var(--brand)] border-r-[var(--brand)] animate-spin"></div>
             </div>
           </div>
         </div>
@@ -38,10 +38,10 @@ export default function UsersList({
 
   if (users.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="bg-white rounded-[var(--radius-lg)] shadow-sm border border-[var(--border)] p-12 text-center">
+        <div className="w-20 h-20 bg-gradient-to-br from-[var(--brand-soft)] to-[var(--brand-muted)] rounded-full flex items-center justify-center mx-auto mb-6">
           <svg
-            className="w-10 h-10 text-blue-600"
+            className="w-10 h-10 text-[var(--brand)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -63,25 +63,25 @@ export default function UsersList({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+    <div className="bg-white rounded-[var(--radius-lg)] shadow-sm overflow-hidden border border-[var(--border)]">
       {/* Mobile Cards */}
       <div className="md:hidden divide-y divide-gray-100">
         {users.map((user) => (
           <button
             key={user._id}
             onClick={() => onUserClick(user)}
-            className="w-full text-left p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition duration-200 active:bg-blue-100"
+            className="w-full text-left p-4 hover:bg-gradient-to-r hover:from-[var(--brand-soft)] hover:to-[var(--brand-muted)] transition duration-200 active:bg-[var(--brand-muted)]"
           >
             <div className="flex items-center gap-3 mb-3">
               {user.profilePicture ? (
                 <img
                   src={user.profilePicture}
                   alt={user.name}
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-100"
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-[var(--brand-muted)]"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center ring-2 ring-blue-100">
-                  <span className="text-blue-700 font-bold text-sm">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--brand-muted)] to-teal-200 flex items-center justify-center ring-2 ring-[var(--brand-muted)]">
+                  <span className="text-[var(--brand-hover)] font-bold text-sm">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -124,7 +124,7 @@ export default function UsersList({
                 className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                   user.role === "admin"
                     ? "bg-purple-100 text-purple-700 ring-1 ring-purple-200"
-                    : "bg-blue-100 text-blue-700 ring-1 ring-blue-200"
+                    : "bg-[var(--brand-muted)] text-[var(--brand-hover)] ring-1 ring-teal-200"
                 }`}
               >
                 {user.role}
@@ -176,7 +176,7 @@ export default function UsersList({
               <tr
                 key={user._id}
                 onClick={() => onUserClick(user)}
-                className="hover:bg-blue-50 cursor-pointer transition duration-150 border-l-4 border-transparent hover:border-l-blue-500"
+                className="hover:bg-[var(--brand-soft)] cursor-pointer transition duration-150 border-l-4 border-transparent hover:border-l-[var(--brand)]"
               >
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
@@ -184,11 +184,11 @@ export default function UsersList({
                       <img
                         src={user.profilePicture}
                         alt={user.name}
-                        className="w-10 h-10 rounded-full object-cover ring-2 ring-blue-100"
+                        className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--brand-muted)]"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center ring-2 ring-blue-100">
-                        <span className="text-blue-700 font-bold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--brand-muted)] to-teal-200 flex items-center justify-center ring-2 ring-[var(--brand-muted)]">
+                        <span className="text-[var(--brand-hover)] font-bold text-sm">
                           {user.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -225,7 +225,7 @@ export default function UsersList({
                     className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ring-1 ${
                       user.role === "admin"
                         ? "bg-purple-100 text-purple-700 ring-purple-200"
-                        : "bg-blue-100 text-blue-700 ring-blue-200"
+                        : "bg-[var(--brand-muted)] text-[var(--brand-hover)] ring-teal-200"
                     }`}
                   >
                     {user.role}
@@ -249,7 +249,7 @@ export default function UsersList({
                     year: "numeric",
                   })}
                 </td>
-                <td className="px-6 py-4 text-right text-sm font-semibold text-blue-600 hover:text-blue-700">
+                <td className="px-6 py-4 text-right text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]">
                   View ›
                 </td>
               </tr>
@@ -260,7 +260,7 @@ export default function UsersList({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-6 py-5 border-t border-gray-100 flex items-center justify-between bg-gray-50">
+        <div className="px-6 py-5 border-t border-[var(--border)] flex items-center justify-between bg-[var(--surface-2)]">
           <p className="text-sm font-medium text-gray-700">
             Page <span className="font-bold text-gray-900">{page}</span> of{" "}
             <span className="font-bold text-gray-900">{totalPages}</span>

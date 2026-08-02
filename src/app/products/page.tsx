@@ -1,46 +1,42 @@
 import { Suspense } from "react";
 import ProductPageContent from "./_components/ProductPageContent";
+import { Skeleton } from "@/components/ui/Card";
 
 function ProductSkeleton() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mb-8 sm:mb-12">
-          <div className="h-12 bg-gray-200 rounded w-2/3 mb-3 animate-pulse"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+    <main className="min-h-screen bg-[var(--surface-2)]">
+      <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <Skeleton className="h-9 w-2/3 max-w-sm mb-3" />
+          <Skeleton className="h-5 w-1/2 max-w-xs" />
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          <aside className="hidden lg:block lg:w-80 flex-shrink-0">
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="bg-white p-4 rounded-lg shadow-md animate-pulse"
-                >
-                  <div className="h-6 bg-gray-200 rounded mb-3"></div>
-                  <div className="space-y-2">
-                    {[1, 2, 3].map((j) => (
-                      <div key={j} className="h-4 bg-gray-200 rounded"></div>
-                    ))}
-                  </div>
+        <Skeleton className="h-[52px] w-full rounded-[var(--radius-lg)] mb-6" />
+
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          <aside className="hidden lg:block lg:w-72 flex-shrink-0">
+            <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 space-y-5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-3.5 w-1/3" />
+                  <Skeleton className="h-11 w-full" />
                 </div>
               ))}
             </div>
           </aside>
 
           <div className="flex-1 min-w-0">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100 animate-pulse"
+                  className="overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
                 >
-                  <div className="w-full aspect-square bg-gray-200"></div>
-                  <div className="p-5">
-                    <div className="h-5 bg-gray-200 rounded mb-3"></div>
-                    <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
-                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  <Skeleton className="aspect-[4/3] w-full rounded-none" />
+                  <div className="p-3.5 sm:p-4 space-y-2.5">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                    <Skeleton className="h-6 w-1/2 mt-1" />
                   </div>
                 </div>
               ))}

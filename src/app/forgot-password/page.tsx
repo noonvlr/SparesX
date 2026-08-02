@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function ForgotPasswordPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+    <main className="min-h-screen bg-[var(--surface-2)] flex items-center justify-center p-4">
       <ForgotPasswordForm />
     </main>
   );

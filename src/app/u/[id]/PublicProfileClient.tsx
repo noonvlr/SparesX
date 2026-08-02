@@ -8,6 +8,9 @@ import TrustBadges from "@/components/TrustBadges";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 import RateSellerModal from "@/components/RateSellerModal";
 import { openChatUi } from "@/components/chat/openChat";
+import { AuthPromptSheet } from "@/components/ContactSheet";
+import { Card, EmptyState } from "@/components/ui/Card";
+import { Button, buttonVariants } from "@/components/ui/Button";
 import type { PublicBadge } from "@/lib/badges/catalog";
 
 type PublicProfile = {
@@ -112,7 +115,7 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-16 text-center text-gray-500">
+      <div className="max-w-5xl mx-auto px-4 py-16 text-center text-[var(--muted)]">
         Loading profile…
       </div>
     );
@@ -120,16 +123,16 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
 
   if (error || !profile) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile not found</h1>
-        <p className="text-gray-600 mb-6">{error || "This user is unavailable."}</p>
-        <Link
-          href="/sellers"
-          className="inline-flex px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold"
-        >
-          Browse sellers
-        </Link>
-      </div>
+      <EmptyState
+        className="max-w-lg mx-auto"
+        title="Profile not found"
+        description={error || "This user is unavailable."}
+        action={
+          <Link href="/sellers" className={buttonVariants({ variant: "primary" })}>
+            Browse sellers
+          </Link>
+        }
+      />
     );
   }
 
@@ -138,10 +141,10 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
     profile.role === "admin" ? "/admin/settings" : "/technician/profile";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50">
+    <main className="min-h-screen bg-[var(--surface-2)]">
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 space-y-8">
         {isOwn && (
-          <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-900 flex flex-wrap items-center justify-between gap-2">
+          <div className="rounded-[var(--radius)] bg-[var(--brand-soft)] border border-[var(--brand-muted)] px-4 py-3 text-sm text-[var(--brand-hover)] flex flex-wrap items-center justify-between gap-2">
             <span>This is your public profile. Contact details stay private.</span>
             <Link href={editHref} className="font-semibold underline">
               Edit profile
@@ -149,26 +152,26 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
           </div>
         )}
 
-        <header className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-8">
+        <Card className="p-5 sm:p-8">
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
             {profile.profilePicture ? (
               <img
                 src={profile.profilePicture}
                 alt={profile.name}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border border-gray-100"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] object-cover border border-[var(--border)]"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-3xl font-bold">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-white flex items-center justify-center text-3xl font-semibold">
                 {profile.name.charAt(0).toUpperCase()}
               </div>
             )}
 
             <div className="min-w-0 flex-1 space-y-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--ink)] tracking-tight">
                   {profile.name}
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 capitalize">
+                <p className="text-sm text-[var(--muted)] mt-1 capitalize">
                   {profile.role === "admin" ? "Administrator" : "Seller on SparesX"}
                   {profile.createdAt
                     ? ` · Joined ${new Date(profile.createdAt).toLocaleDateString(
@@ -201,32 +204,24 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
               />
 
               {location && (
-                <p className="text-sm text-gray-600">
-                  <span className="font-semibold text-gray-800">Location:</span>{" "}
+                <p className="text-sm text-[var(--ink-secondary)]">
+                  <span className="font-semibold text-[var(--ink)]">Location:</span>{" "}
                   {location}
                 </p>
               )}
 
               {!isOwn && (
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <button
-                    type="button"
-                    onClick={handleMessage}
-                    className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
-                  >
+                  <Button type="button" onClick={handleMessage}>
                     Message
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleRate}
-                    className="px-4 py-2.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-sm font-semibold hover:bg-amber-100"
-                  >
+                  </Button>
+                  <Button type="button" variant="soft" onClick={handleRate}>
                     Rate
-                  </button>
+                  </Button>
                   <button
                     type="button"
                     onClick={handleReport}
-                    className="px-4 py-2.5 rounded-xl text-rose-700 border border-rose-200 text-sm font-semibold hover:bg-rose-50"
+                    className="px-4 py-2.5 rounded-[var(--radius)] text-[var(--danger)] border border-red-200 text-sm font-semibold hover:bg-[var(--danger-soft)] transition-colors"
                   >
                     Report
                   </button>
@@ -234,16 +229,16 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
               )}
             </div>
           </div>
-        </header>
+        </Card>
 
-        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
+        <Card className="p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-[var(--ink)] mb-3">About</h2>
           {profile.about?.trim() ? (
-            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm text-[var(--ink-secondary)] leading-relaxed whitespace-pre-wrap">
               {profile.about.trim()}
             </p>
           ) : (
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <p className="text-sm text-[var(--muted)] leading-relaxed">
               {isOwn
                 ? "You haven’t added an about section yet. Edit your profile to introduce yourself to buyers."
                 : location
@@ -254,40 +249,40 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
           {isOwn && (
             <Link
               href={editHref}
-              className="inline-block mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              className="inline-block mt-3 text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
             >
               {profile.about?.trim() ? "Edit about" : "Add about"} →
             </Link>
           )}
-        </section>
+        </Card>
 
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <Card className="p-5 sm:p-6">
           <div className="flex items-end justify-between gap-3 mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Ratings</h2>
-            <span className="text-xs text-gray-500">
+            <h2 className="text-lg font-semibold text-[var(--ink)]">Ratings</h2>
+            <span className="text-xs text-[var(--muted)]">
               {profile.ratingCount || 0} review
               {(profile.ratingCount || 0) === 1 ? "" : "s"}
             </span>
           </div>
           {ratings.length === 0 ? (
-            <p className="text-sm text-gray-500">No public ratings yet.</p>
+            <p className="text-sm text-[var(--muted)]">No public ratings yet.</p>
           ) : (
             <ul className="space-y-3">
               {ratings.map((r) => (
                 <li
                   key={r._id}
-                  className="rounded-xl border border-gray-100 px-4 py-3"
+                  className="rounded-[var(--radius)] border border-[var(--border)] px-4 py-3"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-[var(--ink)]">
                       {r.rater?.name || "Member"}
                     </p>
                     <StarRatingDisplay value={r.stars} />
                   </div>
                   {r.comment && (
-                    <p className="text-sm text-gray-600 mt-1.5">{r.comment}</p>
+                    <p className="text-sm text-[var(--ink-secondary)] mt-1.5">{r.comment}</p>
                   )}
-                  <p className="text-[11px] text-gray-400 mt-1">
+                  <p className="text-[11px] text-[var(--muted)] mt-1">
                     Behaviour {r.behaviour}/5 · Response {r.response}/5
                     {r.createdAt
                       ? ` · ${new Date(r.createdAt).toLocaleDateString("en-IN")}`
@@ -297,21 +292,22 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
               ))}
             </ul>
           )}
-        </section>
+        </Card>
 
         <section>
           <div className="flex items-end justify-between gap-3 mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-semibold text-[var(--ink)] tracking-tight">
               Active listings
             </h2>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-[var(--muted)]">
               {listings.length} item{listings.length === 1 ? "" : "s"}
             </span>
           </div>
           {listings.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-10 text-center text-sm text-gray-500">
-              No approved listings yet.
-            </div>
+            <EmptyState
+              className="rounded-[var(--radius-lg)] border border-dashed border-[var(--border-strong)] bg-[var(--surface)]"
+              title="No approved listings yet"
+            />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
               {listings.map((item) => (
@@ -340,48 +336,12 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
         }
       />
 
-      {showAuth && (
-        <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4"
-          onClick={() => setShowAuth(false)}
-        >
-          <div
-            className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Login required
-            </h3>
-            <p className="text-sm text-gray-600 mb-6">
-              Login to message, rate, or report this user.
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    `/login?next=${encodeURIComponent(`/u/${userId}`)}`,
-                  )
-                }
-                className="py-3 rounded-xl bg-blue-600 text-white font-semibold"
-              >
-                Login
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  router.push(
-                    `/register?next=${encodeURIComponent(`/u/${userId}`)}`,
-                  )
-                }
-                className="py-3 rounded-xl border border-gray-300 font-semibold"
-              >
-                Sign up
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AuthPromptSheet
+        open={showAuth}
+        onClose={() => setShowAuth(false)}
+        nextPath={`/u/${userId}`}
+        description="Login to message, rate, or report this user."
+      />
     </main>
   );
 }

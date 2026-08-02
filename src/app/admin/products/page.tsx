@@ -180,7 +180,7 @@ export default function AdminProductsPage() {
             Approve, edit, feature, or remove any listing
           </p>
         </div>
-        <Link href="/products" className="text-sm text-blue-600 hover:underline">
+        <Link href="/products" className="text-sm text-[var(--brand)] hover:underline">
           View public catalog →
         </Link>
       </div>
@@ -200,7 +200,7 @@ export default function AdminProductsPage() {
             onClick={() => setStatus(value)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
               status === value
-                ? "bg-blue-600 text-white border-blue-600"
+                ? "bg-[var(--brand)] text-white border-[var(--brand)]"
                 : "bg-white text-gray-600 border-gray-200"
             }`}
           >
@@ -224,7 +224,7 @@ export default function AdminProductsPage() {
         />
         <button
           type="submit"
-          className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold"
+          className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold"
         >
           Search
         </button>
@@ -232,7 +232,7 @@ export default function AdminProductsPage() {
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-gray-500">Loading...</div>
         ) : (
@@ -348,7 +348,7 @@ export default function AdminProductsPage() {
                         <button
                           type="button"
                           onClick={() => openEdit(p)}
-                          className="px-2 py-1 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-semibold"
+                          className="px-2 py-1 rounded-lg border border-teal-200 text-[var(--brand-hover)] text-[11px] font-semibold"
                         >
                           Edit
                         </button>
@@ -483,7 +483,7 @@ export default function AdminProductsPage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 text-white font-semibold disabled:opacity-60"
+                className="flex-1 py-2.5 rounded-xl bg-[var(--brand)] text-white font-semibold disabled:opacity-60"
               >
                 {saving ? "Saving..." : "Save changes"}
               </button>

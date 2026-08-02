@@ -185,7 +185,7 @@ export default function SiteSettingsPage() {
       )}
 
       <form onSubmit={save} className="space-y-8">
-        <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-4">
+        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5 shadow-sm space-y-4">
           <h2 className="text-lg font-semibold text-gray-900">Active SMS provider</h2>
           <div className="flex flex-wrap gap-4">
             {(["twilio", "msg91"] as const).map((p) => (
@@ -210,7 +210,7 @@ export default function SiteSettingsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5 shadow-sm space-y-3">
           <h2 className="text-lg font-semibold text-gray-900">Twilio</h2>
           <p className="text-xs text-gray-500">
             Trial accounts cannot send custom SMS text. Create a{" "}
@@ -277,7 +277,7 @@ export default function SiteSettingsPage() {
           </label>
         </section>
 
-        <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5 shadow-sm space-y-3">
           <h2 className="text-lg font-semibold text-gray-900">MSG91</h2>
           <label className="block text-sm">
             <span className="text-gray-600">
@@ -319,7 +319,7 @@ export default function SiteSettingsPage() {
           </label>
         </section>
 
-        <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5 shadow-sm space-y-3">
           <h2 className="text-lg font-semibold text-gray-900">
             Email OTP SMTP (optional override)
           </h2>
@@ -407,13 +407,13 @@ export default function SiteSettingsPage() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50"
         >
           {saving ? "Saving…" : "Save settings"}
         </button>
       </form>
 
-      <section className="mt-10 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm space-y-3">
+      <section className="mt-10 rounded-[var(--radius-lg)] border border-[var(--border)] bg-white p-5 shadow-sm space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">Test SMS</h2>
         <p className="text-xs text-gray-500">
           Sends a test OTP via the active provider to a mobile number you enter.

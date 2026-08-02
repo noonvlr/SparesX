@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import ModelSelector from "@/components/ModelSelector";
+import { Button } from "@/components/ui/Button";
 
 interface Brand {
   _id: string;
@@ -344,8 +345,8 @@ export default function AddProductPage() {
     return (
       <div className="max-w-3xl mx-auto py-8 px-3 sm:px-6 flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">Loading form options...</p>
+          <div className="w-12 h-12 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-[var(--muted)] font-medium">Loading form options...</p>
         </div>
       </div>
     );
@@ -354,19 +355,15 @@ export default function AddProductPage() {
   if (phoneGate === "blocked") {
     return (
       <div className="max-w-lg mx-auto py-16 px-4 text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl font-semibold text-[var(--ink)] mb-2">
           Verify your phone first
         </h1>
-        <p className="text-sm text-gray-600 mb-6">
+        <p className="text-sm text-[var(--muted)] mb-6">
           You must verify your mobile number before posting a listing.
         </p>
-        <button
-          type="button"
-          onClick={() => router.push("/verify")}
-          className="px-5 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
-        >
+        <Button size="lg" onClick={() => router.push("/verify")}>
           Go to verification
-        </button>
+        </Button>
       </div>
     );
   }
@@ -374,25 +371,25 @@ export default function AddProductPage() {
   return (
     <div className="max-w-3xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6">
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 text-gray-900">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold mb-1 sm:mb-2 text-[var(--ink)]">
           Add New Product
         </h1>
-        <p className="text-xs sm:text-sm lg:text-base text-gray-600">
+        <p className="text-xs sm:text-sm lg:text-base text-[var(--muted)]">
           List your device parts for sale
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200 space-y-6"
+        className="bg-[var(--surface)] p-6 sm:p-8 rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-[var(--border)] space-y-6"
       >
         {error && (
-          <div className="p-4 text-red-700 bg-red-50 border border-red-200 rounded-lg font-medium animate-in fade-in">
+          <div className="p-4 text-[var(--danger)] bg-[var(--danger-soft)] border border-[var(--danger)]/20 rounded-[var(--radius)] font-medium animate-in fade-in">
             {error}
           </div>
         )}
         {success && (
-          <div className="p-4 text-green-700 bg-green-50 border border-green-200 rounded-lg font-medium animate-in fade-in">
+          <div className="p-4 text-[var(--success)] bg-[var(--success-soft)] border border-[var(--success)]/20 rounded-[var(--radius)] font-medium animate-in fade-in">
             {success}
           </div>
         )}
@@ -400,11 +397,11 @@ export default function AddProductPage() {
         {/* Step 1: Device Category Selection */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+            <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
               1
             </div>
-            <label className="text-sm font-semibold text-gray-800">
-              Select Device Category <span className="text-red-500">*</span>
+            <label className="text-sm font-semibold text-[var(--ink-secondary)]">
+              Select Device Category <span className="text-[var(--danger)]">*</span>
             </label>
           </div>
           <div className="overflow-x-auto scrollbar-hide">
@@ -423,10 +420,10 @@ export default function AddProductPage() {
                       modelNumber: "",
                     }))
                   }
-                  className={`px-4 py-3 rounded-lg border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
+                  className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
                     form.deviceCategory === cat.value
-                      ? "border-blue-600 bg-blue-600 text-white shadow-md hover:shadow-lg hover:border-blue-700"
-                      : "border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50 shadow-sm hover:shadow-md"
+                      ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)] hover:border-[var(--brand-hover)]"
+                      : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] shadow-[var(--shadow-sm)]"
                   }`}
                 >
                   <div className="text-base mb-1">{cat.icon}</div>
@@ -441,19 +438,19 @@ export default function AddProductPage() {
 
         {/* Step 2: Device Details (Brand & Model) */}
         {form.deviceCategory && (
-          <div className="p-6 bg-gradient-to-br from-blue-50 via-blue-50 to-cyan-50 rounded-lg border-2 border-blue-300 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+              <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
                 2
               </div>
-              <h3 className="text-sm font-semibold text-blue-900">
+              <h3 className="text-sm font-semibold text-[var(--brand-hover)]">
                 Choose Brand & Model
               </h3>
             </div>
 
             {/* Brand Dropdown */}
             <div className="relative">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                 Brand *
               </label>
               <input
@@ -483,16 +480,16 @@ export default function AddProductPage() {
                 onBlur={() =>
                   setTimeout(() => setShowBrandDropdown(false), 300)
                 }
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="w-full px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required={!!form.deviceCategory}
               />
               {form.brand && (
-                <div className="mt-2 inline-block bg-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
                   ✓ {form.brand}
                 </div>
               )}
               {showBrandDropdown && (
-                <div className="absolute z-10 mt-2 w-full max-h-80 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-xl animate-in fade-in duration-200">
+                <div className="absolute z-10 mt-2 w-full max-h-80 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)] animate-in fade-in duration-200">
                   {filteredBrands.length > 0 ? (
                     filteredBrands.map((brand) => (
                       <button
@@ -503,13 +500,13 @@ export default function AddProductPage() {
                           handleBrandSelect(brand);
                         }}
                         onClick={(e) => e.preventDefault()}
-                        className="w-full px-4 py-3 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 border-b border-gray-100 last:border-b-0"
+                        className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] active:bg-[var(--brand-muted)] transition font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
                       >
                         {brand.name}
                       </button>
                     ))
                   ) : (
-                    <div className="px-4 py-2.5 text-gray-500 text-center">
+                    <div className="px-4 py-2.5 text-[var(--muted)] text-center">
                       No brands found
                     </div>
                   )}
@@ -539,19 +536,19 @@ export default function AddProductPage() {
         {/* Step 3: Product Details (only show after device is fully selected) */}
         {form.deviceCategory && form.brand && form.deviceModel && (
           <>
-            <div className="border-t-2 border-gray-100 pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="border-t-2 border-[var(--border)] pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded-full bg-gray-700 text-white flex items-center justify-center text-xs font-bold">
+                <div className="w-6 h-6 rounded-full bg-[var(--ink-secondary)] text-white flex items-center justify-center text-xs font-bold">
                   3
                 </div>
-                <h3 className="text-sm font-semibold text-gray-800">
+                <h3 className="text-sm font-semibold text-[var(--ink-secondary)]">
                   Product Details
                 </h3>
               </div>
 
               {/* Product Name (Auto-populated) */}
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                   Product Name *
                 </label>
                 <input
@@ -561,17 +558,17 @@ export default function AddProductPage() {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, name: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-[var(--muted)] mt-1">
                   💡 Auto-populated from model selection
                 </p>
               </div>
 
               {/* Part Type */}
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                   Part Type *
                 </label>
                 <div className="relative">
@@ -587,16 +584,16 @@ export default function AddProductPage() {
                     onBlur={() =>
                       setTimeout(() => setShowPartTypeDropdown(false), 300)
                     }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   />
                   {form.partType && (
-                    <div className="mt-2 inline-block bg-purple-500 text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
+                    <div className="mt-2 inline-block bg-[var(--brand-hover)] text-white px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
                       ✓{" "}
                       {partTypes.find((p) => p.value === form.partType)?.label}
                     </div>
                   )}
                   {showPartTypeDropdown && (
-                    <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-gray-300 rounded-lg bg-white shadow-lg animate-in fade-in duration-200">
+                    <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-md)] animate-in fade-in duration-200">
                       {filteredPartTypes.length > 0 ? (
                         filteredPartTypes.map((partType) => (
                           <button
@@ -607,14 +604,14 @@ export default function AddProductPage() {
                               handlePartTypeSelect(partType);
                             }}
                             onClick={(e) => e.preventDefault()}
-                            className="w-full px-4 py-2.5 text-left hover:bg-blue-50 active:bg-blue-100 transition font-medium text-gray-700 flex items-center gap-3 border-b border-gray-100 last:border-b-0"
+                            className="w-full px-4 py-2.5 text-left hover:bg-[var(--brand-soft)] active:bg-[var(--brand-muted)] transition font-medium text-[var(--ink-secondary)] flex items-center gap-3 border-b border-[var(--border)] last:border-b-0"
                           >
                             <span className="text-lg">{partType.icon}</span>
                             {partType.label}
                           </button>
                         ))
                       ) : (
-                        <div className="px-4 py-2.5 text-gray-500 text-center">
+                        <div className="px-4 py-2.5 text-[var(--muted)] text-center">
                           No part types found
                         </div>
                       )}
@@ -625,7 +622,7 @@ export default function AddProductPage() {
 
               {/* Description */}
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                   Description *
                 </label>
                 <textarea
@@ -634,7 +631,7 @@ export default function AddProductPage() {
                   onChange={(e) =>
                     setForm((f) => ({ ...f, description: e.target.value }))
                   }
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none h-32"
+                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition resize-none h-32"
                   required
                 />
               </div>
@@ -642,7 +639,7 @@ export default function AddProductPage() {
               {/* Price & Condition */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                     Price (₹) *
                   </label>
                   <input
@@ -652,7 +649,7 @@ export default function AddProductPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, price: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                     required
                   />
                   <label className="mt-3 flex items-center gap-2 cursor-pointer select-none">
@@ -665,16 +662,16 @@ export default function AddProductPage() {
                           priceNegotiable: e.target.checked,
                         }))
                       }
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="w-4 h-4 rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
                     />
-                    <span className="text-sm text-gray-700">
+                    <span className="text-sm text-[var(--ink-secondary)]">
                       Price is negotiable
                     </span>
                   </label>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                  <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
                     Condition *
                   </label>
                   <select
@@ -682,7 +679,7 @@ export default function AddProductPage() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, condition: e.target.value }))
                     }
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   >
                     {conditions.map((cond) => (
                       <option key={cond.value} value={cond.value}>
@@ -695,7 +692,7 @@ export default function AddProductPage() {
 
               {/* Image Upload */}
               <div className="mt-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-3">
+                <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-3">
                   Product Images (Max {MAX_IMAGES})
                 </label>
 
@@ -719,10 +716,10 @@ export default function AddProductPage() {
                       } as unknown as React.ChangeEvent<HTMLInputElement>);
                     }
                   }}
-                  className={`relative border-2 border-dashed rounded-lg p-8 transition-all duration-300 cursor-pointer ${
+                  className={`relative border-2 border-dashed rounded-[var(--radius)] p-8 transition-all duration-300 cursor-pointer ${
                     dragActive
-                      ? "border-blue-500 bg-blue-50 shadow-lg scale-105"
-                      : "border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50"
+                      ? "border-[var(--brand)] bg-[var(--brand-soft)] shadow-[var(--shadow-md)] scale-105"
+                      : "border-[var(--border-strong)] bg-[var(--surface-2)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
                   } ${uploadingImages ? "opacity-50 pointer-events-none" : ""}`}
                 >
                   <input
@@ -742,8 +739,8 @@ export default function AddProductPage() {
                       <svg
                         className={`w-12 h-12 transition-all duration-300 ${
                           dragActive
-                            ? "text-blue-500 scale-110"
-                            : "text-gray-400"
+                            ? "text-[var(--brand)] scale-110"
+                            : "text-[var(--muted)]"
                         }`}
                         fill="none"
                         stroke="currentColor"
@@ -757,12 +754,12 @@ export default function AddProductPage() {
                         />
                       </svg>
                     </div>
-                    <p className="text-sm font-semibold text-gray-700">
+                    <p className="text-sm font-semibold text-[var(--ink-secondary)]">
                       {dragActive
                         ? "Drop images here"
                         : "Drag images here or click to browse"}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-[var(--muted)] mt-1">
                       PNG, JPG, WebP up to 5MB each ({images.length}/
                       {MAX_IMAGES})
                     </p>
@@ -781,7 +778,7 @@ export default function AddProductPage() {
                   />
                   <label
                     htmlFor="cameraInput"
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2"
+                    className="flex-1 bg-[var(--brand)] text-white py-2.5 rounded-[var(--radius)] font-semibold hover:bg-[var(--brand-hover)] hover:shadow-[var(--shadow-md)] transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2"
                   >
                     <svg
                       className="w-5 h-5"
@@ -810,8 +807,8 @@ export default function AddProductPage() {
                 {images.length > 0 && (
                   <div className="mt-4 animate-in fade-in zoom-in duration-300">
                     {/* Confirmation Message */}
-                    <div className="mb-4 p-3 sm:p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
-                      <p className="text-sm font-semibold text-green-700 flex items-center gap-2">
+                    <div className="mb-4 p-3 sm:p-4 bg-[var(--success-soft)] border-l-4 border-[var(--success)] rounded-[var(--radius)]">
+                      <p className="text-sm font-semibold text-[var(--success)] flex items-center gap-2">
                         <svg
                           className="w-5 h-5"
                           fill="currentColor"
@@ -829,7 +826,7 @@ export default function AddProductPage() {
                       </p>
                     </div>
 
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                    <p className="text-sm font-semibold text-[var(--ink-secondary)] mb-3">
                       Uploaded Images ({images.length}/{MAX_IMAGES})
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -838,7 +835,7 @@ export default function AddProductPage() {
                           key={idx}
                           className="relative group animate-in fade-in zoom-in duration-300"
                         >
-                          <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden shadow-md">
+                          <div className="aspect-square bg-[var(--surface-3)] rounded-[var(--radius)] overflow-hidden shadow-[var(--shadow-sm)]">
                             <img
                               src={image}
                               alt={`Preview ${idx + 1}`}
@@ -853,7 +850,7 @@ export default function AddProductPage() {
                                 imageFiles.filter((_, i) => i !== idx),
                               );
                             }}
-                            className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-lg hover:scale-110"
+                            className="absolute top-1 right-1 bg-[var(--danger)] hover:bg-red-700 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-[var(--shadow-md)] hover:scale-110"
                           >
                             <svg
                               className="w-4 h-4"
@@ -875,12 +872,12 @@ export default function AddProductPage() {
 
                 {uploadingImages && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-sm text-blue-600 font-semibold">
+                    <p className="text-sm text-[var(--brand)] font-semibold">
                       🔄 Uploading images...
                     </p>
-                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div className="w-full bg-[var(--surface-3)] rounded-full h-2 overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full animate-pulse"
+                        className="bg-[var(--brand)] h-full rounded-full animate-pulse"
                         style={{
                           width: "100%",
                           animation: "pulse 2s infinite",
@@ -893,23 +890,24 @@ export default function AddProductPage() {
             </div>
 
             {/* Submit Button */}
-            <button
+            <Button
               type="submit"
               disabled={loading || uploadingImages}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              size="lg"
+              className="w-full mt-2"
             >
               {uploadingImages
                 ? "Uploading Images..."
                 : loading
                   ? "Adding Product..."
                   : "Add Product"}
-            </button>
+            </Button>
           </>
         )}
 
         {/* Helper text when not fully configured */}
         {(!form.deviceCategory || !form.brand || !form.deviceModel) && (
-          <div className="mt-8 p-4 bg-gray-50 border border-gray-200 rounded-lg text-center text-gray-600 animate-in fade-in">
+          <div className="mt-8 p-4 bg-[var(--surface-2)] border border-[var(--border)] rounded-[var(--radius)] text-center text-[var(--muted)] animate-in fade-in">
             {!form.deviceCategory &&
               "👈 Select a device category to get started"}
             {form.deviceCategory &&

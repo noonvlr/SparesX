@@ -36,12 +36,12 @@ export default function SavedCountStat() {
   }, []);
 
   return (
-    <div className="p-5 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200 hover:shadow-md transition">
+    <div className="p-5 rounded-[var(--radius)] bg-[var(--success-soft)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
       <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-semibold text-green-700">Saved Items</p>
-        <div className="p-2 bg-green-200 rounded-lg">
+        <p className="text-sm font-semibold text-[var(--success)]">Saved Items</p>
+        <div className="p-2 bg-[var(--success)]/15 rounded-[var(--radius-sm)]">
           <svg
-            className="w-5 h-5 text-green-700"
+            className="w-5 h-5 text-[var(--success)]"
             fill="currentColor"
             viewBox="0 0 20 20"
           >
@@ -49,10 +49,10 @@ export default function SavedCountStat() {
           </svg>
         </div>
       </div>
-      <p className="text-3xl font-bold text-green-900">
+      <p className="text-3xl font-semibold text-[var(--ink)]">
         {total === null ? "—" : total}
       </p>
-      <p className="text-xs text-green-600 mt-2">
+      <p className="text-xs text-[var(--success)] mt-2">
         {total && total > 0 ? (
           <Link href="/dashboard/buyer/saved" className="underline hover:no-underline">
             View saved items

@@ -34,9 +34,9 @@ export default function AdminDashboard() {
       label: "Total users",
       value: stats.userCount,
       href: "/admin/users",
-      from: "from-blue-500",
-      to: "to-blue-600",
-      muted: "text-blue-100",
+      from: "from-[var(--brand)]",
+      to: "to-[var(--brand-hover)]",
+      muted: "text-[var(--brand-muted)]",
     },
     {
       label: "Technicians",
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
           <Link
             key={card.label}
             href={card.href}
-            className={`bg-gradient-to-br ${card.from} ${card.to} text-white rounded-2xl shadow-lg p-5 hover:opacity-95 transition`}
+            className={`bg-gradient-to-br ${card.from} ${card.to} text-white rounded-[var(--radius-lg)] shadow-lg p-5 hover:opacity-95 transition`}
           >
             <div className={`${card.muted} text-xs font-medium uppercase tracking-wide`}>
               {card.label}
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
           <Link
             key={link.href}
             href={link.href}
-            className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:border-blue-200 hover:shadow transition"
+            className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-4 shadow-sm hover:border-[var(--brand-muted)] hover:shadow transition"
           >
             <p className="font-semibold text-gray-900">{link.title}</p>
             <p className="text-sm text-gray-500 mt-1">{link.desc}</p>

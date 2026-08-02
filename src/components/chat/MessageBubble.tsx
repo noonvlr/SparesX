@@ -5,7 +5,7 @@ import type { ChatMessage } from "@/types/chat";
 function Receipt({ message, mine }: { message: ChatMessage; mine: boolean }) {
   if (!mine) return null;
   if (message.read) {
-    return <span className="text-sky-300 text-[10px] ml-1">✓✓</span>;
+    return <span className="text-teal-200 text-[10px] ml-1">✓✓</span>;
   }
   if (message.delivered) {
     return <span className="text-white/70 text-[10px] ml-1">✓✓</span>;
@@ -30,7 +30,7 @@ export default function MessageBubble({
       <div
         className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[15px] shadow-sm ${
           mine
-            ? "bg-blue-600 text-white rounded-br-md"
+            ? "bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-br-md"
             : "bg-white text-gray-900 border border-gray-100 rounded-bl-md"
         }`}
       >

@@ -12,11 +12,11 @@ export default function BuyerRequestsRedirect() {
   }, [router]);
 
   return (
-    <main className="p-8 text-sm text-gray-500">
+    <main className="p-8 text-sm text-[var(--muted)]">
       Redirecting to{" "}
       <Link
         href="/requests?tab=mine"
-        className="text-blue-600 hover:underline"
+        className="text-[var(--brand)] hover:underline"
       >
         My requests
       </Link>

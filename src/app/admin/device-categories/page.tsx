@@ -250,7 +250,7 @@ export default function AdminDeviceCategoriesPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand)] mb-4"></div>
           <p className="text-gray-600">Loading device categories...</p>
         </div>
       </div>
@@ -272,7 +272,7 @@ export default function AdminDeviceCategoriesPage() {
           </div>
           <button
             onClick={handleAddNew}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold shadow-lg hover:shadow-xl"
+            className="bg-[var(--brand)] text-white px-6 py-3 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold shadow-lg hover:shadow-xl"
           >
             + Add Brand
           </button>
@@ -312,7 +312,7 @@ export default function AdminDeviceCategoriesPage() {
                       }}
                       className={`p-3 rounded-lg font-semibold transition ${
                         formData.category === dt.slug
-                          ? "bg-blue-600 text-white ring-2 ring-blue-300"
+                          ? "bg-[var(--brand)] text-white ring-2 ring-teal-300"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
@@ -340,7 +340,7 @@ export default function AdminDeviceCategoriesPage() {
                       });
                     }}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="e.g., Apple"
                   />
                 </div>
@@ -356,7 +356,7 @@ export default function AdminDeviceCategoriesPage() {
                       setFormData({ ...formData, slug: e.target.value })
                     }
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="apple"
                   />
                 </div>
@@ -371,7 +371,7 @@ export default function AdminDeviceCategoriesPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, logo: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="https://..."
                   />
                 </div>
@@ -384,7 +384,7 @@ export default function AdminDeviceCategoriesPage() {
                       onChange={(e) =>
                         setFormData({ ...formData, isActive: e.target.checked })
                       }
-                      className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-5 h-5 text-[var(--brand)] border-gray-300 rounded focus:ring-[var(--brand)]"
                     />
                     <span className="text-sm font-medium text-gray-700">
                       Active
@@ -406,8 +406,8 @@ export default function AdminDeviceCategoriesPage() {
                 </div>
 
                 {/* Add Model Form Card */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-                  <h4 className="text-sm font-bold text-blue-900 mb-4 flex items-center gap-2">
+                <div className="bg-gradient-to-br from-[var(--brand-soft)] to-white border-2 border-teal-200 rounded-xl p-6 mb-6">
+                  <h4 className="text-sm font-bold text-teal-900 mb-4 flex items-center gap-2">
                     <span className="text-lg">➕</span> Add a New Model
                   </h4>
 
@@ -423,7 +423,7 @@ export default function AdminDeviceCategoriesPage() {
                         onChange={(e) =>
                           setNewModel({ ...newModel, name: e.target.value })
                         }
-                        className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none text-base font-medium"
+                        className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)] focus:outline-none text-base font-medium"
                         placeholder="e.g., iPhone 15 Pro, Galaxy S24, MacBook Pro 14-inch"
                       />
                       <p className="text-xs text-gray-600 mt-1">
@@ -446,7 +446,7 @@ export default function AdminDeviceCategoriesPage() {
                               modelNumber: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent text-base"
                           placeholder="e.g., A3108, SM-S911B"
                         />
                         <p className="text-xs text-gray-600 mt-1">
@@ -467,7 +467,7 @@ export default function AdminDeviceCategoriesPage() {
                               releaseYear: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent text-base"
                           placeholder={new Date().getFullYear().toString()}
                           min="2000"
                           max={new Date().getFullYear() + 1}
@@ -482,7 +482,7 @@ export default function AdminDeviceCategoriesPage() {
                     <button
                       type="button"
                       onClick={handleAddModel}
-                      className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-base shadow-md hover:shadow-lg"
+                      className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-teal-800 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-base shadow-md hover:shadow-lg"
                     >
                       <span>✓</span> Add This Model
                     </button>
@@ -495,7 +495,7 @@ export default function AdminDeviceCategoriesPage() {
                     <h4 className="font-bold text-gray-900 text-base">
                       Added Models
                     </h4>
-                    <span className="bg-blue-100 text-blue-800 font-semibold text-sm px-2.5 py-0.5 rounded-full">
+                    <span className="bg-[var(--brand-muted)] text-teal-800 font-semibold text-sm px-2.5 py-0.5 rounded-full">
                       {formData.models.length}
                     </span>
                   </div>
@@ -505,7 +505,7 @@ export default function AdminDeviceCategoriesPage() {
                       {formData.models.map((model, index) => (
                         <div
                           key={index}
-                          className="flex items-start justify-between bg-white border-l-4 border-l-blue-500 p-4 rounded-lg border border-gray-200 hover:shadow-md transition group"
+                          className="flex items-start justify-between bg-white border-l-4 border-l-[var(--brand)] p-4 rounded-lg border border-gray-200 hover:shadow-md transition group"
                         >
                           <div className="flex-1">
                             <p className="font-semibold text-gray-900 text-base">
@@ -562,7 +562,7 @@ export default function AdminDeviceCategoriesPage() {
               <div className="flex gap-3 pt-4 border-t">
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
+                  className="bg-[var(--brand)] text-white px-6 py-2 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold"
                 >
                   {editingBrand ? "Update Brand" : "Create Brand"}
                 </button>
@@ -591,7 +591,7 @@ export default function AdminDeviceCategoriesPage() {
                   onClick={() => setSelectedCategory(dt.slug)}
                   className={`px-6 py-3 rounded-lg font-semibold transition whitespace-nowrap ${
                     selectedCategory === dt.slug
-                      ? "bg-blue-600 text-white shadow-lg"
+                      ? "bg-[var(--brand)] text-white shadow-lg"
                       : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
                   }`}
                 >
@@ -651,7 +651,7 @@ export default function AdminDeviceCategoriesPage() {
                         </code>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-800 font-semibold text-sm">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--brand-muted)] text-teal-800 font-semibold text-sm">
                           {brand.models.length}
                         </span>
                       </td>
@@ -669,7 +669,7 @@ export default function AdminDeviceCategoriesPage() {
                       <td className="px-6 py-4 text-right space-x-2">
                         <button
                           onClick={() => handleEdit(brand)}
-                          className="text-blue-600 hover:text-blue-800 font-medium transition"
+                          className="text-[var(--brand)] hover:text-teal-800 font-medium transition"
                         >
                           Edit
                         </button>

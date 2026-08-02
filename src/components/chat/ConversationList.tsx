@@ -38,7 +38,7 @@ export default function ConversationList({
   }
 
   return (
-    <ul className="divide-y divide-gray-100 overflow-y-auto h-full">
+    <ul className="overflow-y-auto h-full p-2 space-y-1">
       {conversations.map((c) => {
         const peer = c.peer || c.participants?.find(Boolean);
         const unread = c.unreadCount || 0;
@@ -46,11 +46,11 @@ export default function ConversationList({
         return (
           <li key={c._id}>
             <div
-              className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition flex items-start gap-3 ${
+              className={`w-full text-left px-3 py-3 rounded-xl hover:bg-teal-50/70 transition flex items-start gap-3 ${
                 activeId === c._id
-                  ? "bg-blue-50"
+                  ? "bg-teal-50 ring-1 ring-teal-100"
                   : unread
-                    ? "bg-emerald-50/40"
+                    ? "bg-teal-50/30"
                     : ""
               }`}
             >
@@ -68,13 +68,13 @@ export default function ConversationList({
                       className="w-11 h-11 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold">
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center font-bold">
                       {(peer?.name || "?").charAt(0).toUpperCase()}
                     </div>
                   )}
                 </Link>
               ) : (
-                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold">
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center font-bold">
                   {(peer?.name || "?").charAt(0).toUpperCase()}
                 </div>
               )}
@@ -107,7 +107,7 @@ export default function ConversationList({
                     />
                   </div>
                   {unread > 0 && (
-                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-green-500 text-white text-[10px] font-bold flex items-center justify-center">
+                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center">
                       {unread > 99 ? "99+" : unread}
                     </span>
                   )}

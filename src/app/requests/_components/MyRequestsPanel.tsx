@@ -166,7 +166,7 @@ export default function MyRequestsPanel() {
         <Link
           href="/requests?tab=submit"
           scroll={false}
-          className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
+          className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)]"
         >
           New request
         </Link>
@@ -180,7 +180,7 @@ export default function MyRequestsPanel() {
             onClick={() => setStatus(s)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border capitalize ${
               status === s
-                ? "bg-blue-600 text-white border-blue-600"
+                ? "bg-[var(--brand)] text-white border-[var(--brand)]"
                 : "bg-white text-gray-600 border-gray-200"
             }`}
           >
@@ -203,7 +203,7 @@ export default function MyRequestsPanel() {
           <Link
             href="/requests?tab=submit"
             scroll={false}
-            className="text-blue-600 font-semibold text-sm hover:underline"
+            className="text-[var(--brand)] font-semibold text-sm hover:underline"
           >
             Submit your first request
           </Link>
@@ -288,7 +288,7 @@ export default function MyRequestsPanel() {
                       type="button"
                       disabled={saving}
                       onClick={() => void saveEdit(item._id)}
-                      className="px-3 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold disabled:opacity-50"
+                      className="px-3 py-2 rounded-lg bg-[var(--brand)] text-white text-xs font-semibold disabled:opacity-50"
                     >
                       {saving ? "Saving…" : "Save"}
                     </button>
@@ -341,7 +341,7 @@ export default function MyRequestsPanel() {
                     <button
                       type="button"
                       onClick={() => startEdit(item)}
-                      className="px-3 py-1.5 rounded-lg border border-blue-200 text-xs font-semibold text-blue-700"
+                      className="px-3 py-1.5 rounded-lg border border-[var(--brand-muted)] text-xs font-semibold text-[var(--brand-hover)]"
                     >
                       Edit
                     </button>

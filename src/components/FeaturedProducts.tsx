@@ -1,32 +1,53 @@
 "use client";
 
+import Link from "next/link";
 import ProductCard, { ProductCardData } from "@/components/ProductCard";
+import { EmptyState } from "@/components/ui/Card";
+import { buttonVariants } from "@/components/ui/Button";
+import { cn } from "@/lib/ui/cn";
 
 export default function FeaturedProducts({
   products,
 }: {
   products: ProductCardData[];
 }) {
-  if (!products?.length) return null;
-
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-      <div className="flex justify-between items-center mb-6 sm:mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
-          Featured Products
-        </h2>
-        <a
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+      <div className="flex justify-between items-end mb-6 sm:mb-8 gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-hover)] mb-2">
+            Fresh listings
+          </p>
+          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)]">
+            Featured products
+          </h2>
+        </div>
+        <Link
           href="/products"
-          className="text-blue-600 hover:text-blue-700 font-semibold text-sm sm:text-base hover:underline"
+          className="shrink-0 text-sm sm:text-base font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors"
         >
-          View All →
-        </a>
+          View all →
+        </Link>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
-        {products.map((product) => (
-          <ProductCard key={product._id} product={product} />
-        ))}
-      </div>
+
+      {products?.length ? (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
+          {products.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState
+          className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+          title="No listings yet"
+          description="New spare parts from verified technicians will show up here soon."
+          action={
+            <Link href="/products" className={cn(buttonVariants({ variant: "soft" }))}>
+              Browse all products
+            </Link>
+          }
+        />
+      )}
     </section>
   );
 }

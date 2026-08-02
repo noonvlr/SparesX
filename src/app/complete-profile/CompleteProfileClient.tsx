@@ -12,7 +12,7 @@ const COUNTRY_CODES = [
 ];
 
 const inputClass =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+  "w-full px-3.5 py-2.5 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]";
 
 export default function CompleteProfileClient() {
   const router = useRouter();
@@ -156,21 +156,25 @@ export default function CompleteProfileClient() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f8f9fa] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+      <main className="min-h-screen bg-[var(--surface-2)] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#f8f9fa] py-8 px-4">
+    <main className="min-h-screen bg-[var(--surface-2)] py-8 px-4">
       <div className="max-w-lg mx-auto">
-        <div className="rounded-2xl border-2 border-gray-200 bg-white overflow-hidden shadow-sm">
-          <div className="px-6 py-5 border-b-2 border-gray-200 bg-gray-50">
-            <h1 className="text-xl font-bold text-gray-900">
+        <div className="glass rounded-[var(--radius-lg)] overflow-hidden shadow-[var(--shadow-lg)]">
+          <div className="px-6 py-5 border-b border-[var(--border)] bg-[var(--brand-soft)]">
+            <span className="inline-flex items-center gap-1 text-xs font-bold tracking-tight text-[var(--brand-hover)] mb-2">
+              <span>Spares</span>
+              <span>X</span>
+            </span>
+            <h1 className="text-xl font-bold text-[var(--ink)]">
               Complete your profile
             </h1>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm text-[var(--muted)] mt-1">
               Add your contact details so buyers can reach you. Required once
               after Google Sign-In.
             </p>
@@ -178,14 +182,14 @@ export default function CompleteProfileClient() {
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+              <div className="p-3 rounded-[var(--radius)] bg-[var(--danger-soft)] border border-[var(--danger)]/20 text-[var(--danger)] text-sm">
                 {error}
               </div>
             )}
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                   Code
                 </label>
                 <select
@@ -201,7 +205,7 @@ export default function CompleteProfileClient() {
                 </select>
               </div>
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                   Mobile
                 </label>
                 <input
@@ -221,7 +225,7 @@ export default function CompleteProfileClient() {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-gray-700">
+            <label className="flex items-center gap-2 text-sm text-[var(--ink-secondary)]">
               <input
                 type="checkbox"
                 checked={waSameAsMobile}
@@ -235,13 +239,13 @@ export default function CompleteProfileClient() {
                     );
                   }
                 }}
-                className="rounded border-gray-300"
+                className="rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
               />
               WhatsApp same as mobile
             </label>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                 WhatsApp number
               </label>
               <input
@@ -262,7 +266,7 @@ export default function CompleteProfileClient() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                 Address
               </label>
               <textarea
@@ -275,7 +279,7 @@ export default function CompleteProfileClient() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                 PIN code
                 {pinLoading ? " · Looking up…" : ""}
               </label>
@@ -294,7 +298,7 @@ export default function CompleteProfileClient() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                   City
                 </label>
                 <input
@@ -305,7 +309,7 @@ export default function CompleteProfileClient() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
                   State
                 </label>
                 <input
@@ -320,7 +324,7 @@ export default function CompleteProfileClient() {
             <button
               type="submit"
               disabled={saving}
-              className="w-full py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+              className="w-full py-3 rounded-[var(--radius)] bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
             >
               {saving ? "Saving…" : "Save and continue"}
             </button>

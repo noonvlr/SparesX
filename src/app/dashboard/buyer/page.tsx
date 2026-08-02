@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SavedCountStat from "./_components/SavedCountStat";
+import { PageHeader, Card } from "@/components/ui/Card";
 
 export const metadata: Metadata = {
   title: "Buyer Dashboard - SparesX",
@@ -12,159 +13,107 @@ export const metadata: Metadata = {
   },
 };
 
+const QUICK_LINKS = [
+  {
+    href: "/dashboard/buyer/requests",
+    label: "My Requests",
+    desc: "Review requests you have submitted for specific parts.",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+      />
+    ),
+  },
+  {
+    href: "/dashboard/buyer/enquiries",
+    label: "Enquiries",
+    desc: "Track conversations and offers from sellers.",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+      />
+    ),
+  },
+  {
+    href: "/dashboard/buyer/saved",
+    label: "Saved Parts",
+    desc: "Quickly revisit listings you saved.",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 5a2 2 0 012-2h6a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V5z"
+      />
+    ),
+  },
+  {
+    href: "/dashboard/buyer/profile",
+    label: "Profile",
+    desc: "Update contact details for faster responses.",
+    icon: (
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+      />
+    ),
+  },
+];
+
 export default function BuyerDashboardPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
+    <main className="min-h-screen bg-[var(--surface-2)] p-4 md:p-8">
       <section className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            Buyer Dashboard
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Manage your enquiries, requests, and saved parts.
-          </p>
-        </div>
+        <PageHeader
+          title="Buyer Dashboard"
+          description="Manage your enquiries, requests, and saved parts."
+        />
 
-        {/* Dashboard Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {/* My Requests Card */}
-          <Link
-            href="/dashboard/buyer/requests"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-blue-300 transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mb-4">
-                <svg
-                  className="w-6 h-6 text-blue-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                My Requests
-              </h3>
-              <p className="text-sm text-gray-600">
-                Review requests you have submitted for specific parts.
-              </p>
-            </div>
-          </Link>
-
-          {/* Enquiries Card */}
-          <Link
-            href="/dashboard/buyer/enquiries"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-green-300 transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mb-4">
-                <svg
-                  className="w-6 h-6 text-green-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Enquiries
-              </h3>
-              <p className="text-sm text-gray-600">
-                Track conversations and offers from sellers.
-              </p>
-            </div>
-          </Link>
-
-          {/* Saved Parts Card */}
-          <Link
-            href="/dashboard/buyer/saved"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-purple-300 transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mb-4">
-                <svg
-                  className="w-6 h-6 text-purple-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 5a2 2 0 012-2h6a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V5z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Saved Parts
-              </h3>
-              <p className="text-sm text-gray-600">
-                Quickly revisit listings you saved.
-              </p>
-            </div>
-          </Link>
-
-          {/* Profile Card */}
-          <Link
-            href="/dashboard/buyer/profile"
-            className="group relative bg-white rounded-2xl shadow-lg border border-gray-200 p-6 hover:shadow-xl hover:border-indigo-300 transition-all duration-300"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-transparent opacity-0 group-hover:opacity-100 rounded-2xl transition-opacity duration-300"></div>
-            <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center mb-4">
-                <svg
-                  className="w-6 h-6 text-indigo-700"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">Profile</h3>
-              <p className="text-sm text-gray-600">
-                Update contact details for faster responses.
-              </p>
-            </div>
-          </Link>
+          {QUICK_LINKS.map((item) => (
+            <Link key={item.href} href={item.href} className="block">
+              <Card hover className="p-6 h-full">
+                <div className="w-12 h-12 rounded-[var(--radius)] bg-[var(--brand-soft)] flex items-center justify-center mb-4">
+                  <svg
+                    className="w-6 h-6 text-[var(--brand)]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    {item.icon}
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[var(--ink)] mb-2">
+                  {item.label}
+                </h3>
+                <p className="text-sm text-[var(--muted)]">{item.desc}</p>
+              </Card>
+            </Link>
+          ))}
         </div>
 
         {/* Quick Stats Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+        <Card className="p-8">
+          <h2 className="text-2xl font-semibold text-[var(--ink)] mb-6">
             Quick Overview
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="p-5 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-md transition">
+            <div className="p-5 rounded-[var(--radius)] bg-[var(--brand-soft)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-blue-700">
+                <p className="text-sm font-semibold text-[var(--brand-hover)]">
                   Active Requests
                 </p>
-                <div className="p-2 bg-blue-200 rounded-lg">
+                <div className="p-2 bg-[var(--brand-muted)] rounded-[var(--radius-sm)]">
                   <svg
-                    className="w-5 h-5 text-blue-700"
+                    className="w-5 h-5 text-[var(--brand-hover)]"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -177,20 +126,20 @@ export default function BuyerDashboardPage() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-blue-900">0</p>
-              <p className="text-xs text-blue-600 mt-2">No pending requests</p>
+              <p className="text-3xl font-semibold text-[var(--ink)]">0</p>
+              <p className="text-xs text-[var(--brand-hover)] mt-2">No pending requests</p>
             </div>
 
             <SavedCountStat />
 
-            <div className="p-5 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 hover:shadow-md transition">
+            <div className="p-5 rounded-[var(--radius)] bg-[var(--surface-3)] border border-[var(--border)] hover:shadow-[var(--shadow-sm)] transition">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-purple-700">
+                <p className="text-sm font-semibold text-[var(--ink-secondary)]">
                   Open Chats
                 </p>
-                <div className="p-2 bg-purple-200 rounded-lg">
+                <div className="p-2 bg-[var(--border)] rounded-[var(--radius-sm)]">
                   <svg
-                    className="w-5 h-5 text-purple-700"
+                    className="w-5 h-5 text-[var(--ink-secondary)]"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -202,11 +151,11 @@ export default function BuyerDashboardPage() {
                   </svg>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-purple-900">0</p>
-              <p className="text-xs text-purple-600 mt-2">Start enquiries</p>
+              <p className="text-3xl font-semibold text-[var(--ink)]">0</p>
+              <p className="text-xs text-[var(--muted)] mt-2">Start enquiries</p>
             </div>
           </div>
-        </div>
+        </Card>
       </section>
     </main>
   );

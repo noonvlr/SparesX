@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ToastHost";
 import { openChatUi } from "@/components/chat/openChat";
+import { PageHeader, Card, Badge, EmptyState } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 type ConnectItem = {
   _id: string;
@@ -38,21 +40,17 @@ function formatDate(iso?: string) {
 }
 
 function StatusPill({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    pending: "bg-amber-50 text-amber-800 border-amber-200",
-    approved: "bg-green-50 text-green-800 border-green-200",
-    declined: "bg-red-50 text-red-700 border-red-200",
-    expired: "bg-gray-100 text-gray-600 border-gray-200",
-    revoked: "bg-gray-100 text-gray-600 border-gray-200",
+  const tones: Record<string, "warning" | "success" | "danger" | "neutral"> = {
+    pending: "warning",
+    approved: "success",
+    declined: "danger",
+    expired: "neutral",
+    revoked: "neutral",
   };
   return (
-    <span
-      className={`inline-flex text-xs font-semibold px-2 py-0.5 rounded-full border capitalize ${
-        styles[status] || styles.expired
-      }`}
-    >
+    <Badge tone={tones[status] || "neutral"} className="capitalize">
       {status}
-    </span>
+    </Badge>
   );
 }
 
@@ -120,18 +118,12 @@ export default function WhatsAppConnectClient() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-emerald-50/40">
+    <main className="min-h-screen bg-[var(--surface-2)]">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-            WhatsApp connections
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Approve a request once and that buyer can WhatsApp you for{" "}
-            <span className="font-medium text-gray-800">any of your listings</span>
-            . In-app chat stays available without approval.
-          </p>
-        </div>
+        <PageHeader
+          title="WhatsApp connections"
+          description="Approve a request once and that buyer can WhatsApp you for any of your listings. In-app chat stays available without approval."
+        />
 
         <div className="flex gap-2 mb-6">
           {(
@@ -144,10 +136,10 @@ export default function WhatsAppConnectClient() {
               key={key}
               type="button"
               onClick={() => setTab(key)}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+              className={`px-4 py-2 rounded-[var(--radius)] text-sm font-semibold transition ${
                 tab === key
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+                  ? "bg-[var(--brand)] text-white"
+                  : "bg-[var(--surface)] text-[var(--ink-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)]"
               }`}
             >
               {label}
@@ -157,31 +149,35 @@ export default function WhatsAppConnectClient() {
 
         {loading ? (
           <div className="py-16 flex justify-center">
-            <div className="w-10 h-10 border-4 border-green-200 border-t-green-600 rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-gray-200 bg-white/80 p-10 text-center">
-            <p className="text-gray-600 text-sm">
-              {tab === "incoming"
-                ? "No WhatsApp requests yet."
-                : "You haven't sent any WhatsApp requests."}
-            </p>
-            <Link
-              href="/products"
-              className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
-            >
-              Browse products →
-            </Link>
-          </div>
+          <Card className="border-dashed">
+            <EmptyState
+              title={
+                tab === "incoming"
+                  ? "No WhatsApp requests yet"
+                  : "No requests sent yet"
+              }
+              description={
+                tab === "incoming"
+                  ? "Incoming buyer requests will appear here."
+                  : "You haven't sent any WhatsApp requests."
+              }
+              action={
+                <Link href="/products">
+                  <Button variant="soft">Browse products →</Button>
+                </Link>
+              }
+            />
+          </Card>
         ) : (
           <ul className="space-y-3">
             {items.map((item) => (
-              <li
-                key={item._id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sm:p-5"
-              >
+              <li key={item._id}>
+              <Card className="p-4 sm:p-5">
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 rounded-full bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center text-sm font-bold text-gray-500">
+                  <div className="w-11 h-11 rounded-full bg-[var(--surface-3)] overflow-hidden flex-shrink-0 flex items-center justify-center text-sm font-bold text-[var(--muted)]">
                     {item.peer.profilePicture ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -198,37 +194,37 @@ export default function WhatsAppConnectClient() {
                       {item.peer._id ? (
                         <Link
                           href={`/u/${item.peer._id}`}
-                          className="font-semibold text-gray-900 hover:text-blue-700 truncate"
+                          className="font-semibold text-[var(--ink)] hover:text-[var(--brand)] truncate"
                         >
                           {item.peer.name}
                         </Link>
                       ) : (
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-[var(--ink)]">
                           {item.peer.name}
                         </span>
                       )}
                       <StatusPill status={item.status} />
                     </div>
                     {item.peer.city && (
-                      <p className="text-xs text-gray-500 mt-0.5">{item.peer.city}</p>
+                      <p className="text-xs text-[var(--muted)] mt-0.5">{item.peer.city}</p>
                     )}
                     {item.product && (
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-[var(--ink-secondary)] mt-1">
                         About:{" "}
                         <Link
                           href={`/product/${item.product._id}`}
-                          className="text-blue-600 hover:underline"
+                          className="text-[var(--brand)] hover:underline"
                         >
                           {item.product.name}
                         </Link>
                       </p>
                     )}
                     {item.message && (
-                      <p className="text-sm text-gray-700 mt-2 bg-gray-50 rounded-lg px-3 py-2">
+                      <p className="text-sm text-[var(--ink-secondary)] mt-2 bg-[var(--surface-2)] rounded-[var(--radius)] px-3 py-2">
                         {item.message}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-[var(--muted)] mt-2">
                       Requested {formatDate(item.createdAt)}
                       {item.respondedAt
                         ? ` · Responded ${formatDate(item.respondedAt)}`
@@ -238,61 +234,62 @@ export default function WhatsAppConnectClient() {
                     <div className="mt-3 flex flex-wrap gap-2">
                       {tab === "incoming" && item.status === "pending" && (
                         <>
-                          <button
-                            type="button"
+                          <Button
+                            size="sm"
+                            className="bg-[var(--success)] hover:bg-emerald-700"
                             disabled={actionId === item._id}
                             onClick={() => act(item._id, "approve")}
-                            className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 disabled:opacity-50"
                           >
                             Approve
-                          </button>
-                          <button
-                            type="button"
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
                             disabled={actionId === item._id}
                             onClick={() => act(item._id, "decline")}
-                            className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
                           >
                             Decline
-                          </button>
+                          </Button>
                         </>
                       )}
                       {tab === "incoming" && item.status === "approved" && (
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                           disabled={actionId === item._id}
                           onClick={() => act(item._id, "revoke")}
-                          className="px-3 py-1.5 rounded-lg border border-red-200 text-red-700 text-sm font-semibold hover:bg-red-50 disabled:opacity-50"
                         >
                           Revoke access
-                        </button>
+                        </Button>
                       )}
                       {tab === "outgoing" && item.status === "pending" && (
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
+                          variant="secondary"
                           disabled={actionId === item._id}
                           onClick={() => act(item._id, "revoke")}
-                          className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
                         >
                           Cancel request
-                        </button>
+                        </Button>
                       )}
                       {item.peer._id && (
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
                           onClick={() =>
                             openChatUi({
                               peerId: item.peer._id,
                               productId: item.product?._id,
                             })
                           }
-                          className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700"
                         >
                           In-app chat
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>
                 </div>
+              </Card>
               </li>
             ))}
           </ul>

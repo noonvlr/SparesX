@@ -13,7 +13,7 @@ const STATUS_OPTIONS = [
 
 const STATUS_STYLE: Record<string, string> = {
   open: "bg-amber-50 text-amber-700 border-amber-200",
-  in_progress: "bg-blue-50 text-blue-700 border-blue-200",
+  in_progress: "bg-[var(--brand-soft)] text-[var(--brand-hover)] border-teal-200",
   resolved: "bg-green-50 text-green-700 border-green-200",
   closed: "bg-gray-50 text-gray-600 border-gray-200",
 };
@@ -189,8 +189,8 @@ export default function AdminSupportPage() {
               onClick={() => setStatus(opt.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                 status === opt.value
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-200"
+                  ? "bg-[var(--brand)] text-white border-[var(--brand)]"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-teal-200"
               }`}
             >
               {opt.label}
@@ -201,7 +201,7 @@ export default function AdminSupportPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
           {loading ? (
             <div className="p-6 text-sm text-gray-500">Loading...</div>
           ) : visibleTickets.length === 0 ? (
@@ -217,7 +217,7 @@ export default function AdminSupportPage() {
                       onClick={() => openTicket(ticket._id)}
                       className={`w-full text-left p-4 transition relative ${
                         selectedId === ticket._id
-                          ? "bg-blue-50"
+                          ? "bg-[var(--brand-soft)]"
                           : unread
                             ? "bg-emerald-50/40 hover:bg-emerald-50/70"
                             : "hover:bg-gray-50"
@@ -267,7 +267,7 @@ export default function AdminSupportPage() {
           )}
         </div>
 
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 min-h-[420px]">
+        <div className="lg:col-span-3 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm p-5 min-h-[420px]">
           {!selected ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">
               Select a ticket to open and reply
@@ -341,7 +341,7 @@ export default function AdminSupportPage() {
                   type="button"
                   disabled={saving}
                   onClick={() => updateTicket("in_progress")}
-                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold disabled:opacity-60"
                 >
                   Save & mark in progress
                 </button>

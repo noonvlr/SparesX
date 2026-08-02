@@ -149,7 +149,7 @@ export default function UsersManager() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-[var(--brand-soft)] to-white p-4 md:p-8">
       {/* Header Section */}
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
@@ -161,7 +161,7 @@ export default function UsersManager() {
         <button
           type="button"
           onClick={() => setShowCreate(true)}
-          className="px-5 py-2.5 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
+          className="px-5 py-2.5 rounded-xl bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)]"
         >
           + Create user
         </button>
@@ -174,7 +174,7 @@ export default function UsersManager() {
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1 relative group">
               <svg
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[var(--brand)] transition"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -191,12 +191,12 @@ export default function UsersManager() {
                 placeholder="Search by name, email, or mobile..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:shadow-lg transition"
+                className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent focus:shadow-lg transition"
               />
             </div>
             <button
               type="submit"
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-lg hover:from-blue-700 hover:to-indigo-700 transition duration-200 transform hover:scale-105"
+              className="px-8 py-3 bg-[var(--brand)] text-white font-semibold rounded-xl hover:bg-[var(--brand-hover)] hover:shadow-lg transition duration-200 transform hover:scale-105"
             >
               Search
             </button>
@@ -235,7 +235,7 @@ export default function UsersManager() {
                     e.target.value as "all" | "active" | "blocked",
                   )
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium hover:border-gray-400 focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition"
               >
                 <option value="all">All</option>
                 <option value="active">Active</option>
@@ -264,7 +264,7 @@ export default function UsersManager() {
                     e.target.value as "all" | "admin" | "technician",
                   )
                 }
-                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium hover:border-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium hover:border-gray-400 focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent transition"
               >
                 <option value="all">All</option>
                 <option value="admin">Admin</option>
@@ -277,12 +277,12 @@ export default function UsersManager() {
         {/* Stats Grid */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Users */}
-          <div className="p-5 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 hover:shadow-md transition">
+          <div className="p-5 rounded-xl bg-gradient-to-br from-[var(--brand-soft)] to-[var(--brand-muted)] border border-teal-200 hover:shadow-md transition">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-blue-700">Total Users</p>
-              <div className="p-2 bg-blue-200 rounded-lg">
+              <p className="text-sm font-semibold text-[var(--brand-hover)]">Total Users</p>
+              <div className="p-2 bg-teal-200 rounded-lg">
                 <svg
-                  className="w-5 h-5 text-blue-700"
+                  className="w-5 h-5 text-[var(--brand-hover)]"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -290,7 +290,7 @@ export default function UsersManager() {
                 </svg>
               </div>
             </div>
-            <p className="text-2xl font-bold text-blue-900">{stats.total}</p>
+            <p className="text-2xl font-bold text-teal-900">{stats.total}</p>
           </div>
 
           {/* Active Users */}
@@ -465,7 +465,7 @@ export default function UsersManager() {
             <button
               type="submit"
               disabled={creating}
-              className="w-full py-2.5 rounded-xl bg-blue-600 text-white font-semibold disabled:opacity-60"
+              className="w-full py-2.5 rounded-xl bg-[var(--brand)] text-white font-semibold disabled:opacity-60"
             >
               {creating ? "Creating..." : "Create account"}
             </button>

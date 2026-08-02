@@ -9,6 +9,8 @@ import { getCroppedImage } from "@/lib/utils/cropImage";
 import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
 import { MAX_ABOUT_LENGTH } from "@/lib/validation/userContact";
+import { Card, Badge } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -49,15 +51,9 @@ const emptyForm = (): ProfileForm => ({
 
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <span
-      className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
-        ok
-          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-          : "bg-amber-50 text-amber-900 border-amber-200"
-      }`}
-    >
+    <Badge tone={ok ? "success" : "warning"} className="border border-transparent">
       {label}: {ok ? "Verified" : "Not verified"}
-    </span>
+    </Badge>
   );
 }
 
@@ -73,18 +69,15 @@ function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section
-      id={id}
-      className="rounded-2xl border-2 border-gray-200 bg-white overflow-hidden"
-    >
-      <div className="px-5 sm:px-6 py-4 border-b-2 border-gray-200 bg-gray-50/80">
-        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
+    <Card id={id} className="overflow-hidden">
+      <div className="px-5 sm:px-6 py-4 border-b border-[var(--border)] bg-[var(--surface-2)]">
+        <h2 className="text-base sm:text-lg font-semibold text-[var(--ink)]">{title}</h2>
         {description && (
-          <p className="text-sm text-gray-500 mt-0.5">{description}</p>
+          <p className="text-sm text-[var(--muted)] mt-0.5">{description}</p>
         )}
       </div>
       <div className="px-5 sm:px-6 py-5">{children}</div>
-    </section>
+    </Card>
   );
 }
 
@@ -99,17 +92,17 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-1.5">
         {label}
       </label>
       {children}
-      {hint && <p className="mt-1.5 text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-[var(--muted)]">{hint}</p>}
     </div>
   );
 }
 
 const inputClass =
-  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+  "w-full px-3.5 py-2.5 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]";
 
 const SECTIONS = [
   { id: "about", label: "About" },
@@ -459,8 +452,8 @@ export default function TechnicianProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4">
-        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+      <main className="min-h-screen bg-[var(--surface-2)] flex items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
       </main>
     );
   }
@@ -468,12 +461,12 @@ export default function TechnicianProfilePage() {
   const location = [form.city, form.state].filter(Boolean).join(", ");
 
   return (
-    <main className="min-h-screen bg-[#f8f9fa] pb-28">
+    <main className="min-h-screen bg-[var(--surface-2)] pb-28">
       <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
         <button
           type="button"
           onClick={() => router.back()}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--muted)] hover:text-[var(--ink)] mb-4"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -482,14 +475,14 @@ export default function TechnicianProfilePage() {
         </button>
 
         {error && (
-          <div className="mb-4 p-3 rounded-xl border-2 border-red-200 bg-red-50 text-red-700 text-sm">
+          <div className="mb-4 p-3 rounded-[var(--radius)] border border-[var(--danger)]/20 bg-[var(--danger-soft)] text-[var(--danger)] text-sm">
             {error}
           </div>
         )}
 
         {/* Channel-style header */}
-        <div className="rounded-2xl border-2 border-gray-200 bg-white overflow-hidden mb-6">
-          <div className="h-28 sm:h-36 bg-gradient-to-r from-slate-700 via-blue-700 to-sky-600" />
+        <Card className="overflow-hidden mb-6">
+          <div className="h-28 sm:h-36 bg-gradient-to-r from-[var(--brand-hover)] to-[var(--brand)]" />
           <div className="px-4 sm:px-6 pb-5">
             <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 sm:-mt-14">
               <div className="relative self-center sm:self-auto shrink-0">
@@ -498,19 +491,19 @@ export default function TechnicianProfilePage() {
                   <img
                     src={form.profilePicture}
                     alt={form.name}
-                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-md bg-white"
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[var(--surface)] shadow-[var(--shadow)] bg-[var(--surface)]"
                   />
                 ) : (
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl font-bold border-4 border-white shadow-md">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-4xl font-semibold border-4 border-[var(--surface)] shadow-[var(--shadow)]">
                     {(form.name || "?").charAt(0).toUpperCase()}
                   </div>
                 )}
                 <label
                   htmlFor="profilePicInput"
-                  className="absolute bottom-1 right-1 w-9 h-9 bg-white border border-gray-300 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-50 shadow"
+                  className="absolute bottom-1 right-1 w-9 h-9 bg-[var(--surface)] border border-[var(--border-strong)] rounded-full flex items-center justify-center cursor-pointer hover:bg-[var(--surface-2)] shadow-[var(--shadow-sm)]"
                   title="Change photo"
                 >
-                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[var(--ink-secondary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -526,15 +519,15 @@ export default function TechnicianProfilePage() {
               </div>
 
               <div className="flex-1 min-w-0 text-center sm:text-left sm:pb-1">
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
+                <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--ink)] truncate">
                   {form.name || "Your profile"}
                 </h1>
-                <p className="text-sm text-gray-500 mt-1 truncate">{form.email}</p>
+                <p className="text-sm text-[var(--muted)] mt-1 truncate">{form.email}</p>
                 {location && (
-                  <p className="text-sm text-gray-600 mt-0.5">{location}</p>
+                  <p className="text-sm text-[var(--ink-secondary)] mt-0.5">{location}</p>
                 )}
                 {typeof profile?.trustScore === "number" && (
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-[var(--muted)] mt-2">
                     Trust score {profile.trustScore}
                     {profile.trustLabel ? ` · ${profile.trustLabel}` : ""}
                   </p>
@@ -545,25 +538,24 @@ export default function TechnicianProfilePage() {
                 {profile?._id && (
                   <Link
                     href={`/u/${profile._id}`}
-                    className="px-4 py-2 rounded-full border border-gray-300 text-sm font-semibold text-gray-800 hover:bg-gray-50"
+                    className="px-4 py-2 rounded-full border border-[var(--border-strong)] text-sm font-semibold text-[var(--ink-secondary)] hover:bg-[var(--surface-2)]"
                   >
                     View public profile
                   </Link>
                 )}
-                <button
-                  type="button"
+                <Button
+                  className="rounded-full px-4"
                   onClick={() => handleUpdate()}
                   disabled={saving || !dirty}
-                  className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-40"
                 >
                   {saving ? "Saving…" : "Save changes"}
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           {/* Section tabs */}
-          <div className="border-t-2 border-gray-200 px-2 sm:px-4 overflow-x-auto">
+          <div className="border-t border-[var(--border)] px-2 sm:px-4 overflow-x-auto">
             <nav className="flex gap-1 min-w-max">
               {SECTIONS.map((s) => (
                 <button
@@ -572,8 +564,8 @@ export default function TechnicianProfilePage() {
                   onClick={() => scrollTo(s.id)}
                   className={`px-3.5 py-3 text-sm font-semibold border-b-2 transition ${
                     activeSection === s.id
-                      ? "border-gray-900 text-gray-900"
-                      : "border-transparent text-gray-500 hover:text-gray-800"
+                      ? "border-[var(--brand)] text-[var(--brand)]"
+                      : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]"
                   }`}
                 >
                   {s.label}
@@ -581,7 +573,7 @@ export default function TechnicianProfilePage() {
               ))}
             </nav>
           </div>
-        </div>
+        </Card>
 
         <form onSubmit={handleUpdate} className="space-y-5">
           <SectionCard
@@ -598,7 +590,7 @@ export default function TechnicianProfilePage() {
               maxLength={MAX_ABOUT_LENGTH}
               placeholder="e.g. Mobile parts seller in Pune. Genuine LCD, battery & charging port stock with quick dispatch."
             />
-            <p className="mt-2 text-xs text-gray-500 text-right">
+            <p className="mt-2 text-xs text-[var(--muted)] text-right">
               {form.about.length}/{MAX_ABOUT_LENGTH}
             </p>
           </SectionCard>
@@ -677,7 +669,7 @@ export default function TechnicianProfilePage() {
 
           <SectionCard id="contact" title="WhatsApp contact">
             <div className="max-w-xl space-y-4">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm text-[var(--ink-secondary)]">
                 <input
                   type="checkbox"
                   checked={waSameAsMobile}
@@ -691,7 +683,7 @@ export default function TechnicianProfilePage() {
                       );
                     }
                   }}
-                  className="rounded border-gray-300"
+                  className="rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
                 />
                 Same as mobile number
               </label>
@@ -778,11 +770,10 @@ export default function TechnicianProfilePage() {
               <StatusPill ok={!!profile?.addressVerified} label="Address" />
               <StatusPill ok={!!profile?.isTrusted} label="Trusted" />
             </div>
-            <Link
-              href="/verify"
-              className="inline-flex px-4 py-2.5 rounded-full bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800"
-            >
-              Verify phone / email
+            <Link href="/verify">
+              <Button className="rounded-full" variant="secondary">
+                Verify phone / email
+              </Button>
             </Link>
           </SectionCard>
 
@@ -803,11 +794,11 @@ export default function TechnicianProfilePage() {
                 size="md"
               />
             ) : (
-              <p className="text-sm text-gray-500">No trust data yet.</p>
+              <p className="text-sm text-[var(--muted)]">No trust data yet.</p>
             )}
             <Link
               href="/trust-score"
-              className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+              className="inline-block mt-4 text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
             >
               How Trust Score works →
             </Link>
@@ -865,10 +856,11 @@ export default function TechnicianProfilePage() {
                   required
                 />
               </Field>
-              <button
+              <Button
                 type="submit"
+                variant="secondary"
+                className="rounded-full"
                 disabled={pwSaving}
-                className="px-5 py-2.5 rounded-full border border-gray-300 bg-white text-gray-900 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
               >
                 {pwSaving
                   ? profile?.hasPassword
@@ -877,7 +869,7 @@ export default function TechnicianProfilePage() {
                   : profile?.hasPassword
                     ? "Update password"
                     : "Set password"}
-              </button>
+              </Button>
             </form>
           </SectionCard>
         </div>
@@ -885,9 +877,9 @@ export default function TechnicianProfilePage() {
 
       {/* Sticky save bar */}
       {dirty && (
-        <div className="fixed bottom-0 inset-x-0 z-40 border-t-2 border-gray-200 bg-white/95 backdrop-blur px-4 py-3">
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur px-4 py-3">
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-            <p className="text-sm text-gray-600">You have unsaved changes</p>
+            <p className="text-sm text-[var(--muted)]">You have unsaved changes</p>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -899,18 +891,17 @@ export default function TechnicianProfilePage() {
                         initialForm.whatsappNumber.replace(/\D/g, ""),
                   );
                 }}
-                className="px-4 py-2 rounded-full border border-gray-300 text-sm font-semibold"
+                className="px-4 py-2 rounded-full border border-[var(--border-strong)] text-sm font-semibold text-[var(--ink-secondary)] hover:bg-[var(--surface-2)]"
               >
                 Discard
               </button>
-              <button
-                type="button"
+              <Button
+                className="rounded-full"
                 onClick={() => handleUpdate()}
                 disabled={saving}
-                className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold disabled:opacity-50"
               >
                 {saving ? "Saving…" : "Save"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -918,13 +909,13 @@ export default function TechnicianProfilePage() {
 
       {cropOpen && (
         <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden border-2 border-gray-200">
-            <div className="px-6 py-4 border-b-2 border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">
+          <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] w-full max-w-md overflow-hidden border border-[var(--border)]">
+            <div className="px-6 py-4 border-b border-[var(--border)]">
+              <h3 className="text-lg font-semibold text-[var(--ink)]">
                 Crop profile picture
               </h3>
             </div>
-            <div className="relative h-80 bg-gray-100">
+            <div className="relative h-80 bg-[var(--surface-2)]">
               {cropImageSrc && (
                 <Cropper
                   image={cropImageSrc}
@@ -939,8 +930,8 @@ export default function TechnicianProfilePage() {
                 />
               )}
             </div>
-            <div className="px-6 py-4 border-b border-gray-200">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="px-6 py-4 border-b border-[var(--border)]">
+              <label className="block text-sm font-medium text-[var(--ink-secondary)] mb-2">
                 Zoom
               </label>
               <input
@@ -950,14 +941,14 @@ export default function TechnicianProfilePage() {
                 step={0.1}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
-                className="w-full accent-blue-600"
+                className="w-full accent-[var(--brand)]"
               />
             </div>
             {uploading && uploadProgress > 0 && (
               <div className="px-6 py-3">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-[var(--surface-3)] rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-blue-600 transition-all"
+                    className="h-full bg-[var(--brand)] transition-all"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -968,18 +959,17 @@ export default function TechnicianProfilePage() {
                 type="button"
                 onClick={handleCropCancel}
                 disabled={uploading}
-                className="flex-1 py-3 rounded-full border border-gray-300 font-semibold disabled:opacity-50"
+                className="flex-1 py-3 rounded-full border border-[var(--border-strong)] font-semibold text-[var(--ink-secondary)] disabled:opacity-50"
               >
                 Cancel
               </button>
-              <button
-                type="button"
+              <Button
+                className="flex-1 rounded-full"
                 onClick={handleCropConfirm}
                 disabled={uploading}
-                className="flex-1 py-3 rounded-full bg-blue-600 text-white font-semibold disabled:opacity-50"
               >
                 {uploading ? "Uploading…" : "Upload"}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

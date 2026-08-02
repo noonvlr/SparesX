@@ -53,7 +53,7 @@ function ThreadBody({
   }, [messages.length, typing, conversationId]);
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-[#efeae2]">
+    <div className="flex flex-col h-full min-h-0 bg-[var(--chat-thread)]">
       {!compact && (
         <ProductHeader product={conversation?.productId as any} />
       )}
@@ -63,7 +63,7 @@ function ThreadBody({
             <button
               type="button"
               onClick={() => void chat.loadOlder(conversationId)}
-              className="text-xs text-blue-700 font-medium"
+              className="text-xs text-teal-700 font-semibold hover:text-teal-800"
             >
               Load older
             </button>
@@ -99,6 +99,7 @@ function ThreadBody({
         onSendImage={(url) => chat.sendImage(conversationId, url)}
         onTyping={() => chat.onTyping(conversationId)}
         disabled={!chat.userId}
+        showQuickReplies={messages.length < 3}
       />
     </div>
   );
@@ -121,12 +122,12 @@ function FloatingWindow({
 
   return (
     <div
-      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] bg-white/95 backdrop-blur rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
+      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] glass rounded-2xl shadow-2xl border border-teal-900/10 overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
       style={{ right }}
       role="dialog"
       aria-label={`Chat with ${peer?.name || "user"}`}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5 bg-slate-900 text-white">
+      <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-teal-700 to-teal-900 text-white">
         {peer?._id ? (
           <Link
             href={`/u/${peer._id}`}
@@ -140,7 +141,7 @@ function FloatingWindow({
                 className="w-8 h-8 rounded-full object-cover"
               />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold">
+              <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-sm font-bold">
                 {(peer?.name || "?").charAt(0).toUpperCase()}
               </div>
             )}
@@ -152,7 +153,7 @@ function FloatingWindow({
             className="w-8 h-8 rounded-full object-cover"
           />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold">
+          <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-sm font-bold">
             {(peer?.name || "?").charAt(0).toUpperCase()}
           </div>
         )}
@@ -335,7 +336,7 @@ export default function FloatingChatDock() {
                 key={id}
                 type="button"
                 onClick={() => chat.restoreFloating(id)}
-                className="relative w-12 h-12 rounded-full shadow-lg border-2 border-white bg-blue-600 text-white font-bold overflow-hidden transition-transform duration-200 hover:scale-105 animate-in zoom-in-75"
+                className="relative w-12 h-12 rounded-full shadow-lg border-2 border-white bg-teal-600 text-white font-bold overflow-hidden transition-transform duration-200 hover:scale-105 animate-in zoom-in-75"
                 title={peer?.name || "Chat"}
               >
                 {peer?.profilePicture ? (
@@ -372,19 +373,19 @@ export default function FloatingChatDock() {
             onClick={() => chat.closePanel()}
           />
           <aside
-            className="fixed z-[95] bg-white/95 backdrop-blur shadow-2xl border border-gray-200 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
+            className="fixed z-[95] glass shadow-2xl border border-teal-900/10 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
               inset-x-0 bottom-0 h-[min(92vh,720px)] rounded-t-3xl
               md:inset-auto md:right-4 md:bottom-24 md:w-[380px] md:h-[min(640px,calc(100vh-7rem))] md:rounded-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Messages"
           >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-white rounded-t-3xl md:rounded-t-2xl">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-teal-900/10 bg-white/70 rounded-t-3xl md:rounded-t-2xl">
               {chat.panelView === "thread" ? (
                 <button
                   type="button"
                   onClick={chat.backToList}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
+                  className="p-1.5 rounded-lg hover:bg-teal-50 text-gray-600"
                   aria-label="Back to conversations"
                 >
                   ←
@@ -415,7 +416,7 @@ export default function FloatingChatDock() {
                   setChatMuted(next);
                   setMuted(next);
                 }}
-                className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-600"
+                className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-teal-50 hover:border-teal-200"
                 title={muted ? "Unmute sounds" : "Mute sounds"}
               >
                 {muted ? "Muted" : "Sound"}
@@ -423,7 +424,7 @@ export default function FloatingChatDock() {
               <span
                 className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
                   chat.connected
-                    ? "bg-emerald-50 text-emerald-700"
+                    ? "bg-teal-50 text-teal-700"
                     : "bg-amber-50 text-amber-700"
                 }`}
               >
@@ -432,7 +433,7 @@ export default function FloatingChatDock() {
               <button
                 type="button"
                 onClick={chat.closePanel}
-                className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+                className="p-1.5 rounded-lg hover:bg-teal-50 text-gray-500"
                 aria-label="Close"
               >
                 ×
@@ -478,12 +479,10 @@ export default function FloatingChatDock() {
           if (suppressClickRef.current) return;
           togglePanel();
         }}
-        className="fixed z-[96] w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-xl hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 touch-none select-none"
-        style={
-          fabPosition
-            ? { left: fabPosition.x, top: fabPosition.y }
-            : { right: "1rem", bottom: "1.25rem" }
-        }
+        className={`fixed z-[96] w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-900/20 hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-teal-300 touch-none select-none ${
+          fabPosition ? "" : "chat-fab-default"
+        }`}
+        style={fabPosition ? { left: fabPosition.x, top: fabPosition.y } : undefined}
         aria-label="Open messages"
       >
         <svg
