@@ -15,6 +15,8 @@ export interface IUser extends Document {
   state: string;
   whatsappNumber: string;
   profilePicture?: string;
+  /** Public bio shown on /u/[id] About section */
+  about?: string;
   isBlocked: boolean;
   lastSeen?: Date;
   emailVerified: boolean;
@@ -71,6 +73,7 @@ const UserSchema: Schema<IUser> = new Schema({
   state: { type: String, required: true, trim: true },
   whatsappNumber: { type: String, required: true, trim: true },
   profilePicture: { type: String, trim: true },
+  about: { type: String, trim: true, maxlength: 500, default: "" },
   isBlocked: { type: Boolean, default: false },
   lastSeen: { type: Date },
   emailVerified: { type: Boolean, default: false },

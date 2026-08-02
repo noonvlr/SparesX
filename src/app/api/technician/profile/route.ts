@@ -4,6 +4,8 @@ import { User } from "@/lib/models/User";
 import { verifyJwt } from "@/lib/auth/jwt";
 import {
   normalizeEmail,
+  normalizeAbout,
+  MAX_ABOUT_LENGTH,
   parseContactFields,
 } from "@/lib/validation/userContact";
 
@@ -124,6 +126,17 @@ export async function PUT(req: NextRequest) {
 
   if (body.profilePicture !== undefined) {
     user.profilePicture = String(body.profilePicture || "");
+  }
+
+  if (body.about !== undefined) {
+    const raw = String(body.about ?? "");
+    if (raw.trim().length > MAX_ABOUT_LENGTH) {
+      return NextResponse.json(
+        { message: `About must be at most ${MAX_ABOUT_LENGTH} characters` },
+        { status: 400 },
+      );
+    }
+    user.about = normalizeAbout(body.about);
   }
 
   await user.save();

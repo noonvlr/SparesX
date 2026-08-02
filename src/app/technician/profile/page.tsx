@@ -8,6 +8,7 @@ import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
+import { MAX_ABOUT_LENGTH } from "@/lib/validation/userContact";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -29,6 +30,7 @@ type ProfileForm = {
   pinCode: string;
   whatsappNumber: string;
   profilePicture: string;
+  about: string;
 };
 
 const emptyForm = (): ProfileForm => ({
@@ -42,6 +44,7 @@ const emptyForm = (): ProfileForm => ({
   pinCode: "",
   whatsappNumber: "",
   profilePicture: "",
+  about: "",
 });
 
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
@@ -49,7 +52,7 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
     <span
       className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
         ok
-          ? "bg-green-50 text-green-800 border-green-200"
+          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
           : "bg-amber-50 text-amber-900 border-amber-200"
       }`}
     >
@@ -58,24 +61,29 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
-function Section({
+function SectionCard({
+  id,
   title,
   description,
   children,
 }: {
+  id?: string;
   title: string;
   description?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+    <section
+      id={id}
+      className="rounded-2xl border-2 border-gray-200 bg-white overflow-hidden"
+    >
+      <div className="px-5 sm:px-6 py-4 border-b-2 border-gray-200 bg-gray-50/80">
+        <h2 className="text-base sm:text-lg font-bold text-gray-900">{title}</h2>
         {description && (
-          <p className="text-sm text-gray-500 mt-1">{description}</p>
+          <p className="text-sm text-gray-500 mt-0.5">{description}</p>
         )}
       </div>
-      {children}
+      <div className="px-5 sm:px-6 py-5">{children}</div>
     </section>
   );
 }
@@ -91,17 +99,27 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+      <label className="block text-sm font-medium text-gray-700 mb-1.5">
         {label}
       </label>
       {children}
-      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-gray-500">{hint}</p>}
     </div>
   );
 }
 
 const inputClass =
-  "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+  "w-full px-3.5 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500";
+
+const SECTIONS = [
+  { id: "about", label: "About" },
+  { id: "identity", label: "Identity" },
+  { id: "contact", label: "Contact" },
+  { id: "address", label: "Address" },
+  { id: "verification", label: "Verification" },
+  { id: "trust", label: "Trust" },
+  { id: "security", label: "Security" },
+] as const;
 
 export default function TechnicianProfilePage() {
   const router = useRouter();
@@ -120,6 +138,7 @@ export default function TechnicianProfilePage() {
   const [initialForm, setInitialForm] = useState<ProfileForm>(emptyForm());
   const [waSameAsMobile, setWaSameAsMobile] = useState(false);
   const [pinLoading, setPinLoading] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>("about");
 
   const [pwCurrent, setPwCurrent] = useState("");
   const [pwNew, setPwNew] = useState("");
@@ -131,8 +150,7 @@ export default function TechnicianProfilePage() {
   );
 
   const emailWillReverify =
-    form.email.trim().toLowerCase() !==
-    initialForm.email.trim().toLowerCase();
+    form.email.trim().toLowerCase() !== initialForm.email.trim().toLowerCase();
   const phoneWillReverify =
     form.mobile.replace(/\D/g, "") !== initialForm.mobile.replace(/\D/g, "") ||
     form.countryCode !== initialForm.countryCode;
@@ -162,6 +180,7 @@ export default function TechnicianProfilePage() {
             pinCode: data.user.pinCode || "",
             whatsappNumber: data.user.whatsappNumber || "",
             profilePicture: data.user.profilePicture || "",
+            about: data.user.about || "",
           };
           setProfile(data.user);
           setForm(nextForm);
@@ -179,7 +198,28 @@ export default function TechnicianProfilePage() {
       .finally(() => setLoading(false));
   }, [router]);
 
-  const setField = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
+  useEffect(() => {
+    const ids = SECTIONS.map((s) => s.id);
+    const observers: IntersectionObserver[] = [];
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        },
+        { rootMargin: "-40% 0px -50% 0px", threshold: 0 },
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, [loading]);
+
+  const setField = <K extends keyof ProfileForm>(
+    key: K,
+    value: ProfileForm[K],
+  ) => {
     setForm((f) => {
       const next = { ...f, [key]: value };
       if (key === "mobile" && waSameAsMobile) {
@@ -210,7 +250,7 @@ export default function TechnicianProfilePage() {
         }));
       }
     } catch {
-      // ignore lookup failures
+      // ignore
     } finally {
       setPinLoading(false);
     }
@@ -288,8 +328,8 @@ export default function TechnicianProfilePage() {
     }
   };
 
-  async function handleUpdate(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleUpdate(e?: React.FormEvent) {
+    e?.preventDefault();
     setError("");
     const token = localStorage.getItem("token");
     if (!token) {
@@ -312,7 +352,7 @@ export default function TechnicianProfilePage() {
       });
       const data = await res.json();
       if (res.ok) {
-        const next = data.user
+        const next: ProfileForm = data.user
           ? {
               name: data.user.name || "",
               email: data.user.email || "",
@@ -324,6 +364,7 @@ export default function TechnicianProfilePage() {
               pinCode: data.user.pinCode || "",
               whatsappNumber: data.user.whatsappNumber || "",
               profilePicture: data.user.profilePicture || "",
+              about: data.user.about || "",
             }
           : form;
         setForm(next);
@@ -384,132 +425,163 @@ export default function TechnicianProfilePage() {
     }
   }
 
+  const scrollTo = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActiveSection(id);
+  };
+
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
+      <main className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4">
         <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
       </main>
     );
   }
 
+  const location = [form.city, form.state].filter(Boolean).join(", ");
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50 pb-28">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-5">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="p-2 hover:bg-white rounded-xl border border-gray-200 transition"
-            aria-label="Go back"
-          >
-            <svg
-              className="w-5 h-5 text-gray-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Your profile</h1>
-            <p className="text-sm text-gray-500">
-              Manage your contact details, verification, and security
-            </p>
-          </div>
-        </div>
+    <main className="min-h-screen bg-[#f8f9fa] pb-28">
+      <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 mb-4"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <div className="mb-4 p-3 rounded-xl border-2 border-red-200 bg-red-50 text-red-700 text-sm">
             {error}
           </div>
         )}
 
-        {/* Header card */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="relative self-center sm:self-auto">
-              {form.profilePicture ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={form.profilePicture}
-                  alt={form.name}
-                  className="w-24 h-24 rounded-full object-cover border border-gray-100"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-700">
-                  {(form.name || "?").charAt(0).toUpperCase()}
-                </div>
-              )}
-              <label
-                htmlFor="profilePicInput"
-                className="absolute bottom-0 right-0 w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 shadow"
-              >
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        {/* Channel-style header */}
+        <div className="rounded-2xl border-2 border-gray-200 bg-white overflow-hidden mb-6">
+          <div className="h-28 sm:h-36 bg-gradient-to-r from-slate-700 via-blue-700 to-sky-600" />
+          <div className="px-4 sm:px-6 pb-5">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12 sm:-mt-14">
+              <div className="relative self-center sm:self-auto shrink-0">
+                {form.profilePicture ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={form.profilePicture}
+                    alt={form.name}
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white shadow-md bg-white"
+                  />
+                ) : (
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-blue-600 text-white flex items-center justify-center text-4xl font-bold border-4 border-white shadow-md">
+                    {(form.name || "?").charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <label
+                  htmlFor="profilePicInput"
+                  className="absolute bottom-1 right-1 w-9 h-9 bg-white border border-gray-300 rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-50 shadow"
+                  title="Change photo"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </label>
-              <input
-                id="profilePicInput"
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploading}
-                className="hidden"
-              />
-            </div>
-            <div className="flex-1 min-w-0 text-center sm:text-left">
-              <h2 className="text-xl font-bold text-gray-900 truncate">
-                {form.name || "Your name"}
-              </h2>
-              <p className="text-sm text-gray-500 truncate">{form.email}</p>
-              <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </label>
+                <input
+                  id="profilePicInput"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="hidden"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0 text-center sm:text-left sm:pb-1">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">
+                  {form.name || "Your profile"}
+                </h1>
+                <p className="text-sm text-gray-500 mt-1 truncate">{form.email}</p>
+                {location && (
+                  <p className="text-sm text-gray-600 mt-0.5">{location}</p>
+                )}
                 {typeof profile?.trustScore === "number" && (
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-100">
+                  <p className="text-xs text-gray-500 mt-2">
                     Trust score {profile.trustScore}
                     {profile.trustLabel ? ` · ${profile.trustLabel}` : ""}
-                  </span>
+                  </p>
                 )}
+              </div>
+
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-end sm:pb-1">
                 {profile?._id && (
                   <Link
                     href={`/u/${profile._id}`}
-                    className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+                    className="px-4 py-2 rounded-full border border-gray-300 text-sm font-semibold text-gray-800 hover:bg-gray-50"
                   >
                     View public profile
                   </Link>
                 )}
+                <button
+                  type="button"
+                  onClick={() => handleUpdate()}
+                  disabled={saving || !dirty}
+                  className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-40"
+                >
+                  {saving ? "Saving…" : "Save changes"}
+                </button>
               </div>
             </div>
           </div>
-        </section>
+
+          {/* Section tabs */}
+          <div className="border-t-2 border-gray-200 px-2 sm:px-4 overflow-x-auto">
+            <nav className="flex gap-1 min-w-max">
+              {SECTIONS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => scrollTo(s.id)}
+                  className={`px-3.5 py-3 text-sm font-semibold border-b-2 transition ${
+                    activeSection === s.id
+                      ? "border-gray-900 text-gray-900"
+                      : "border-transparent text-gray-500 hover:text-gray-800"
+                  }`}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
 
         <form onSubmit={handleUpdate} className="space-y-5">
-          <Section
-            title="Identity"
-            description="Changing email or mobile will require re-verification."
+          <SectionCard
+            id="about"
+            title="About"
+            description="Shown on your public profile. Tell buyers who you are."
           >
-            <div className="space-y-4">
+            <textarea
+              className={`${inputClass} resize-y min-h-[120px]`}
+              value={form.about}
+              onChange={(e) =>
+                setField("about", e.target.value.slice(0, MAX_ABOUT_LENGTH))
+              }
+              maxLength={MAX_ABOUT_LENGTH}
+              placeholder="e.g. Mobile parts seller in Pune. Genuine LCD, battery & charging port stock with quick dispatch."
+            />
+            <p className="mt-2 text-xs text-gray-500 text-right">
+              {form.about.length}/{MAX_ABOUT_LENGTH}
+            </p>
+          </SectionCard>
+
+          <SectionCard
+            id="identity"
+            title="Identity"
+            description="Changing email or mobile requires re-verification."
+          >
+            <div className="space-y-4 max-w-xl">
               <Field label="Full name">
                 <input
                   className={inputClass}
@@ -574,48 +646,50 @@ export default function TechnicianProfilePage() {
                 </div>
               </div>
             </div>
-          </Section>
+          </SectionCard>
 
-          <Section title="WhatsApp">
-            <label className="flex items-center gap-2 text-sm text-gray-700 mb-3">
-              <input
-                type="checkbox"
-                checked={waSameAsMobile}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setWaSameAsMobile(checked);
-                  if (checked) {
+          <SectionCard id="contact" title="WhatsApp contact">
+            <div className="max-w-xl space-y-4">
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={waSameAsMobile}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setWaSameAsMobile(checked);
+                    if (checked) {
+                      setField(
+                        "whatsappNumber",
+                        form.mobile.replace(/\D/g, "").slice(0, 10),
+                      );
+                    }
+                  }}
+                  className="rounded border-gray-300"
+                />
+                Same as mobile number
+              </label>
+              <Field label="WhatsApp number">
+                <input
+                  type="tel"
+                  className={inputClass}
+                  value={form.whatsappNumber}
+                  onChange={(e) => {
+                    setWaSameAsMobile(false);
                     setField(
                       "whatsappNumber",
-                      form.mobile.replace(/\D/g, "").slice(0, 10),
+                      e.target.value.replace(/\D/g, "").slice(0, 10),
                     );
-                  }
-                }}
-                className="rounded border-gray-300"
-              />
-              Same as mobile number
-            </label>
-            <Field label="WhatsApp number">
-              <input
-                type="tel"
-                className={inputClass}
-                value={form.whatsappNumber}
-                onChange={(e) => {
-                  setWaSameAsMobile(false);
-                  setField(
-                    "whatsappNumber",
-                    e.target.value.replace(/\D/g, "").slice(0, 10),
-                  );
-                }}
-                maxLength={10}
-                disabled={waSameAsMobile}
-                required
-              />
-            </Field>
-          </Section>
+                  }}
+                  maxLength={10}
+                  disabled={waSameAsMobile}
+                  required
+                />
+              </Field>
+            </div>
+          </SectionCard>
 
-          <Section title="Address">
-            <div className="space-y-4">
+          <SectionCard id="address" title="Address">
+            <div className="space-y-4 max-w-xl">
               <Field label="Street address">
                 <textarea
                   className={`${inputClass} resize-none`}
@@ -660,133 +734,145 @@ export default function TechnicianProfilePage() {
                 </Field>
               </div>
             </div>
-          </Section>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={saving || !dirty}
-              className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
-            >
-              {saving ? "Saving…" : "Save changes"}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setForm(initialForm);
-                setWaSameAsMobile(
-                  !!initialForm.mobile &&
-                    initialForm.mobile.replace(/\D/g, "") ===
-                      initialForm.whatsappNumber.replace(/\D/g, ""),
-                );
-              }}
-              disabled={!dirty}
-              className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 disabled:opacity-50"
-            >
-              Reset
-            </button>
-          </div>
+          </SectionCard>
         </form>
 
-        <Section
-          title="Verification"
-          description="Confirm phone and email yourself. KYC and trust badges are granted by SparesX."
-        >
-          <div className="flex flex-wrap gap-2 mb-4">
-            <StatusPill ok={!!profile?.phoneVerified} label="Phone" />
-            <StatusPill ok={!!profile?.emailVerified} label="Email" />
-            <StatusPill ok={!!profile?.kycVerified} label="KYC" />
-            <StatusPill ok={!!profile?.businessVerified} label="Business" />
-            <StatusPill ok={!!profile?.addressVerified} label="Address" />
-            <StatusPill ok={!!profile?.isTrusted} label="Trusted" />
-          </div>
-          <Link
-            href="/verify"
-            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800"
+        <div className="space-y-5 mt-5">
+          <SectionCard
+            id="verification"
+            title="Verification"
+            description="Confirm phone and email yourself. KYC and trust are granted by SparesX."
           >
-            Verify phone / email
-          </Link>
-        </Section>
-
-        <Section title="Trust & badges">
-          {profile ? (
-            <TrustBadges
-              phoneVerified={profile.phoneVerified}
-              emailVerified={profile.emailVerified}
-              kycVerified={profile.kycVerified}
-              businessVerified={profile.businessVerified}
-              addressVerified={profile.addressVerified}
-              isTrusted={profile.isTrusted}
-              trustScore={profile.trustScore}
-              trustLabel={profile.trustLabel}
-              badges={profile.badges}
-              activeBadgeKeys={profile.activeBadgeKeys}
-              showScore
-              size="md"
-            />
-          ) : (
-            <p className="text-sm text-gray-500">No trust data yet.</p>
-          )}
-          <Link
-            href="/trust-score"
-            className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
-          >
-            How Trust Score works →
-          </Link>
-        </Section>
-
-        <Section
-          title="Security"
-          description="Change your password. Minimum 6 characters."
-        >
-          <form onSubmit={handlePasswordChange} className="space-y-4">
-            <Field label="Current password">
-              <input
-                type="password"
-                className={inputClass}
-                value={pwCurrent}
-                onChange={(e) => setPwCurrent(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
-            </Field>
-            <Field label="New password">
-              <input
-                type="password"
-                className={inputClass}
-                value={pwNew}
-                onChange={(e) => setPwNew(e.target.value)}
-                autoComplete="new-password"
-                minLength={6}
-                required
-              />
-            </Field>
-            <Field label="Confirm new password">
-              <input
-                type="password"
-                className={inputClass}
-                value={pwConfirm}
-                onChange={(e) => setPwConfirm(e.target.value)}
-                autoComplete="new-password"
-                minLength={6}
-                required
-              />
-            </Field>
-            <button
-              type="submit"
-              disabled={pwSaving}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+            <div className="flex flex-wrap gap-2 mb-4">
+              <StatusPill ok={!!profile?.phoneVerified} label="Phone" />
+              <StatusPill ok={!!profile?.emailVerified} label="Email" />
+              <StatusPill ok={!!profile?.kycVerified} label="KYC" />
+              <StatusPill ok={!!profile?.businessVerified} label="Business" />
+              <StatusPill ok={!!profile?.addressVerified} label="Address" />
+              <StatusPill ok={!!profile?.isTrusted} label="Trusted" />
+            </div>
+            <Link
+              href="/verify"
+              className="inline-flex px-4 py-2.5 rounded-full bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800"
             >
-              {pwSaving ? "Updating…" : "Update password"}
-            </button>
-          </form>
-        </Section>
+              Verify phone / email
+            </Link>
+          </SectionCard>
+
+          <SectionCard id="trust" title="Trust & badges">
+            {profile ? (
+              <TrustBadges
+                phoneVerified={profile.phoneVerified}
+                emailVerified={profile.emailVerified}
+                kycVerified={profile.kycVerified}
+                businessVerified={profile.businessVerified}
+                addressVerified={profile.addressVerified}
+                isTrusted={profile.isTrusted}
+                trustScore={profile.trustScore}
+                trustLabel={profile.trustLabel}
+                badges={profile.badges}
+                activeBadgeKeys={profile.activeBadgeKeys}
+                showScore
+                size="md"
+              />
+            ) : (
+              <p className="text-sm text-gray-500">No trust data yet.</p>
+            )}
+            <Link
+              href="/trust-score"
+              className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+            >
+              How Trust Score works →
+            </Link>
+          </SectionCard>
+
+          <SectionCard
+            id="security"
+            title="Security"
+            description="Change your password. Minimum 6 characters."
+          >
+            <form onSubmit={handlePasswordChange} className="space-y-4 max-w-xl">
+              <Field label="Current password">
+                <input
+                  type="password"
+                  className={inputClass}
+                  value={pwCurrent}
+                  onChange={(e) => setPwCurrent(e.target.value)}
+                  autoComplete="current-password"
+                  required
+                />
+              </Field>
+              <Field label="New password">
+                <input
+                  type="password"
+                  className={inputClass}
+                  value={pwNew}
+                  onChange={(e) => setPwNew(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </Field>
+              <Field label="Confirm new password">
+                <input
+                  type="password"
+                  className={inputClass}
+                  value={pwConfirm}
+                  onChange={(e) => setPwConfirm(e.target.value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </Field>
+              <button
+                type="submit"
+                disabled={pwSaving}
+                className="px-5 py-2.5 rounded-full border border-gray-300 bg-white text-gray-900 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+              >
+                {pwSaving ? "Updating…" : "Update password"}
+              </button>
+            </form>
+          </SectionCard>
+        </div>
       </div>
+
+      {/* Sticky save bar */}
+      {dirty && (
+        <div className="fixed bottom-0 inset-x-0 z-40 border-t-2 border-gray-200 bg-white/95 backdrop-blur px-4 py-3">
+          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+            <p className="text-sm text-gray-600">You have unsaved changes</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setForm(initialForm);
+                  setWaSameAsMobile(
+                    !!initialForm.mobile &&
+                      initialForm.mobile.replace(/\D/g, "") ===
+                        initialForm.whatsappNumber.replace(/\D/g, ""),
+                  );
+                }}
+                className="px-4 py-2 rounded-full border border-gray-300 text-sm font-semibold"
+              >
+                Discard
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdate()}
+                disabled={saving}
+                className="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-semibold disabled:opacity-50"
+              >
+                {saving ? "Saving…" : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {cropOpen && (
         <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden border-2 border-gray-200">
+            <div className="px-6 py-4 border-b-2 border-gray-200">
               <h3 className="text-lg font-bold text-gray-900">
                 Crop profile picture
               </h3>
@@ -807,7 +893,7 @@ export default function TechnicianProfilePage() {
               )}
             </div>
             <div className="px-6 py-4 border-b border-gray-200">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Zoom
               </label>
               <input
@@ -835,7 +921,7 @@ export default function TechnicianProfilePage() {
                 type="button"
                 onClick={handleCropCancel}
                 disabled={uploading}
-                className="flex-1 py-3 rounded-xl bg-gray-100 font-semibold disabled:opacity-50"
+                className="flex-1 py-3 rounded-full border border-gray-300 font-semibold disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -843,7 +929,7 @@ export default function TechnicianProfilePage() {
                 type="button"
                 onClick={handleCropConfirm}
                 disabled={uploading}
-                className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-semibold disabled:opacity-50"
+                className="flex-1 py-3 rounded-full bg-blue-600 text-white font-semibold disabled:opacity-50"
               >
                 {uploading ? "Uploading…" : "Upload"}
               </button>

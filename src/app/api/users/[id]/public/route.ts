@@ -24,7 +24,7 @@ export async function GET(
 
     const user = await User.findById(id)
       .select(
-        "name profilePicture city state role isBlocked createdAt phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount",
+        "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount",
       )
       .lean();
 
@@ -60,6 +60,7 @@ export async function GET(
           profilePicture: user.profilePicture || null,
           city: user.city || null,
           state: user.state || null,
+          about: (user as { about?: string }).about || "",
           role: user.role,
           createdAt: user.createdAt,
           ...trust,

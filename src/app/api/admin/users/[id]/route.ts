@@ -4,6 +4,8 @@ import { User } from "@/lib/models/User";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   normalizeEmail,
+  normalizeAbout,
+  MAX_ABOUT_LENGTH,
   parseContactFields,
 } from "@/lib/validation/userContact";
 
@@ -61,6 +63,7 @@ export async function PATCH(
       address,
       city,
       state,
+      about,
       ...rest
     } = body;
 
@@ -95,6 +98,17 @@ export async function PATCH(
         return NextResponse.json({ message: parsed.message }, { status: 400 });
       }
       Object.assign(updateData, parsed.data);
+    }
+
+    if (about !== undefined) {
+      const raw = String(about ?? "");
+      if (raw.trim().length > MAX_ABOUT_LENGTH) {
+        return NextResponse.json(
+          { message: `About must be at most ${MAX_ABOUT_LENGTH} characters` },
+          { status: 400 },
+        );
+      }
+      updateData.about = normalizeAbout(about);
     }
 
     // Email uniqueness + clear verification when changed

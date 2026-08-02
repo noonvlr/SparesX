@@ -40,6 +40,7 @@ export default function UserDetailsModal({
     city: user.city,
     state: user.state,
     whatsappNumber: user.whatsappNumber,
+    about: user.about || "",
     profilePicture: user.profilePicture || "",
     isBlocked: user.isBlocked,
     isTrusted: !!user.isTrusted,
@@ -517,6 +518,16 @@ export default function UserDetailsModal({
                   </p>
                 </div>
 
+                {/* About */}
+                <div className="p-4 bg-gray-50 rounded-lg md:col-span-2">
+                  <label className="text-xs font-semibold text-gray-500 uppercase">
+                    About
+                  </label>
+                  <p className="text-gray-900 font-medium mt-1 whitespace-pre-wrap">
+                    {user.about?.trim() || "—"}
+                  </p>
+                </div>
+
                 {/* Status */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <label className="text-xs font-semibold text-gray-500 uppercase">
@@ -794,6 +805,25 @@ export default function UserDetailsModal({
                     required
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+
+                {/* About */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    About
+                  </label>
+                  <textarea
+                    name="about"
+                    value={editData.about}
+                    onChange={handleChange}
+                    rows={3}
+                    maxLength={500}
+                    placeholder="Public bio shown on their profile"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {(editData.about || "").length}/500
+                  </p>
                 </div>
 
                 {/* Address */}

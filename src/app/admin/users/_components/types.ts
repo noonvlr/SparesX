@@ -11,6 +11,7 @@ export interface AdminUser {
   state: string;
   whatsappNumber?: string;
   profilePicture?: string;
+  about?: string;
   isBlocked: boolean;
   phoneVerified?: boolean;
   emailVerified?: boolean;

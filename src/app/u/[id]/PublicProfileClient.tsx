@@ -16,6 +16,7 @@ type PublicProfile = {
   profilePicture?: string | null;
   city?: string | null;
   state?: string | null;
+  about?: string | null;
   role?: string;
   createdAt?: string;
   phoneVerified?: boolean;
@@ -235,13 +236,29 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
           </div>
         </header>
 
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6">
           <h2 className="text-lg font-bold text-gray-900 mb-3">About</h2>
-          <p className="text-sm text-gray-600 leading-relaxed">
-            {location
-              ? `${profile.name} is listed on SparesX from ${location}. Contact details are private — use in-app chat to enquire.`
-              : `${profile.name} is listed on SparesX. Contact details are private — use in-app chat to enquire.`}
-          </p>
+          {profile.about?.trim() ? (
+            <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {profile.about.trim()}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500 leading-relaxed">
+              {isOwn
+                ? "You haven’t added an about section yet. Edit your profile to introduce yourself to buyers."
+                : location
+                  ? `${profile.name} is listed on SparesX from ${location}. Contact details are private — use in-app chat to enquire.`
+                  : `${profile.name} is listed on SparesX. Contact details are private — use in-app chat to enquire.`}
+            </p>
+          )}
+          {isOwn && (
+            <Link
+              href={editHref}
+              className="inline-block mt-3 text-sm font-semibold text-blue-600 hover:text-blue-700"
+            >
+              {profile.about?.trim() ? "Edit about" : "Add about"} →
+            </Link>
+          )}
         </section>
 
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
