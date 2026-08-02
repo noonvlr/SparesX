@@ -61,4 +61,4 @@ export function PageFade({
   );
 }
 
-export { motion, useReducedMotion, useMotionDuration };
+export { motion, useReducedMotion };
