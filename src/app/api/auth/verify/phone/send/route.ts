@@ -23,6 +23,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "Phone already verified" });
   }
 
+  const mobile = String(user.mobile || "").replace(/\D/g, "");
+  if (mobile.length < 10) {
+    return NextResponse.json(
+      {
+        message:
+          "Add a valid mobile number in your profile before verifying your phone",
+      },
+      { status: 400 },
+    );
+  }
+
   const allowed = assertOtpSendAllowed(user, "phone");
   if (!allowed.ok) {
     return NextResponse.json({ message: allowed.message }, { status: 429 });
@@ -34,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   const result = await sendSmsOtp({
     countryCode: user.countryCode || "+91",
-    mobile: user.mobile,
+    mobile,
     otp,
   });
 
@@ -53,7 +64,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     message: "OTP sent to your mobile number",
-    maskedMobile: `${user.countryCode || "+91"} ******${user.mobile.slice(-4)}`,
+    maskedMobile: `${user.countryCode || "+91"} ******${mobile.slice(-4)}`,
     viaTwilioVerify: !!result.viaTwilioVerify,
   });
 }

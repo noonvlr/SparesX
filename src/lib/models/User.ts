@@ -1,19 +1,23 @@
-import mongoose, { Schema, Document, Model } from 'mongoose';
+import mongoose, { Schema, Document, Model } from "mongoose";
 
-export type UserRole = 'technician' | 'admin';
+export type UserRole = "technician" | "admin";
+export type AuthProvider = "local" | "google";
 
 export interface IUser extends Document {
   name: string;
   email: string;
-  password: string;
+  /** Optional for Google-only accounts */
+  password?: string;
   role: UserRole;
-  mobile: string;
+  authProvider: AuthProvider;
+  googleId?: string;
+  mobile?: string;
   countryCode: string;
-  address: string;
-  pinCode: string;
-  city: string;
-  state: string;
-  whatsappNumber: string;
+  address?: string;
+  pinCode?: string;
+  city?: string;
+  state?: string;
+  whatsappNumber?: string;
   profilePicture?: string;
   /** Public bio shown on /u/[id] About section */
   about?: string;
@@ -60,54 +64,82 @@ export interface IUser extends Document {
   updatedAt: Date;
 }
 
-const UserSchema: Schema<IUser> = new Schema({
-  name: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['technician', 'admin'], required: true },
-  mobile: { type: String, required: true, trim: true },
-  countryCode: { type: String, required: true, trim: true, default: '+91' },
-  address: { type: String, required: true, trim: true },
-  pinCode: { type: String, required: true, trim: true },
-  city: { type: String, required: true, trim: true },
-  state: { type: String, required: true, trim: true },
-  whatsappNumber: { type: String, required: true, trim: true },
-  profilePicture: { type: String, trim: true },
-  about: { type: String, trim: true, maxlength: 500, default: "" },
-  isBlocked: { type: Boolean, default: false },
-  lastSeen: { type: Date },
-  emailVerified: { type: Boolean, default: false },
-  phoneVerified: { type: Boolean, default: false },
-  isTrusted: { type: Boolean, default: false },
-  kycVerified: { type: Boolean, default: false },
-  businessVerified: { type: Boolean, default: false },
-  addressVerified: { type: Boolean, default: false },
-  kycVerifiedAt: { type: Date },
-  businessVerifiedAt: { type: Date },
-  addressVerifiedAt: { type: Date },
-  eliteApproved: { type: Boolean, default: false },
-  completedSales: { type: Number, default: 0 },
-  averageRating: { type: Number, default: 0 },
-  ratingCount: { type: Number, default: 0 },
-  responseRate: { type: Number, default: 0 },
-  complaintRate: { type: Number, default: 0 },
-  trustScore: { type: Number, default: 0 },
-  activeBadgeKeys: { type: [String], default: [] },
-  specialBadgeKeys: { type: [String], default: [] },
-  revokedBadgeKeys: { type: [String], default: [] },
-  emailVerifiedAt: { type: Date },
-  phoneVerifiedAt: { type: Date },
-  trustedAt: { type: Date },
-  emailVerifyOTP: { type: String, default: undefined },
-  emailVerifyOTPExpiry: { type: Date, default: undefined },
-  phoneVerifyOTP: { type: String, default: undefined },
-  phoneVerifyOTPExpiry: { type: Date, default: undefined },
-  phoneOtpSendCount: { type: Number, default: 0 },
-  phoneOtpSendWindowStart: { type: Date },
-  emailOtpSendCount: { type: Number, default: 0 },
-  emailOtpSendWindowStart: { type: Date },
-  passwordResetOTP: { type: String, default: undefined },
-  passwordResetOTPExpiry: { type: Date, default: undefined },
-}, { timestamps: true });
+const UserSchema: Schema<IUser> = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: { type: String, required: false },
+    role: { type: String, enum: ["technician", "admin"], required: true },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+      index: true,
+    },
+    googleId: {
+      type: String,
+      trim: true,
+      sparse: true,
+      unique: true,
+      index: true,
+    },
+    mobile: { type: String, trim: true, default: "" },
+    countryCode: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "+91",
+    },
+    address: { type: String, trim: true, default: "" },
+    pinCode: { type: String, trim: true, default: "" },
+    city: { type: String, trim: true, default: "" },
+    state: { type: String, trim: true, default: "" },
+    whatsappNumber: { type: String, trim: true, default: "" },
+    profilePicture: { type: String, trim: true },
+    about: { type: String, trim: true, maxlength: 500, default: "" },
+    isBlocked: { type: Boolean, default: false },
+    lastSeen: { type: Date },
+    emailVerified: { type: Boolean, default: false },
+    phoneVerified: { type: Boolean, default: false },
+    isTrusted: { type: Boolean, default: false },
+    kycVerified: { type: Boolean, default: false },
+    businessVerified: { type: Boolean, default: false },
+    addressVerified: { type: Boolean, default: false },
+    kycVerifiedAt: { type: Date },
+    businessVerifiedAt: { type: Date },
+    addressVerifiedAt: { type: Date },
+    eliteApproved: { type: Boolean, default: false },
+    completedSales: { type: Number, default: 0 },
+    averageRating: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 },
+    responseRate: { type: Number, default: 0 },
+    complaintRate: { type: Number, default: 0 },
+    trustScore: { type: Number, default: 0 },
+    activeBadgeKeys: { type: [String], default: [] },
+    specialBadgeKeys: { type: [String], default: [] },
+    revokedBadgeKeys: { type: [String], default: [] },
+    emailVerifiedAt: { type: Date },
+    phoneVerifiedAt: { type: Date },
+    trustedAt: { type: Date },
+    emailVerifyOTP: { type: String, default: undefined },
+    emailVerifyOTPExpiry: { type: Date, default: undefined },
+    phoneVerifyOTP: { type: String, default: undefined },
+    phoneVerifyOTPExpiry: { type: Date, default: undefined },
+    phoneOtpSendCount: { type: Number, default: 0 },
+    phoneOtpSendWindowStart: { type: Date },
+    emailOtpSendCount: { type: Number, default: 0 },
+    emailOtpSendWindowStart: { type: Date },
+    passwordResetOTP: { type: String, default: undefined },
+    passwordResetOTPExpiry: { type: Date, default: undefined },
+  },
+  { timestamps: true },
+);
 
-export const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+export const User: Model<IUser> =
+  mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       whatsappNumber: parsed.data.whatsappNumber,
       profilePicture: profilePicture || "",
       role: "technician",
+      authProvider: "local",
     });
 
     return NextResponse.json(

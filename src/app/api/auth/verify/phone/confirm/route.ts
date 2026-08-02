@@ -46,9 +46,16 @@ export async function POST(req: NextRequest) {
   const code = String(otp).trim();
 
   if (user.phoneVerifyOTP === TWILIO_VERIFY_SENTINEL) {
+    const mobile = String(user.mobile || "").replace(/\D/g, "");
+    if (mobile.length < 10) {
+      return NextResponse.json(
+        { message: "Add a valid mobile number before verifying" },
+        { status: 400 },
+      );
+    }
     const check = await confirmTwilioVerifyOtp({
       countryCode: user.countryCode || "+91",
-      mobile: user.mobile,
+      mobile,
       code,
     });
     if (!check.ok) {

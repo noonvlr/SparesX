@@ -40,6 +40,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    if (!user.password) {
+      return NextResponse.json(
+        {
+          message:
+            "This account uses Google Sign-In and has no password yet. Use Google to sign in, or contact support to set a password.",
+        },
+        { status: 400 },
+      );
+    }
+
     const ok = await comparePassword(currentPassword, user.password);
     if (!ok) {
       return NextResponse.json(

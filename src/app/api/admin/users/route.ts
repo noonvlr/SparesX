@@ -131,6 +131,7 @@ export async function POST(request: NextRequest) {
       state: parsed.data.state,
       whatsappNumber: parsed.data.whatsappNumber,
       role: role || "technician",
+      authProvider: "local",
       isBlocked: false,
     });
 
