@@ -3,8 +3,10 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
 import Category from "@/lib/models/Category";
+import { Product } from "@/lib/models/Product";
 import { verifyJwt } from "@/lib/auth/jwt";
 import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
+import { normalizeCategoryName } from "@/lib/categories/normalize";
 
 const slugify = (value: string) =>
   value
@@ -134,6 +136,31 @@ export async function POST(req: NextRequest) {
     }
 
     const category = await Category.create(categoryPayload);
+
+    // Retire legacy global categories with the same display name and remap products
+    const nameKey = normalizeCategoryName(category.name);
+    const globalDupes = await Category.find({
+      _id: { $ne: category._id },
+      $or: [{ deviceId: null }, { deviceId: { $exists: false } }],
+      isActive: true,
+    })
+      .select("_id name slug")
+      .lean();
+
+    const toRetire = globalDupes.filter(
+      (g) => normalizeCategoryName(g.name) === nameKey,
+    );
+
+    for (const dup of toRetire) {
+      await Product.updateMany(
+        { partType: { $in: [dup.slug, dup.name] } },
+        { $set: { partType: category.slug } },
+      );
+      await Category.updateOne(
+        { _id: dup._id },
+        { $set: { isActive: false } },
+      );
+    }
 
     revalidateCategoryCaches();
 

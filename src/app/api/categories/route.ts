@@ -3,13 +3,12 @@ import { connectDB } from "@/lib/db/connect";
 import { findPublicCategories } from "@/lib/categories/publicQuery";
 
 /**
- * GET public part categories (active only).
+ * GET public part categories (active only), deduped by display name.
  *
  * Query:
- * - device / deviceCategory — device type slug; returns that device's
- *   part categories plus global (deviceId null) fallbacks
- * - deviceId — DeviceType ObjectId (same behavior)
- * - omit both — all active categories (global + device-scoped)
+ * - device / deviceCategory — device type slug
+ * - deviceId — DeviceType ObjectId
+ * - dedupe=false — return raw rows including duplicates (admin/debug)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -19,8 +18,13 @@ export async function GET(req: NextRequest) {
     const device =
       searchParams.get("device") || searchParams.get("deviceCategory");
     const deviceId = searchParams.get("deviceId");
+    const dedupeByName = searchParams.get("dedupe") !== "false";
 
-    const categories = await findPublicCategories({ device, deviceId });
+    const categories = await findPublicCategories({
+      device,
+      deviceId,
+      dedupeByName,
+    });
 
     return NextResponse.json(
       { categories },

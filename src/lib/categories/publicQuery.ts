@@ -1,6 +1,8 @@
 import { Types } from "mongoose";
 import Category from "@/lib/models/Category";
 import DeviceType from "@/lib/models/DeviceType";
+import { normalizeCategoryName } from "@/lib/categories/normalize";
+import { ensureCategoriesReconciled } from "@/lib/categories/ensureReconciled";
 
 export type PublicCategory = {
   _id: string;
@@ -26,21 +28,99 @@ type LeanCategory = {
     | null;
 };
 
+function toPublic(cat: LeanCategory): PublicCategory {
+  const populated =
+    cat.deviceId &&
+    typeof cat.deviceId === "object" &&
+    !(cat.deviceId instanceof Types.ObjectId) &&
+    "_id" in cat.deviceId
+      ? (cat.deviceId as { _id: Types.ObjectId; slug?: string; name?: string })
+      : null;
+  const rawId = populated
+    ? populated._id
+    : cat.deviceId instanceof Types.ObjectId
+      ? cat.deviceId
+      : null;
+
+  return {
+    _id: String(cat._id),
+    name: cat.name,
+    icon: cat.icon || "📦",
+    slug: cat.slug,
+    description: cat.description,
+    order: cat.order ?? 0,
+    deviceId: rawId ? String(rawId) : null,
+    deviceSlug: populated?.slug || null,
+  };
+}
+
+/**
+ * Prefer device-scoped categories over globals with the same name.
+ * When a device filter is active, prefer that device's row.
+ */
+export function dedupeCategoriesByName(
+  categories: PublicCategory[],
+  preferredDeviceId?: string | null,
+): PublicCategory[] {
+  const best = new Map<string, PublicCategory>();
+
+  for (const cat of categories) {
+    const key = normalizeCategoryName(cat.name || cat.slug);
+    if (!key) continue;
+    const existing = best.get(key);
+    if (!existing) {
+      best.set(key, cat);
+      continue;
+    }
+
+    const catMatchesDevice =
+      preferredDeviceId && cat.deviceId === preferredDeviceId;
+    const existingMatchesDevice =
+      preferredDeviceId && existing.deviceId === preferredDeviceId;
+
+    if (catMatchesDevice && !existingMatchesDevice) {
+      best.set(key, cat);
+      continue;
+    }
+    if (!catMatchesDevice && existingMatchesDevice) continue;
+
+    // Prefer device-scoped over global
+    if (cat.deviceId && !existing.deviceId) {
+      best.set(key, cat);
+      continue;
+    }
+    if (!cat.deviceId && existing.deviceId) continue;
+
+    // Prefer lower order, then name
+    if (cat.order < existing.order) {
+      best.set(key, cat);
+    }
+  }
+
+  return [...best.values()].sort(
+    (a, b) => a.order - b.order || a.name.localeCompare(b.name),
+  );
+}
+
 /**
  * Public part-category query.
  *
  * - No device filter → all active categories (global + device-scoped).
  * - With device / deviceId → that device's categories plus global fallbacks.
- *
- * Global = deviceId null/absent (from /admin/categories).
- * Device-scoped = deviceId set (from device-management).
+ * - dedupeByName (default true) collapses Display/Camera duplicates so UI
+ *   shows one chip per name and links to the preferred slug.
  */
 export async function findPublicCategories(options?: {
   device?: string | null;
   deviceId?: string | null;
+  dedupeByName?: boolean;
 }): Promise<PublicCategory[]> {
   const deviceParam = options?.device?.trim().toLowerCase() || null;
   const deviceIdParam = options?.deviceId?.trim() || null;
+  const shouldDedupe = options?.dedupeByName !== false;
+
+  // One-shot cleanup when legacy globals collide with device-scoped names
+  await ensureCategoriesReconciled();
 
   let deviceObjectId: Types.ObjectId | null = null;
 
@@ -73,29 +153,11 @@ export async function findPublicCategories(options?: {
     .populate("deviceId", "slug name")
     .lean()) as LeanCategory[];
 
-  return rows.map((cat) => {
-    const populated =
-      cat.deviceId &&
-      typeof cat.deviceId === "object" &&
-      !(cat.deviceId instanceof Types.ObjectId) &&
-      "_id" in cat.deviceId
-        ? (cat.deviceId as { _id: Types.ObjectId; slug?: string; name?: string })
-        : null;
-    const rawId = populated
-      ? populated._id
-      : cat.deviceId instanceof Types.ObjectId
-        ? cat.deviceId
-        : null;
+  const mapped = rows.map(toPublic);
+  if (!shouldDedupe) return mapped;
 
-    return {
-      _id: String(cat._id),
-      name: cat.name,
-      icon: cat.icon || "📦",
-      slug: cat.slug,
-      description: cat.description,
-      order: cat.order ?? 0,
-      deviceId: rawId ? String(rawId) : null,
-      deviceSlug: populated?.slug || null,
-    };
-  });
+  return dedupeCategoriesByName(
+    mapped,
+    deviceObjectId ? String(deviceObjectId) : null,
+  );
 }

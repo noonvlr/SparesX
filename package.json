@@ -13,7 +13,8 @@
     "seed:device-types": "tsx scripts/seed-device-types.ts",
     "seed:categories": "node scripts/seed-categories.js",
     "seed:device-categories": "node scripts/seed-device-categories.js",
-    "migrate:categories": "node scripts/migrate-categories.js"
+    "migrate:categories": "node scripts/migrate-categories.js",
+    "reconcile:categories": "node scripts/reconcile-categories.js"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.4",

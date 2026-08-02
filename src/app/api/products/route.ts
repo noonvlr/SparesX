@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
+import { buildPartTypeMatch } from "@/lib/categories/partTypeMatch";
+import { ensureCategoriesReconciled } from "@/lib/categories/ensureReconciled";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -52,6 +54,8 @@ function buildModelFilter(deviceModel: string, brand?: string | null) {
 export async function GET(req: NextRequest) {
   try {
     await connectDB();
+    await ensureCategoriesReconciled();
+
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "12", 10);
@@ -83,7 +87,9 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    if (partType) query.partType = partType;
+    if (partType) {
+      Object.assign(query, await buildPartTypeMatch(partType));
+    }
 
     if (brand) {
       query.brand = {

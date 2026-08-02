@@ -28,6 +28,7 @@ export default function AdminCategoriesPage() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [reconciling, setReconciling] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -51,6 +52,34 @@ export default function AdminCategoriesPage() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleReconcile() {
+    setReconciling(true);
+    setError("");
+    setSuccess("");
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/admin/categories/reconcile", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ deleteInactiveDuplicates: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Cleanup failed");
+      const r = data.report;
+      setSuccess(
+        `Cleanup done: remapped ${r.productsRemapped} products, removed ${r.categoriesDeleted} duplicate categories.`,
+      );
+      await fetchCategories();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setReconciling(false);
     }
   }
 
@@ -168,12 +197,21 @@ export default function AdminCategoriesPage() {
               Add, edit, or remove categories for the homepage
             </p>
           </div>
-          <button
-            onClick={handleAddNew}
-            className="bg-[var(--brand)] text-white px-6 py-3 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold shadow-lg hover:shadow-xl"
-          >
-            + Add Category
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleReconcile}
+              disabled={reconciling}
+              className="bg-slate-800 text-white px-5 py-3 rounded-lg hover:bg-slate-900 transition font-semibold disabled:opacity-60"
+            >
+              {reconciling ? "Cleaning…" : "Clean duplicates"}
+            </button>
+            <button
+              onClick={handleAddNew}
+              className="bg-[var(--brand)] text-white px-6 py-3 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold shadow-lg hover:shadow-xl"
+            >
+              + Add Category
+            </button>
+          </div>
         </div>
 
         {error && (

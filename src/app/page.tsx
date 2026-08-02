@@ -4,6 +4,9 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 import AdSlot from "@/components/AdSlot";
 import { buttonVariants } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
+import { connectDB } from "@/lib/db/connect";
+import { findPublicCategories } from "@/lib/categories/publicQuery";
+import { Product } from "@/lib/models/Product";
 
 export const metadata: Metadata = {
   title: "Buy & Sell Mobile Spare Parts Online",
@@ -57,32 +60,36 @@ export const metadata: Metadata = {
   },
 };
 
+export const revalidate = 60;
+
 export default async function HomePage() {
+  await connectDB();
+
+  const [featuredRaw, categoryRows] = await Promise.all([
+    Product.find({ status: "approved" })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .select(
+        "name price images brand partType condition deviceModel deviceCategory slug status priceNegotiable",
+      )
+      .lean(),
+    findPublicCategories({ dedupeByName: true }),
+  ]);
+
+  const featuredProducts = featuredRaw.map((p) => ({
+    ...p,
+    _id: String(p._id),
+  }));
+
+  const categories = categoryRows.map((cat) => ({
+    name: cat.name,
+    icon: cat.icon,
+    slug: cat.slug,
+    href: `/products?partType=${encodeURIComponent(cat.slug)}`,
+  }));
+
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || "https://spares-x-h1cj.vercel.app";
-
-  // Fetch featured products with revalidation (ISR)
-  const productsRes = await fetch(`${baseUrl}/api/products?limit=6`, {
-    next: { revalidate: 300 }, // Revalidate every 5 minutes
-  });
-  const productsData = productsRes.ok
-    ? await productsRes.json()
-    : { products: [] };
-  const featuredProducts = productsData.products || [];
-
-  // Fetch categories with short-lived cache + on-demand tag invalidation
-  const categoriesRes = await fetch(`${baseUrl}/api/categories`, {
-    next: { revalidate: 60, tags: ["categories"] },
-  });
-  const categoriesData = categoriesRes.ok
-    ? await categoriesRes.json()
-    : { categories: [] };
-  const categories =
-    categoriesData.categories?.map((cat: any) => ({
-      name: cat.name,
-      icon: cat.icon,
-      href: `/products?partType=${encodeURIComponent(cat.slug)}`,
-    })) || [];
 
   // JSON-LD structured data for SEO
   const jsonLd = {
@@ -180,7 +187,7 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {categories.map((category: any) => (
                 <Link
-                  key={category.name}
+                  key={category.slug}
                   href={category.href}
                   className="card-hover group flex flex-col items-center gap-2 sm:gap-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-6 shadow-[var(--shadow-sm)]"
                 >
