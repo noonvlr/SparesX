@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
-import { Conversation, IConversation } from "@/lib/models/Conversation";
+import { Conversation, IConversation, conversationPairKey, ensureConversationIndexes } from "@/lib/models/Conversation";
 import { Message, IMessage, MessageType } from "@/lib/models/Message";
 import { User } from "@/lib/models/User";
 import { Product } from "@/lib/models/Product";
@@ -70,6 +70,7 @@ export async function getOrCreateConversation(params: {
   }
 
   await connectDB();
+  await ensureConversationIndexes();
 
   const peer = await User.findById(peerId).select("_id isBlocked").lean();
   if (!peer || peer.isBlocked) {
@@ -84,25 +85,71 @@ export async function getOrCreateConversation(params: {
   }
 
   const [p1, p2] = sortedPair(userId, peerId);
-  const filter: Record<string, unknown> = {
-    participants: { $all: [toOid(p1), toOid(p2)], $size: 2 },
+  const pairKey = conversationPairKey(p1, p2);
+  const productOid = productId ? toOid(productId) : undefined;
+
+  const pairMatch = {
+    $or: [
+      { pairKey },
+      {
+        participants: { $all: [toOid(p1), toOid(p2)], $size: 2 },
+      },
+    ],
   };
-  if (productId) {
-    filter.productId = toOid(productId);
-  } else {
-    filter.productId = { $exists: false };
-  }
+
+  const filter: Record<string, unknown> = productOid
+    ? { productId: productOid, ...pairMatch }
+    : {
+        $and: [
+          { $or: [{ productId: { $exists: false } }, { productId: null }] },
+          pairMatch,
+        ],
+      };
 
   let conversation = await Conversation.findOne(filter);
-  if (!conversation) {
+  if (conversation) {
+    if (!conversation.pairKey) {
+      conversation.pairKey = pairKey;
+      await conversation.save().catch(() => {});
+    }
+    return conversation;
+  }
+
+  try {
     conversation = await Conversation.create({
       participants: [toOid(p1), toOid(p2)],
-      ...(productId ? { productId: toOid(productId) } : {}),
+      pairKey,
+      ...(productOid ? { productId: productOid } : {}),
       unreadCounts: new Map([
         [userId, 0],
         [peerId, 0],
       ]),
     });
+  } catch (err: unknown) {
+    // Race: another request created the same pair — return existing
+    const code = (err as { code?: number })?.code;
+    if (code === 11000) {
+      conversation = await Conversation.findOne(
+        productOid
+          ? { pairKey, productId: productOid }
+          : {
+              pairKey,
+              $or: [{ productId: { $exists: false } }, { productId: null }],
+            },
+      );
+      if (!conversation) {
+        conversation = await Conversation.findOne({
+          participants: { $all: [toOid(p1), toOid(p2)], $size: 2 },
+          ...(productOid
+            ? { productId: productOid }
+            : {
+                $or: [{ productId: { $exists: false } }, { productId: null }],
+              }),
+        });
+      }
+      if (conversation) return conversation;
+    }
+    throw err;
   }
 
   return conversation;
