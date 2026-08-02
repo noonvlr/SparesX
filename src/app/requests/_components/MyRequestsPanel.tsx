@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Card, Badge, EmptyState } from "@/components/ui/Card";
+import { Spinner } from "@/components/ui/Spinner";
+import { Alert } from "@/components/ui/Alert";
 
 type MyRequest = {
   _id: string;
@@ -17,10 +22,10 @@ type MyRequest = {
   updatedAt: string;
 };
 
-const STATUS_STYLE: Record<string, string> = {
-  open: "bg-amber-50 text-amber-700 border-amber-200",
-  fulfilled: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  closed: "bg-gray-50 text-gray-600 border-gray-200",
+const STATUS_TONE: Record<string, "warning" | "success" | "neutral"> = {
+  open: "warning",
+  fulfilled: "success",
+  closed: "neutral",
 };
 
 export default function MyRequestsPanel() {
@@ -156,20 +161,18 @@ export default function MyRequestsPanel() {
     <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-300">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <h2 className="text-xl sm:text-2xl font-bold text-[var(--ink)]">
             My requests
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-[var(--muted)] mt-1">
             Update status, edit details, or delete your spare-part requests.
           </p>
         </div>
-        <Link
-          href="/requests?tab=submit"
-          scroll={false}
-          className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)]"
-        >
-          New request
-        </Link>
+        <Button asChild size="sm">
+          <Link href="/requests?tab=submit" scroll={false}>
+            New request
+          </Link>
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -180,8 +183,8 @@ export default function MyRequestsPanel() {
             onClick={() => setStatus(s)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border capitalize ${
               status === s
-                ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                : "bg-white text-gray-600 border-gray-200"
+                ? "bg-[var(--brand)] text-[var(--ink-inverse)] border-[var(--brand)]"
+                : "bg-[var(--surface)] text-[var(--muted)] border-[var(--border)]"
             }`}
           >
             {s}
@@ -189,172 +192,176 @@ export default function MyRequestsPanel() {
         ))}
       </div>
 
-      {error && (
-        <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <Alert tone="danger">{error}</Alert>}
 
       {loading ? (
-        <div className="text-sm text-gray-500">Loading…</div>
-      ) : requests.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 p-10 text-center bg-white">
-          <p className="text-gray-600 text-sm mb-3">You have no requests yet.</p>
-          <Link
-            href="/requests?tab=submit"
-            scroll={false}
-            className="text-[var(--brand)] font-semibold text-sm hover:underline"
-          >
-            Submit your first request
-          </Link>
+        <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
+          <Spinner size="sm" className="text-[var(--brand)]" />
+          Loading…
         </div>
+      ) : requests.length === 0 ? (
+        <Card className="border-dashed rounded-2xl">
+          <EmptyState
+            title="You have no requests yet."
+            action={
+              <Button asChild variant="link">
+                <Link href="/requests?tab=submit" scroll={false}>
+                  Submit your first request
+                </Link>
+              </Button>
+            }
+          />
+        </Card>
       ) : (
         <ul className="space-y-3">
           {requests.map((item) => (
-            <li
-              key={item._id}
-              className="rounded-2xl border border-gray-100 bg-white shadow-sm p-4"
-            >
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <p className="font-semibold text-gray-900">
-                    {item.category}
-                    {item.brand ? ` · ${item.brand}` : ""}
-                    {item.deviceModel ? ` · ${item.deviceModel}` : ""}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    Updated {new Date(item.updatedAt).toLocaleString("en-IN")}
-                  </p>
+            <li key={item._id}>
+              <Card padding="sm" className="rounded-2xl p-4">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div>
+                    <p className="font-semibold text-[var(--ink)]">
+                      {item.category}
+                      {item.brand ? ` · ${item.brand}` : ""}
+                      {item.deviceModel ? ` · ${item.deviceModel}` : ""}
+                    </p>
+                    <p className="text-xs text-[var(--muted)] mt-0.5">
+                      Updated {new Date(item.updatedAt).toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <Badge tone={STATUS_TONE[item.status]} className="capitalize">
+                    {item.status}
+                  </Badge>
                 </div>
-                <span
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLE[item.status]}`}
-                >
-                  {item.status}
-                </span>
-              </div>
 
-              {editingId === item._id ? (
-                <div className="space-y-2 mt-3">
-                  <input
-                    value={editDraft.category}
-                    onChange={(e) =>
-                      setEditDraft((d) => ({ ...d, category: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                    placeholder="Category / part"
-                  />
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      value={editDraft.brand}
+                {editingId === item._id ? (
+                  <div className="space-y-2 mt-3">
+                    <Input
+                      value={editDraft.category}
                       onChange={(e) =>
-                        setEditDraft((d) => ({ ...d, brand: e.target.value }))
+                        setEditDraft((d) => ({ ...d, category: e.target.value }))
                       }
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                      placeholder="Brand"
+                      size="sm"
+                      placeholder="Category / part"
                     />
-                    <input
-                      value={editDraft.deviceModel}
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input
+                        value={editDraft.brand}
+                        onChange={(e) =>
+                          setEditDraft((d) => ({ ...d, brand: e.target.value }))
+                        }
+                        size="sm"
+                        placeholder="Brand"
+                      />
+                      <Input
+                        value={editDraft.deviceModel}
+                        onChange={(e) =>
+                          setEditDraft((d) => ({
+                            ...d,
+                            deviceModel: e.target.value,
+                          }))
+                        }
+                        size="sm"
+                        placeholder="Model"
+                      />
+                    </div>
+                    <Textarea
+                      value={editDraft.description}
                       onChange={(e) =>
                         setEditDraft((d) => ({
                           ...d,
-                          deviceModel: e.target.value,
+                          description: e.target.value,
                         }))
                       }
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                      placeholder="Model"
+                      rows={3}
+                      className="min-h-[80px]"
                     />
-                  </div>
-                  <textarea
-                    value={editDraft.description}
-                    onChange={(e) =>
-                      setEditDraft((d) => ({
-                        ...d,
-                        description: e.target.value,
-                      }))
-                    }
-                    rows={3}
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                  />
-                  <input
-                    value={editDraft.phone}
-                    onChange={(e) =>
-                      setEditDraft((d) => ({ ...d, phone: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-                    placeholder="Phone"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      disabled={saving}
-                      onClick={() => void saveEdit(item._id)}
-                      className="px-3 py-2 rounded-lg bg-[var(--brand)] text-white text-xs font-semibold disabled:opacity-50"
-                    >
-                      {saving ? "Saving…" : "Save"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditingId(null)}
-                      className="px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {item.description}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {item.status !== "fulfilled" && (
-                      <button
+                    <Input
+                      value={editDraft.phone}
+                      onChange={(e) =>
+                        setEditDraft((d) => ({ ...d, phone: e.target.value }))
+                      }
+                      size="sm"
+                      placeholder="Phone"
+                    />
+                    <div className="flex gap-2">
+                      <Button
                         type="button"
-                        onClick={() =>
-                          void setRequestStatus(item._id, "fulfilled")
-                        }
-                        className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold"
+                        size="sm"
+                        loading={saving}
+                        onClick={() => void saveEdit(item._id)}
                       >
-                        Mark fulfilled
-                      </button>
-                    )}
-                    {item.status !== "open" && (
-                      <button
+                        Save
+                      </Button>
+                      <Button
                         type="button"
-                        onClick={() => void setRequestStatus(item._id, "open")}
-                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setEditingId(null)}
                       >
-                        Reopen
-                      </button>
-                    )}
-                    {item.status !== "closed" && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          void setRequestStatus(item._id, "closed")
-                        }
-                        className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700"
-                      >
-                        Close
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => startEdit(item)}
-                      className="px-3 py-1.5 rounded-lg border border-[var(--brand-muted)] text-xs font-semibold text-[var(--brand-hover)]"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void removeRequest(item._id)}
-                      className="px-3 py-1.5 rounded-lg border border-rose-200 text-xs font-semibold text-rose-700"
-                    >
-                      Delete
-                    </button>
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                </>
-              )}
+                ) : (
+                  <>
+                    <p className="text-sm text-[var(--ink-secondary)] whitespace-pre-wrap">
+                      {item.description}
+                    </p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {item.status !== "fulfilled" && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="success"
+                          onClick={() =>
+                            void setRequestStatus(item._id, "fulfilled")
+                          }
+                        >
+                          Mark fulfilled
+                        </Button>
+                      )}
+                      {item.status !== "open" && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => void setRequestStatus(item._id, "open")}
+                        >
+                          Reopen
+                        </Button>
+                      )}
+                      {item.status !== "closed" && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            void setRequestStatus(item._id, "closed")
+                          }
+                        >
+                          Close
+                        </Button>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="soft"
+                        onClick={() => startEdit(item)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="danger"
+                        onClick={() => void removeRequest(item._id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </Card>
             </li>
           ))}
         </ul>

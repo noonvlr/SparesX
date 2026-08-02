@@ -1,10 +1,24 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Cropper from "react-easy-crop";
 import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import {
+  Alert,
+  Button,
+  Card,
+  Checkbox,
+  Divider,
+  Field,
+  IconButton,
+  Input,
+  Modal,
+  Select,
+  Spinner,
+  Textarea,
+} from "@/components/ui";
 
 const COUNTRY_CODES = [{ code: "+91", country: "India", flag: "🇮🇳" }];
 
@@ -53,7 +67,6 @@ export default function RegisterForm() {
       [name]: value,
     }));
 
-    // Check password match
     if (name === "password" || name === "confirmPassword") {
       const pass = name === "password" ? value : formData.password;
       const confirm =
@@ -62,7 +75,6 @@ export default function RegisterForm() {
     }
   };
 
-  // Auto-fill WhatsApp number
   const handleWhatsappToggle = (value: boolean) => {
     setIsMobileWhatsapp(value);
     if (value) {
@@ -78,7 +90,6 @@ export default function RegisterForm() {
     }
   };
 
-  // Auto-update WhatsApp when mobile changes
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setFormData((prev) => ({
@@ -88,13 +99,11 @@ export default function RegisterForm() {
     }));
   };
 
-  // Fetch city and state from pincode
   const fetchLocationFromPincode = async (pincode: string) => {
     if (pincode.length !== 6) return;
 
     setLoadingLocation(true);
     try {
-      // Using public API for Indian postcodes
       const response = await fetch(
         `https://api.postalpincode.in/pincode/${pincode}`,
       );
@@ -126,7 +135,6 @@ export default function RegisterForm() {
     }
   };
 
-  // Handle pincode change
   const handlePincodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 6);
     setFormData((prev) => ({
@@ -139,7 +147,6 @@ export default function RegisterForm() {
     }
   };
 
-  // Handle image upload (opens cropper)
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -185,8 +192,8 @@ export default function RegisterForm() {
         cropImageSrc,
         croppedAreaPixels,
       );
-      const formData = new FormData();
-      formData.append(
+      const uploadForm = new FormData();
+      uploadForm.append(
         "files",
         new File([croppedBlob], `profile-${Date.now()}.jpg`, {
           type: "image/jpeg",
@@ -195,7 +202,7 @@ export default function RegisterForm() {
 
       const response = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        body: uploadForm,
       });
 
       const data = await response.json();
@@ -210,7 +217,7 @@ export default function RegisterForm() {
       } else {
         setError(data.error || "Failed to upload image");
       }
-    } catch (error) {
+    } catch {
       setError("Failed to crop or upload image");
     } finally {
       setUploadingImage(false);
@@ -222,7 +229,6 @@ export default function RegisterForm() {
     setError("");
     setSuccess("");
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
       return;
@@ -241,7 +247,6 @@ export default function RegisterForm() {
     setLoading(true);
 
     try {
-      // Prepare data for submission
       const dataToSend = {
         name: formData.name,
         email: formData.email,
@@ -271,7 +276,7 @@ export default function RegisterForm() {
       } else {
         setError(data.message || "Registration failed");
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -279,78 +284,38 @@ export default function RegisterForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-[var(--surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)] border border-[var(--border)] w-full max-w-3xl overflow-hidden"
-    >
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] px-8 py-8">
-        <span className="inline-flex items-center gap-1.5 text-sm font-bold tracking-tight text-white/90 mb-3">
+    <Card variant="elevated" className="w-full overflow-hidden">
+      <div className="bg-[var(--brand)] px-8 py-8">
+        <span className="inline-flex items-center gap-1.5 text-sm font-bold tracking-tight text-[var(--ink-inverse)]/90 mb-3">
           <span>Spares</span>
-          <span className="text-white">X</span>
+          <span className="text-[var(--ink-inverse)]">X</span>
         </span>
-        <h2 className="text-4xl font-bold text-white mb-2">
+        <h2 className="text-4xl font-bold text-[var(--ink-inverse)] mb-2">
           Create Your Account
         </h2>
-        <p className="text-white/85">
+        <p className="text-[var(--ink-inverse)]/85">
           Join SparesX and start connecting with verified sellers
         </p>
       </div>
 
-      {/* Form Content */}
-      <div className="p-8">
-        {/* Google OAuth Section */}
+      <form onSubmit={handleSubmit} className="p-8">
         <div className="mb-8">
           <GoogleSignInButton />
-
-          <div className="relative mt-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--border-strong)]"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-[var(--surface)] text-[var(--muted)] font-medium">
-                Or register with email
-              </span>
-            </div>
-          </div>
+          <Divider label="Or register with email" className="mt-6" />
         </div>
 
-        {/* Error & Success Messages */}
-        {error && (
-          <div className="mb-6 p-4 bg-[var(--danger-soft)] border-l-4 border-[var(--danger)] rounded-[var(--radius)] flex gap-3">
-            <svg
-              className="w-5 h-5 text-[var(--danger)] flex-shrink-0 mt-0.5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <p className="text-[var(--danger)] font-medium">{error}</p>
-          </div>
-        )}
+        {error ? (
+          <Alert tone="danger" className="mb-6">
+            {error}
+          </Alert>
+        ) : null}
 
-        {success && (
-          <div className="mb-6 p-4 bg-[var(--success-soft)] border-l-4 border-[var(--success)] rounded-[var(--radius)] flex gap-3">
-            <svg
-              className="w-5 h-5 text-[var(--success)] flex-shrink-0 mt-0.5"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                clipRule="evenodd"
-              />
-            </svg>
-            <p className="text-[var(--success)] font-medium">{success}</p>
-          </div>
-        )}
+        {success ? (
+          <Alert tone="success" className="mb-6">
+            {success}
+          </Alert>
+        ) : null}
 
-        {/* Section 1: Personal Info */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
             <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
@@ -359,102 +324,90 @@ export default function RegisterForm() {
             Personal Information
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                Full Name <span className="text-[var(--danger)]">*</span>
-              </label>
-              <input
+            <Field label="Full Name" htmlFor="name" required>
+              <Input
+                id="name"
                 type="text"
                 name="name"
                 placeholder="Your name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                Email Address <span className="text-[var(--danger)]">*</span>
-              </label>
-              <input
+            <Field label="Email Address" htmlFor="email" required>
+              <Input
+                id="email"
                 type="email"
                 name="email"
                 placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                 required
               />
-            </div>
+            </Field>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                Profile Picture (Optional)
-              </label>
-
-              {/* Image Preview */}
-              {formData.profilePicture && (
-                <div className="mb-3 flex items-center gap-4">
-                  <img
-                    src={formData.profilePicture}
-                    alt="Profile preview"
-                    className="w-16 h-16 rounded-full object-cover border-2 border-[var(--border)]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, profilePicture: "" }))
-                    }
-                    className="text-[var(--danger)] text-sm hover:opacity-80 font-medium"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-
-              {/* File Upload Button */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage}
-                className="px-4 py-2.5 bg-[var(--brand-soft)] border border-[var(--brand-muted)] text-[var(--brand-hover)] rounded-[var(--radius)] hover:bg-[var(--brand-muted)] transition font-medium disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+              <Field
+                label="Profile Picture (Optional)"
+                htmlFor="profilePicture"
+                hint="Max file size: 5MB. You can also add or update your profile picture later"
               >
-                {uploadingImage ? "Uploading..." : "Upload Image"}
-              </button>
+                {formData.profilePicture ? (
+                  <div className="mb-3 flex items-center gap-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={formData.profilePicture}
+                      alt="Profile preview"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-[var(--border)]"
+                    />
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="text-[var(--danger)]"
+                      onClick={() =>
+                        setFormData((prev) => ({ ...prev, profilePicture: "" }))
+                      }
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : null}
 
-              {/* Or enter URL */}
-              <div className="mt-2">
-                <label className="text-xs text-[var(--muted)] font-medium">
-                  Or enter image URL:
-                </label>
                 <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="soft"
+                  onClick={() => fileInputRef.current?.click()}
+                  loading={uploadingImage}
+                  className="mb-3"
+                >
+                  Upload Image
+                </Button>
+
+                <p className="text-caption text-[var(--muted)] mb-1.5">
+                  Or enter image URL:
+                </p>
+                <Input
+                  id="profilePicture"
                   type="text"
                   name="profilePicture"
                   placeholder="https://example.com/photo.jpg"
                   value={formData.profilePicture}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition mt-1"
                 />
-              </div>
-
-              <p className="text-xs text-[var(--muted)] mt-1.5">
-                Max file size: 5MB. You can also add or update your profile
-                picture later
-              </p>
+              </Field>
             </div>
           </div>
         </div>
 
-        {/* Section 2: Security */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
             <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
@@ -463,32 +416,33 @@ export default function RegisterForm() {
             Security
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                Password <span className="text-[var(--danger)]">*</span>
-              </label>
+            <Field
+              label="Password"
+              htmlFor="password"
+              required
+              hint="Minimum 6 characters"
+            >
               <div className="relative">
-                <input
+                <Input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
                   placeholder="Create a strong password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition pr-12"
+                  className="pr-12"
                   required
                   minLength={6}
                 />
-                <button
+                <IconButton
                   type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink-secondary)] transition"
                 >
                   {showPassword ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                       <path
                         fillRule="evenodd"
@@ -497,11 +451,7 @@ export default function RegisterForm() {
                       />
                     </svg>
                   ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-14-14zM10 18a8 8 0 100-16 8 8 0 000 16zm0-14a3.978 3.978 0 00-1.482.285 4 4 0 015.656 5.656 3.978 3.978 0 00-.285-1.482A4 4 0 0010 4zm6.707 6.707a4 4 0 01-5.656 5.656 4 4 0 005.656-5.656z"
@@ -509,43 +459,44 @@ export default function RegisterForm() {
                       />
                     </svg>
                   )}
-                </button>
+                </IconButton>
               </div>
-              <p className="text-xs text-[var(--muted)] mt-1.5">
-                Minimum 6 characters
-              </p>
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                Confirm Password <span className="text-[var(--danger)]">*</span>
-              </label>
+            <Field
+              label="Confirm Password"
+              htmlFor="confirmPassword"
+              required
+              error={
+                !passwordMatch && formData.confirmPassword
+                  ? "Passwords do not match"
+                  : null
+              }
+            >
               <div className="relative">
-                <input
+                <Input
+                  id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:border-transparent transition pr-12 ${
-                    passwordMatch
-                      ? "border-[var(--border-strong)] focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
-                      : "border-[var(--danger)] focus:ring-[var(--danger)]/30"
-                  }`}
+                  variant={passwordMatch ? "default" : "error"}
+                  className="pr-12"
                   required
                   minLength={6}
                 />
-                <button
+                <IconButton
                   type="button"
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[var(--muted)] hover:text-[var(--ink-secondary)] transition"
                 >
                   {showConfirmPassword ? (
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                       <path
                         fillRule="evenodd"
@@ -554,11 +505,7 @@ export default function RegisterForm() {
                       />
                     </svg>
                   ) : (
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path
                         fillRule="evenodd"
                         d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-14-14zM10 18a8 8 0 100-16 8 8 0 000 16zm0-14a3.978 3.978 0 00-1.482.285 4 4 0 015.656 5.656 3.978 3.978 0 00-.285-1.482A4 4 0 0010 4zm6.707 6.707a4 4 0 01-5.656 5.656 4 4 0 005.656-5.656z"
@@ -566,18 +513,12 @@ export default function RegisterForm() {
                       />
                     </svg>
                   )}
-                </button>
+                </IconButton>
               </div>
-              {!passwordMatch && formData.confirmPassword && (
-                <p className="text-xs text-[var(--danger)] mt-1.5">
-                  Passwords do not match
-                </p>
-              )}
-            </div>
+            </Field>
           </div>
         </div>
 
-        {/* Section 3: Contact Information */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
             <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
@@ -586,144 +527,102 @@ export default function RegisterForm() {
             Contact Information
           </h3>
 
-          {/* Mobile with Country Code */}
-          <div>
-            <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-              Mobile Number <span className="text-[var(--danger)]">*</span>
-            </label>
+          <Field label="Mobile Number" htmlFor="mobile" required>
             <div className="flex gap-2">
-              <select
+              <Select
                 name="countryCode"
                 value={formData.countryCode}
                 onChange={handleChange}
-                className="px-3 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition bg-[var(--surface)] min-w-fit font-medium text-[var(--ink-secondary)]"
+                className="min-w-fit w-auto"
               >
                 {COUNTRY_CODES.map((item) => (
                   <option key={item.code} value={item.code}>
                     {item.flag} {item.code}
                   </option>
                 ))}
-              </select>
-              <input
+              </Select>
+              <Input
+                id="mobile"
                 type="tel"
                 name="mobile"
                 placeholder="9876543210"
                 value={formData.mobile}
                 onChange={handleMobileChange}
                 maxLength={10}
-                className="flex-1 px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+                className="flex-1"
                 required
               />
             </div>
-          </div>
+          </Field>
 
-          {/* WhatsApp Toggle */}
-          <div className="mt-4 p-4 bg-gradient-to-br from-[var(--brand-soft)] to-emerald-50 rounded-[var(--radius)] border border-[var(--brand-muted)]">
-            <div className="mb-3">
-              <label className="text-sm font-semibold text-[var(--ink)] flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-green-600"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
-                </svg>
-                WhatsApp Number
-              </label>
-            </div>
+          <div className="mt-4 p-4 bg-[var(--success-soft)] rounded-[var(--radius)] border border-[var(--success)]/20">
+            <p className="text-sm font-semibold text-[var(--ink)] flex items-center gap-2 mb-3">
+              <svg
+                className="w-5 h-5 text-[var(--success)]"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+              </svg>
+              WhatsApp Number
+            </p>
 
             <div className="flex items-center gap-3 mb-3">
-              <button
+              <Button
                 type="button"
+                variant={isMobileWhatsapp ? "success" : "outline"}
+                className="flex-1"
                 onClick={() => handleWhatsappToggle(true)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius)] font-medium transition-all flex-1 justify-center ${
-                  isMobileWhatsapp
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "bg-[var(--surface)] text-[var(--ink-secondary)] border-2 border-[var(--border)] hover:border-green-300"
-                }`}
               >
-                <div
-                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    isMobileWhatsapp ? "border-white" : "border-[var(--border-strong)]"
-                  }`}
-                >
-                  {isMobileWhatsapp && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                <span className="text-sm">Same as mobile</span>
-              </button>
-              <button
+                Same as mobile
+              </Button>
+              <Button
                 type="button"
+                variant={!isMobileWhatsapp ? "success" : "outline"}
+                className="flex-1"
                 onClick={() => handleWhatsappToggle(false)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius)] font-medium transition-all flex-1 justify-center ${
-                  !isMobileWhatsapp
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "bg-[var(--surface)] text-[var(--ink-secondary)] border-2 border-[var(--border)] hover:border-green-300"
-                }`}
               >
-                <div
-                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                    !isMobileWhatsapp ? "border-white" : "border-[var(--border-strong)]"
-                  }`}
-                >
-                  {!isMobileWhatsapp && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                <span className="text-sm">Different number</span>
-              </button>
+                Different number
+              </Button>
             </div>
 
-            {isMobileWhatsapp && formData.mobile && (
-              <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface)] rounded-[var(--radius)] border border-green-200">
-                <svg
-                  className="w-4 h-4 text-green-600 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+            {isMobileWhatsapp && formData.mobile ? (
+              <div className="flex items-center gap-2 px-3 py-2 bg-[var(--surface)] rounded-[var(--radius)] border border-[var(--success)]/30">
                 <span className="text-sm text-[var(--ink-secondary)] font-medium">
                   {formData.countryCode} {formData.mobile}
                 </span>
               </div>
-            )}
+            ) : null}
 
-            {!isMobileWhatsapp && (
+            {!isMobileWhatsapp ? (
               <div className="flex gap-2">
-                <select
+                <Select
                   name="countryCode"
                   value={formData.countryCode}
                   onChange={handleChange}
-                  className="px-3 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition bg-[var(--surface)] min-w-fit font-medium text-[var(--ink-secondary)] text-sm"
+                  className="min-w-fit w-auto"
                 >
                   {COUNTRY_CODES.map((item) => (
                     <option key={item.code} value={item.code}>
                       {item.flag} {item.code}
                     </option>
                   ))}
-                </select>
-                <input
+                </Select>
+                <Input
                   type="tel"
                   name="whatsappNumber"
                   placeholder="Enter WhatsApp number"
                   value={formData.whatsappNumber}
                   onChange={handleChange}
                   maxLength={10}
-                  className="flex-1 px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition text-sm"
+                  className="flex-1"
                   required={!isMobileWhatsapp}
                 />
               </div>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Section 4: Address & Location */}
         <div className="mb-8">
           <h3 className="text-lg font-semibold text-[var(--ink)] mb-4 flex items-center gap-2">
             <span className="bg-[var(--brand-soft)] text-[var(--brand-hover)] rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
@@ -732,93 +631,86 @@ export default function RegisterForm() {
             Address & Location
           </h3>
 
-          <div className="mb-4">
-            <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-              Street Address <span className="text-[var(--danger)]">*</span>
-            </label>
-            <textarea
+          <Field
+            label="Street Address"
+            htmlFor="address"
+            required
+            className="mb-4"
+          >
+            <Textarea
+              id="address"
               name="address"
               placeholder="Enter your complete address"
               value={formData.address}
               onChange={handleChange}
-              className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition resize-none"
               rows={3}
               required
             />
-          </div>
+          </Field>
 
-          {/* PIN Code with Auto-fetch */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                PIN Code <span className="text-[var(--danger)]">*</span>
-              </label>
+            <Field label="PIN Code" htmlFor="pinCode" required>
               <div className="relative">
-                <input
+                <Input
+                  id="pinCode"
                   type="text"
                   name="pinCode"
                   placeholder="6-digit PIN"
                   value={formData.pinCode}
                   onChange={handlePincodeChange}
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
                   required
                 />
-                {loadingLocation && (
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                    <div className="animate-spin h-5 w-5 border-2 border-[var(--brand)] border-t-transparent rounded-full"></div>
-                  </div>
-                )}
+                {loadingLocation ? (
+                  <Spinner
+                    size="sm"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--brand)]"
+                  />
+                ) : null}
               </div>
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                City <span className="text-[var(--danger)]">*</span>
-              </label>
-              <input
+            <Field label="City" htmlFor="city" required>
+              <Input
+                id="city"
                 type="text"
                 name="city"
                 placeholder="Auto-filled"
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+                className="bg-[var(--surface-2)]"
                 readOnly={formData.pinCode.length === 6}
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
-                State <span className="text-[var(--danger)]">*</span>
-              </label>
-              <input
+            <Field label="State" htmlFor="state" required>
+              <Input
+                id="state"
                 type="text"
                 name="state"
                 placeholder="Auto-filled"
                 value={formData.state}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface-2)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+                className="bg-[var(--surface-2)]"
                 readOnly={formData.pinCode.length === 6}
               />
-            </div>
+            </Field>
           </div>
 
-          {loadingLocation && (
+          {loadingLocation ? (
             <p className="text-xs text-[var(--brand-hover)] flex items-center gap-1">
-              <span className="inline-block h-1.5 w-1.5 bg-[var(--brand)] rounded-full animate-pulse"></span>
+              <Spinner size="sm" className="text-[var(--brand)]" />
               Fetching location details...
             </p>
-          )}
+          ) : null}
         </div>
 
-        {/* Submit Button */}
         <div className="pt-6 border-t border-[var(--border)] space-y-4">
           <label className="flex items-start gap-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[var(--border-strong)] text-[var(--brand)] focus:ring-[var(--brand)]"
+              className="mt-1"
               required
             />
             <span className="text-sm text-[var(--muted)] leading-relaxed">
@@ -845,20 +737,15 @@ export default function RegisterForm() {
             </span>
           </label>
 
-          <button
+          <Button
             type="submit"
-            disabled={loading || !passwordMatch || !acceptedTerms}
-            className="w-full bg-gradient-to-r from-[var(--brand)] to-[var(--brand-hover)] text-white py-4 rounded-[var(--radius)] font-bold text-lg hover:brightness-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)]"
+            size="lg"
+            className="w-full"
+            loading={loading}
+            disabled={!passwordMatch || !acceptedTerms}
           >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="inline-block h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                Creating Account...
-              </span>
-            ) : (
-              "Create Account"
-            )}
-          </button>
+            Create Account
+          </Button>
 
           <p className="mt-6 text-center text-[var(--muted)]">
             Already have an account?{" "}
@@ -870,24 +757,32 @@ export default function RegisterForm() {
             </a>
           </p>
         </div>
-      </div>
+      </form>
 
-      {cropOpen && cropImageSrc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] w-full max-w-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-[var(--ink)]">
-                Adjust Profile Picture
-              </h3>
-              <button
-                type="button"
-                onClick={handleCropCancel}
-                className="text-[var(--muted)] hover:text-[var(--ink-secondary)]"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="relative w-full h-[360px] bg-[var(--surface-3)]">
+      <Modal
+        open={cropOpen && !!cropImageSrc}
+        onClose={handleCropCancel}
+        title="Adjust Profile Picture"
+        sheet={false}
+        className="sm:max-w-2xl"
+        footer={
+          <>
+            <Button type="button" variant="secondary" onClick={handleCropCancel}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleCropConfirm}
+              loading={uploadingImage}
+            >
+              Save
+            </Button>
+          </>
+        }
+      >
+        {cropImageSrc ? (
+          <>
+            <div className="relative w-full h-[360px] bg-[var(--surface-3)] -mx-5 -mt-5 mb-4">
               <Cropper
                 image={cropImageSrc}
                 crop={crop}
@@ -898,40 +793,21 @@ export default function RegisterForm() {
                 onCropComplete={onCropComplete}
               />
             </div>
-            <div className="px-6 py-4 border-t border-[var(--border)]">
-              <div className="flex items-center gap-3">
-                <label className="text-sm text-[var(--muted)]">Zoom</label>
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.1}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full accent-[var(--brand)]"
-                />
-              </div>
-              <div className="mt-4 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={handleCropCancel}
-                  className="px-4 py-2 bg-[var(--surface-3)] text-[var(--ink-secondary)] rounded-[var(--radius)] hover:bg-[var(--border)]"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCropConfirm}
-                  disabled={uploadingImage}
-                  className="px-4 py-2 bg-[var(--brand)] text-white rounded-[var(--radius)] hover:bg-[var(--brand-hover)] disabled:opacity-50"
-                >
-                  {uploadingImage ? "Uploading..." : "Save"}
-                </button>
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--muted)]">Zoom</span>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-[var(--brand)]"
+              />
             </div>
-          </div>
-        </div>
-      )}
-    </form>
+          </>
+        ) : null}
+      </Modal>
+    </Card>
   );
 }

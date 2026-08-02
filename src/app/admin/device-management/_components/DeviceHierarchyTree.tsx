@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { FixedSizeList as List } from "react-window";
 import type { DeviceHierarchyNode, NodeType, SelectedNode } from "./hooks";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 
 interface FlatNode {
   node: DeviceHierarchyNode;
@@ -105,11 +111,11 @@ export default function DeviceHierarchyTree({
     "part-category": "PART",
   };
   const typeDots: Record<NodeType, string> = {
-    device: "bg-slate-900",
+    device: "bg-[var(--ink)]",
     brand: "bg-[var(--brand)]",
-    model: "bg-emerald-500",
-    "parts-root": "bg-amber-500",
-    "part-category": "bg-purple-500",
+    model: "bg-[var(--success)]",
+    "parts-root": "bg-[var(--warning)]",
+    "part-category": "bg-[var(--info)]",
   };
 
   const counts = useMemo(() => {
@@ -163,33 +169,33 @@ export default function DeviceHierarchyTree({
   };
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <Card padding="md">
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Hierarchy</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-lg font-semibold text-[var(--ink)]">Hierarchy</h2>
+            <p className="text-xs text-[var(--muted)]">
               Devices, brands, models, and parts categories
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-            <span className="rounded-full bg-slate-100 px-2 py-1">
+          <div className="flex flex-wrap gap-2 text-xs text-[var(--ink-secondary)]">
+            <span className="rounded-full bg-[var(--surface-3)] px-2 py-1">
               Devices {counts.devices}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-1">
+            <span className="rounded-full bg-[var(--surface-3)] px-2 py-1">
               Brands {counts.brands}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-1">
+            <span className="rounded-full bg-[var(--surface-3)] px-2 py-1">
               Models {counts.models}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-1">
+            <span className="rounded-full bg-[var(--surface-3)] px-2 py-1">
               Parts {counts.parts}
             </span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+        <div className="flex flex-wrap gap-4 text-xs text-[var(--muted)]">
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-slate-900" />
+            <span className="h-2 w-2 rounded-full bg-[var(--ink)]" />
             Device
           </span>
           <span className="flex items-center gap-2">
@@ -197,43 +203,39 @@ export default function DeviceHierarchyTree({
             Brand
           </span>
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+            <span className="h-2 w-2 rounded-full bg-[var(--success)]" />
             Model
           </span>
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-amber-500" />
+            <span className="h-2 w-2 rounded-full bg-[var(--warning)]" />
             Parts root
           </span>
           <span className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-purple-500" />
+            <span className="h-2 w-2 rounded-full bg-[var(--info)]" />
             Part category
           </span>
         </div>
       </div>
 
       <div className="mb-4 space-y-3">
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            Search hierarchy
-          </label>
-          <input
+        <Field
+          label="Search hierarchy"
+          htmlFor="hierarchy-search"
+          hint={`Showing ${visibleNodes.length} item${visibleNodes.length === 1 ? "" : "s"}`}
+        >
+          <Input
+            id="hierarchy-search"
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search device, brand, model, or parts"
-            className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none"
+            size="sm"
           />
-          <p className="mt-1 text-xs text-slate-400">
-            Showing {visibleNodes.length} item
-            {visibleNodes.length === 1 ? "" : "s"}
-          </p>
-        </div>
+        </Field>
 
-        <div>
-          <label className="text-sm font-medium text-slate-700">
-            Add new device
-          </label>
-          <div className="mt-2 flex gap-2">
-            <input
+        <Field label="Add new device" htmlFor="new-device-name">
+          <div className="flex gap-2">
+            <Input
+              id="new-device-name"
               value={newDeviceName}
               onChange={(event) => onNewDeviceNameChange(event.target.value)}
               onKeyDown={(event) => {
@@ -243,32 +245,34 @@ export default function DeviceHierarchyTree({
                 }
               }}
               placeholder="Device name"
-              className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-slate-400 focus:outline-none"
+              size="sm"
+              className="flex-1"
             />
-            <button
+            <Button
               type="button"
+              variant="secondary"
+              size="sm"
               onClick={onAddDevice}
-              disabled={isAddingDevice}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+              loading={isAddingDevice}
             >
-              {isAddingDevice ? "Adding..." : "Add"}
-            </button>
+              Add
+            </Button>
           </div>
-        </div>
+        </Field>
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <Alert tone="danger" className="mb-3">
           {error}
-        </div>
+        </Alert>
       ) : null}
 
       {loading ? (
-        <div className="flex min-h-[200px] items-center justify-center text-sm text-slate-500">
-          Loading hierarchy...
+        <div className="flex min-h-[200px] items-center justify-center gap-2 text-sm text-[var(--muted)]">
+          <Spinner /> Loading hierarchy...
         </div>
       ) : visibleNodes.length === 0 ? (
-        <div className="flex min-h-[200px] items-center justify-center text-sm text-slate-500">
+        <div className="flex min-h-[200px] items-center justify-center text-sm text-[var(--muted)]">
           No nodes match your search.
         </div>
       ) : (
@@ -288,8 +292,8 @@ export default function DeviceHierarchyTree({
                 style={style}
                 className={`flex items-center gap-2 rounded-lg border-l-2 px-2 ${
                   isSelected
-                    ? "border-slate-900 bg-slate-100"
-                    : "border-transparent hover:bg-slate-50"
+                    ? "border-[var(--ink)] bg-[var(--surface-3)]"
+                    : "border-transparent hover:bg-[var(--surface-2)]"
                 }`}
                 onClick={() => onSelectNode(item.node)}
                 role="button"
@@ -317,18 +321,18 @@ export default function DeviceHierarchyTree({
                         event.stopPropagation();
                         onToggleNode(item.node.id);
                       }}
-                      className="mr-2 w-5 text-xs text-slate-500"
+                      className="mr-2 w-5 text-xs text-[var(--muted)]"
                       aria-label={item.isExpanded ? "Collapse" : "Expand"}
                     >
                       {item.isExpanded ? "-" : "+"}
                     </button>
                   ) : (
-                    <span className="mr-2 w-5 text-xs text-slate-300">.</span>
+                    <span className="mr-2 w-5 text-xs text-[var(--muted)]">.</span>
                   )}
                   <div>
                     <div
                       className={`text-sm font-medium ${
-                        isDisabled ? "text-slate-400" : "text-slate-900"
+                        isDisabled ? "text-[var(--muted)]" : "text-[var(--ink)]"
                       }`}
                     >
                       {item.node.type === "part-category" && item.node.icon ? (
@@ -336,18 +340,18 @@ export default function DeviceHierarchyTree({
                       ) : null}
                       {item.node.name}
                       {item.node.type === "device" ? (
-                        <span className="ml-2 text-xs text-slate-500">
+                        <span className="ml-2 text-xs text-[var(--muted)]">
                           ({countDescendants(item.node, "brand")} brands,{" "}
                           {countDescendants(item.node, "model")} models)
                         </span>
                       ) : null}
                       {item.node.type === "brand" ? (
-                        <span className="ml-2 text-xs text-slate-500">
+                        <span className="ml-2 text-xs text-[var(--muted)]">
                           ({countDescendants(item.node, "model")} models)
                         </span>
                       ) : null}
                     </div>
-                    <div className="text-xs text-slate-400">
+                    <div className="text-xs text-[var(--muted)]">
                       {typeLabels[item.node.type] || item.node.type.toUpperCase()}
                       {isDisabled ? " - Disabled" : ""}
                     </div>
@@ -358,6 +362,6 @@ export default function DeviceHierarchyTree({
           }}
         </List>
       )}
-    </section>
+    </Card>
   );
 }

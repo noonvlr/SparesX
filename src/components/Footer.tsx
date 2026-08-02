@@ -10,7 +10,7 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link
               href="/"
-              className="text-2xl font-bold text-[var(--brand)] hover:text-teal-300 transition"
+              className="text-2xl font-bold text-[var(--brand)] hover:text-[var(--brand-muted)] transition"
             >
               SparesX
             </Link>

@@ -6,6 +6,12 @@ import { cn } from "@/lib/ui/cn";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+/** Duration in seconds; respects prefers-reduced-motion when used with useMotionDuration. */
+export function useMotionDuration(ms: number = 200) {
+  const reduce = useReducedMotion();
+  return reduce ? 0 : ms / 1000;
+}
+
 export function FadeIn({
   className,
   children,
@@ -55,4 +61,4 @@ export function PageFade({
   );
 }
 
-export { motion, useReducedMotion };
+export { motion, useReducedMotion, useMotionDuration };

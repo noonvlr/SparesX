@@ -27,4 +27,4 @@ export {
   SectionHeader,
 } from "@/components/ui/Container";
 export { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
-export { FadeIn, PageFade, motion, useReducedMotion } from "@/components/ui/Motion";
+export { FadeIn, PageFade, motion, useReducedMotion, useMotionDuration } from "@/components/ui/Motion";

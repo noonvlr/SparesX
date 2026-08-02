@@ -1,6 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AdminPage } from "@/components/layout";
+import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -11,11 +18,11 @@ const STATUS_OPTIONS = [
   { value: "unread", label: "Unread" },
 ];
 
-const STATUS_STYLE: Record<string, string> = {
-  open: "bg-amber-50 text-amber-700 border-amber-200",
-  in_progress: "bg-[var(--brand-soft)] text-[var(--brand-hover)] border-teal-200",
-  resolved: "bg-green-50 text-green-700 border-green-200",
-  closed: "bg-gray-50 text-gray-600 border-gray-200",
+const STATUS_TONE: Record<string, "warning" | "brand" | "success" | "neutral"> = {
+  open: "warning",
+  in_progress: "brand",
+  resolved: "success",
+  closed: "neutral",
 };
 
 function isUnread(ticket: any) {
@@ -58,7 +65,6 @@ export default function AdminSupportPage() {
       setTickets(data.tickets || []);
       setUnreadCount(data.unreadCount || 0);
       setError("");
-      // Notify navbar to refresh badge
       window.dispatchEvent(
         new CustomEvent("support-unread-updated", {
           detail: { unreadCount: data.unreadCount || 0 },
@@ -87,7 +93,6 @@ export default function AdminSupportPage() {
     const ticket = tickets.find((t) => t._id === ticketId);
     if (!ticket || !isUnread(ticket)) return;
 
-    // Optimistic UI
     setTickets((prev) =>
       prev.map((t) =>
         t._id === ticketId
@@ -162,52 +167,57 @@ export default function AdminSupportPage() {
   }
 
   if (error && !tickets.length) {
-    return <div className="p-8 text-red-600">{error}</div>;
+    return (
+      <AdminPage title="Support inbox">
+        <Alert tone="danger">{error}</Alert>
+      </AdminPage>
+    );
   }
 
   return (
-    <main className="max-w-6xl mx-auto py-8 px-4">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-gray-900">Support inbox</h1>
-            {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-2 rounded-full bg-green-500 text-white text-xs font-bold">
-                {unreadCount > 99 ? "99+" : unreadCount}
-              </span>
-            )}
-          </div>
-          <p className="text-gray-600 text-sm mt-1">
-            Unread messages stay bold until you open them
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {STATUS_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setStatus(opt.value)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                status === opt.value
-                  ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-teal-200"
-              }`}
-            >
-              {opt.label}
-              {opt.value === "unread" && unreadCount > 0 ? ` (${unreadCount})` : ""}
-            </button>
-          ))}
-        </div>
+    <AdminPage>
+      <PageHeader
+        title="Support inbox"
+        description="Unread messages stay bold until you open them"
+        actions={
+          unreadCount > 0 ? (
+            <Badge tone="success">
+              {unreadCount > 99 ? "99+" : unreadCount} unread
+            </Badge>
+          ) : undefined
+        }
+      />
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        {STATUS_OPTIONS.map((opt) => (
+          <Button
+            key={opt.value}
+            type="button"
+            size="sm"
+            variant={status === opt.value ? "primary" : "outline"}
+            onClick={() => setStatus(opt.value)}
+            className="rounded-full"
+          >
+            {opt.label}
+            {opt.value === "unread" && unreadCount > 0
+              ? ` (${unreadCount})`
+              : ""}
+          </Button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
+        <Card padding="none" className="lg:col-span-2 overflow-hidden">
           {loading ? (
-            <div className="p-6 text-sm text-gray-500">Loading...</div>
+            <div className="flex items-center justify-center gap-2 p-6 text-sm text-[var(--muted)]">
+              <Spinner size="sm" /> Loading…
+            </div>
           ) : visibleTickets.length === 0 ? (
-            <div className="p-6 text-sm text-gray-500">No tickets in this view.</div>
+            <div className="p-6 text-sm text-[var(--muted)]">
+              No tickets in this view.
+            </div>
           ) : (
-            <ul className="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto">
+            <ul className="divide-y divide-[var(--divider)] max-h-[70vh] overflow-y-auto">
               {visibleTickets.map((ticket) => {
                 const unread = isUnread(ticket);
                 return (
@@ -219,14 +229,16 @@ export default function AdminSupportPage() {
                         selectedId === ticket._id
                           ? "bg-[var(--brand-soft)]"
                           : unread
-                            ? "bg-emerald-50/40 hover:bg-emerald-50/70"
-                            : "hover:bg-gray-50"
+                            ? "bg-[var(--success-soft)]/40 hover:bg-[var(--success-soft)]/70"
+                            : "hover:bg-[var(--surface-hover)]"
                       }`}
                     >
                       <div className="flex items-start gap-2.5">
                         <span
                           className={`mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                            unread ? "bg-green-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]" : "bg-transparent"
+                            unread
+                              ? "bg-[var(--success)]"
+                              : "bg-transparent"
                           }`}
                           aria-hidden
                         />
@@ -235,24 +247,25 @@ export default function AdminSupportPage() {
                             <p
                               className={`text-sm line-clamp-2 ${
                                 unread
-                                  ? "font-bold text-gray-900"
-                                  : "font-medium text-gray-700"
+                                  ? "font-bold text-[var(--ink)]"
+                                  : "font-medium text-[var(--ink-secondary)]"
                               }`}
                             >
                               {ticket.subject}
                             </p>
-                            <span
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLE[ticket.status]}`}
+                            <Badge
+                              tone={STATUS_TONE[ticket.status] || "neutral"}
+                              className="capitalize"
                             >
                               {String(ticket.status).replace("_", " ")}
-                            </span>
+                            </Badge>
                           </div>
                           <p
-                            className={`text-xs ${unread ? "text-gray-700 font-medium" : "text-gray-500"}`}
+                            className={`text-xs ${unread ? "text-[var(--ink-secondary)] font-medium" : "text-[var(--muted)]"}`}
                           >
                             {ticket.name} · {ticket.email}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1 capitalize">
+                          <p className="text-xs text-[var(--muted)] mt-1 capitalize">
                             {unread ? "New · " : "Opened · "}
                             {String(ticket.type).replace("_", " ")} ·{" "}
                             {new Date(ticket.createdAt).toLocaleString("en-IN")}
@@ -265,34 +278,32 @@ export default function AdminSupportPage() {
               })}
             </ul>
           )}
-        </div>
+        </Card>
 
-        <div className="lg:col-span-3 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm p-5 min-h-[420px]">
+        <Card padding="md" className="lg:col-span-3 min-h-[420px]">
           {!selected ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-500">
+            <div className="h-full flex items-center justify-center text-sm text-[var(--muted)]">
               Select a ticket to open and reply
             </div>
           ) : (
             <div className="space-y-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h2 className="text-xl font-bold text-gray-900">
+                  <h2 className="text-xl font-bold text-[var(--ink)]">
                     {selected.subject}
                   </h2>
                   {!isUnread(selected) && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
-                      Read
-                    </span>
+                    <Badge tone="neutral">Read</Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[var(--muted)] mt-1">
                   From {selected.name} ({selected.email}) ·{" "}
                   <span className="capitalize">
                     {String(selected.type).replace("_", " ")}
                   </span>
                 </p>
                 {(selected.reportedUser || selected.product) && (
-                  <div className="mt-2 rounded-lg bg-rose-50 border border-rose-100 px-3 py-2 text-xs text-rose-900 space-y-1">
+                  <Alert tone="danger" className="mt-2 text-xs">
                     {selected.reportedUser && (
                       <p>
                         Reported user:{" "}
@@ -315,57 +326,54 @@ export default function AdminSupportPage() {
                         </span>
                       </p>
                     )}
-                  </div>
+                  </Alert>
                 )}
               </div>
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              <div className="rounded-[var(--radius)] bg-[var(--surface-2)] border border-[var(--border)] p-4">
+                <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">
                   {selected.message}
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1.5">
-                  Admin reply
-                </label>
-                <textarea
+              <Field label="Admin reply" htmlFor="admin-reply">
+                <Textarea
+                  id="admin-reply"
                   value={reply}
                   onChange={(e) => setReply(e.target.value)}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm min-h-[120px]"
                   placeholder="Write a reply the user will see on their Support page..."
                 />
-              </div>
+              </Field>
 
               <div className="flex flex-wrap gap-2">
-                <button
+                <Button
                   type="button"
                   disabled={saving}
+                  loading={saving}
                   onClick={() => updateTicket("in_progress")}
-                  className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold disabled:opacity-60"
                 >
                   Save & mark in progress
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="success"
                   disabled={saving}
                   onClick={() => updateTicket("resolved")}
-                  className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold disabled:opacity-60"
                 >
                   Resolve
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
+                  variant="outline"
                   disabled={saving}
                   onClick={() => updateTicket("closed")}
-                  className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold disabled:opacity-60"
                 >
                   Close
-                </button>
+                </Button>
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </div>
-    </main>
+    </AdminPage>
   );
 }

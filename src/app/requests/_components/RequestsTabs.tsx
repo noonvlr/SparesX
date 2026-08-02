@@ -14,7 +14,7 @@ export default function RequestsTabs({
   ];
 
   return (
-    <div className="inline-flex rounded-2xl bg-white/90 backdrop-blur border border-gray-200 p-1.5 shadow-sm overflow-x-auto max-w-full">
+    <div className="inline-flex rounded-2xl bg-[var(--surface)]/90 backdrop-blur border border-[var(--border)] p-1.5 shadow-[var(--shadow-sm)] overflow-x-auto max-w-full">
       {items.map((item) => (
         <Link
           key={item.key}
@@ -23,8 +23,8 @@ export default function RequestsTabs({
           prefetch
           className={`px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
             active === item.key
-              ? "bg-[var(--brand)] text-white shadow-md scale-[1.02]"
-              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+              ? "bg-[var(--brand)] text-[var(--ink-inverse)] shadow-[var(--shadow-sm)] scale-[1.02]"
+              : "text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)]"
           }`}
         >
           {item.label}

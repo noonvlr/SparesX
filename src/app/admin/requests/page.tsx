@@ -2,11 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { AdminPage } from "@/components/layout";
+import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 
-const STATUS_STYLE: Record<string, string> = {
-  open: "bg-amber-50 text-amber-800 border-amber-200",
-  fulfilled: "bg-green-50 text-green-800 border-green-200",
-  closed: "bg-gray-50 text-gray-700 border-gray-200",
+const STATUS_TONE: Record<string, "warning" | "success" | "neutral"> = {
+  open: "warning",
+  fulfilled: "success",
+  closed: "neutral",
 };
 
 type SpareRequest = {
@@ -115,18 +121,19 @@ export default function AdminRequestsPage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto py-8 px-4">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manage requests</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Moderate spare-part requests — mark fulfilled, close, or delete
-          </p>
-        </div>
-        <Link href="/requests" className="text-sm text-[var(--brand)] hover:underline">
-          View public board →
-        </Link>
-      </div>
+    <AdminPage>
+      <PageHeader
+        title="Manage requests"
+        description="Moderate spare-part requests — mark fulfilled, close, or delete"
+        actions={
+          <Link
+            href="/requests"
+            className="text-sm text-[var(--brand)] hover:underline"
+          >
+            View public board →
+          </Link>
+        }
+      />
 
       <div className="flex flex-wrap gap-2 mb-4">
         {(
@@ -137,18 +144,16 @@ export default function AdminRequestsPage() {
             ["closed", "Closed"],
           ] as const
         ).map(([value, label]) => (
-          <button
+          <Button
             key={value}
             type="button"
+            size="sm"
+            variant={status === value ? "primary" : "outline"}
             onClick={() => setStatus(value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${
-              status === value
-                ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                : "bg-white text-gray-600 border-gray-200"
-            }`}
+            className="rounded-full"
           >
             {label} ({statusCounts[value] ?? 0})
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -159,53 +164,58 @@ export default function AdminRequestsPage() {
           load(status, q);
         }}
       >
-        <input
+        <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name, email, part, brand..."
-          className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          className="flex-1"
+          size="sm"
         />
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold"
-        >
+        <Button type="submit" size="sm">
           Search
-        </button>
+        </Button>
       </form>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
+      {error && (
+        <Alert tone="danger" className="mb-4">
+          {error}
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
+        <Card padding="none" className="lg:col-span-2 overflow-hidden">
           {loading ? (
-            <div className="p-6 text-sm text-gray-500">Loading...</div>
+            <div className="flex items-center justify-center gap-2 p-6 text-sm text-[var(--muted)]">
+              <Spinner size="sm" /> Loading…
+            </div>
           ) : requests.length === 0 ? (
-            <div className="p-6 text-sm text-gray-500">No requests found.</div>
+            <div className="p-6 text-sm text-[var(--muted)]">No requests found.</div>
           ) : (
-            <ul className="divide-y divide-gray-100 max-h-[70vh] overflow-y-auto">
+            <ul className="divide-y divide-[var(--divider)] max-h-[70vh] overflow-y-auto">
               {requests.map((r) => (
                 <li key={r._id}>
                   <button
                     type="button"
                     onClick={() => setSelected(r)}
-                    className={`w-full text-left p-4 hover:bg-gray-50 ${
+                    className={`w-full text-left p-4 hover:bg-[var(--surface-hover)] ${
                       selected?._id === r._id ? "bg-[var(--brand-soft)]" : ""
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <p className="font-semibold text-sm text-gray-900 line-clamp-2">
+                      <p className="font-semibold text-sm text-[var(--ink)] line-clamp-2">
                         {r.category}
                       </p>
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${STATUS_STYLE[r.status]}`}
+                      <Badge
+                        tone={STATUS_TONE[r.status] || "neutral"}
+                        className="capitalize"
                       >
                         {r.status}
-                      </span>
+                      </Badge>
                     </div>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-[var(--ink-secondary)]">
                       {r.name} · {r.email}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-[var(--muted)] mt-1">
                       {[r.deviceCategory, r.brand, r.deviceModel]
                         .filter(Boolean)
                         .join(" · ") || "No device info"}{" "}
@@ -216,38 +226,38 @@ export default function AdminRequestsPage() {
               ))}
             </ul>
           )}
-        </div>
+        </Card>
 
-        <div className="lg:col-span-3 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm p-5 min-h-[360px]">
+        <Card padding="md" className="lg:col-span-3 min-h-[360px]">
           {!selected ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-500">
+            <div className="h-full flex items-center justify-center text-sm text-[var(--muted)]">
               Select a request to manage
             </div>
           ) : (
             <div className="space-y-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 capitalize">
+                <h2 className="text-xl font-bold text-[var(--ink)] capitalize">
                   {selected.category}
                 </h2>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-[var(--muted)] mt-1">
                   {[selected.deviceCategory, selected.brand, selected.deviceModel]
                     .filter(Boolean)
                     .join(" · ") || "Device not specified"}
                 </p>
               </div>
 
-              <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
-                <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              <div className="rounded-[var(--radius)] bg-[var(--surface-2)] border border-[var(--border)] p-4">
+                <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">
                   {selected.description}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                <div className="rounded-xl border border-gray-100 p-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-1">
+                <div className="rounded-[var(--radius)] border border-[var(--border)] p-3">
+                  <p className="text-xs font-semibold text-[var(--muted)] mb-1">
                     Contact
                   </p>
-                  <p className="font-medium">{selected.name}</p>
+                  <p className="font-medium text-[var(--ink)]">{selected.name}</p>
                   <a
                     href={`mailto:${selected.email}`}
                     className="text-[var(--brand)] hover:underline block"
@@ -263,22 +273,22 @@ export default function AdminRequestsPage() {
                     </a>
                   )}
                 </div>
-                <div className="rounded-xl border border-gray-100 p-3">
-                  <p className="text-xs font-semibold text-gray-500 mb-1">
+                <div className="rounded-[var(--radius)] border border-[var(--border)] p-3">
+                  <p className="text-xs font-semibold text-[var(--muted)] mb-1">
                     Meta
                   </p>
-                  <p>
+                  <p className="text-[var(--ink)]">
                     Status:{" "}
                     <span className="capitalize font-medium">
                       {selected.status}
                     </span>
                   </p>
-                  <p>
+                  <p className="text-[var(--ink)]">
                     Posted:{" "}
                     {new Date(selected.createdAt).toLocaleString("en-IN")}
                   </p>
                   {selected.userId && (
-                    <p className="text-gray-600 mt-1">
+                    <p className="text-[var(--ink-secondary)] mt-1">
                       Account: {selected.userId.name || selected.userId.email}
                     </p>
                   )}
@@ -287,58 +297,62 @@ export default function AdminRequestsPage() {
 
               <div className="flex flex-wrap gap-2">
                 {selected.status !== "fulfilled" && (
-                  <button
+                  <Button
                     type="button"
+                    variant="success"
+                    size="sm"
                     disabled={busyId === selected._id}
                     onClick={() => patchStatus(selected._id, "fulfilled")}
-                    className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold disabled:opacity-50"
                   >
                     Mark fulfilled
-                  </button>
+                  </Button>
                 )}
                 {selected.status !== "open" && (
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
                     disabled={busyId === selected._id}
                     onClick={() => patchStatus(selected._id, "open")}
-                    className="px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold disabled:opacity-50"
+                    className="bg-[var(--warning)] text-[var(--ink-inverse)] hover:opacity-90"
                   >
                     Reopen
-                  </button>
+                  </Button>
                 )}
                 {selected.status !== "closed" && (
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
                     disabled={busyId === selected._id}
                     onClick={() => patchStatus(selected._id, "closed")}
-                    className="px-4 py-2 rounded-xl border border-gray-300 text-sm font-semibold disabled:opacity-50"
                   >
                     Close
-                  </button>
+                  </Button>
                 )}
                 {selected.phone && (
                   <a
                     href={`https://wa.me/91${selected.phone.replace(/\D/g, "").slice(-10)}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2 rounded-xl bg-[#25D366] text-white text-sm font-semibold"
+                    className="inline-flex items-center px-4 py-2 rounded-[var(--radius)] bg-[var(--success)] text-[var(--ink-inverse)] text-sm font-semibold"
                   >
                     WhatsApp
                   </a>
                 )}
-                <button
+                <Button
                   type="button"
+                  variant="danger"
+                  size="sm"
                   disabled={busyId === selected._id}
                   onClick={() => remove(selected._id)}
-                  className="px-4 py-2 rounded-xl border border-red-200 text-red-700 text-sm font-semibold disabled:opacity-50"
                 >
                   Delete
-                </button>
+                </Button>
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </div>
-    </main>
+    </AdminPage>
   );
 }

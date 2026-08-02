@@ -1,6 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { AdminPage } from "@/components/layout";
+import { Card, Badge, EmptyState, PageHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
+import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 
 interface Category {
   _id: string;
@@ -179,276 +188,217 @@ export default function AdminCategoriesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl text-gray-600">Loading...</div>
-      </div>
+      <AdminPage title="Manage Categories">
+        <div className="flex items-center justify-center gap-2 py-16 text-[var(--muted)]">
+          <Spinner size="lg" /> Loading…
+        </div>
+      </AdminPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Manage Categories
-            </h1>
-            <p className="text-gray-600">
-              Add, edit, or remove categories for the homepage
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
+    <AdminPage>
+      <PageHeader
+        title="Manage Categories"
+        description="Add, edit, or remove categories for the homepage"
+        actions={
+          <>
+            <Button
+              variant="secondary"
               onClick={handleReconcile}
-              disabled={reconciling}
-              className="bg-slate-800 text-white px-5 py-3 rounded-lg hover:bg-slate-900 transition font-semibold disabled:opacity-60"
+              loading={reconciling}
             >
-              {reconciling ? "Cleaning…" : "Clean duplicates"}
-            </button>
-            <button
-              onClick={handleAddNew}
-              className="bg-[var(--brand)] text-white px-6 py-3 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold shadow-lg hover:shadow-xl"
-            >
-              + Add Category
-            </button>
-          </div>
-        </div>
+              Clean duplicates
+            </Button>
+            <Button onClick={handleAddNew}>+ Add Category</Button>
+          </>
+        }
+      />
 
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
-            <p className="text-red-700 font-medium">{error}</p>
-          </div>
-        )}
+      {error && (
+        <Alert tone="danger" className="mb-6">
+          {error}
+        </Alert>
+      )}
 
-        {success && (
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
-            <p className="text-green-700 font-medium">{success}</p>
-          </div>
-        )}
+      {success && (
+        <Alert tone="success" className="mb-6">
+          {success}
+        </Alert>
+      )}
 
-        {showForm && (
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8 border border-gray-200">
-            <h2 className="text-2xl font-bold mb-6">
-              {editingCategory ? "Edit Category" : "Add New Category"}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Category Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => {
-                      setFormData({
-                        ...formData,
-                        name: e.target.value,
-                        slug: generateSlug(e.target.value),
-                      });
-                    }}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-                    placeholder="e.g., Mobile Screens"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Icon (Emoji) *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.icon}
-                    onChange={(e) =>
-                      setFormData({ ...formData, icon: e.target.value })
-                    }
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-                    placeholder="📱"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Slug *
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.slug}
-                    onChange={(e) =>
-                      setFormData({ ...formData, slug: e.target.value })
-                    }
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-                    placeholder="mobile-screens"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Order
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.order}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        order: parseInt(e.target.value),
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
-                  placeholder="Optional description"
+      {showForm && (
+        <Card padding="lg" className="mb-8">
+          <h2 className="text-xl font-bold text-[var(--ink)] mb-6">
+            {editingCategory ? "Edit Category" : "Add New Category"}
+          </h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Category Name" htmlFor="cat-name" required>
+                <Input
+                  id="cat-name"
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => {
+                    setFormData({
+                      ...formData,
+                      name: e.target.value,
+                      slug: generateSlug(e.target.value),
+                    });
+                  }}
+                  required
+                  placeholder="e.g., Mobile Screens"
                 />
-              </div>
+              </Field>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="isActive"
-                  checked={formData.isActive}
+              <Field label="Icon (Emoji)" htmlFor="cat-icon" required>
+                <Input
+                  id="cat-icon"
+                  type="text"
+                  value={formData.icon}
                   onChange={(e) =>
-                    setFormData({ ...formData, isActive: e.target.checked })
+                    setFormData({ ...formData, icon: e.target.value })
                   }
-                  className="w-5 h-5 text-[var(--brand)] border-gray-300 rounded focus:ring-[var(--brand)]"
+                  required
+                  placeholder="📱"
                 />
-                <label
-                  htmlFor="isActive"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Active (visible on homepage)
-                </label>
-              </div>
+              </Field>
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="bg-[var(--brand)] text-white px-6 py-2 rounded-lg hover:bg-[var(--brand-hover)] transition font-semibold"
-                >
-                  {editingCategory ? "Update Category" : "Create Category"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition font-semibold"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+              <Field label="Slug" htmlFor="cat-slug" required>
+                <Input
+                  id="cat-slug"
+                  type="text"
+                  value={formData.slug}
+                  onChange={(e) =>
+                    setFormData({ ...formData, slug: e.target.value })
+                  }
+                  required
+                  placeholder="mobile-screens"
+                />
+              </Field>
 
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Icon
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Slug
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {categories.map((category) => (
-                  <tr
-                    key={category._id}
-                    className="hover:bg-gray-50 transition"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="text-3xl">{category.icon}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-gray-900">
-                        {category.name}
-                      </div>
-                      {category.description && (
-                        <div className="text-sm text-gray-500 mt-1">
-                          {category.description}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                        {category.slug}
-                      </code>
-                    </td>
-                    <td className="px-6 py-4 text-gray-700">
-                      {category.order}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${
-                          category.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {category.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleEdit(category)}
-                        className="text-[var(--brand)] hover:text-teal-800 font-medium transition"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(category._id)}
-                        className="text-red-600 hover:text-red-800 font-medium transition"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {categories.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-5xl mb-4">📂</div>
-              <p className="text-gray-600 font-medium">No categories yet</p>
-              <p className="text-gray-500 text-sm mt-2">
-                Click "Add Category" to create your first category
-              </p>
+              <Field label="Order" htmlFor="cat-order">
+                <Input
+                  id="cat-order"
+                  type="number"
+                  value={formData.order}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      order: parseInt(e.target.value),
+                    })
+                  }
+                />
+              </Field>
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+
+            <Field label="Description" htmlFor="cat-desc">
+              <Textarea
+                id="cat-desc"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={3}
+                placeholder="Optional description"
+              />
+            </Field>
+
+            <label className="flex items-center gap-2 text-sm font-medium text-[var(--ink)]">
+              <Checkbox
+                id="isActive"
+                checked={formData.isActive}
+                onChange={(e) =>
+                  setFormData({ ...formData, isActive: e.target.checked })
+                }
+              />
+              Active (visible on homepage)
+            </label>
+
+            <div className="flex gap-3 pt-4">
+              <Button type="submit">
+                {editingCategory ? "Update Category" : "Create Category"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowForm(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      {categories.length === 0 ? (
+        <Card>
+          <EmptyState
+            title="No categories yet"
+            description='Click "Add Category" to create your first category'
+          />
+        </Card>
+      ) : (
+        <Table>
+          <THead>
+            <TR>
+              <TH>Icon</TH>
+              <TH>Name</TH>
+              <TH>Slug</TH>
+              <TH>Order</TH>
+              <TH>Status</TH>
+              <TH className="text-right">Actions</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {categories.map((category) => (
+              <TR key={category._id}>
+                <TD>
+                  <span className="text-3xl">{category.icon}</span>
+                </TD>
+                <TD>
+                  <div className="font-semibold text-[var(--ink)]">
+                    {category.name}
+                  </div>
+                  {category.description && (
+                    <div className="text-sm text-[var(--muted)] mt-1">
+                      {category.description}
+                    </div>
+                  )}
+                </TD>
+                <TD>
+                  <code className="bg-[var(--surface-3)] px-2 py-1 rounded text-sm">
+                    {category.slug}
+                  </code>
+                </TD>
+                <TD className="text-[var(--ink-secondary)]">{category.order}</TD>
+                <TD>
+                  <Badge tone={category.isActive ? "success" : "neutral"}>
+                    {category.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </TD>
+                <TD className="text-right space-x-2">
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => handleEdit(category)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => handleDelete(category._id)}
+                    className="text-[var(--danger)]"
+                  >
+                    Delete
+                  </Button>
+                </TD>
+              </TR>
+            ))}
+          </TBody>
+        </Table>
+      )}
+    </AdminPage>
   );
 }

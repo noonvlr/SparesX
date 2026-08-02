@@ -16,11 +16,11 @@ const TYPES = [
 ];
 
 const STATUS_STYLE: Record<string, string> = {
-  open: "bg-amber-50 text-amber-700 border-amber-200",
+  open: "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/20",
   in_progress:
     "bg-[var(--brand-soft)] text-[var(--brand-hover)] border-[var(--brand-muted)]",
-  resolved: "bg-green-50 text-green-700 border-green-200",
-  closed: "bg-gray-50 text-gray-600 border-gray-200",
+  resolved: "bg-[var(--success-soft)] text-[var(--success)] border-[var(--success)]/20",
+  closed: "bg-[var(--surface-3)] text-[var(--muted)] border-[var(--border)]",
 };
 
 function SupportPageInner() {

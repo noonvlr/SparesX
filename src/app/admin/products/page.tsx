@@ -2,11 +2,22 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { AdminPage } from "@/components/layout";
+import { Badge, PageHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Field } from "@/components/ui/Field";
+import { Select } from "@/components/ui/Select";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
+import { Modal } from "@/components/ui/Modal";
+import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 
-const STATUS_STYLE: Record<string, string> = {
-  pending: "bg-amber-50 text-amber-800 border-amber-200",
-  approved: "bg-green-50 text-green-800 border-green-200",
-  rejected: "bg-red-50 text-red-800 border-red-200",
+const STATUS_TONE: Record<string, "warning" | "success" | "danger" | "neutral"> = {
+  pending: "warning",
+  approved: "success",
+  rejected: "danger",
 };
 
 type Product = {
@@ -172,18 +183,19 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto py-8 px-4">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Manage products</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Approve, edit, feature, or remove any listing
-          </p>
-        </div>
-        <Link href="/products" className="text-sm text-[var(--brand)] hover:underline">
-          View public catalog →
-        </Link>
-      </div>
+    <AdminPage>
+      <PageHeader
+        title="Manage products"
+        description="Approve, edit, feature, or remove any listing"
+        actions={
+          <Link
+            href="/products"
+            className="text-sm text-[var(--brand)] hover:underline"
+          >
+            View public catalog →
+          </Link>
+        }
+      />
 
       <div className="flex flex-wrap gap-2 mb-4">
         {(
@@ -194,18 +206,16 @@ export default function AdminProductsPage() {
             ["rejected", "Rejected"],
           ] as const
         ).map(([value, label]) => (
-          <button
+          <Button
             key={value}
             type="button"
+            size="sm"
+            variant={status === value ? "primary" : "outline"}
             onClick={() => setStatus(value)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-              status === value
-                ? "bg-[var(--brand)] text-white border-[var(--brand)]"
-                : "bg-white text-gray-600 border-gray-200"
-            }`}
+            className="rounded-full"
           >
             {label} ({statusCounts[value] ?? 0})
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -216,288 +226,284 @@ export default function AdminProductsPage() {
           load(status, q);
         }}
       >
-        <input
+        <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search name, brand, model, part..."
-          className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm"
+          className="flex-1"
+          size="sm"
         />
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold"
-        >
+        <Button type="submit" size="sm">
           Search
-        </button>
+        </Button>
       </form>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
-
-      <div className="bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center text-gray-500">Loading...</div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs uppercase text-gray-600">
-                <tr>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-4 py-3">Fitment</th>
-                  <th className="px-4 py-3">Price</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Seller</th>
-                  <th className="px-4 py-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {products.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-                {products.map((p) => (
-                  <tr key={p._id} className="hover:bg-gray-50/80 align-top">
-                    <td className="px-4 py-3">
-                      <div className="flex gap-3">
-                        {p.images?.[0] ? (
-                          <img
-                            src={p.images[0]}
-                            alt=""
-                            className="w-12 h-12 rounded-lg object-cover border"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-gray-100" />
-                        )}
-                        <div className="min-w-0">
-                          <p className="font-semibold text-gray-900 line-clamp-1">
-                            {p.name}
-                            {p.featured && (
-                              <span className="ml-2 text-[10px] font-bold text-amber-600">
-                                ★ FEATURED
-                              </span>
-                            )}
-                          </p>
-                          <p className="text-xs text-gray-500 line-clamp-2">
-                            {p.description}
-                          </p>
-                          <p className="text-[11px] text-gray-400 mt-0.5 capitalize">
-                            {p.condition}
-                            {p.priceNegotiable ? " · Negotiable" : ""}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-700">
-                      <p className="capitalize">{p.deviceCategory || "—"}</p>
-                      <p>
-                        {p.brand || "—"} {p.deviceModel || ""}
-                      </p>
-                      <p className="text-gray-500 capitalize">{p.partType || "—"}</p>
-                    </td>
-                    <td className="px-4 py-3 font-semibold whitespace-nowrap">
-                      ₹{Number(p.price).toLocaleString("en-IN")}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex px-2 py-0.5 rounded-full border text-[10px] font-semibold capitalize ${STATUS_STYLE[p.status] || ""}`}
-                      >
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-700">
-                      <p className="font-medium">{p.technician?.name || "N/A"}</p>
-                      <p className="text-gray-500">{p.technician?.email}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1.5 max-w-[220px]">
-                        {p.status !== "approved" && (
-                          <button
-                            type="button"
-                            disabled={busyId === p._id}
-                            onClick={() =>
-                              patchProduct(p._id, { status: "approved" })
-                            }
-                            className="px-2 py-1 rounded-lg bg-green-600 text-white text-[11px] font-semibold disabled:opacity-50"
-                          >
-                            Approve
-                          </button>
-                        )}
-                        {p.status !== "rejected" && (
-                          <button
-                            type="button"
-                            disabled={busyId === p._id}
-                            onClick={() =>
-                              patchProduct(p._id, { status: "rejected" })
-                            }
-                            className="px-2 py-1 rounded-lg bg-amber-600 text-white text-[11px] font-semibold disabled:opacity-50"
-                          >
-                            Reject
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          disabled={busyId === p._id}
-                          onClick={() =>
-                            patchProduct(p._id, { featured: !p.featured })
-                          }
-                          className="px-2 py-1 rounded-lg border border-amber-300 text-amber-800 text-[11px] font-semibold disabled:opacity-50"
-                        >
-                          {p.featured ? "Unfeature" : "Feature"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEdit(p)}
-                          className="px-2 py-1 rounded-lg border border-teal-200 text-[var(--brand-hover)] text-[11px] font-semibold"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busyId === p._id}
-                          onClick={() => deleteProduct(p._id, p.name)}
-                          className="px-2 py-1 rounded-lg border border-red-200 text-red-700 text-[11px] font-semibold disabled:opacity-50"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {editId && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <form
-            onSubmit={saveEdit}
-            className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-3"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-bold text-gray-900">Edit product</h2>
-              <button
-                type="button"
-                onClick={() => setEditId(null)}
-                className="text-gray-400 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-            {(
-              [
-                ["name", "Name"],
-                ["description", "Description"],
-                ["price", "Price"],
-                ["deviceCategory", "Device category"],
-                ["brand", "Brand"],
-                ["deviceModel", "Model"],
-                ["partType", "Part type"],
-              ] as const
-            ).map(([key, label]) => (
-              <div key={key}>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  {label}
-                </label>
-                {key === "description" ? (
-                  <textarea
-                    value={editForm[key]}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, [key]: e.target.value }))
-                    }
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[80px]"
-                    required
-                  />
-                ) : (
-                  <input
-                    type={key === "price" ? "number" : "text"}
-                    value={editForm[key]}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, [key]: e.target.value }))
-                    }
-                    className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                    required={true}
-                  />
-                )}
-              </div>
-            ))}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Condition
-                </label>
-                <select
-                  value={editForm.condition}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, condition: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                >
-                  <option value="new">New</option>
-                  <option value="used">Used</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  value={editForm.status}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, status: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                >
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-              </div>
-            </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={editForm.priceNegotiable}
-                onChange={(e) =>
-                  setEditForm((f) => ({
-                    ...f,
-                    priceNegotiable: e.target.checked,
-                  }))
-                }
-              />
-              Price negotiable
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={editForm.featured}
-                onChange={(e) =>
-                  setEditForm((f) => ({ ...f, featured: e.target.checked }))
-                }
-              />
-              Featured on homepage
-            </label>
-            <div className="flex gap-2 pt-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="flex-1 py-2.5 rounded-xl bg-[var(--brand)] text-white font-semibold disabled:opacity-60"
-              >
-                {saving ? "Saving..." : "Save changes"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditId(null)}
-                className="px-4 py-2.5 rounded-xl border border-gray-300 font-semibold"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+      {error && (
+        <Alert tone="danger" className="mb-4">
+          {error}
+        </Alert>
       )}
-    </main>
+
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 py-16 text-[var(--muted)]">
+          <Spinner /> Loading…
+        </div>
+      ) : (
+        <Table>
+          <THead>
+            <TR>
+              <TH>Product</TH>
+              <TH>Fitment</TH>
+              <TH>Price</TH>
+              <TH>Status</TH>
+              <TH>Seller</TH>
+              <TH>Actions</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {products.length === 0 && (
+              <TR>
+                <TD colSpan={6} className="text-center text-[var(--muted)] py-8">
+                  No products found.
+                </TD>
+              </TR>
+            )}
+            {products.map((p) => (
+              <TR key={p._id} className="align-top">
+                <TD>
+                  <div className="flex gap-3">
+                    {p.images?.[0] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.images[0]}
+                        alt=""
+                        className="w-12 h-12 rounded-[var(--radius)] object-cover border border-[var(--border)]"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-[var(--radius)] bg-[var(--surface-3)]" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[var(--ink)] line-clamp-1">
+                        {p.name}
+                        {p.featured && (
+                          <Badge tone="warning" className="ml-2">
+                            ★ Featured
+                          </Badge>
+                        )}
+                      </p>
+                      <p className="text-xs text-[var(--muted)] line-clamp-2">
+                        {p.description}
+                      </p>
+                      <p className="text-[11px] text-[var(--muted)] mt-0.5 capitalize">
+                        {p.condition}
+                        {p.priceNegotiable ? " · Negotiable" : ""}
+                      </p>
+                    </div>
+                  </div>
+                </TD>
+                <TD className="text-xs text-[var(--ink-secondary)]">
+                  <p className="capitalize">{p.deviceCategory || "—"}</p>
+                  <p>
+                    {p.brand || "—"} {p.deviceModel || ""}
+                  </p>
+                  <p className="text-[var(--muted)] capitalize">
+                    {p.partType || "—"}
+                  </p>
+                </TD>
+                <TD className="font-semibold whitespace-nowrap">
+                  ₹{Number(p.price).toLocaleString("en-IN")}
+                </TD>
+                <TD>
+                  <Badge tone={STATUS_TONE[p.status] || "neutral"} className="capitalize">
+                    {p.status}
+                  </Badge>
+                </TD>
+                <TD className="text-xs text-[var(--ink-secondary)]">
+                  <p className="font-medium">{p.technician?.name || "N/A"}</p>
+                  <p className="text-[var(--muted)]">{p.technician?.email}</p>
+                </TD>
+                <TD>
+                  <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                    {p.status !== "approved" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="success"
+                        disabled={busyId === p._id}
+                        onClick={() =>
+                          patchProduct(p._id, { status: "approved" })
+                        }
+                        className="text-[11px] h-8 min-h-0 px-2"
+                      >
+                        Approve
+                      </Button>
+                    )}
+                    {p.status !== "rejected" && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="soft"
+                        disabled={busyId === p._id}
+                        onClick={() =>
+                          patchProduct(p._id, { status: "rejected" })
+                        }
+                        className="text-[11px] h-8 min-h-0 px-2 bg-[var(--warning-soft)] text-[var(--warning)] hover:opacity-90"
+                      >
+                        Reject
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={busyId === p._id}
+                      onClick={() =>
+                        patchProduct(p._id, { featured: !p.featured })
+                      }
+                      className="text-[11px] h-8 min-h-0 px-2"
+                    >
+                      {p.featured ? "Unfeature" : "Feature"}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="soft"
+                      onClick={() => openEdit(p)}
+                      className="text-[11px] h-8 min-h-0 px-2"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="danger"
+                      disabled={busyId === p._id}
+                      onClick={() => deleteProduct(p._id, p.name)}
+                      className="text-[11px] h-8 min-h-0 px-2"
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </TD>
+              </TR>
+            ))}
+          </TBody>
+        </Table>
+      )}
+
+      <Modal
+        open={!!editId}
+        onClose={() => setEditId(null)}
+        title="Edit product"
+        sheet={false}
+        className="sm:max-w-lg"
+        footer={
+          <>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setEditId(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="admin-product-edit"
+              loading={saving}
+            >
+              Save changes
+            </Button>
+          </>
+        }
+      >
+        <form id="admin-product-edit" onSubmit={saveEdit} className="space-y-3">
+          {(
+            [
+              ["name", "Name"],
+              ["description", "Description"],
+              ["price", "Price"],
+              ["deviceCategory", "Device category"],
+              ["brand", "Brand"],
+              ["deviceModel", "Model"],
+              ["partType", "Part type"],
+            ] as const
+          ).map(([key, label]) => (
+            <Field key={key} label={label} htmlFor={`edit-${key}`} required>
+              {key === "description" ? (
+                <Textarea
+                  id={`edit-${key}`}
+                  value={editForm[key]}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                  required
+                />
+              ) : (
+                <Input
+                  id={`edit-${key}`}
+                  type={key === "price" ? "number" : "text"}
+                  value={editForm[key]}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                  required
+                  size="sm"
+                />
+              )}
+            </Field>
+          ))}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Condition" htmlFor="edit-condition">
+              <Select
+                id="edit-condition"
+                value={editForm.condition}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, condition: e.target.value }))
+                }
+                size="sm"
+              >
+                <option value="new">New</option>
+                <option value="used">Used</option>
+              </Select>
+            </Field>
+            <Field label="Status" htmlFor="edit-status">
+              <Select
+                id="edit-status"
+                value={editForm.status}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, status: e.target.value }))
+                }
+                size="sm"
+              >
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </Select>
+            </Field>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
+            <Checkbox
+              checked={editForm.priceNegotiable}
+              onChange={(e) =>
+                setEditForm((f) => ({
+                  ...f,
+                  priceNegotiable: e.target.checked,
+                }))
+              }
+            />
+            Price negotiable
+          </label>
+          <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
+            <Checkbox
+              checked={editForm.featured}
+              onChange={(e) =>
+                setEditForm((f) => ({ ...f, featured: e.target.checked }))
+              }
+            />
+            Featured on homepage
+          </label>
+        </form>
+      </Modal>
+    </AdminPage>
   );
 }

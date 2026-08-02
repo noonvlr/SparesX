@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/ui/cn";
 import { EmptyState } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";

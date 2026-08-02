@@ -5,12 +5,12 @@ import type { ChatMessage } from "@/types/chat";
 function Receipt({ message, mine }: { message: ChatMessage; mine: boolean }) {
   if (!mine) return null;
   if (message.read) {
-    return <span className="text-teal-200 text-[10px] ml-1">✓✓</span>;
+    return <span className="text-[var(--brand-muted)] text-[10px] ml-1">✓✓</span>;
   }
   if (message.delivered) {
-    return <span className="text-white/70 text-[10px] ml-1">✓✓</span>;
+    return <span className="text-[var(--ink-inverse)]/70 text-[10px] ml-1">✓✓</span>;
   }
-  return <span className="text-white/70 text-[10px] ml-1">✓</span>;
+  return <span className="text-[var(--ink-inverse)]/70 text-[10px] ml-1">✓</span>;
 }
 
 export default function MessageBubble({
@@ -28,10 +28,10 @@ export default function MessageBubble({
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"} mb-2`}>
       <div
-        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[15px] shadow-sm ${
+        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[15px] shadow-[var(--shadow-sm)] ${
           mine
-            ? "bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-br-md"
-            : "bg-white text-gray-900 border border-gray-100 rounded-bl-md"
+            ? "bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] rounded-br-md"
+            : "bg-[var(--surface)] text-[var(--ink)] border border-[var(--border)] rounded-bl-md"
         }`}
       >
         {message.type === "image" && message.mediaUrl ? (
@@ -49,7 +49,7 @@ export default function MessageBubble({
         )}
         <div
           className={`flex items-center justify-end gap-1 mt-0.5 ${
-            mine ? "text-white/70" : "text-gray-400"
+            mine ? "text-[var(--ink-inverse)]/70" : "text-[var(--muted)]"
           }`}
         >
           <span className="text-[10px]">{time}</span>

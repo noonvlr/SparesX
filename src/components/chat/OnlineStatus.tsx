@@ -13,11 +13,13 @@ export default function OnlineStatus({
     return (
       <span
         className={`inline-flex items-center gap-1 text-xs font-medium ${
-          light ? "text-emerald-300" : "text-emerald-600"
+          light ? "text-[var(--success-soft)]" : "text-[var(--success)]"
         }`}
       >
         <span
-          className={`w-2 h-2 rounded-full ${light ? "bg-emerald-400" : "bg-emerald-500"}`}
+          className={`w-2 h-2 rounded-full ${
+            light ? "bg-[var(--success-soft)]" : "bg-[var(--success)]"
+          }`}
         />
         Online
       </span>
@@ -26,7 +28,11 @@ export default function OnlineStatus({
   if (lastSeen) {
     const d = new Date(lastSeen);
     return (
-      <span className={`text-xs ${light ? "text-white/70" : "text-gray-500"}`}>
+      <span
+        className={`text-xs ${
+          light ? "text-[var(--ink-inverse)]/70" : "text-[var(--muted)]"
+        }`}
+      >
         Last seen{" "}
         {d.toLocaleString("en-IN", {
           day: "numeric",
@@ -38,7 +44,11 @@ export default function OnlineStatus({
     );
   }
   return (
-    <span className={`text-xs ${light ? "text-white/50" : "text-gray-400"}`}>
+    <span
+      className={`text-xs ${
+        light ? "text-[var(--ink-inverse)]/50" : "text-[var(--muted)]"
+      }`}
+    >
       Offline
     </span>
   );

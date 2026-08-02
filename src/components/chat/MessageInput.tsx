@@ -1,6 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { Textarea } from "@/components/ui/Input";
 
 const QUICK_REPLIES = [
   "Is this available?",
@@ -73,25 +76,27 @@ export default function MessageInput({
   }
 
   return (
-    <div className="bg-white">
+    <div className="bg-[var(--surface)]">
       {showQuickReplies && (
         <div className="flex gap-2 overflow-x-auto px-3 pt-2.5 pb-1 scrollbar-hide">
           {QUICK_REPLIES.map((reply) => (
-            <button
+            <Button
               key={reply}
               type="button"
+              size="sm"
+              variant="soft"
               disabled={disabled || Boolean(sendingReply)}
               onClick={() => void handleQuickReply(reply)}
-              className="btn-press shrink-0 whitespace-nowrap rounded-full border border-teal-200 bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 hover:bg-teal-100 hover:border-teal-300 transition disabled:opacity-50"
+              className="shrink-0 whitespace-nowrap rounded-full h-auto min-h-0 py-1.5 text-xs"
             >
               {sendingReply === reply ? "…" : reply}
-            </button>
+            </Button>
           ))}
         </div>
       )}
       <form
         onSubmit={handleSubmit}
-        className="flex items-end gap-2 p-3 border-t border-gray-100"
+        className="flex items-end gap-2 p-3 border-t border-[var(--border)]"
       >
         <input
           ref={fileRef}
@@ -100,16 +105,18 @@ export default function MessageInput({
           className="hidden"
           onChange={handleFile}
         />
-        <button
+        <IconButton
           type="button"
+          variant="outline"
+          size="sm"
           disabled={disabled || uploading}
           onClick={() => fileRef.current?.click()}
-          className="p-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-teal-50 hover:border-teal-200 hover:text-teal-700 disabled:opacity-50"
           aria-label="Attach image"
+          className="rounded-xl"
         >
           {uploading ? "…" : "📷"}
-        </button>
-        <textarea
+        </IconButton>
+        <Textarea
           value={text}
           onChange={(e) => {
             setText(e.target.value);
@@ -124,15 +131,16 @@ export default function MessageInput({
           rows={1}
           placeholder="Type a message"
           disabled={disabled}
-          className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-base leading-5 max-h-28 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-300 chat-input"
+          className="flex-1 resize-none min-h-0 max-h-28 py-2.5 leading-5 chat-input"
         />
-        <button
+        <Button
           type="submit"
+          size="sm"
           disabled={disabled || !text.trim()}
-          className="btn-press px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold disabled:opacity-50"
+          className="rounded-xl"
         >
           Send
-        </button>
+        </Button>
       </form>
     </div>
   );

@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { AdminPage } from "@/components/layout";
+import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
@@ -26,71 +30,81 @@ export default function AdminDashboard() {
       .catch(() => setError("Failed to load dashboard"));
   }, []);
 
-  if (error) return <div className="p-8 text-red-600">{error}</div>;
-  if (!stats) return <div className="p-8">Loading...</div>;
+  if (error) {
+    return (
+      <AdminPage title="Admin Dashboard">
+        <Alert tone="danger">{error}</Alert>
+      </AdminPage>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <AdminPage title="Admin Dashboard">
+        <div className="flex items-center justify-center gap-2 py-16 text-[var(--muted)]">
+          <Spinner /> Loading…
+        </div>
+      </AdminPage>
+    );
+  }
 
   const cards = [
     {
       label: "Total users",
       value: stats.userCount,
       href: "/admin/users",
-      from: "from-[var(--brand)]",
-      to: "to-[var(--brand-hover)]",
-      muted: "text-[var(--brand-muted)]",
+      soft: "bg-[var(--brand-soft)]",
+      labelClass: "text-[var(--brand-hover)]",
     },
     {
       label: "Technicians",
       value: stats.technicianCount,
       href: "/admin/users",
-      from: "from-emerald-500",
-      to: "to-emerald-600",
-      muted: "text-emerald-100",
+      soft: "bg-[var(--success-soft)]",
+      labelClass: "text-[var(--success)]",
     },
     {
       label: "Products",
       value: stats.productCount,
       href: "/admin/products",
-      from: "from-violet-500",
-      to: "to-violet-600",
-      muted: "text-violet-100",
+      soft: "bg-[var(--info-soft)]",
+      labelClass: "text-[var(--info)]",
       badge: stats.pendingProducts
         ? `${stats.pendingProducts} pending`
         : null,
+      badgeTone: "warning" as const,
     },
     {
       label: "Open requests",
       value: stats.openRequests,
       href: "/admin/requests",
-      from: "from-amber-500",
-      to: "to-amber-600",
-      muted: "text-amber-100",
+      soft: "bg-[var(--warning-soft)]",
+      labelClass: "text-[var(--warning)]",
     },
     {
       label: "Support unread",
       value: stats.unreadSupport,
       href: "/admin/support",
-      from: "from-rose-500",
-      to: "to-rose-600",
-      muted: "text-rose-100",
+      soft: "bg-[var(--danger-soft)]",
+      labelClass: "text-[var(--danger)]",
     },
     {
       label: "Chat threads",
       value: stats.conversationCount,
       href: "/admin/chat",
-      from: "from-cyan-500",
-      to: "to-cyan-700",
-      muted: "text-cyan-100",
+      soft: "bg-[var(--info-soft)]",
+      labelClass: "text-[var(--info)]",
       badge: stats.messageCount
         ? `${stats.messageCount} messages`
         : null,
+      badgeTone: "neutral" as const,
     },
     {
       label: "Blocked users",
       value: stats.blockedUsers,
       href: "/admin/users",
-      from: "from-slate-500",
-      to: "to-slate-700",
-      muted: "text-slate-200",
+      soft: "bg-[var(--danger-soft)]",
+      labelClass: "text-[var(--danger)]",
     },
   ];
 
@@ -108,45 +122,49 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <main className="max-w-6xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-2 text-gray-900">Admin Dashboard</h1>
-      <p className="text-gray-600 text-sm mb-8">
-        Full control over catalog, requests, users, devices, support, and chats
-      </p>
+    <AdminPage>
+      <PageHeader
+        title="Admin Dashboard"
+        description="Full control over catalog, requests, users, devices, support, and chats"
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         {cards.map((card) => (
-          <Link
-            key={card.label}
-            href={card.href}
-            className={`bg-gradient-to-br ${card.from} ${card.to} text-white rounded-[var(--radius-lg)] shadow-lg p-5 hover:opacity-95 transition`}
-          >
-            <div className={`${card.muted} text-xs font-medium uppercase tracking-wide`}>
-              {card.label}
-            </div>
-            <div className="text-4xl font-bold mt-2">{card.value ?? 0}</div>
-            {card.badge && (
-              <div className="text-xs mt-2 font-semibold bg-white/20 inline-block px-2 py-0.5 rounded-full">
-                {card.badge}
+          <Link key={card.label} href={card.href} className="block">
+            <Card
+              hover
+              padding="md"
+              className={`${card.soft} border-[var(--border)]`}
+            >
+              <div
+                className={`${card.labelClass} text-xs font-medium uppercase tracking-wide`}
+              >
+                {card.label}
               </div>
-            )}
+              <div className="text-4xl font-bold mt-2 text-[var(--ink)]">
+                {card.value ?? 0}
+              </div>
+              {card.badge && (
+                <Badge tone={card.badgeTone || "neutral"} className="mt-2">
+                  {card.badge}
+                </Badge>
+              )}
+            </Card>
           </Link>
         ))}
       </div>
 
-      <h2 className="text-lg font-bold text-gray-900 mb-3">Quick actions</h2>
+      <h2 className="text-lg font-bold text-[var(--ink)] mb-3">Quick actions</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="rounded-[var(--radius)] border border-[var(--border)] bg-white p-4 shadow-sm hover:border-[var(--brand-muted)] hover:shadow transition"
-          >
-            <p className="font-semibold text-gray-900">{link.title}</p>
-            <p className="text-sm text-gray-500 mt-1">{link.desc}</p>
+          <Link key={link.href} href={link.href} className="block">
+            <Card hover padding="md">
+              <p className="font-semibold text-[var(--ink)]">{link.title}</p>
+              <p className="text-sm text-[var(--muted)] mt-1">{link.desc}</p>
+            </Card>
           </Link>
         ))}
       </div>
-    </main>
+    </AdminPage>
   );
 }

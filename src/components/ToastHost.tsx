@@ -45,10 +45,11 @@ export default function ToastHost() {
         : "bg-[var(--success)]";
 
   return (
-    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] px-4 w-full max-w-sm pointer-events-none">
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[var(--z-toast)] px-4 w-full max-w-sm pointer-events-none">
       <div
-        className={`${colors} text-white rounded-xl shadow-xl px-4 py-3 text-sm font-medium text-center animate-in fade-in slide-in-from-top-2`}
+        className={`${colors} text-[var(--ink-inverse)] rounded-[var(--radius)] shadow-[var(--shadow-md)] px-4 py-3 text-sm font-medium text-center animate-in fade-in`}
         role="status"
+        aria-live="polite"
       >
         {toast.message}
       </div>

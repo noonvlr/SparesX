@@ -1,3 +1,5 @@
+"use client";
+
 import { cn } from "@/lib/ui/cn";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/Card";

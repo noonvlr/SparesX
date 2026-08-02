@@ -15,6 +15,9 @@ import {
   setChatMuted,
 } from "@/lib/chat/sound";
 import type { ChatConversation } from "@/types/chat";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { Avatar, Badge, Skeleton } from "@/components/ui/Card";
 
 function peerOf(c?: ChatConversation | null, userId?: string | null) {
   if (!c) return undefined;
@@ -60,26 +63,28 @@ function ThreadBody({
       <div className="flex-1 overflow-y-auto px-3 py-3">
         {chat.hasMoreById[conversationId] && (
           <div className="text-center mb-2">
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={() => void chat.loadOlder(conversationId)}
-              className="text-xs text-teal-700 font-semibold hover:text-teal-800"
+              className="text-xs font-semibold"
             >
               Load older
-            </button>
+            </Button>
           </div>
         )}
         {chat.loadingThread && messages.length === 0 ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div
+              <Skeleton
                 key={i}
-                className="h-10 w-2/3 bg-white/60 rounded-xl animate-pulse"
+                className="h-10 w-2/3 rounded-xl bg-[var(--surface)]/60"
               />
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <p className="text-center text-sm text-gray-500 py-8">
+          <p className="text-center text-sm text-[var(--muted)] py-8">
             No messages yet. Say hello.
           </p>
         ) : (
@@ -122,40 +127,30 @@ function FloatingWindow({
 
   return (
     <div
-      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] glass rounded-2xl shadow-2xl border border-teal-900/10 overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
+      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] glass rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
       style={{ right }}
       role="dialog"
       aria-label={`Chat with ${peer?.name || "user"}`}
     >
-      <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-teal-700 to-teal-900 text-white">
+      <div className="flex items-center gap-2 px-3 py-2.5 bg-gradient-to-r from-[var(--brand-hover)] to-[var(--ink)] text-[var(--ink-inverse)]">
         {peer?._id ? (
           <Link
             href={`/u/${peer._id}`}
             className="shrink-0 rounded-full"
             title="View profile"
           >
-            {peer?.profilePicture ? (
-              <img
-                src={peer.profilePicture}
-                alt=""
-                className="w-8 h-8 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-sm font-bold">
-                {(peer?.name || "?").charAt(0).toUpperCase()}
-              </div>
-            )}
+            <Avatar
+              src={peer?.profilePicture}
+              name={peer?.name}
+              size="sm"
+            />
           </Link>
-        ) : peer?.profilePicture ? (
-          <img
-            src={peer.profilePicture}
-            alt=""
-            className="w-8 h-8 rounded-full object-cover"
-          />
         ) : (
-          <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-sm font-bold">
-            {(peer?.name || "?").charAt(0).toUpperCase()}
-          </div>
+          <Avatar
+            src={peer?.profilePicture}
+            name={peer?.name}
+            size="sm"
+          />
         )}
         <div className="min-w-0 flex-1">
           {peer?._id ? (
@@ -174,22 +169,24 @@ function FloatingWindow({
             light
           />
         </div>
-        <button
+        <IconButton
           type="button"
+          size="sm"
           onClick={() => chat.minimizeFloating(conversationId)}
-          className="p-1.5 hover:bg-white/10 rounded-lg text-lg leading-none"
+          className="text-[var(--ink-inverse)] hover:bg-[var(--ink-inverse)]/10"
           aria-label="Minimize"
         >
           –
-        </button>
-        <button
+        </IconButton>
+        <IconButton
           type="button"
+          size="sm"
           onClick={() => chat.closeFloating(conversationId)}
-          className="p-1.5 hover:bg-white/10 rounded-lg text-lg leading-none"
+          className="text-[var(--ink-inverse)] hover:bg-[var(--ink-inverse)]/10"
           aria-label="Close"
         >
           ×
-        </button>
+        </IconButton>
       </div>
       <div className="flex-1 min-h-0">
         <ThreadBody conversationId={conversationId} compact />
@@ -387,7 +384,7 @@ export default function FloatingChatDock() {
                 key={id}
                 type="button"
                 onClick={() => chat.restoreFloating(id)}
-                className="relative w-12 h-12 rounded-full shadow-lg border-2 border-white bg-teal-600 text-white font-bold overflow-hidden transition-transform duration-200 hover:scale-105 animate-in zoom-in-75"
+                className="relative w-12 h-12 rounded-full shadow-lg border-2 border-[var(--surface)] bg-[var(--brand)] text-[var(--ink-inverse)] font-bold overflow-hidden transition-transform duration-200 hover:scale-105 animate-in zoom-in-75"
                 title={peer?.name || "Chat"}
               >
                 {peer?.profilePicture ? (
@@ -400,7 +397,7 @@ export default function FloatingChatDock() {
                   (peer?.name || "?").charAt(0).toUpperCase()
                 )}
                 {unread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-[10px] flex items-center justify-center shadow-md animate-pulse">
+                  <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-[var(--danger)] text-[10px] flex items-center justify-center shadow-md animate-pulse">
                     {unread}
                   </span>
                 )}
@@ -419,34 +416,34 @@ export default function FloatingChatDock() {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[85] bg-black/30 md:bg-black/10 backdrop-blur-[1px]"
+            className="fixed inset-0 z-[85] bg-[var(--overlay)] md:bg-[var(--overlay)]/40 backdrop-blur-[1px]"
             aria-label="Close chat overlay"
             onClick={() => chat.closePanel()}
           />
           <aside
-            className="fixed z-[95] glass shadow-2xl border border-teal-900/10 flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
+            className="fixed z-[95] glass shadow-2xl border border-[var(--border)] flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
               inset-x-0 bottom-0 h-[min(92vh,720px)] rounded-t-3xl
               md:inset-auto md:right-4 md:bottom-24 md:w-[380px] md:h-[min(640px,calc(100vh-7rem))] md:rounded-2xl"
             role="dialog"
             aria-modal="true"
             aria-label="Messages"
           >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-teal-900/10 bg-white/70 rounded-t-3xl md:rounded-t-2xl">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)]/70 rounded-t-3xl md:rounded-t-2xl">
               {chat.panelView === "thread" ? (
-                <button
+                <IconButton
                   type="button"
+                  size="sm"
                   onClick={chat.backToList}
-                  className="p-1.5 rounded-lg hover:bg-teal-50 text-gray-600"
                   aria-label="Back to conversations"
                 >
                   ←
-                </button>
+                </IconButton>
               ) : (
-                <span className="text-lg font-bold text-gray-900">Chats</span>
+                <span className="text-lg font-bold text-[var(--ink)]">Chats</span>
               )}
               {chat.panelView === "thread" && (
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-gray-900 truncate">
+                  <p className="font-semibold text-[var(--ink)] truncate">
                     {activePeer?.name || "Chat"}
                   </p>
                   <OnlineStatus
@@ -460,35 +457,31 @@ export default function FloatingChatDock() {
                 </div>
               )}
               {chat.panelView === "list" && <div className="flex-1" />}
-              <button
+              <Button
                 type="button"
+                size="sm"
+                variant="secondary"
                 onClick={() => {
                   const next = !muted;
                   setChatMuted(next);
                   setMuted(next);
                 }}
-                className="text-xs px-2 py-1 rounded-lg border border-gray-200 text-gray-600 hover:bg-teal-50 hover:border-teal-200"
+                className="h-auto min-h-0 px-2 py-1 text-xs"
                 title={muted ? "Unmute sounds" : "Mute sounds"}
               >
                 {muted ? "Muted" : "Sound"}
-              </button>
-              <span
-                className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  chat.connected
-                    ? "bg-teal-50 text-teal-700"
-                    : "bg-amber-50 text-amber-700"
-                }`}
-              >
+              </Button>
+              <Badge tone={chat.connected ? "brand" : "warning"}>
                 {chat.connected ? "Live" : "Offline"}
-              </span>
-              <button
+              </Badge>
+              <IconButton
                 type="button"
+                size="sm"
                 onClick={chat.closePanel}
-                className="p-1.5 rounded-lg hover:bg-teal-50 text-gray-500"
                 aria-label="Close"
               >
                 ×
-              </button>
+              </IconButton>
             </div>
 
             <div className="flex-1 min-h-0">
@@ -539,7 +532,7 @@ export default function FloatingChatDock() {
               if (suppressClickRef.current) return;
               togglePanel();
             }}
-            className="relative w-14 h-14 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white shadow-xl shadow-teal-900/20 hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-teal-300 touch-none select-none"
+            className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] shadow-xl shadow-[var(--brand-hover)]/20 hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-[var(--focus-ring)] touch-none select-none"
             aria-label="Open messages"
           >
             <svg
@@ -556,7 +549,7 @@ export default function FloatingChatDock() {
               />
             </svg>
             {chat.unreadTotal > 0 && (
-              <span className="absolute -top-1 -left-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-rose-500 text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-md animate-pulse">
+              <span className="absolute -top-1 -left-1 min-w-[1.35rem] h-[1.35rem] px-1 rounded-full bg-[var(--danger)] text-[11px] font-bold flex items-center justify-center border-2 border-[var(--surface)] shadow-md animate-pulse">
                 {chat.unreadTotal > 99 ? "99+" : chat.unreadTotal}
               </span>
             )}
@@ -564,7 +557,7 @@ export default function FloatingChatDock() {
           <button
             type="button"
             onClick={dismissFab}
-            className="absolute -top-1.5 -right-1.5 z-[97] w-6 h-6 rounded-full bg-white text-slate-600 border border-slate-200 shadow-md flex items-center justify-center hover:bg-slate-50 hover:text-slate-900"
+            className="absolute -top-1.5 -right-1.5 z-[97] w-6 h-6 rounded-full bg-[var(--surface)] text-[var(--ink-secondary)] border border-[var(--border-strong)] shadow-md flex items-center justify-center hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
             aria-label="Hide chat bubble"
             title="Hide"
           >

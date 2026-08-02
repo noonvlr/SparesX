@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthPage } from "@/components/layout";
 import RegisterForm from "./_components/RegisterForm";
 
 export const metadata: Metadata = {
@@ -16,8 +17,8 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[var(--surface-2)] px-4 py-12">
+    <AuthPage className="items-start">
       <RegisterForm />
-    </main>
+    </AuthPage>
   );
 }

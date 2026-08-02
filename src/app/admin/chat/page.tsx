@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminPage } from "@/components/layout";
+import { Card, Badge, PageHeader, Avatar } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Alert } from "@/components/ui/Alert";
+import { Spinner } from "@/components/ui/Spinner";
 
 type Participant = {
   _id: string;
@@ -160,24 +166,19 @@ export default function AdminChatPage() {
   }, [selected]);
 
   return (
-    <main className="chat-ui max-w-7xl mx-auto py-8 px-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Chat disputes</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Read-only access to user chats for dispute review. Delete only when
-            content violates policy.
-          </p>
-        </div>
-        <div className="flex gap-2 text-xs">
-          <span className="px-3 py-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand-hover)] border border-[var(--brand-muted)] font-semibold">
-            {stats.conversationCount} conversations
-          </span>
-          <span className="px-3 py-1.5 rounded-full bg-slate-50 text-slate-700 border border-slate-200 font-semibold">
-            {stats.messageCount} messages
-          </span>
-        </div>
-      </div>
+    <AdminPage>
+      <PageHeader
+        title="Chat disputes"
+        description="Read-only access to user chats for dispute review. Delete only when content violates policy."
+        actions={
+          <div className="flex gap-2 text-xs">
+            <Badge tone="brand">
+              {stats.conversationCount} conversations
+            </Badge>
+            <Badge tone="neutral">{stats.messageCount} messages</Badge>
+          </div>
+        }
+      />
 
       <form
         className="flex gap-2 mb-4"
@@ -186,46 +187,47 @@ export default function AdminChatPage() {
           setSearch(q);
         }}
       >
-        <input
+        <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search by name, email, user id, or conversation id"
-          className="flex-1 rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+          className="flex-1"
+          size="sm"
         />
-        <button
-          type="submit"
-          className="px-4 py-2.5 rounded-xl bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)]"
-        >
+        <Button type="submit" size="sm">
           Search
-        </button>
+        </Button>
         {search && (
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={() => {
               setQ("");
               setSearch("");
             }}
-            className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600"
           >
             Clear
-          </button>
+          </Button>
         )}
       </form>
 
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-50 text-red-700 text-sm">
+        <Alert tone="danger" className="mb-4">
           {error}
-        </div>
+        </Alert>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-2 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm overflow-hidden">
+        <Card padding="none" className="lg:col-span-2 overflow-hidden">
           {loading ? (
-            <div className="p-6 text-sm text-gray-500">Loading chats…</div>
+            <div className="flex items-center gap-2 p-6 text-sm text-[var(--muted)]">
+              <Spinner size="sm" /> Loading chats…
+            </div>
           ) : conversations.length === 0 ? (
-            <div className="p-6 text-sm text-gray-500">No conversations found.</div>
+            <div className="p-6 text-sm text-[var(--muted)]">No conversations found.</div>
           ) : (
-            <ul className="divide-y divide-gray-100 max-h-[75vh] overflow-y-auto">
+            <ul className="divide-y divide-[var(--divider)] max-h-[75vh] overflow-y-auto">
               {conversations.map((c) => {
                 const [a, b] = c.participants || [];
                 const active = selectedId === c._id;
@@ -235,16 +237,16 @@ export default function AdminChatPage() {
                       type="button"
                       onClick={() => void openConversation(c._id)}
                       className={`w-full text-left p-4 transition ${
-                        active ? "bg-[var(--brand-soft)]" : "hover:bg-gray-50"
+                        active ? "bg-[var(--brand-soft)]" : "hover:bg-[var(--surface-hover)]"
                       }`}
                     >
-                      <p className="text-sm font-semibold text-gray-900 truncate">
+                      <p className="text-sm font-semibold text-[var(--ink)] truncate">
                         {nameOf(a)} ↔ {nameOf(b)}
                       </p>
-                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                      <p className="text-xs text-[var(--muted)] truncate mt-0.5">
                         {c.lastMessage || "No messages yet"}
                       </p>
-                      <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-gray-400">
+                      <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-[var(--muted)]">
                         <span>
                           {c.messageCount || 0} msgs
                           {c.productId && typeof c.productId === "object"
@@ -263,47 +265,39 @@ export default function AdminChatPage() {
               })}
             </ul>
           )}
-        </div>
+        </Card>
 
-        <div className="lg:col-span-3 bg-white rounded-[var(--radius-lg)] border border-[var(--border)] shadow-sm min-h-[420px] flex flex-col overflow-hidden">
+        <Card padding="none" className="lg:col-span-3 min-h-[420px] flex flex-col overflow-hidden">
           {!selectedId ? (
-            <div className="flex-1 flex items-center justify-center text-sm text-gray-500 p-8">
+            <div className="flex-1 flex items-center justify-center text-sm text-[var(--muted)] p-8">
               Select a conversation to review the full thread.
             </div>
           ) : detailLoading ? (
-            <div className="p-6 text-sm text-gray-500">Loading thread…</div>
+            <div className="flex items-center gap-2 p-6 text-sm text-[var(--muted)]">
+              <Spinner size="sm" /> Loading thread…
+            </div>
           ) : !selected ? (
-            <div className="p-6 text-sm text-gray-500">Conversation not found.</div>
+            <div className="p-6 text-sm text-[var(--muted)]">Conversation not found.</div>
           ) : (
             <>
-              <div className="border-b border-gray-100 p-4 bg-slate-50">
+              <div className="border-b border-[var(--divider)] p-4 bg-[var(--surface-2)]">
                 <div className="flex flex-wrap gap-3">
                   {selected.participants?.map((p) => (
                     <div
                       key={p._id}
-                      className="flex items-center gap-2 rounded-xl bg-white border border-gray-100 px-3 py-2"
+                      className="flex items-center gap-2 rounded-[var(--radius)] bg-[var(--surface)] border border-[var(--border)] px-3 py-2"
                     >
-                      {p.profilePicture ? (
-                        <img
-                          src={p.profilePicture}
-                          alt=""
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
-                          {(p.name || "?").charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      <Avatar src={p.profilePicture} name={p.name} size="sm" />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
+                        <p className="text-sm font-semibold text-[var(--ink)] truncate">
                           {nameOf(p)}
                           {p.isBlocked ? (
-                            <span className="ml-1 text-[10px] text-rose-600">
+                            <span className="ml-1 text-[10px] text-[var(--danger)]">
                               blocked
                             </span>
                           ) : null}
                         </p>
-                        <p className="text-[11px] text-gray-500 truncate">
+                        <p className="text-[11px] text-[var(--muted)] truncate">
                           {p.email} · {p.role || "user"} ·{" "}
                           {p.online ? "Online" : "Offline"}
                         </p>
@@ -318,9 +312,9 @@ export default function AdminChatPage() {
                   ))}
                 </div>
                 {selected.productId && typeof selected.productId === "object" && (
-                  <div className="mt-3 text-xs text-gray-600">
+                  <div className="mt-3 text-xs text-[var(--ink-secondary)]">
                     Product context:{" "}
-                    <span className="font-semibold text-gray-900">
+                    <span className="font-semibold text-[var(--ink)]">
                       {selected.productId.name}
                     </span>
                     {selected.productId.brand
@@ -338,14 +332,14 @@ export default function AdminChatPage() {
                     </Link>
                   </div>
                 )}
-                <p className="mt-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1 inline-block">
+                <Alert tone="warning" className="mt-2 inline-block text-[11px] py-1 px-2">
                   Admin audit view — use only for disputes / policy review
-                </p>
+                </Alert>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 bg-[#efeae2] max-h-[62vh]">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 bg-[var(--surface-2)] max-h-[62vh]">
                 {messages.length === 0 ? (
-                  <p className="text-sm text-gray-500 text-center py-8">
+                  <p className="text-sm text-[var(--muted)] text-center py-8">
                     No messages in this conversation.
                   </p>
                 ) : (
@@ -365,8 +359,8 @@ export default function AdminChatPage() {
                         <div
                           className={`max-w-[88%] sm:max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm border ${
                             isFirst
-                              ? "bg-white border-gray-100 rounded-bl-md"
-                              : "bg-[var(--brand)] text-white border-[var(--brand)] rounded-br-md"
+                              ? "bg-[var(--surface)] border-[var(--border)] rounded-bl-md"
+                              : "bg-[var(--brand)] text-[var(--ink-inverse)] border-[var(--brand)] rounded-br-md"
                           }`}
                         >
                           {showName && (
@@ -384,7 +378,7 @@ export default function AdminChatPage() {
                                 onClick={() => void deleteMessage(m._id)}
                                 className={`text-[11px] shrink-0 disabled:opacity-50 ${
                                   isFirst
-                                    ? "text-rose-600 hover:underline"
+                                    ? "text-[var(--danger)] hover:underline"
                                     : "text-white/80 hover:underline"
                                 }`}
                               >
@@ -399,6 +393,7 @@ export default function AdminChatPage() {
                               rel="noreferrer"
                               className="block"
                             >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={m.mediaUrl}
                                 alt="Chat attachment"
@@ -408,7 +403,7 @@ export default function AdminChatPage() {
                           ) : (
                             <p
                               className={`chat-bubble-text whitespace-pre-wrap break-words ${
-                                isFirst ? "text-gray-900" : "text-white"
+                                isFirst ? "text-[var(--ink)]" : "text-white"
                               }`}
                             >
                               {m.text || ""}
@@ -416,7 +411,7 @@ export default function AdminChatPage() {
                           )}
                           <p
                             className={`text-[10px] mt-1.5 text-right ${
-                              isFirst ? "text-gray-400" : "text-white/70"
+                              isFirst ? "text-[var(--muted)]" : "text-white/70"
                             }`}
                           >
                             {new Date(m.createdAt).toLocaleString("en-IN", {
@@ -435,8 +430,8 @@ export default function AdminChatPage() {
               </div>
             </>
           )}
-        </div>
+        </Card>
       </div>
-    </main>
+    </AdminPage>
   );
 }

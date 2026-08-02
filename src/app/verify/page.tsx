@@ -5,6 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ToastHost";
 import { useOtpResendCooldown } from "@/hooks/useOtpResendCooldown";
+import { AuthPage } from "@/components/layout";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  Spinner,
+} from "@/components/ui";
 
 type Status = {
   email: string;
@@ -160,15 +170,17 @@ export default function VerifyPage() {
 
   if (loading) {
     return (
-      <main className="max-w-lg mx-auto py-12 px-4 text-[var(--muted)]">
-        Loading…
-      </main>
+      <AuthPage>
+        <div className="flex justify-center py-12">
+          <Spinner size="lg" className="text-[var(--brand)]" />
+        </div>
+      </AuthPage>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[var(--surface-2)] py-10 px-4">
-      <div className="max-w-lg mx-auto">
+    <AuthPage className="items-start">
+      <div className="w-full">
         <h1 className="text-3xl font-bold text-[var(--ink)] mb-2">
           Verify account
         </h1>
@@ -177,139 +189,153 @@ export default function VerifyPage() {
           verification is optional.
         </p>
 
-        {error && (
-          <div className="mb-4 rounded-[var(--radius)] border border-[var(--danger)]/20 bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+        {error ? (
+          <Alert tone="danger" className="mb-4">
             {error}
-          </div>
-        )}
+          </Alert>
+        ) : null}
 
-        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] mb-5 space-y-3">
+        <Card padding="md" className="mb-5 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-semibold text-[var(--ink)]">Phone (required)</h2>
-            <span
-              className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                status?.phoneVerified
-                  ? "bg-[var(--success-soft)] text-[var(--success)]"
-                  : "bg-[var(--warning-soft)] text-[var(--warning)]"
-              }`}
-            >
+            <Badge tone={status?.phoneVerified ? "success" : "warning"}>
               {status?.phoneVerified ? "Verified" : "Not verified"}
-            </span>
+            </Badge>
           </div>
           <p className="text-sm text-[var(--muted)]">
             {status?.countryCode} {status?.mobile}
           </p>
-          {!status?.phoneVerified && (
+          {!status?.phoneVerified ? (
             <>
               {!phoneSent ? (
-                <button
+                <Button
                   type="button"
+                  size="sm"
                   onClick={sendPhone}
-                  disabled={!!busy}
-                  className="px-4 py-2 rounded-[var(--radius)] bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50 transition-colors"
+                  loading={busy === "phone-send"}
+                  disabled={!!busy && busy !== "phone-send"}
                 >
-                  {busy === "phone-send" ? "Sending…" : "Send SMS OTP"}
-                </button>
+                  Send SMS OTP
+                </Button>
               ) : (
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={sendPhone}
-                  disabled={!!busy || !phoneResend.canResend}
-                  className="px-4 py-2 rounded-[var(--radius)] border border-[var(--border-strong)] text-sm font-semibold hover:bg-[var(--surface-2)] disabled:opacity-50 transition-colors"
+                  loading={busy === "phone-send"}
+                  disabled={
+                    (!!busy && busy !== "phone-send") || !phoneResend.canResend
+                  }
                 >
-                  {busy === "phone-send" ? "Sending…" : phoneResend.label}
-                </button>
+                  {phoneResend.label}
+                </Button>
               )}
-              <form onSubmit={confirmPhone} className="flex gap-2">
-                <input
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="6-digit OTP"
-                  className="flex-1 rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
-                  value={phoneOtp}
-                  onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, ""))}
-                  required
-                />
-                <button
+              <form onSubmit={confirmPhone} className="flex gap-2 items-end">
+                <Field htmlFor="phone-otp" className="flex-1">
+                  <Input
+                    id="phone-otp"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="6-digit OTP"
+                    value={phoneOtp}
+                    onChange={(e) =>
+                      setPhoneOtp(e.target.value.replace(/\D/g, ""))
+                    }
+                    required
+                  />
+                </Field>
+                <Button
                   type="submit"
-                  disabled={!!busy || phoneOtp.length !== 6}
-                  className="px-4 py-2 rounded-[var(--radius)] bg-[var(--ink)] text-white text-sm font-semibold disabled:opacity-50"
+                  variant="secondary"
+                  loading={busy === "phone-confirm"}
+                  disabled={
+                    (!!busy && busy !== "phone-confirm") ||
+                    phoneOtp.length !== 6
+                  }
                 >
                   Verify
-                </button>
+                </Button>
               </form>
             </>
-          )}
-        </section>
+          ) : null}
+        </Card>
 
-        <section className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] space-y-3">
+        <Card padding="md" className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-semibold text-[var(--ink)]">Email (optional)</h2>
-            <span
-              className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                status?.emailVerified
-                  ? "bg-[var(--success-soft)] text-[var(--success)]"
-                  : "bg-[var(--surface-3)] text-[var(--muted)]"
-              }`}
-            >
+            <Badge tone={status?.emailVerified ? "success" : "neutral"}>
               {status?.emailVerified ? "Verified" : "Not verified"}
-            </span>
+            </Badge>
           </div>
           <p className="text-sm text-[var(--muted)]">{status?.email}</p>
-          {!status?.emailVerified && (
+          {!status?.emailVerified ? (
             <>
               {!emailSent ? (
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={sendEmail}
-                  disabled={!!busy}
-                  className="px-4 py-2 rounded-[var(--radius)] border border-[var(--border-strong)] text-sm font-semibold hover:bg-[var(--surface-2)] disabled:opacity-50 transition-colors"
+                  loading={busy === "email-send"}
+                  disabled={!!busy && busy !== "email-send"}
                 >
-                  {busy === "email-send" ? "Sending…" : "Send email OTP"}
-                </button>
+                  Send email OTP
+                </Button>
               ) : (
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  variant="outline"
                   onClick={sendEmail}
-                  disabled={!!busy || !emailResend.canResend}
-                  className="px-4 py-2 rounded-[var(--radius)] border border-[var(--border-strong)] text-sm font-semibold hover:bg-[var(--surface-2)] disabled:opacity-50 transition-colors"
+                  loading={busy === "email-send"}
+                  disabled={
+                    (!!busy && busy !== "email-send") || !emailResend.canResend
+                  }
                 >
-                  {busy === "email-send" ? "Sending…" : emailResend.label}
-                </button>
+                  {emailResend.label}
+                </Button>
               )}
-              <form onSubmit={confirmEmail} className="flex gap-2">
-                <input
-                  inputMode="numeric"
-                  maxLength={6}
-                  placeholder="6-digit OTP"
-                  className="flex-1 rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
-                  value={emailOtp}
-                  onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, ""))}
-                  required
-                />
-                <button
+              <form onSubmit={confirmEmail} className="flex gap-2 items-end">
+                <Field htmlFor="email-otp" className="flex-1">
+                  <Input
+                    id="email-otp"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="6-digit OTP"
+                    value={emailOtp}
+                    onChange={(e) =>
+                      setEmailOtp(e.target.value.replace(/\D/g, ""))
+                    }
+                    required
+                  />
+                </Field>
+                <Button
                   type="submit"
-                  disabled={!!busy || emailOtp.length !== 6}
-                  className="px-4 py-2 rounded-[var(--radius)] bg-[var(--ink)] text-white text-sm font-semibold disabled:opacity-50"
+                  variant="secondary"
+                  loading={busy === "email-confirm"}
+                  disabled={
+                    (!!busy && busy !== "email-confirm") ||
+                    emailOtp.length !== 6
+                  }
                 >
                   Verify
-                </button>
+                </Button>
               </form>
             </>
-          )}
-        </section>
+          ) : null}
+        </Card>
 
-        {status?.phoneVerified && (
+        {status?.phoneVerified ? (
           <div className="mt-6">
-            <Link
-              href="/technician/products/new"
-              className="inline-flex px-5 py-3 rounded-[var(--radius)] bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] transition-colors"
-            >
-              Continue to post a listing
-            </Link>
+            <Button asChild>
+              <Link href="/technician/products/new">
+                Continue to post a listing
+              </Link>
+            </Button>
           </div>
-        )}
+        ) : null}
       </div>
-    </main>
+    </AuthPage>
   );
 }

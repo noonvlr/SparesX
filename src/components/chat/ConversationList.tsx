@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ChatConversation } from "@/types/chat";
 import OnlineStatus from "@/components/chat/OnlineStatus";
 import TrustBadges from "@/components/TrustBadges";
+import { Avatar, Skeleton } from "@/components/ui/Card";
 
 export default function ConversationList({
   conversations,
@@ -22,7 +23,7 @@ export default function ConversationList({
     return (
       <div className="p-4 space-y-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-16 rounded-xl bg-gray-100 animate-pulse" />
+          <Skeleton key={i} className="h-16 rounded-xl" />
         ))}
       </div>
     );
@@ -30,7 +31,7 @@ export default function ConversationList({
 
   if (conversations.length === 0) {
     return (
-      <div className="p-8 text-center text-sm text-gray-500">
+      <div className="p-8 text-center text-sm text-[var(--muted)]">
         No conversations yet. Open a product and tap{" "}
         <span className="font-semibold">In-app chat</span>.
       </div>
@@ -46,11 +47,11 @@ export default function ConversationList({
         return (
           <li key={c._id}>
             <div
-              className={`w-full text-left px-3 py-3 rounded-xl hover:bg-teal-50/70 transition flex items-start gap-3 ${
+              className={`w-full text-left px-3 py-3 rounded-xl hover:bg-[var(--brand-soft)]/70 transition flex items-start gap-3 ${
                 activeId === c._id
-                  ? "bg-teal-50 ring-1 ring-teal-100"
+                  ? "bg-[var(--brand-soft)] ring-1 ring-[var(--brand-muted)]"
                   : unread
-                    ? "bg-teal-50/30"
+                    ? "bg-[var(--brand-soft)]/30"
                     : ""
               }`}
             >
@@ -61,22 +62,20 @@ export default function ConversationList({
                   className="shrink-0"
                   title="View profile"
                 >
-                  {peer?.profilePicture ? (
-                    <img
-                      src={peer.profilePicture}
-                      alt=""
-                      className="w-11 h-11 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center font-bold">
-                      {(peer?.name || "?").charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <Avatar
+                    src={peer?.profilePicture}
+                    name={peer?.name}
+                    size="md"
+                    className="w-11 h-11"
+                  />
                 </Link>
               ) : (
-                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center font-bold">
-                  {(peer?.name || "?").charAt(0).toUpperCase()}
-                </div>
+                <Avatar
+                  src={peer?.profilePicture}
+                  name={peer?.name}
+                  size="md"
+                  className="w-11 h-11"
+                />
               )}
               <button
                 type="button"
@@ -88,8 +87,8 @@ export default function ConversationList({
                     <p
                       className={`text-sm truncate ${
                         unread
-                          ? "font-bold text-gray-900"
-                          : "font-semibold text-gray-800"
+                          ? "font-bold text-[var(--ink)]"
+                          : "font-semibold text-[var(--ink-secondary)]"
                       }`}
                     >
                       {peer?.name || "User"}
@@ -107,12 +106,12 @@ export default function ConversationList({
                     />
                   </div>
                   {unread > 0 && (
-                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-teal-600 text-white text-[10px] font-bold flex items-center justify-center">
+                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[var(--brand)] text-[var(--ink-inverse)] text-[10px] font-bold flex items-center justify-center">
                       {unread > 99 ? "99+" : unread}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-gray-500 truncate mt-0.5">
+                <p className="text-xs text-[var(--muted)] truncate mt-0.5">
                   {c.lastMessage || "No messages yet"}
                 </p>
                 <div className="mt-1">
