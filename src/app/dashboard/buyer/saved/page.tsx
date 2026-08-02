@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import SavedItemsClient from "./SavedItemsClient";
 
 export const metadata: Metadata = {
-  title: "Saved Parts - SparesX",
+  title: "Saved Items - SparesX",
   description: "View spare parts you have saved for later.",
   openGraph: {
-    title: "Saved Parts - SparesX",
+    title: "Saved Items - SparesX",
     description: "View spare parts you have saved for later.",
     type: "website",
   },
@@ -14,16 +14,14 @@ export const metadata: Metadata = {
 export default function BuyerSavedPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-3">Saved Parts</h1>
-        <p className="text-gray-600 mb-6">Save listings to revisit quickly.</p>
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 text-gray-600">
-          No saved parts yet. Browse the catalog and save items.
-          <Link href="/products" className="text-blue-600 ml-2 hover:underline">
-            Browse products
-          </Link>
-          .
-        </div>
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Saved Items</h1>
+          <p className="text-gray-600">
+            Listings you saved for later. Remove anytime or open a product to contact the seller.
+          </p>
+        </header>
+        <SavedItemsClient />
       </section>
     </main>
   );

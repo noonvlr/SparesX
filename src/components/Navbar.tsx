@@ -298,6 +298,14 @@ export default function Navbar() {
                   >
                     Requests
                   </Link>
+                  {isAuthenticated && (
+                    <Link
+                      href="/dashboard/buyer/saved"
+                      className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition"
+                    >
+                      Saved
+                    </Link>
+                  )}
                   {isAuthenticated && userRole === "technician" && (
                     <Link
                       href="/technician/products"
@@ -400,6 +408,28 @@ export default function Navbar() {
                       </svg>
                       Profile
                     </Link>
+                    {userRole !== "admin" && (
+                      <Link
+                        href="/dashboard/buyer/saved"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                          />
+                        </svg>
+                        Saved items
+                      </Link>
+                    )}
                     {userRole !== "admin" && (
                     <button
                       type="button"
@@ -622,6 +652,15 @@ export default function Navbar() {
               >
                 Requests
               </Link>
+              {isAuthenticated && (
+                <Link
+                  href="/dashboard/buyer/saved"
+                  className="block text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Saved items
+                </Link>
+              )}
               {isAuthenticated && userRole === "technician" && (
                 <Link
                   href="/technician/products"

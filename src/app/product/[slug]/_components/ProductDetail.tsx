@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { openChatUi } from "@/components/chat/openChat";
 import TrustBadges from "@/components/TrustBadges";
+import { showToast } from "@/components/ToastHost";
 
 interface Seller {
   _id?: string;
@@ -109,6 +110,11 @@ export default function ProductDetail({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [authPromptReason, setAuthPromptReason] = useState<"contact" | "save">(
+    "contact",
+  );
 
   useEffect(() => {
     const userId = getUserIdFromToken();
@@ -143,6 +149,19 @@ export default function ProductDetail({
             : initialProduct.technician;
         setIsOwner(!!userId && String(technicianId) === String(userId));
       });
+
+    if (token) {
+      fetch(`/api/saved/${initialProduct._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) setIsSaved(!!data.saved);
+        })
+        .catch(() => {});
+    } else {
+      setIsSaved(false);
+    }
   }, [initialProduct._id]);
 
   const seller: Seller | null = useMemo(() => {
@@ -156,14 +175,59 @@ export default function ProductDetail({
     ? buildWhatsAppLink(seller, product.name)
     : null;
 
-  const requireAuth = () => {
+  const requireAuth = (reason: "contact" | "save" = "contact") => {
     if (isLoggedIn) return true;
+    setAuthPromptReason(reason);
     setShowAuthPrompt(true);
     return false;
   };
 
+  const handleToggleSave = async () => {
+    if (!requireAuth("save")) return;
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setSaveLoading(true);
+    try {
+      if (isSaved) {
+        const res = await fetch(`/api/saved/${product._id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.message || "Could not remove saved item", "error");
+          return;
+        }
+        setIsSaved(false);
+        showToast("Removed from saved items");
+      } else {
+        const res = await fetch("/api/saved", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ productId: product._id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(data.message || "Could not save item", "error");
+          return;
+        }
+        setIsSaved(true);
+        showToast("Saved for later");
+      }
+      window.dispatchEvent(new Event("sparesx-saved-changed"));
+    } catch {
+      showToast("Something went wrong. Try again.", "error");
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
   const handleChatClick = () => {
-    if (!requireAuth()) return;
+    if (!requireAuth("contact")) return;
     const sellerId = seller?._id;
     if (!sellerId) {
       alert("Seller is not available for chat.");
@@ -176,7 +240,7 @@ export default function ProductDetail({
   };
 
   const handleWhatsAppClick = () => {
-    if (!requireAuth()) return;
+    if (!requireAuth("contact")) return;
     if (!whatsappUrl) {
       alert("Seller WhatsApp number is not available.");
       return;
@@ -299,6 +363,38 @@ export default function ProductDetail({
                 </div>
               </div>
 
+              {!isOwner && (
+                <button
+                  type="button"
+                  onClick={handleToggleSave}
+                  disabled={saveLoading}
+                  className={`mb-5 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition disabled:opacity-60 ${
+                    isSaved
+                      ? "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100"
+                      : "bg-white text-gray-800 border-gray-200 hover:border-blue-300 hover:text-blue-700"
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill={isSaved ? "currentColor" : "none"}
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                    />
+                  </svg>
+                  {saveLoading
+                    ? "Please wait…"
+                    : isSaved
+                      ? "Saved for later"
+                      : "Save for later"}
+                </button>
+              )}
+
               <div className="mb-5">
                 <h2 className="text-lg font-bold text-gray-900 mb-2">
                   Description
@@ -403,18 +499,30 @@ export default function ProductDetail({
       {/* Mobile sticky CTAs */}
       {!isOwner && (
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-gray-200 bg-white/95 backdrop-blur px-4 py-3">
-          <div className="max-w-7xl mx-auto grid grid-cols-2 gap-2">
+          <div className="max-w-7xl mx-auto grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={handleToggleSave}
+              disabled={saveLoading}
+              className={`py-3 rounded-xl font-semibold text-sm border ${
+                isSaved
+                  ? "bg-amber-50 text-amber-900 border-amber-200"
+                  : "bg-white text-gray-800 border-gray-200"
+              }`}
+            >
+              {isSaved ? "Saved" : "Save"}
+            </button>
             <button
               type="button"
               onClick={handleWhatsAppClick}
-              className="py-3 rounded-xl bg-green-600 text-white font-semibold"
+              className="py-3 rounded-xl bg-green-600 text-white font-semibold text-sm"
             >
               WhatsApp
             </button>
             <button
               type="button"
               onClick={handleChatClick}
-              className="py-3 rounded-xl bg-blue-600 text-white font-semibold"
+              className="py-3 rounded-xl bg-blue-600 text-white font-semibold text-sm"
             >
               Chat
             </button>
@@ -430,8 +538,9 @@ export default function ProductDetail({
               Login required
             </h3>
             <p className="text-sm text-gray-600 mb-6">
-              Please login or create an account to contact the seller via
-              WhatsApp or in-app chat.
+              {authPromptReason === "save"
+                ? "Please login or create an account to save this listing for later."
+                : "Please login or create an account to contact the seller via WhatsApp or in-app chat."}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button

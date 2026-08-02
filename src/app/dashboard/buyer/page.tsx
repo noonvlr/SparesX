@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import SavedCountStat from "./_components/SavedCountStat";
 
 export const metadata: Metadata = {
   title: "Buyer Dashboard - SparesX",
@@ -180,24 +181,7 @@ export default function BuyerDashboardPage() {
               <p className="text-xs text-blue-600 mt-2">No pending requests</p>
             </div>
 
-            <div className="p-5 rounded-xl bg-gradient-to-br from-green-50 to-green-100 border border-green-200 hover:shadow-md transition">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-green-700">
-                  Saved Items
-                </p>
-                <div className="p-2 bg-green-200 rounded-lg">
-                  <svg
-                    className="w-5 h-5 text-green-700"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"></path>
-                  </svg>
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-green-900">0</p>
-              <p className="text-xs text-green-600 mt-2">Start saving parts</p>
-            </div>
+            <SavedCountStat />
 
             <div className="p-5 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 hover:shadow-md transition">
               <div className="flex items-center justify-between mb-3">
