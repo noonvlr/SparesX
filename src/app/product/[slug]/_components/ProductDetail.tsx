@@ -12,6 +12,7 @@ import RateSellerModal from "@/components/RateSellerModal";
 import { AuthPromptSheet } from "@/components/ContactSheet";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
 
@@ -405,7 +406,7 @@ export default function ProductDetail({
           {isOwner && (
             <Link
               href={`/technician/products/edit/${product._id}`}
-              className="inline-flex items-center gap-2 rounded-[var(--radius)] bg-[var(--brand)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--brand-hover)] transition-colors"
+              className={cn(buttonVariants({ size: "sm" }))}
             >
               Edit listing
             </Link>
@@ -485,8 +486,8 @@ export default function ProductDetail({
                 </Badge>
               </div>
 
-              <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-white p-5 mb-5">
-                <p className="text-sm text-white/80 mb-1">Price</p>
+              <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] p-5 mb-5">
+                <p className="text-sm text-[var(--ink-inverse)]/80 mb-1">Price</p>
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <p className="text-3xl sm:text-4xl font-semibold tracking-tight">
                     ₹{product.price?.toLocaleString()}
@@ -495,15 +496,15 @@ export default function ProductDetail({
               </div>
 
               {!isOwner && (
-                <button
+                <Button
                   type="button"
                   onClick={handleToggleSave}
                   disabled={saveLoading}
+                  variant={isSaved ? "soft" : "secondary"}
                   className={cn(
-                    "btn-press mb-5 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-[var(--radius)] text-sm font-semibold border transition-colors disabled:opacity-60",
-                    isSaved
-                      ? "bg-[var(--warning-soft)] text-[var(--warning)] border-orange-200 hover:bg-orange-100"
-                      : "bg-[var(--surface)] text-[var(--ink-secondary)] border-[var(--border-strong)] hover:border-[var(--brand)] hover:text-[var(--brand-hover)]",
+                    "mb-5 w-full sm:w-auto",
+                    isSaved &&
+                      "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]",
                   )}
                 >
                   <svg
@@ -524,7 +525,7 @@ export default function ProductDetail({
                     : isSaved
                       ? "Saved for later"
                       : "Save for later"}
-                </button>
+                </Button>
               )}
 
               <div className="mb-5">
@@ -617,19 +618,18 @@ export default function ProductDetail({
                   </div>
                   {!isOwner && (
                     <div className="hidden lg:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                      <button
+                      <Button
                         type="button"
                         onClick={handleWhatsAppClick}
                         disabled={waLoading || waActionLoading}
                         className={cn(
-                          "btn-press px-4 py-2.5 rounded-[var(--radius)] text-sm font-semibold transition-colors disabled:opacity-60",
                           waConnect?.status === "pending" && !waConnect.unlocked
-                            ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-orange-200"
-                            : "bg-[#25D366] text-white hover:bg-[#1ebe57]",
+                            ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]"
+                            : "bg-[#25D366] text-[var(--ink-inverse)] hover:bg-[#1ebe57] shadow-none",
                         )}
                       >
                         {waButtonLabel}
-                      </button>
+                      </Button>
                       <Button type="button" onClick={handleChatClick}>
                         In-app chat
                       </Button>
@@ -644,14 +644,14 @@ export default function ProductDetail({
               )}
 
               {!isLoggedIn && !isOwner && (
-                <p className="mt-4 text-sm text-[var(--ink-secondary)] bg-[var(--warning-soft)] border border-orange-100 rounded-[var(--radius)] px-3 py-2">
+                <p className="mt-4 text-sm text-[var(--ink-secondary)] bg-[var(--warning-soft)] border border-[var(--warning)]/20 rounded-[var(--radius)] px-3 py-2">
                   Login or sign up to contact the seller.
                 </p>
               )}
               {isLoggedIn && !isOwner && (
                 <div className="mt-4 space-y-1.5">
                   {waConnect?.unlocked && (
-                    <p className="text-xs text-[var(--success)] bg-[var(--success-soft)] border border-emerald-100 rounded-[var(--radius)] px-3 py-2">
+                    <p className="text-xs text-[var(--success)] bg-[var(--success-soft)] border border-[var(--success)]/20 rounded-[var(--radius)] px-3 py-2">
                       WhatsApp unlocked with this seller
                       {waConnect.maskedNumber
                         ? ` (${waConnect.maskedNumber})`
@@ -661,7 +661,7 @@ export default function ProductDetail({
                     </p>
                   )}
                   {waConnect?.status === "pending" && (
-                    <p className="text-xs text-[var(--warning)] bg-[var(--warning-soft)] border border-orange-100 rounded-[var(--radius)] px-3 py-2">
+                    <p className="text-xs text-[var(--warning)] bg-[var(--warning-soft)] border border-[var(--warning)]/20 rounded-[var(--radius)] px-3 py-2">
                       WhatsApp request pending. Once they approve, unlock applies
                       to all their products.
                     </p>
@@ -703,46 +703,51 @@ export default function ProductDetail({
       {!isOwner && (
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 glass px-3 py-3">
           <div className="max-w-7xl mx-auto grid grid-cols-4 gap-1.5">
-            <button
+            <Button
               type="button"
               onClick={handleToggleSave}
               disabled={saveLoading}
+              size="sm"
+              variant={isSaved ? "soft" : "secondary"}
               className={cn(
-                "btn-press py-3 rounded-[var(--radius)] font-semibold text-xs border",
-                isSaved
-                  ? "bg-[var(--warning-soft)] text-[var(--warning)] border-orange-200"
-                  : "bg-[var(--surface)] text-[var(--ink-secondary)] border-[var(--border-strong)]",
+                "h-auto min-h-0 py-3 text-xs rounded-[var(--radius)]",
+                isSaved &&
+                  "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]",
               )}
             >
               {isSaved ? "Saved" : "Save"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleWhatsAppClick}
               disabled={waLoading || waActionLoading}
+              size="sm"
               className={cn(
-                "btn-press py-3 rounded-[var(--radius)] font-semibold text-xs disabled:opacity-60",
+                "h-auto min-h-0 py-3 text-xs rounded-[var(--radius)] shadow-none",
                 waConnect?.status === "pending" && !waConnect.unlocked
-                  ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-orange-200"
-                  : "bg-[#25D366] text-white",
+                  ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]"
+                  : "bg-[#25D366] text-[var(--ink-inverse)] hover:bg-[#1ebe57]",
               )}
             >
               {waButtonLabel}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleChatClick}
-              className="btn-press py-3 rounded-[var(--radius)] bg-[var(--brand)] text-white font-semibold text-xs hover:bg-[var(--brand-hover)]"
+              size="sm"
+              className="h-auto min-h-0 py-3 text-xs rounded-[var(--radius)]"
             >
               Chat
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={handleRateClick}
-              className="btn-press py-3 rounded-[var(--radius)] bg-[var(--warning-soft)] text-[var(--warning)] border border-orange-200 font-semibold text-xs"
+              size="sm"
+              variant="soft"
+              className="h-auto min-h-0 py-3 text-xs rounded-[var(--radius)] bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]"
             >
               Rate
-            </button>
+            </Button>
           </div>
         </div>
       )}

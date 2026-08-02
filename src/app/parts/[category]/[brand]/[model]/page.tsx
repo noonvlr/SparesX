@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
 
 export async function generateMetadata({
   params,
@@ -47,39 +48,35 @@ export default async function PartsPage({
   const products = data.products || [];
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <main className="min-h-screen bg-[var(--surface-2)]">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-            {decodeURIComponent(category)} • {decodeURIComponent(brand)} •{" "}
-            {decodeURIComponent(model)}
-          </h1>
-          <p className="text-gray-600 text-base sm:text-lg">
-            Verified listings for this device model.
-          </p>
-        </header>
+        <PageHeader
+          className="mb-8"
+          title={`${decodeURIComponent(category)} • ${decodeURIComponent(brand)} • ${decodeURIComponent(model)}`}
+          description="Verified listings for this device model."
+        />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {products.length === 0 ? (
-            <div className="col-span-full text-center py-16 text-gray-500">
-              No listings yet. Try a broader category or submit a request.
-            </div>
+            <EmptyState
+              className="col-span-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+              title="No listings yet"
+              description="Try a broader category or submit a request."
+            />
           ) : (
             products.map((product: any) => (
-              <Link
-                key={product._id}
-                href={`/product/${product._id}`}
-                className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition"
-              >
-                <div className="font-semibold text-gray-900 line-clamp-2">
-                  {product.name}
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  {product.category} • {product.condition}
-                </div>
-                <div className="text-[var(--brand)] font-bold mt-2">
-                  ₹{product.price?.toLocaleString()}
-                </div>
+              <Link key={product._id} href={`/product/${product._id}`}>
+                <Card hover className="p-4 h-full">
+                  <div className="font-semibold text-[var(--ink)] line-clamp-2">
+                    {product.name}
+                  </div>
+                  <div className="text-sm text-[var(--muted)] mt-1">
+                    {product.category} • {product.condition}
+                  </div>
+                  <div className="text-[var(--brand)] font-bold mt-2">
+                    ₹{product.price?.toLocaleString()}
+                  </div>
+                </Card>
               </Link>
             ))
           )}

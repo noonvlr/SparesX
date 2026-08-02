@@ -8,7 +8,7 @@ import ProductPageContent from "../products/_components/ProductPageContent";
 
 function ProductSkeleton() {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--surface)] flex items-center justify-center text-[var(--muted)]">
       Loading...
     </div>
   );

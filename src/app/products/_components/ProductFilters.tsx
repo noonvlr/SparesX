@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Card";
-import { cn } from "@/lib/ui/cn";
 
 interface Brand {
   _id: string;
@@ -62,12 +63,6 @@ function saveRecentSearch(term: string) {
     // ignore quota / privacy-mode errors
   }
 }
-
-const selectClasses = cn(
-  "w-full h-11 px-3 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-sm text-[var(--ink)]",
-  "transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]",
-  "disabled:bg-[var(--surface-3)] disabled:text-[var(--muted)]",
-);
 
 const fieldLabelClasses =
   "block text-xs font-semibold text-[var(--ink-secondary)] mb-2 uppercase tracking-wide";
@@ -540,10 +535,9 @@ export default function ProductFilters() {
     <div className="space-y-5">
       <div>
         <label className={fieldLabelClasses}>Device type</label>
-        <select
+        <Select
           value={selectedDeviceCategory}
           onChange={(e) => handleDeviceCategoryChange(e.target.value)}
-          className={selectClasses}
         >
           <option value="">All devices</option>
           {deviceCategories.map((cat) => (
@@ -552,15 +546,14 @@ export default function ProductFilters() {
               {cat.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div>
         <label className={fieldLabelClasses}>Brand</label>
-        <select
+        <Select
           value={selectedBrand}
           onChange={(e) => handleBrandChange(e.target.value)}
-          className={selectClasses}
         >
           <option value="">All brands</option>
           {brands.map((brand) => (
@@ -568,16 +561,15 @@ export default function ProductFilters() {
               {brand.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div>
         <label className={fieldLabelClasses}>Model</label>
-        <select
+        <Select
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
           disabled={!selectedBrandSlug}
-          className={selectClasses}
         >
           <option value="">
             {!selectedBrand
@@ -597,7 +589,7 @@ export default function ProductFilters() {
               {model.modelNumber ? ` (${model.modelNumber})` : ""}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div>
@@ -676,23 +668,21 @@ export default function ProductFilters() {
       <div>
         <label className={fieldLabelClasses}>Price range (₹)</label>
         <div className="grid grid-cols-2 gap-2">
-          <input
+          <Input
             type="number"
             placeholder="Min"
             value={priceRange.min}
             onChange={(e) =>
               setPriceRange({ ...priceRange, min: e.target.value })
             }
-            className="h-11 px-3 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
           />
-          <input
+          <Input
             type="number"
             placeholder="Max"
             value={priceRange.max}
             onChange={(e) =>
               setPriceRange({ ...priceRange, max: e.target.value })
             }
-            className="h-11 px-3 rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-sm text-[var(--ink)] placeholder:text-[var(--muted)] transition-colors hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)]"
           />
         </div>
       </div>
@@ -724,19 +714,19 @@ export default function ProductFilters() {
       </div>
 
       {/* Mobile floating trigger */}
-      <button
+      <Button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="btn-press lg:hidden fixed bottom-[calc(var(--bottom-nav-h)+16px)] right-4 z-40 inline-flex items-center gap-2 rounded-full bg-[var(--brand)] px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-lg)] hover:bg-[var(--brand-hover)]"
+        className="lg:hidden fixed bottom-[calc(var(--bottom-nav-h)+16px)] right-4 z-40 rounded-full px-4 py-3 shadow-[var(--shadow-lg)]"
       >
         <IconFilter className="h-4.5 w-4.5" />
         Filters
         {activeFilterCount > 0 && (
-          <Badge className="border-0 bg-white/25 text-white">
+          <Badge className="border-0 bg-[var(--ink-inverse)]/25 text-[var(--ink-inverse)]">
             {activeFilterCount}
           </Badge>
         )}
-      </button>
+      </Button>
 
       {/* Mobile filter sheet */}
       <Modal open={isOpen} onClose={() => setIsOpen(false)} title="Filters">

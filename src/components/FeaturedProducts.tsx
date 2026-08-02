@@ -3,7 +3,7 @@
 import Link from "next/link";
 import ProductCard, { ProductCardData } from "@/components/ProductCard";
 import { EmptyState } from "@/components/ui/Card";
-import { buttonVariants } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 
 export default function FeaturedProducts({

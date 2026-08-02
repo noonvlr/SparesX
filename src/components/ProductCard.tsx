@@ -7,6 +7,9 @@ import {
   ContactSheet,
   useContactFlow,
 } from "@/components/ContactSheet";
+import { Button } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/IconButton";
+import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/lib/ui/cn";
 import {
   formatListingTitle,
@@ -71,7 +74,7 @@ export default function ProductCard({
   return (
     <>
       <article
-        className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-100 bg-white shadow-md origin-top scale-[0.92] sm:scale-[0.95] card-hover"
+        className="group relative flex flex-col overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)] origin-top scale-[0.92] sm:scale-[0.95] card-hover"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => {
           setHovered(false);
@@ -79,19 +82,21 @@ export default function ProductCard({
         }}
       >
         {onRemove ? (
-          <button
+          <IconButton
             type="button"
             aria-label="Remove from saved"
             disabled={removing}
+            size="sm"
+            variant="outline"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onRemove();
             }}
-            className="absolute top-2 left-2 z-20 inline-flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-white/95 text-gray-600 border border-gray-200 shadow-sm hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+            className="absolute top-2 left-2 z-20 rounded-full bg-[var(--surface)]/95 text-[var(--muted)] shadow-[var(--shadow-sm)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
           >
             {removing ? (
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
+              <Spinner size="sm" className="text-[var(--muted)]" />
             ) : (
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -102,14 +107,14 @@ export default function ProductCard({
                 />
               </svg>
             )}
-          </button>
+          </IconButton>
         ) : null}
 
         <Link href={`/product/${product._id}`} className="block">
-          <div className="relative aspect-square overflow-hidden bg-gray-50 border-b border-gray-200 flex items-center justify-center">
+          <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)] border-b border-[var(--border-strong)] flex items-center justify-center">
             {product.priceNegotiable ? (
               <div className="absolute top-0 right-0 z-10 overflow-hidden w-20 h-20 pointer-events-none">
-                <div className="absolute top-2.5 -right-6 w-24 rotate-45 bg-emerald-500 text-white text-[9px] sm:text-[10px] font-bold tracking-wide text-center py-0.5 shadow-md">
+                <div className="absolute top-2.5 -right-6 w-24 rotate-45 bg-[var(--success)] text-[var(--ink-inverse)] text-[9px] sm:text-[10px] font-bold tracking-wide text-center py-0.5 shadow-[var(--shadow-sm)]">
                   Negotiable
                 </div>
               </div>
@@ -124,13 +129,13 @@ export default function ProductCard({
                   loading="lazy"
                 />
                 {images.length > 1 ? (
-                  <span className="absolute bottom-1.5 right-1.5 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <span className="absolute bottom-1.5 right-1.5 rounded-full bg-[var(--ink)]/50 px-2 py-0.5 text-[10px] font-semibold text-[var(--ink-inverse)]">
                     {imageIndex + 1}/{images.length}
                   </span>
                 ) : null}
               </>
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-gray-300">
+              <div className="flex h-full w-full items-center justify-center text-[var(--border-strong)]">
                 <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -146,7 +151,7 @@ export default function ProductCard({
 
         <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <Link href={`/product/${product._id}`}>
-            <h3 className="mb-1.5 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-gray-900 transition-colors group-hover:text-[var(--brand)]">
+            <h3 className="mb-1.5 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-[var(--ink)] transition-colors group-hover:text-[var(--brand)]">
               {title}
             </h3>
           </Link>
@@ -158,7 +163,7 @@ export default function ProductCard({
               </span>
             ) : null}
             {badge ? (
-              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium text-gray-700">
+              <span className="rounded-full bg-[var(--surface-3)] px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium text-[var(--ink-secondary)]">
                 {badge}
               </span>
             ) : null}
@@ -167,8 +172,8 @@ export default function ProductCard({
                 className={cn(
                   "rounded-full px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium",
                   product.condition === "new"
-                    ? "bg-green-50 text-green-700"
-                    : "bg-amber-50 text-amber-700",
+                    ? "bg-[var(--success-soft)] text-[var(--success)]"
+                    : "bg-[var(--warning-soft)] text-[var(--warning)]",
                 )}
               >
                 {product.condition}
@@ -180,17 +185,18 @@ export default function ProductCard({
             <p className="text-base sm:text-lg font-bold text-[var(--brand)]">
               ₹{product.price?.toLocaleString()}
             </p>
-            <button
+            <Button
               type="button"
+              size="sm"
+              className="w-full h-auto min-h-0 py-1.5 text-[11px] sm:text-xs rounded-lg"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 void contact.openContact();
               }}
-              className="btn-press w-full rounded-lg bg-gray-900 py-1.5 text-[11px] sm:text-xs font-semibold text-white hover:bg-gray-800"
             >
               Contact now
-            </button>
+            </Button>
           </div>
         </div>
       </article>

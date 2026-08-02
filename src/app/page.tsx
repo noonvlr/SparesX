@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import FeaturedProducts from "@/components/FeaturedProducts";
 import AdSlot from "@/components/AdSlot";
-import { buttonVariants } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
 import { findPublicCategories } from "@/lib/categories/publicQuery";
@@ -122,7 +122,7 @@ export default async function HomePage() {
         <section className="relative overflow-hidden">
           <div
             aria-hidden
-            className="absolute inset-0 -z-20 bg-gradient-to-b from-[var(--brand-soft)] via-white to-[var(--surface-2)]"
+            className="absolute inset-0 -z-20 bg-gradient-to-b from-[var(--brand-soft)] via-[var(--surface)] to-[var(--surface-2)]"
           />
           <div
             aria-hidden
@@ -130,12 +130,12 @@ export default async function HomePage() {
           />
           <div
             aria-hidden
-            className="absolute top-24 right-[-120px] -z-10 h-72 w-72 rounded-full bg-slate-400/10 blur-3xl"
+            className="absolute top-24 right-[-120px] -z-10 h-72 w-72 rounded-full bg-[var(--ink)]/5 blur-3xl"
           />
 
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
             <div className="mb-6 flex items-center justify-center gap-2.5">
-              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--brand)] text-white text-lg sm:text-xl font-bold shadow-[var(--shadow-sm)]">
+              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--brand)] text-[var(--ink-inverse)] text-lg sm:text-xl font-bold shadow-[var(--shadow-sm)]">
                 S
               </span>
               <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--ink)]">
