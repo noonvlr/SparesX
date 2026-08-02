@@ -11,16 +11,8 @@ export default function OnlineStatus({
 }) {
   if (online) {
     return (
-      <span
-        className={`inline-flex items-center gap-1 text-xs font-medium ${
-          light ? "text-[var(--success-soft)]" : "text-[var(--success)]"
-        }`}
-      >
-        <span
-          className={`w-2 h-2 rounded-full ${
-            light ? "bg-[var(--success-soft)]" : "bg-[var(--success)]"
-          }`}
-        />
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--success)]">
+        <span className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_0_3px_var(--success-soft)]" />
         Online
       </span>
     );
@@ -30,7 +22,7 @@ export default function OnlineStatus({
     return (
       <span
         className={`text-xs ${
-          light ? "text-[var(--ink-inverse)]/70" : "text-[var(--muted)]"
+          light ? "text-[var(--chat-timestamp-outgoing)]" : "text-[var(--muted)]"
         }`}
       >
         Last seen{" "}
@@ -46,7 +38,7 @@ export default function OnlineStatus({
   return (
     <span
       className={`text-xs ${
-        light ? "text-[var(--ink-inverse)]/50" : "text-[var(--muted)]"
+        light ? "text-[var(--chat-timestamp-outgoing)]" : "text-[var(--muted)]"
       }`}
     >
       Offline

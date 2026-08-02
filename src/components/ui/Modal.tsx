@@ -99,7 +99,7 @@ export function Modal({
         ref={panelRef}
         tabIndex={-1}
         className={cn(
-          "relative w-full sm:max-w-lg bg-[var(--surface-elevated)] shadow-[var(--shadow-modal)] border border-[var(--border)] outline-none",
+          "relative w-full sm:max-w-lg bg-[var(--modal-bg)] shadow-[var(--shadow-modal)] border border-[var(--glass-border)] outline-none glass",
           sheet
             ? "rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-lg)] max-h-[90dvh] overflow-y-auto"
             : "rounded-[var(--radius-lg)] max-h-[90dvh] overflow-y-auto m-4",

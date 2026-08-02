@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import AppShell from "@/components/shell/AppShell";
 import ChatShell from "@/components/chat/ChatShell";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const siteUrl = "https://spares-x-h1cj.vercel.app";
 
@@ -10,6 +11,10 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0F14" },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -65,11 +70,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={GeistSans.variable}>
-      <body className="antialiased min-h-screen flex flex-col font-sans">
-        <ChatShell>
-          <AppShell>{children}</AppShell>
-        </ChatShell>
+    <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
+      <body className="antialiased min-h-screen flex flex-col font-sans bg-[var(--surface-2)] text-[var(--ink)]">
+        <ThemeProvider>
+          <ChatShell>
+            <AppShell>{children}</AppShell>
+          </ChatShell>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -8,6 +8,7 @@ import ToastHost from "@/components/ToastHost";
 import VerificationBanner from "@/components/VerificationBanner";
 import PasswordSetupBanner from "@/components/PasswordSetupBanner";
 import { Avatar, Badge } from "@/components/ui/Card";
+import { ThemeToggle, ThemeCycleButton } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/ui/cn";
 import { useShellAuth } from "./useShellAuth";
 
@@ -431,13 +432,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col min-h-0">
       {hideShell && (
-        <header className="sticky top-0 z-40 glass h-[var(--nav-h)] flex items-center px-4">
+        <header className="sticky top-0 z-40 glass h-[var(--nav-h)] flex items-center justify-between px-4">
           <Link
             href="/"
             className="text-lg font-semibold tracking-tight text-[var(--brand)]"
           >
             SparesX
           </Link>
+          <ThemeToggle size="sm" />
         </header>
       )}
 
@@ -502,6 +504,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <ThemeToggle size="sm" />
               {!isAuthenticated ? (
                 <>
                   <Link
@@ -512,7 +515,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                   <Link
                     href="/register"
-                    className="rounded-[var(--radius)] px-3.5 py-2 text-sm font-semibold bg-[var(--brand)] text-white hover:bg-[var(--brand-hover)] transition-colors"
+                    className="rounded-[var(--radius)] px-3.5 py-2 text-sm font-semibold bg-[var(--brand)] text-[var(--primary-foreground)] hover:bg-[var(--brand-hover)] transition-colors"
                   >
                     Register
                   </Link>
@@ -534,9 +537,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   {desktopProfileOpen && (
                     <div
                       role="menu"
-                      className="absolute right-0 mt-2 w-56 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)] py-1.5 z-50"
+                      className="absolute right-0 mt-2 w-56 rounded-[var(--radius-lg)] border border-[var(--glass-border)] bg-[var(--dropdown-bg)] shadow-[var(--shadow-dropdown)] py-1.5 z-[var(--z-dropdown)] glass"
                     >
-                      <div className="px-3 py-2 border-b border-[var(--border)]">
+                      <div className="px-3 py-2 border-b border-[var(--divider)]">
                         <p className="text-sm font-semibold text-[var(--ink)] truncate">
                           {userName || "Account"}
                         </p>
@@ -562,11 +565,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                           Control center
                         </Link>
                       )}
+                      <div className="border-t border-[var(--divider)] my-1 pt-1">
+                        <p className="px-3 py-1 text-tiny uppercase tracking-wide text-[var(--muted)]">
+                          Theme
+                        </p>
+                        <ThemeToggle showLabels className="px-1" />
+                      </div>
                       <button
                         type="button"
                         role="menuitem"
                         onClick={() => void onLogout()}
-                        className="w-full text-left px-3 py-2.5 text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                        className="w-full text-left px-3 py-2.5 text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-soft)] border-t border-[var(--divider)] mt-1"
                       >
                         Logout
                       </button>
@@ -589,12 +598,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             SparesX
           </Link>
           <div className="flex items-center gap-1">
+            <ThemeCycleButton />
             <Link
               href="/products"
               className="inline-flex items-center justify-center min-h-12 min-w-12 rounded-[var(--radius)] text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand)] transition-colors"
               aria-label="Search products"
             >
-              <IconSearch className="h-5 w-5" />
+              <IconSearch className="h-5 w-5 opacity-[var(--icon-opacity-inactive)]" />
             </Link>
             {isAuthenticated ? (
               <button
@@ -630,9 +640,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               />
               <div
                 role="menu"
-                className="absolute right-3 top-[calc(100%-4px)] z-[50] w-64 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)] py-1.5 animate-in"
+                className="absolute right-3 top-[calc(100%-4px)] z-[50] w-64 rounded-[var(--radius-lg)] border border-[var(--glass-border)] bg-[var(--dropdown-bg)] shadow-[var(--shadow-dropdown)] py-1.5 animate-in glass"
               >
-                <div className="px-3 py-2.5 border-b border-[var(--border)] flex items-center gap-3">
+                <div className="px-3 py-2.5 border-b border-[var(--divider)] flex items-center gap-3">
                   <Avatar src={profilePicture} name={userName || "U"} size="sm" />
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-[var(--ink)] truncate">
@@ -649,7 +659,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-11"
                   onClick={() => setMobileProfileOpen(false)}
                 >
-                  <IconUser className="h-4 w-4 text-[var(--muted)]" />
+                  <IconUser className="h-4 w-4 opacity-[var(--icon-opacity-inactive)]" />
                   View profile
                 </Link>
                 {isTechnician && (
@@ -659,7 +669,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-11"
                     onClick={() => setMobileProfileOpen(false)}
                   >
-                    <IconGrid className="h-4 w-4 text-[var(--muted)]" />
+                    <IconGrid className="h-4 w-4 opacity-[var(--icon-opacity-inactive)]" />
                     Dashboard
                   </Link>
                 )}
@@ -670,15 +680,21 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     className="flex items-center gap-3 px-3 py-3 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-11"
                     onClick={() => setMobileProfileOpen(false)}
                   >
-                    <IconMore className="h-4 w-4 text-[var(--muted)]" />
+                    <IconMore className="h-4 w-4 opacity-[var(--icon-opacity-inactive)]" />
                     Control center
                   </Link>
                 )}
+                <div className="border-t border-[var(--divider)] my-1 pt-1">
+                  <p className="px-3 py-1 text-tiny uppercase tracking-wide text-[var(--muted)]">
+                    Theme
+                  </p>
+                  <ThemeToggle showLabels className="px-1 pb-1" />
+                </div>
                 <button
                   type="button"
                   role="menuitem"
                   onClick={() => void onLogout()}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] min-h-11"
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] min-h-11 border-t border-[var(--divider)]"
                 >
                   <svg
                     className="h-4 w-4"
@@ -760,18 +776,24 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="md:hidden fixed inset-0 z-[var(--z-modal)]">
           <button
             type="button"
-            className="absolute inset-0 bg-slate-900/40"
+            className="absolute inset-0 bg-[var(--overlay)]"
             aria-label="Close more menu"
             onClick={() => setMobileMoreOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--surface)] shadow-[var(--shadow-lg)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--modal-bg)] shadow-[var(--shadow-modal)] border-t border-[var(--glass-border)] pb-[env(safe-area-inset-bottom,0px)] animate-in glass">
             <div className="flex justify-center pt-3 pb-1">
-              <span className="h-1 w-10 rounded-full bg-slate-300" />
+              <span className="h-1 w-10 rounded-full bg-[var(--border-strong)]" />
             </div>
             <p className="px-5 pb-2 text-sm font-semibold text-[var(--ink)]">
               More
             </p>
-            <div className="px-3 pb-3 space-y-0.5 max-h-[60dvh] overflow-y-auto">
+            <div className="px-3 pb-2 border-b border-[var(--divider)] mb-1">
+              <p className="px-2 py-1 text-tiny uppercase tracking-wide text-[var(--muted)]">
+                Theme
+              </p>
+              <ThemeToggle showLabels />
+            </div>
+            <div className="px-3 pb-3 space-y-0.5 max-h-[50dvh] overflow-y-auto">
               {moreLinks.map((item) => {
                 const className = cn(
                   "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium min-h-12",
@@ -790,7 +812,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                         item.onClick?.();
                       }}
                     >
-                      <span className="text-[var(--muted)]">{item.icon}</span>
+                      <span className="opacity-[var(--icon-opacity-inactive)]">
+                        {item.icon}
+                      </span>
                       {item.label}
                     </button>
                   );
@@ -802,12 +826,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     className={className}
                     onClick={() => setMobileMoreOpen(false)}
                   >
-                    <span className="text-[var(--muted)]">{item.icon}</span>
+                    <span className="opacity-[var(--icon-opacity-inactive)]">
+                      {item.icon}
+                    </span>
                     <span className="flex-1">{item.label}</span>
                     {item.badge && item.badge > 0 ? (
                       <Badge
                         tone="success"
-                        className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-white border-0"
+                        className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-[var(--ink-inverse)] border-0"
                       >
                         {item.badge > 99 ? "99+" : item.badge}
                       </Badge>

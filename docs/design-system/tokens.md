@@ -51,4 +51,6 @@ Utility classes: `.text-display`, `.text-heading`, `.text-title`, `.text-subtitl
 
 ## Dark scaffold
 
-Set `data-theme="dark"` on a root element to activate dark token overrides. No toggle UI in v1.
+Set `data-theme="dark"` on `<html>` (via `ThemeProvider` / `ThemeToggle`) to activate layered dark tokens. Prefer **system** when no preference is stored. See [theming.md](./theming.md).
+
+Dark surfaces (no pure black): `--surface-2` `#0B0F14` → `--surface` `#111827` → `--surface-3` `#1A2433` → `--surface-elevated` `#202C3C`.

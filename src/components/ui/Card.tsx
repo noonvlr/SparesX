@@ -82,7 +82,7 @@ export function Skeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "animate-pulse rounded-[var(--radius)] bg-[var(--surface-3)]",
+        "animate-pulse rounded-[var(--radius)] bg-[var(--skeleton)]",
         className,
       )}
       aria-hidden

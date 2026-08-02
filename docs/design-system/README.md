@@ -41,6 +41,7 @@ Prefer **path imports** over the `@/components/ui` barrel in Server Components.
 ## Docs in this folder
 
 - [tokens.md](./tokens.md) — token reference + migration cheat sheet
+- [theming.md](./theming.md) — light / dark / system architecture
 - [button.md](./button.md)
 - [input.md](./input.md)
 - [field.md](./field.md)

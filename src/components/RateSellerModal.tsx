@@ -118,35 +118,35 @@ export default function RateSellerModal({
 
   return (
     <div
-      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-[var(--overlay)] p-4"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white rounded-2xl shadow-xl p-5 sm:p-6 space-y-4"
+        className="w-full max-w-md bg-[var(--modal-bg)] rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--border)] p-5 sm:p-6 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">
+            <h3 className="text-lg font-bold text-[var(--ink)]">
               {updating ? "Update rating" : "Rate seller"}
             </h3>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-[var(--muted)] mt-0.5">
               {sellerName || "Seller"} — behaviour & response
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-700 text-sm font-semibold"
+            className="text-[var(--muted)] hover:text-[var(--ink)] text-sm font-semibold"
           >
             Close
           </button>
         </div>
 
         {loading ? (
-          <p className="text-sm text-gray-500 py-6 text-center">Checking…</p>
+          <p className="text-sm text-[var(--muted)] py-6 text-center">Checking…</p>
         ) : !eligible ? (
-          <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3 text-sm text-amber-900">
+          <div className="rounded-[var(--radius)] bg-[var(--warning-soft)] border border-[var(--warning)]/20 px-4 py-3 text-sm text-[var(--warning)]">
             {reason || "You are not eligible to rate this seller yet."}
           </div>
         ) : (
@@ -163,14 +163,14 @@ export default function RateSellerModal({
               onChange={setResponse}
             />
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-1.5">
+              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
                 Comment (optional)
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value.slice(0, 500))}
                 rows={3}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm"
+                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
                 placeholder="How was dealing with this seller?"
               />
             </div>
@@ -178,7 +178,7 @@ export default function RateSellerModal({
               type="button"
               disabled={submitting}
               onClick={submit}
-              className="w-full py-3 rounded-xl bg-[var(--brand)] text-white font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50"
+              className="w-full py-3 rounded-[var(--radius)] bg-[var(--brand)] text-[var(--primary-foreground)] font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50"
             >
               {submitting
                 ? "Submitting…"

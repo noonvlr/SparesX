@@ -5,12 +5,24 @@ import type { ChatMessage } from "@/types/chat";
 function Receipt({ message, mine }: { message: ChatMessage; mine: boolean }) {
   if (!mine) return null;
   if (message.read) {
-    return <span className="text-[var(--brand-muted)] text-[10px] ml-1">✓✓</span>;
+    return (
+      <span className="text-[var(--brand-hover)] text-[10px] ml-1 opacity-90">
+        ✓✓
+      </span>
+    );
   }
   if (message.delivered) {
-    return <span className="text-[var(--ink-inverse)]/70 text-[10px] ml-1">✓✓</span>;
+    return (
+      <span className="text-[var(--chat-timestamp-outgoing)] text-[10px] ml-1">
+        ✓✓
+      </span>
+    );
   }
-  return <span className="text-[var(--ink-inverse)]/70 text-[10px] ml-1">✓</span>;
+  return (
+    <span className="text-[var(--chat-timestamp-outgoing)] text-[10px] ml-1">
+      ✓
+    </span>
+  );
 }
 
 export default function MessageBubble({
@@ -30,12 +42,13 @@ export default function MessageBubble({
       <div
         className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[15px] shadow-[var(--shadow-sm)] ${
           mine
-            ? "bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] rounded-br-md"
-            : "bg-[var(--surface)] text-[var(--ink)] border border-[var(--border)] rounded-bl-md"
+            ? "bg-[var(--chat-bubble-outgoing)] text-[var(--chat-bubble-outgoing-fg)] rounded-br-md"
+            : "bg-[var(--chat-bubble-incoming)] text-[var(--ink)] border border-[var(--chat-bubble-incoming-border)] rounded-bl-md"
         }`}
       >
         {message.type === "image" && message.mediaUrl ? (
           <a href={message.mediaUrl} target="_blank" rel="noreferrer">
+            {/* Product/chat images keep natural colors — never invert */}
             <img
               src={message.mediaUrl}
               alt="Shared"
@@ -49,7 +62,9 @@ export default function MessageBubble({
         )}
         <div
           className={`flex items-center justify-end gap-1 mt-0.5 ${
-            mine ? "text-[var(--ink-inverse)]/70" : "text-[var(--muted)]"
+            mine
+              ? "text-[var(--chat-timestamp-outgoing)]"
+              : "text-[var(--chat-timestamp)]"
           }`}
         >
           <span className="text-[10px]">{time}</span>
