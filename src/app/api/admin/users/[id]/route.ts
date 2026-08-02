@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
+import {
+  normalizeEmail,
+  parseContactFields,
+} from "@/lib/validation/userContact";
 
 export async function GET(
   request: NextRequest,
@@ -43,16 +47,100 @@ export async function PATCH(
     const body = await request.json();
 
     const {
-      email,
       password,
       createdAt,
       updatedAt,
       _id,
       role,
+      email,
+      name,
+      mobile,
+      whatsappNumber,
+      pinCode,
+      countryCode,
+      address,
+      city,
+      state,
       ...rest
     } = body;
 
+    void password;
+    void createdAt;
+    void updatedAt;
+    void _id;
+
     const updateData: Record<string, unknown> = { ...rest };
+
+    const contactInput = {
+      name,
+      email,
+      mobile,
+      whatsappNumber,
+      pinCode,
+      countryCode,
+      address,
+      city,
+      state,
+    };
+
+    const presentKeys = (
+      Object.keys(contactInput) as (keyof typeof contactInput)[]
+    ).filter((k) => contactInput[k] !== undefined);
+
+    if (presentKeys.length > 0) {
+      const parsed = parseContactFields(contactInput, {
+        fieldsPresent: presentKeys,
+      });
+      if (!parsed.ok) {
+        return NextResponse.json({ message: parsed.message }, { status: 400 });
+      }
+      Object.assign(updateData, parsed.data);
+    }
+
+    // Email uniqueness + clear verification when changed
+    if (typeof updateData.email === "string") {
+      const nextEmail = normalizeEmail(updateData.email);
+      const existing = await User.findOne({
+        email: nextEmail,
+        _id: { $ne: id },
+      }).select("_id");
+      if (existing) {
+        return NextResponse.json(
+          { message: "Email already registered" },
+          { status: 409 },
+        );
+      }
+
+      const current = await User.findById(id).select("email emailVerified");
+      if (current && nextEmail !== current.email) {
+        updateData.email = nextEmail;
+        updateData.emailVerified = false;
+        updateData.emailVerifiedAt = null;
+        updateData.emailVerifyOTP = null;
+        updateData.emailVerifyOTPExpiry = null;
+      } else {
+        updateData.email = nextEmail;
+      }
+    }
+
+    // Clear phone verification when mobile or countryCode changes
+    if (updateData.mobile !== undefined || updateData.countryCode !== undefined) {
+      const current = await User.findById(id).select("mobile countryCode");
+      if (current) {
+        const mobileChanged =
+          updateData.mobile !== undefined &&
+          String(updateData.mobile) !== String(current.mobile);
+        const ccChanged =
+          updateData.countryCode !== undefined &&
+          String(updateData.countryCode) !== String(current.countryCode || "+91");
+        if (mobileChanged || ccChanged) {
+          updateData.phoneVerified = false;
+          updateData.phoneVerifiedAt = null;
+          updateData.phoneVerifyOTP = null;
+          updateData.phoneVerifyOTPExpiry = null;
+        }
+      }
+    }
 
     // Allow role change (but not demoting yourself)
     if (role !== undefined) {
@@ -66,39 +154,6 @@ export async function PATCH(
         );
       }
       updateData.role = role;
-    }
-
-    if (updateData.mobile) {
-      const cleanMobile = String(updateData.mobile).replace(/\D/g, "");
-      if (cleanMobile.length !== 10 || !/^[6-9]/.test(cleanMobile)) {
-        return NextResponse.json(
-          { message: "Mobile number must be 10 digits and start with 6-9" },
-          { status: 400 },
-        );
-      }
-      updateData.mobile = cleanMobile;
-    }
-
-    if (updateData.pinCode) {
-      const cleanPinCode = String(updateData.pinCode).replace(/\D/g, "");
-      if (cleanPinCode.length !== 6) {
-        return NextResponse.json(
-          { message: "PIN code must be 6 digits" },
-          { status: 400 },
-        );
-      }
-      updateData.pinCode = cleanPinCode;
-    }
-
-    if (updateData.whatsappNumber) {
-      const cleanWhatsapp = String(updateData.whatsappNumber).replace(/\D/g, "");
-      if (cleanWhatsapp.length !== 10 || !/^[6-9]/.test(cleanWhatsapp)) {
-        return NextResponse.json(
-          { message: "WhatsApp number must be 10 digits and start with 6-9" },
-          { status: 400 },
-        );
-      }
-      updateData.whatsappNumber = cleanWhatsapp;
     }
 
     // Prevent blocking yourself

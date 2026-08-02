@@ -3,6 +3,10 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { hashPassword } from "@/lib/utils/hash";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
+import {
+  parseContactFields,
+  validatePassword,
+} from "@/lib/validation/userContact";
 
 export async function GET(request: NextRequest) {
   const admin = requireAdmin(request);
@@ -68,31 +72,28 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const {
-      name,
-      email,
-      password,
-      mobile,
-      countryCode,
-      address,
-      pinCode,
-      city,
-      state,
-      whatsappNumber,
-      role,
-    } = body;
+    const { password, role } = body;
 
-    if (
-      !name?.trim() ||
-      !email?.trim() ||
-      !password ||
-      !mobile ||
-      !address?.trim() ||
-      !pinCode ||
-      !city?.trim() ||
-      !state?.trim() ||
-      !whatsappNumber
-    ) {
+    const parsed = parseContactFields(
+      {
+        name: body.name,
+        email: body.email,
+        mobile: body.mobile,
+        whatsappNumber: body.whatsappNumber,
+        pinCode: body.pinCode,
+        countryCode: body.countryCode,
+        address: body.address,
+        city: body.city,
+        state: body.state,
+      },
+      { requireAll: true },
+    );
+
+    if (!parsed.ok) {
+      return NextResponse.json({ message: parsed.message }, { status: 400 });
+    }
+
+    if (!password) {
       return NextResponse.json(
         { message: "All required fields must be filled" },
         { status: 400 },
@@ -103,38 +104,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Invalid role" }, { status: 400 });
     }
 
-    if (password.length < 6) {
-      return NextResponse.json(
-        { message: "Password must be at least 6 characters" },
-        { status: 400 },
-      );
-    }
-
-    const cleanMobile = String(mobile).replace(/\D/g, "");
-    const cleanWhatsapp = String(whatsappNumber).replace(/\D/g, "");
-    const cleanPin = String(pinCode).replace(/\D/g, "");
-
-    if (cleanMobile.length !== 10 || !/^[6-9]/.test(cleanMobile)) {
-      return NextResponse.json(
-        { message: "Mobile number must be 10 digits and start with 6-9" },
-        { status: 400 },
-      );
-    }
-    if (cleanWhatsapp.length !== 10 || !/^[6-9]/.test(cleanWhatsapp)) {
-      return NextResponse.json(
-        { message: "WhatsApp number must be 10 digits and start with 6-9" },
-        { status: 400 },
-      );
-    }
-    if (cleanPin.length !== 6) {
-      return NextResponse.json(
-        { message: "PIN code must be 6 digits" },
-        { status: 400 },
-      );
+    const pwError = validatePassword(password);
+    if (pwError) {
+      return NextResponse.json({ message: pwError }, { status: 400 });
     }
 
     await connectDB();
-    const existing = await User.findOne({ email: email.toLowerCase().trim() });
+    const existing = await User.findOne({ email: parsed.data.email });
     if (existing) {
       return NextResponse.json(
         { message: "Email already registered" },
@@ -142,18 +118,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const hashed = await hashPassword(password);
+    const hashed = await hashPassword(String(password));
     const user = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
+      name: parsed.data.name,
+      email: parsed.data.email,
       password: hashed,
-      mobile: cleanMobile,
-      countryCode: countryCode || "+91",
-      address: address.trim(),
-      pinCode: cleanPin,
-      city: city.trim(),
-      state: state.trim(),
-      whatsappNumber: cleanWhatsapp,
+      mobile: parsed.data.mobile,
+      countryCode: parsed.data.countryCode || "+91",
+      address: parsed.data.address,
+      pinCode: parsed.data.pinCode,
+      city: parsed.data.city,
+      state: parsed.data.state,
+      whatsappNumber: parsed.data.whatsappNumber,
       role: role || "technician",
       isBlocked: false,
     });

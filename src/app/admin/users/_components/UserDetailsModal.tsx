@@ -32,6 +32,7 @@ export default function UserDetailsModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editData, setEditData] = useState({
     name: user.name,
+    email: user.email,
     mobile: user.mobile,
     countryCode: user.countryCode,
     address: user.address,
@@ -314,15 +315,12 @@ export default function UserDetailsModal({
             // View Mode
             <div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Email (Mandatory - Cannot Edit) */}
+                {/* Email */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <label className="text-xs font-semibold text-gray-500 uppercase">
                     Email
                   </label>
                   <p className="text-gray-900 font-medium mt-1">{user.email}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    🔒 Cannot be edited
-                  </p>
                 </div>
 
                 {/* Role */}
@@ -728,6 +726,24 @@ export default function UserDetailsModal({
                     required
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={editData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Changing email clears email verification until re-confirmed.
+                  </p>
                 </div>
 
                 {/* Mobile with Country Code */}

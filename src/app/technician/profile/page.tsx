@@ -1,18 +1,114 @@
 "use client";
+
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import Cropper from "react-easy-crop";
 import type { Area } from "@/lib/utils/cropImage";
 import { getCroppedImage } from "@/lib/utils/cropImage";
 import TrustBadges from "@/components/TrustBadges";
+import { showToast } from "@/components/ToastHost";
+
+const COUNTRY_CODES = [
+  { code: "+91", label: "🇮🇳 +91" },
+  { code: "+1", label: "🇺🇸 +1" },
+  { code: "+44", label: "🇬🇧 +44" },
+  { code: "+61", label: "🇦🇺 +61" },
+  { code: "+971", label: "🇦🇪 +971" },
+  { code: "+65", label: "🇸🇬 +65" },
+];
+
+type ProfileForm = {
+  name: string;
+  email: string;
+  mobile: string;
+  address: string;
+  city: string;
+  state: string;
+  countryCode: string;
+  pinCode: string;
+  whatsappNumber: string;
+  profilePicture: string;
+};
+
+const emptyForm = (): ProfileForm => ({
+  name: "",
+  email: "",
+  mobile: "",
+  address: "",
+  city: "",
+  state: "",
+  countryCode: "+91",
+  pinCode: "",
+  whatsappNumber: "",
+  profilePicture: "",
+});
+
+function StatusPill({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <span
+      className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
+        ok
+          ? "bg-green-50 text-green-800 border-green-200"
+          : "bg-amber-50 text-amber-900 border-amber-200"
+      }`}
+    >
+      {label}: {ok ? "Verified" : "Not verified"}
+    </span>
+  );
+}
+
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+      <div className="mb-4">
+        <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+        {description && (
+          <p className="text-sm text-gray-500 mt-1">{description}</p>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Field({
+  label,
+  children,
+  hint,
+}: {
+  label: string;
+  children: React.ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+        {label}
+      </label>
+      {children}
+      {hint && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+    </div>
+  );
+}
+
+const inputClass =
+  "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
 
 export default function TechnicianProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [cropOpen, setCropOpen] = useState(false);
@@ -20,53 +116,33 @@ export default function TechnicianProfilePage() {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [form, setForm] = useState<ProfileForm>(emptyForm());
+  const [initialForm, setInitialForm] = useState<ProfileForm>(emptyForm());
+  const [waSameAsMobile, setWaSameAsMobile] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
 
-  // Country codes with flags
-  const countryCodes = [
-    { code: "+91", country: "India", flag: "🇮🇳" },
-    { code: "+1", country: "USA/Canada", flag: "🇺🇸" },
-    { code: "+44", country: "UK", flag: "🇬🇧" },
-    { code: "+61", country: "Australia", flag: "🇦🇺" },
-    { code: "+971", country: "UAE", flag: "🇦🇪" },
-    { code: "+65", country: "Singapore", flag: "🇸🇬" },
-    { code: "+60", country: "Malaysia", flag: "🇲🇾" },
-    { code: "+86", country: "China", flag: "🇨🇳" },
-    { code: "+81", country: "Japan", flag: "🇯🇵" },
-    { code: "+82", country: "South Korea", flag: "🇰🇷" },
-  ];
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    countryCode: "+91",
-    pinCode: "",
-    whatsappNumber: "",
-    profilePicture: "",
-  });
-  const [initialForm, setInitialForm] = useState({
-    name: "",
-    email: "",
-    address: "",
-    city: "",
-    state: "",
-    countryCode: "+91",
-    pinCode: "",
-    whatsappNumber: "",
-    profilePicture: "",
-  });
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNew, setPwNew] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
 
-  const hasFormChanges = (current: typeof form, initial: typeof initialForm) =>
-    (Object.keys(initial) as Array<keyof typeof initial>).some(
-      (key) => current[key] !== initial[key],
-    );
+  const dirty = (Object.keys(initialForm) as (keyof ProfileForm)[]).some(
+    (k) => form[k] !== initialForm[k],
+  );
+
+  const emailWillReverify =
+    form.email.trim().toLowerCase() !==
+    initialForm.email.trim().toLowerCase();
+  const phoneWillReverify =
+    form.mobile.replace(/\D/g, "") !== initialForm.mobile.replace(/\D/g, "") ||
+    form.countryCode !== initialForm.countryCode;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Not authenticated");
       setLoading(false);
+      router.push("/login?next=/technician/profile");
       return;
     }
     fetch("/api/auth/me", {
@@ -75,9 +151,10 @@ export default function TechnicianProfilePage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.user) {
-          const nextForm = {
+          const nextForm: ProfileForm = {
             name: data.user.name || "",
             email: data.user.email || "",
+            mobile: data.user.mobile || "",
             address: data.user.address || "",
             city: data.user.city || "",
             state: data.user.state || "",
@@ -89,28 +166,67 @@ export default function TechnicianProfilePage() {
           setProfile(data.user);
           setForm(nextForm);
           setInitialForm(nextForm);
+          setWaSameAsMobile(
+            !!nextForm.mobile &&
+              nextForm.mobile.replace(/\D/g, "") ===
+                nextForm.whatsappNumber.replace(/\D/g, ""),
+          );
+        } else {
+          setError("Failed to load profile");
         }
       })
       .catch(() => setError("Failed to load profile"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
+
+  const setField = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
+    setForm((f) => {
+      const next = { ...f, [key]: value };
+      if (key === "mobile" && waSameAsMobile) {
+        next.whatsappNumber = String(value).replace(/\D/g, "").slice(0, 10);
+      }
+      return next;
+    });
+  };
+
+  const fetchLocationFromPincode = async (pincode: string) => {
+    if (pincode.length !== 6) return;
+    setPinLoading(true);
+    try {
+      const res = await fetch(
+        `https://api.postalpincode.in/pincode/${pincode}`,
+      );
+      const data = await res.json();
+      if (
+        Array.isArray(data) &&
+        data[0]?.Status === "Success" &&
+        data[0]?.PostOffice?.[0]
+      ) {
+        const po = data[0].PostOffice[0];
+        setForm((f) => ({
+          ...f,
+          city: po.District || po.Block || f.city,
+          state: po.State || f.state,
+        }));
+      }
+    } catch {
+      // ignore lookup failures
+    } finally {
+      setPinLoading(false);
+    }
+  };
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
-      setError("Please upload an image file");
+      showToast("Please upload an image file", "error");
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
-      setError("Image size should be less than 5MB");
+      showToast("Image size should be less than 5MB", "error");
       return;
     }
-
-    setError("");
-
     const reader = new FileReader();
     reader.onload = () => {
       setCropImageSrc(reader.result as string);
@@ -128,26 +244,19 @@ export default function TechnicianProfilePage() {
     setCropImageSrc(null);
     setZoom(1);
     setCrop({ x: 0, y: 0 });
-    setError("");
   };
 
   const handleCropConfirm = async () => {
     if (!cropImageSrc || !croppedAreaPixels) return;
     setUploading(true);
     setUploadProgress(0);
-    setError("");
-
     try {
-      // Simulate progress for cropping
       setUploadProgress(20);
-
       const croppedBlob = await getCroppedImage(
         cropImageSrc,
         croppedAreaPixels,
       );
-
       setUploadProgress(40);
-
       const formData = new FormData();
       formData.append(
         "files",
@@ -155,58 +264,43 @@ export default function TechnicianProfilePage() {
           type: "image/jpeg",
         }),
       );
-
       setUploadProgress(60);
-
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-
       setUploadProgress(80);
-
       const data = await response.json();
-
       if (response.ok && data.urls?.[0]) {
-        setForm((prev) => ({
-          ...prev,
-          profilePicture: data.urls[0],
-        }));
+        setForm((prev) => ({ ...prev, profilePicture: data.urls[0] }));
         setUploadProgress(100);
         setCropOpen(false);
         setCropImageSrc(null);
-        setSuccess("Profile picture uploaded successfully!");
-        setTimeout(() => {
-          setSuccess("");
-          setUploadProgress(0);
-        }, 2000);
+        showToast("Profile picture uploaded");
       } else {
-        setError(data.error || "Failed to upload image");
-        setUploadProgress(0);
+        showToast(data.error || "Failed to upload image", "error");
       }
-    } catch (error) {
-      setError("Failed to crop or upload image");
-      setUploadProgress(0);
+    } catch {
+      showToast("Failed to crop or upload image", "error");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   };
 
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Not authenticated");
-      setTimeout(() => setError(""), 4000);
       return;
     }
-    if (!hasFormChanges(form, initialForm)) {
-      setError("No changes to save");
-      setTimeout(() => setError(""), 3000);
+    if (!dirty) {
+      showToast("No changes to save");
       return;
     }
+    setSaving(true);
     try {
       const res = await fetch("/api/technician/profile", {
         method: "PUT",
@@ -218,49 +312,98 @@ export default function TechnicianProfilePage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSuccess("Profile updated successfully!");
-        setProfile(form);
-        setInitialForm(form);
-        setTimeout(() => setSuccess(""), 3000);
+        const next = data.user
+          ? {
+              name: data.user.name || "",
+              email: data.user.email || "",
+              mobile: data.user.mobile || "",
+              address: data.user.address || "",
+              city: data.user.city || "",
+              state: data.user.state || "",
+              countryCode: data.user.countryCode || "+91",
+              pinCode: data.user.pinCode || "",
+              whatsappNumber: data.user.whatsappNumber || "",
+              profilePicture: data.user.profilePicture || "",
+            }
+          : form;
+        setForm(next);
+        setInitialForm(next);
+        setProfile((p: any) => ({ ...p, ...data.user }));
+        showToast(
+          emailWillReverify || phoneWillReverify
+            ? "Profile saved. Please re-verify updated email/phone."
+            : "Profile updated successfully",
+        );
+        window.dispatchEvent(new Event("sparesx-profile-updated"));
       } else {
         setError(data.message || "Failed to update profile");
-        setTimeout(() => setError(""), 4000);
+        showToast(data.message || "Failed to update profile", "error");
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred while updating your profile");
-      setTimeout(() => setError(""), 4000);
+      showToast("Something went wrong", "error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault();
+    if (pwNew !== pwConfirm) {
+      showToast("New passwords do not match", "error");
+      return;
+    }
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setPwSaving(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          currentPassword: pwCurrent,
+          newPassword: pwNew,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(data.message || "Could not update password", "error");
+        return;
+      }
+      setPwCurrent("");
+      setPwNew("");
+      setPwConfirm("");
+      showToast("Password updated successfully");
+    } catch {
+      showToast("Something went wrong", "error");
+    } finally {
+      setPwSaving(false);
     }
   }
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 p-8 sm:p-12 text-center w-full max-w-sm">
-          <div className="flex justify-center mb-6">
-            <div className="relative w-12 h-12">
-              <div className="absolute inset-0 rounded-full border-4 border-blue-200"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-500 border-r-blue-500 animate-spin"></div>
-            </div>
-          </div>
-          <p className="text-gray-600 font-medium text-base sm:text-lg">
-            Loading your profile...
-          </p>
-        </div>
+      <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-blue-50 pb-28">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-5">
+        <div className="flex items-center gap-3">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
+            className="p-2 hover:bg-white rounded-xl border border-gray-200 transition"
+            aria-label="Go back"
           >
             <svg
-              className="w-6 h-6 text-gray-900"
+              className="w-5 h-5 text-gray-700"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -273,59 +416,42 @@ export default function TechnicianProfilePage() {
               />
             </svg>
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Edit Profile</h1>
-          {profile && (
-            <div className="mt-2">
-              <TrustBadges
-                phoneVerified={profile.phoneVerified}
-                emailVerified={profile.emailVerified}
-                kycVerified={profile.kycVerified}
-                businessVerified={profile.businessVerified}
-                addressVerified={profile.addressVerified}
-                isTrusted={profile.isTrusted}
-                trustScore={profile.trustScore}
-                trustLabel={profile.trustLabel}
-                badges={profile.badges}
-                activeBadgeKeys={profile.activeBadgeKeys}
-                showScore
-                size="md"
-              />
-            </div>
-          )}
-          <div className="w-10"></div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Your profile</h1>
+            <p className="text-sm text-gray-500">
+              Manage your contact details, verification, and security
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleUpdate} className="pb-24">
-          {/* Profile Picture */}
-          <div className="flex justify-center py-8">
-            <div className="relative group">
+        {error && (
+          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Header card */}
+        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="relative self-center sm:self-auto">
               {form.profilePicture ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={form.profilePicture}
                   alt={form.name}
-                  className="w-32 h-32 rounded-full object-cover"
+                  className="w-24 h-24 rounded-full object-cover border border-gray-100"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center">
-                  <svg
-                    className="w-16 h-16 text-blue-600"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-3xl font-bold text-blue-700">
+                  {(form.name || "?").charAt(0).toUpperCase()}
                 </div>
               )}
               <label
                 htmlFor="profilePicInput"
-                className="absolute bottom-0 right-0 w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-indigo-700 transition shadow-lg"
+                className="absolute bottom-0 right-0 w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 shadow"
               >
                 <svg
-                  className="w-5 h-5 text-white"
+                  className="w-4 h-4 text-white"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -353,259 +479,378 @@ export default function TechnicianProfilePage() {
                 className="hidden"
               />
             </div>
+            <div className="flex-1 min-w-0 text-center sm:text-left">
+              <h2 className="text-xl font-bold text-gray-900 truncate">
+                {form.name || "Your name"}
+              </h2>
+              <p className="text-sm text-gray-500 truncate">{form.email}</p>
+              <div className="mt-3 flex flex-wrap gap-2 justify-center sm:justify-start">
+                {typeof profile?.trustScore === "number" && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-100">
+                    Trust score {profile.trustScore}
+                    {profile.trustLabel ? ` · ${profile.trustLabel}` : ""}
+                  </span>
+                )}
+                {profile?._id && (
+                  <Link
+                    href={`/u/${profile._id}`}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+                  >
+                    View public profile
+                  </Link>
+                )}
+              </div>
+            </div>
           </div>
+        </section>
 
-          {/* Detail Information Section */}
-          <div className="px-4">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
-              Detail Information
-            </h2>
-
-            {/* Name Input */}
-            <div className="mb-6">
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
+        <form onSubmit={handleUpdate} className="space-y-5">
+          <Section
+            title="Identity"
+            description="Changing email or mobile will require re-verification."
+          >
+            <div className="space-y-4">
+              <Field label="Full name">
+                <input
+                  className={inputClass}
+                  value={form.name}
+                  onChange={(e) => setField("name", e.target.value)}
+                  required
+                />
+              </Field>
+              <Field
+                label="Email"
+                hint={
+                  emailWillReverify
+                    ? "Saving will mark email as unverified until you confirm it again."
+                    : undefined
                 }
-                placeholder="Full Name"
-                className="w-full px-0 py-3 text-base text-gray-900 bg-transparent border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-600 transition"
-                required
-              />
-            </div>
-
-            {/* Email Input */}
-            <div className="mb-6">
-              <input
-                type="email"
-                value={form.email}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, email: e.target.value }))
-                }
-                placeholder="Email Address"
-                className="w-full px-0 py-3 text-base text-gray-900 bg-transparent border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-600 transition"
-                required
-              />
-            </div>
-
-            {/* Address Input */}
-            <div className="mb-6">
-              <textarea
-                value={form.address}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, address: e.target.value }))
-                }
-                placeholder="Address"
-                rows={2}
-                className="w-full px-0 py-3 text-base text-gray-900 bg-transparent border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-600 transition resize-none"
-              />
-            </div>
-
-            {/* WhatsApp Number */}
-            <div className="mb-6 flex items-center gap-0 border-b border-gray-200 focus-within:border-indigo-600 transition">
-              <select
-                value={form.countryCode}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, countryCode: e.target.value }))
-                }
-                className="pl-0 pr-2 py-3 text-base text-gray-900 bg-transparent border-0 focus:outline-none cursor-pointer appearance-none"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                  backgroundPosition: "right center",
-                  backgroundRepeat: "no-repeat",
-                  backgroundSize: "16px",
-                  paddingRight: "24px",
-                }}
               >
-                {countryCodes.map((country) => (
-                  <option key={country.code} value={country.code}>
-                    {country.flag} {country.code}
-                  </option>
-                ))}
-              </select>
+                <input
+                  type="email"
+                  className={inputClass}
+                  value={form.email}
+                  onChange={(e) => setField("email", e.target.value)}
+                  required
+                />
+              </Field>
+              <div className="grid grid-cols-3 gap-3">
+                <Field label="Code">
+                  <select
+                    className={inputClass}
+                    value={form.countryCode}
+                    onChange={(e) => setField("countryCode", e.target.value)}
+                  >
+                    {COUNTRY_CODES.map((c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <div className="col-span-2">
+                  <Field
+                    label="Mobile"
+                    hint={
+                      phoneWillReverify
+                        ? "Saving will mark phone as unverified until you confirm it again."
+                        : "10-digit Indian mobile starting with 6–9"
+                    }
+                  >
+                    <input
+                      type="tel"
+                      className={inputClass}
+                      value={form.mobile}
+                      onChange={(e) =>
+                        setField(
+                          "mobile",
+                          e.target.value.replace(/\D/g, "").slice(0, 10),
+                        )
+                      }
+                      maxLength={10}
+                      required
+                    />
+                  </Field>
+                </div>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="WhatsApp">
+            <label className="flex items-center gap-2 text-sm text-gray-700 mb-3">
+              <input
+                type="checkbox"
+                checked={waSameAsMobile}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setWaSameAsMobile(checked);
+                  if (checked) {
+                    setField(
+                      "whatsappNumber",
+                      form.mobile.replace(/\D/g, "").slice(0, 10),
+                    );
+                  }
+                }}
+                className="rounded border-gray-300"
+              />
+              Same as mobile number
+            </label>
+            <Field label="WhatsApp number">
               <input
                 type="tel"
+                className={inputClass}
                 value={form.whatsappNumber}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, whatsappNumber: e.target.value }))
-                }
-                placeholder="WhatsApp Number"
-                className="flex-1 pl-3 py-3 text-base text-gray-900 bg-transparent border-0 focus:outline-none"
-                maxLength={15}
+                onChange={(e) => {
+                  setWaSameAsMobile(false);
+                  setField(
+                    "whatsappNumber",
+                    e.target.value.replace(/\D/g, "").slice(0, 10),
+                  );
+                }}
+                maxLength={10}
+                disabled={waSameAsMobile}
+                required
               />
-            </div>
+            </Field>
+          </Section>
 
-            {/* City */}
-            <div className="mb-6">
-              <input
-                type="text"
-                value={form.city}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, city: e.target.value }))
-                }
-                placeholder="City"
-                className="w-full px-0 py-3 text-base text-gray-900 bg-transparent border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-600 transition"
-              />
+          <Section title="Address">
+            <div className="space-y-4">
+              <Field label="Street address">
+                <textarea
+                  className={`${inputClass} resize-none`}
+                  rows={2}
+                  value={form.address}
+                  onChange={(e) => setField("address", e.target.value)}
+                  required
+                />
+              </Field>
+              <Field
+                label="PIN code"
+                hint={pinLoading ? "Looking up city & state…" : undefined}
+              >
+                <input
+                  className={inputClass}
+                  value={form.pinCode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                    setField("pinCode", value);
+                    if (value.length === 6) void fetchLocationFromPincode(value);
+                  }}
+                  maxLength={6}
+                  required
+                />
+              </Field>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="City">
+                  <input
+                    className={inputClass}
+                    value={form.city}
+                    onChange={(e) => setField("city", e.target.value)}
+                    required
+                  />
+                </Field>
+                <Field label="State">
+                  <input
+                    className={inputClass}
+                    value={form.state}
+                    onChange={(e) => setField("state", e.target.value)}
+                    required
+                  />
+                </Field>
+              </div>
             </div>
+          </Section>
 
-            {/* State */}
-            <div className="mb-6">
-              <input
-                type="text"
-                value={form.state}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, state: e.target.value }))
-                }
-                placeholder="State"
-                className="w-full px-0 py-3 text-base text-gray-900 bg-transparent border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-600 transition"
-              />
-            </div>
-
-            {/* PIN Code */}
-            <div className="mb-6">
-              <input
-                type="text"
-                value={form.pinCode}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, pinCode: e.target.value }))
-                }
-                placeholder="PIN Code"
-                maxLength={6}
-                className="w-full px-0 py-3 text-base text-gray-900 bg-transparent border-0 border-b border-gray-200 focus:outline-none focus:border-indigo-600 transition"
-              />
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="px-4 mt-8 mb-6 flex items-center justify-center gap-3">
+          <div className="flex gap-3">
             <button
               type="submit"
-              className="px-12 py-3 bg-indigo-600 text-white text-base font-semibold rounded-lg hover:bg-indigo-700 transition"
+              disabled={saving || !dirty}
+              className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
             >
-              Save Changes
+              {saving ? "Saving…" : "Save changes"}
             </button>
             <button
               type="button"
-              onClick={() => router.back()}
-              className="px-10 py-3 bg-gray-100 text-gray-700 text-base font-semibold rounded-lg hover:bg-gray-200 transition"
+              onClick={() => {
+                setForm(initialForm);
+                setWaSameAsMobile(
+                  !!initialForm.mobile &&
+                    initialForm.mobile.replace(/\D/g, "") ===
+                      initialForm.whatsappNumber.replace(/\D/g, ""),
+                );
+              }}
+              disabled={!dirty}
+              className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 disabled:opacity-50"
             >
-              Go Back
+              Reset
             </button>
           </div>
-
-          {(error || success) && (
-            <div className="px-4 mb-8 flex justify-center">
-              <div
-                className={`w-full max-w-md px-4 py-3 rounded-lg text-sm font-medium text-center border ${
-                  success
-                    ? "bg-green-50 border-green-200 text-green-700"
-                    : "bg-red-50 border-red-200 text-red-700"
-                }`}
-              >
-                {success || error}
-              </div>
-            </div>
-          )}
         </form>
 
-        {/* Image Cropper Modal */}
-        {cropOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
-              {/* Modal Header */}
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-xl font-bold text-gray-900">
-                  Crop Profile Picture
-                </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Adjust the image to your liking
-                </p>
-              </div>
+        <Section
+          title="Verification"
+          description="Confirm phone and email yourself. KYC and trust badges are granted by SparesX."
+        >
+          <div className="flex flex-wrap gap-2 mb-4">
+            <StatusPill ok={!!profile?.phoneVerified} label="Phone" />
+            <StatusPill ok={!!profile?.emailVerified} label="Email" />
+            <StatusPill ok={!!profile?.kycVerified} label="KYC" />
+            <StatusPill ok={!!profile?.businessVerified} label="Business" />
+            <StatusPill ok={!!profile?.addressVerified} label="Address" />
+            <StatusPill ok={!!profile?.isTrusted} label="Trusted" />
+          </div>
+          <Link
+            href="/verify"
+            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800"
+          >
+            Verify phone / email
+          </Link>
+        </Section>
 
-              {/* Cropper Area */}
-              <div className="relative h-80 bg-gray-100">
-                {cropImageSrc && (
-                  <Cropper
-                    image={cropImageSrc}
-                    crop={crop}
-                    zoom={zoom}
-                    aspect={1}
-                    cropShape="round"
-                    showGrid={false}
-                    onCropChange={setCrop}
-                    onZoomChange={setZoom}
-                    onCropComplete={onCropComplete}
-                  />
-                )}
-              </div>
+        <Section title="Trust & badges">
+          {profile ? (
+            <TrustBadges
+              phoneVerified={profile.phoneVerified}
+              emailVerified={profile.emailVerified}
+              kycVerified={profile.kycVerified}
+              businessVerified={profile.businessVerified}
+              addressVerified={profile.addressVerified}
+              isTrusted={profile.isTrusted}
+              trustScore={profile.trustScore}
+              trustLabel={profile.trustLabel}
+              badges={profile.badges}
+              activeBadgeKeys={profile.activeBadgeKeys}
+              showScore
+              size="md"
+            />
+          ) : (
+            <p className="text-sm text-gray-500">No trust data yet.</p>
+          )}
+          <Link
+            href="/trust-score"
+            className="inline-block mt-4 text-sm font-semibold text-blue-600 hover:text-blue-700"
+          >
+            How Trust Score works →
+          </Link>
+        </Section>
 
-              {/* Zoom Slider */}
-              <div className="px-6 py-4 border-b border-gray-200">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Zoom
-                </label>
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.1}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+        <Section
+          title="Security"
+          description="Change your password. Minimum 6 characters."
+        >
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <Field label="Current password">
+              <input
+                type="password"
+                className={inputClass}
+                value={pwCurrent}
+                onChange={(e) => setPwCurrent(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+            </Field>
+            <Field label="New password">
+              <input
+                type="password"
+                className={inputClass}
+                value={pwNew}
+                onChange={(e) => setPwNew(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                required
+              />
+            </Field>
+            <Field label="Confirm new password">
+              <input
+                type="password"
+                className={inputClass}
+                value={pwConfirm}
+                onChange={(e) => setPwConfirm(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                required
+              />
+            </Field>
+            <button
+              type="submit"
+              disabled={pwSaving}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-900 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
+            >
+              {pwSaving ? "Updating…" : "Update password"}
+            </button>
+          </form>
+        </Section>
+      </div>
+
+      {cropOpen && (
+        <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-bold text-gray-900">
+                Crop profile picture
+              </h3>
+            </div>
+            <div className="relative h-80 bg-gray-100">
+              {cropImageSrc && (
+                <Cropper
+                  image={cropImageSrc}
+                  crop={crop}
+                  zoom={zoom}
+                  aspect={1}
+                  cropShape="round"
+                  showGrid={false}
+                  onCropChange={setCrop}
+                  onZoomChange={setZoom}
+                  onCropComplete={onCropComplete}
                 />
-              </div>
-
-              {/* Upload Progress */}
-              {uploading && uploadProgress > 0 && (
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-700">
-                      Uploading...
-                    </span>
-                    <span className="text-sm font-semibold text-indigo-600">
-                      {uploadProgress}%
-                    </span>
-                  </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-indigo-600 transition-all duration-300 ease-out"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </div>
               )}
-
-              {/* Modal Actions */}
-              <div className="px-6 py-4 flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCropCancel}
-                  disabled={uploading}
-                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCropConfirm}
-                  disabled={uploading}
-                  className="flex-1 px-4 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {uploading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    "Upload"
-                  )}
-                </button>
+            </div>
+            <div className="px-6 py-4 border-b border-gray-200">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Zoom
+              </label>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.1}
+                value={zoom}
+                onChange={(e) => setZoom(Number(e.target.value))}
+                className="w-full accent-blue-600"
+              />
+            </div>
+            {uploading && uploadProgress > 0 && (
+              <div className="px-6 py-3">
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 transition-all"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
               </div>
+            )}
+            <div className="px-6 py-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handleCropCancel}
+                disabled={uploading}
+                className="flex-1 py-3 rounded-xl bg-gray-100 font-semibold disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCropConfirm}
+                disabled={uploading}
+                className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-semibold disabled:opacity-50"
+              >
+                {uploading ? "Uploading…" : "Upload"}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </main>
   );
 }
