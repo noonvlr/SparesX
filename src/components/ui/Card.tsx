@@ -1,16 +1,43 @@
+import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/ui/cn";
+
+const cardVariants = cva(
+  "rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]",
+  {
+    variants: {
+      variant: {
+        default: "shadow-[var(--shadow-sm)]",
+        interactive: "shadow-[var(--shadow-sm)] card-hover cursor-pointer",
+        elevated: "shadow-[var(--shadow-md)] border-transparent",
+        compact: "shadow-none rounded-[var(--radius)]",
+      },
+      padding: {
+        none: "p-0",
+        sm: "p-3",
+        md: "p-5",
+        lg: "p-6",
+      },
+    },
+    defaultVariants: { variant: "default", padding: "none" },
+  },
+);
 
 export function Card({
   className,
   children,
   hover = false,
+  variant,
+  padding,
   ...props
-}: React.HTMLAttributes<HTMLDivElement> & { hover?: boolean }) {
+}: React.HTMLAttributes<HTMLDivElement> &
+  VariantProps<typeof cardVariants> & { hover?: boolean }) {
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]",
-        hover && "card-hover",
+        cardVariants({
+          variant: hover ? "interactive" : variant,
+          padding,
+        }),
         className,
       )}
       {...props}
@@ -20,32 +47,34 @@ export function Card({
   );
 }
 
+const badgeVariants = cva(
+  "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold",
+  {
+    variants: {
+      tone: {
+        neutral: "bg-[var(--surface-3)] text-[var(--ink-secondary)]",
+        brand: "bg-[var(--brand-soft)] text-[var(--brand-hover)]",
+        success: "bg-[var(--success-soft)] text-[var(--success)]",
+        warning: "bg-[var(--warning-soft)] text-[var(--warning)]",
+        danger: "bg-[var(--danger-soft)] text-[var(--danger)]",
+        info: "bg-[var(--info-soft)] text-[var(--info)]",
+      },
+    },
+    defaultVariants: { tone: "neutral" },
+  },
+);
+
 export function Badge({
   className,
   tone = "neutral",
   children,
 }: {
   className?: string;
-  tone?: "neutral" | "brand" | "success" | "warning" | "danger";
+  tone?: VariantProps<typeof badgeVariants>["tone"];
   children: React.ReactNode;
 }) {
-  const tones = {
-    neutral: "bg-[var(--surface-3)] text-[var(--ink-secondary)]",
-    brand: "bg-[var(--brand-soft)] text-[var(--brand-hover)]",
-    success: "bg-[var(--success-soft)] text-[var(--success)]",
-    warning: "bg-[var(--warning-soft)] text-[var(--warning)]",
-    danger: "bg-[var(--danger-soft)] text-[var(--danger)]",
-  };
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold",
-        tones[tone],
-        className,
-      )}
-    >
-      {children}
-    </span>
+    <span className={cn(badgeVariants({ tone }), className)}>{children}</span>
   );
 }
 
@@ -72,7 +101,11 @@ export function Avatar({
   size?: "sm" | "md" | "lg";
   className?: string;
 }) {
-  const sizes = { sm: "h-8 w-8 text-xs", md: "h-10 w-10 text-sm", lg: "h-14 w-14 text-lg" };
+  const sizes = {
+    sm: "h-8 w-8 text-xs",
+    md: "h-10 w-10 text-sm",
+    lg: "h-14 w-14 text-lg",
+  };
   const initials = (name || "?")
     .split(" ")
     .map((p) => p[0])
@@ -131,7 +164,9 @@ export function EmptyState({
       <div className="w-12 h-12 rounded-[var(--radius)] bg-[var(--brand-soft)] mb-4" />
       <h3 className="text-lg font-semibold text-[var(--ink)]">{title}</h3>
       {description ? (
-        <p className="mt-1.5 text-sm text-[var(--muted)] max-w-sm">{description}</p>
+        <p className="mt-1.5 text-sm text-[var(--muted)] max-w-sm">
+          {description}
+        </p>
       ) : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
@@ -157,9 +192,7 @@ export function PageHeader({
       )}
     >
       <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)]">
-          {title}
-        </h1>
+        <h1 className="text-heading text-[var(--ink)]">{title}</h1>
         {description ? (
           <p className="mt-1 text-sm text-[var(--muted)]">{description}</p>
         ) : null}
@@ -168,3 +201,5 @@ export function PageHeader({
     </div>
   );
 }
+
+export { cardVariants, badgeVariants };
