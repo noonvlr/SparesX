@@ -399,6 +399,11 @@ export default function TechnicianProfilePage() {
     }
     const token = localStorage.getItem("token");
     if (!token) return;
+    const needsCurrent = Boolean(profile?.hasPassword);
+    if (needsCurrent && !pwCurrent) {
+      showToast("Enter your current password", "error");
+      return;
+    }
     setPwSaving(true);
     try {
       const res = await fetch("/api/auth/change-password", {
@@ -408,7 +413,7 @@ export default function TechnicianProfilePage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          currentPassword: pwCurrent,
+          ...(needsCurrent ? { currentPassword: pwCurrent } : {}),
           newPassword: pwNew,
         }),
       });
@@ -420,7 +425,14 @@ export default function TechnicianProfilePage() {
       setPwCurrent("");
       setPwNew("");
       setPwConfirm("");
-      showToast("Password updated successfully");
+      setProfile((p: Record<string, unknown> | null) =>
+        p ? { ...p, hasPassword: true } : p,
+      );
+      showToast(
+        needsCurrent
+          ? "Password updated successfully"
+          : "Password set successfully. You can also sign in with email.",
+      );
     } catch {
       showToast("Something went wrong", "error");
     } finally {
@@ -792,20 +804,28 @@ export default function TechnicianProfilePage() {
           <SectionCard
             id="security"
             title="Security"
-            description="Change your password. Minimum 6 characters."
+            description={
+              profile?.hasPassword
+                ? "Change your password. Minimum 6 characters."
+                : "Add a password so you can also sign in with email (Google Sign-In still works). Minimum 6 characters."
+            }
           >
             <form onSubmit={handlePasswordChange} className="space-y-4 max-w-xl">
-              <Field label="Current password">
-                <input
-                  type="password"
-                  className={inputClass}
-                  value={pwCurrent}
-                  onChange={(e) => setPwCurrent(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-              </Field>
-              <Field label="New password">
+              {profile?.hasPassword ? (
+                <Field label="Current password">
+                  <input
+                    type="password"
+                    className={inputClass}
+                    value={pwCurrent}
+                    onChange={(e) => setPwCurrent(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                </Field>
+              ) : null}
+              <Field
+                label={profile?.hasPassword ? "New password" : "Password"}
+              >
                 <input
                   type="password"
                   className={inputClass}
@@ -816,7 +836,13 @@ export default function TechnicianProfilePage() {
                   required
                 />
               </Field>
-              <Field label="Confirm new password">
+              <Field
+                label={
+                  profile?.hasPassword
+                    ? "Confirm new password"
+                    : "Confirm password"
+                }
+              >
                 <input
                   type="password"
                   className={inputClass}
@@ -832,7 +858,13 @@ export default function TechnicianProfilePage() {
                 disabled={pwSaving}
                 className="px-5 py-2.5 rounded-full border border-gray-300 bg-white text-gray-900 text-sm font-semibold hover:bg-gray-50 disabled:opacity-50"
               >
-                {pwSaving ? "Updating…" : "Update password"}
+                {pwSaving
+                  ? profile?.hasPassword
+                    ? "Updating…"
+                    : "Setting…"
+                  : profile?.hasPassword
+                    ? "Update password"
+                    : "Set password"}
               </button>
             </form>
           </SectionCard>

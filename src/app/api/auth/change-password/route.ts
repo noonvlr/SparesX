@@ -5,7 +5,7 @@ import { errorResponse, isAuthError, requireUser } from "@/lib/auth/requireUser"
 import { comparePassword, hashPassword } from "@/lib/utils/hash";
 import { validatePassword } from "@/lib/validation/userContact";
 
-/** POST /api/auth/change-password — authenticated user changes own password */
+/** POST /api/auth/change-password — set or change own password */
 export async function POST(req: NextRequest) {
   const auth = requireUser(req);
   if (isAuthError(auth)) return auth;
@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
     const currentPassword = String(body?.currentPassword ?? "");
     const newPassword = String(body?.newPassword ?? "");
 
-    if (!currentPassword || !newPassword) {
+    if (!newPassword) {
       return NextResponse.json(
-        { message: "Current and new password are required" },
+        { message: "New password is required" },
         { status: 400 },
       );
     }
@@ -27,25 +27,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: pwError }, { status: 400 });
     }
 
-    if (currentPassword === newPassword) {
-      return NextResponse.json(
-        { message: "New password must be different from current password" },
-        { status: 400 },
-      );
-    }
-
     await connectDB();
     const user = await User.findById(auth.id);
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    // Google / passwordless accounts: first-time set (no current password)
     if (!user.password) {
+      user.password = await hashPassword(newPassword);
+      await user.save();
       return NextResponse.json(
         {
-          message:
-            "This account uses Google Sign-In and has no password yet. Use Google to sign in, or contact support to set a password.",
+          message: "Password set successfully. You can now also sign in with email.",
+          hasPassword: true,
         },
+        { status: 200 },
+      );
+    }
+
+    if (!currentPassword) {
+      return NextResponse.json(
+        { message: "Current password is required" },
+        { status: 400 },
+      );
+    }
+
+    if (currentPassword === newPassword) {
+      return NextResponse.json(
+        { message: "New password must be different from current password" },
         { status: 400 },
       );
     }
@@ -62,7 +72,7 @@ export async function POST(req: NextRequest) {
     await user.save();
 
     return NextResponse.json(
-      { message: "Password updated successfully" },
+      { message: "Password updated successfully", hasPassword: true },
       { status: 200 },
     );
   } catch (error) {
