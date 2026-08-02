@@ -4,12 +4,13 @@ import { PageHeader, Card } from "@/components/ui/Card";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "Discover how SparesX connects buyers and technicians. Learn our simple 3-step process: Browse & Request, Get Verified Responses, and Secure Fulfillment.",
+    "See how SparesX works for technicians: browse or request parts, get responses from verified sellers, and finalize deals directly — SparesX does not process payments.",
   keywords: [
     "how it works",
     "buying process",
     "marketplace guide",
     "spare parts workflow",
+    "technician marketplace",
   ],
   alternates: {
     canonical: "/how-it-works",
@@ -17,14 +18,15 @@ export const metadata: Metadata = {
   openGraph: {
     title: "How It Works | SparesX",
     description:
-      "Discover how SparesX connects buyers and technicians. Simple 3-step process to get the spare parts you need.",
+      "Browse or request parts, connect with verified technicians, and finalize deals directly. SparesX doesn't process payments.",
     type: "website",
     url: "https://spares-x-h1cj.vercel.app/how-it-works",
   },
   twitter: {
     card: "summary_large_image",
     title: "How It Works | SparesX",
-    description: "Learn our simple process for buying mobile spare parts.",
+    description:
+      "Connect with technicians and finalize deals directly. SparesX doesn't process payments.",
   },
   robots: {
     index: true,
@@ -53,8 +55,8 @@ export default function HowItWorksPage() {
               text: "Technicians respond with availability and pricing.",
             },
             {
-              title: "Secure Fulfillment",
-              text: "Compare offers, confirm, and complete the purchase securely.",
+              title: "Connect & Finalize",
+              text: "Agree on price and complete the deal directly with the technician. SparesX doesn't process payments — you handle the exchange between yourselves.",
             },
           ].map((step, index) => (
             <Card key={step.title} className="p-6">

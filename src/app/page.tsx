@@ -8,23 +8,19 @@ import { cn } from "@/lib/ui/cn";
 export const metadata: Metadata = {
   title: "Buy & Sell Mobile Spare Parts Online",
   description:
-    "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts & tools. Quality assured, fast delivery nationwide.",
+    "SparesX is a marketplace for mobile repair technicians to list, find, and request spare parts. Browse verified technician listings, trust scores, and connect directly with sellers.",
   keywords: [
     "mobile spare parts",
-    "buy phone parts online",
-    "mobile spare parts marketplace",
-    "technician spare parts",
-    "mobile repair parts India",
-    "wholesale phone parts",
-    "phone screen replacement",
-    "mobile battery online",
-    "phone parts B2B",
+    "technician marketplace",
+    "phone repair parts India",
     "verified technician parts",
+    "request spare parts",
+    "mobile battery screen camera",
   ],
   openGraph: {
     title: "Buy & Sell Mobile Spare Parts Online | SparesX",
     description:
-      "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts. Quality assured, fast delivery.",
+      "List, find, and request spare parts with verified technicians. Trust scores and badges help you connect directly — SparesX does not process payments.",
     url: "/",
     siteName: "SparesX",
     type: "website",
@@ -42,7 +38,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Buy & Sell Mobile Spare Parts Online | SparesX",
     description:
-      "India's premier B2B marketplace for mobile spare parts. Quality assured, verified technicians, fast delivery nationwide.",
+      "Marketplace for technicians: verified listings, trust scores, and direct seller connections.",
     images: ["/og-image.jpg"],
   },
   alternates: {

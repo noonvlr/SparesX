@@ -4,13 +4,13 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Browse All Products",
   description:
-    "Browse all mobile spare parts available on SparesX. Find displays, batteries, cameras, and more from verified sellers.",
+    "Browse spare parts from verified technicians on SparesX. Filter by model and part type and connect directly with sellers.",
   keywords: [
     "browse products",
     "all spare parts",
     "mobile parts catalog",
     "phone repair parts",
-    "spare parts list",
+    "verified technician listings",
   ],
   alternates: {
     canonical: "/browse",
@@ -18,14 +18,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Browse All Products | SparesX",
     description:
-      "Browse all mobile spare parts available on SparesX. Find displays, batteries, cameras, and more.",
+      "Browse verified technician listings by model and part type. Connect directly — SparesX does not process payments.",
     type: "website",
     url: "https://spares-x-h1cj.vercel.app/browse",
   },
   twitter: {
     card: "summary_large_image",
     title: "Browse All Products | SparesX",
-    description: "Browse all mobile spare parts available on SparesX.",
+    description: "Browse verified technician spare-part listings on SparesX.",
   },
   robots: {
     index: true,

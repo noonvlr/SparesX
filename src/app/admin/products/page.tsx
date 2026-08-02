@@ -418,7 +418,7 @@ export default function AdminProductsPage() {
                       setEditForm((f) => ({ ...f, [key]: e.target.value }))
                     }
                     className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm"
-                    required={key !== "partType"}
+                    required={true}
                   />
                 )}
               </div>

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: "%s | SparesX",
   },
   description:
-    "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts & tools. Quality assured, fast delivery nationwide.",
+    "Marketplace for mobile repair technicians to list, find, and request spare parts. Verified listings, trust scores, and direct connections with sellers.",
   keywords: [
     "mobile spare parts",
     "technician marketplace",
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "SparesX – Mobile Spare Parts Marketplace",
     description:
-      "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians, buy genuine parts & tools.",
+      "List, find, and request spare parts with verified technicians. Connect directly — SparesX does not process payments.",
     url: siteUrl,
     siteName: "SparesX",
     type: "website",
@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SparesX – Mobile Spare Parts Marketplace",
     description:
-      "India's premier B2B marketplace for mobile spare parts. Connect with verified technicians.",
+      "Verified technician listings, trust scores, and direct seller connections for mobile spare parts.",
   },
   robots: {
     index: true,

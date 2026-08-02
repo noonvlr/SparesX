@@ -5,13 +5,13 @@ import RequestsBoard from "./_components/RequestsBoard";
 export const metadata: Metadata = {
   title: "Part Requests",
   description:
-    "Browse open spare-part requests from buyers, or submit your own request and get responses from verified technicians.",
+    "Browse open spare-part requests from technicians, or post your own request and connect directly with sellers who have the part.",
   keywords: [
     "request spare part",
     "part request",
     "find mobile parts",
-    "custom request",
     "technician network",
+    "verified sellers",
   ],
   alternates: {
     canonical: "/requests",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Part Requests | SparesX",
     description:
-      "Browse open requests or submit a spare parts request to verified technicians.",
+      "Post or browse spare-part requests and connect directly with technicians. SparesX does not process payments.",
     type: "website",
     url: "https://spares-x-h1cj.vercel.app/requests",
   },

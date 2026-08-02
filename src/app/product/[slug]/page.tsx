@@ -27,42 +27,49 @@ export async function generateMetadata({
     const { product } = await res.json();
     const productUrl = `${baseUrl}/product/${slug}`;
     const productImage = product.images?.[0] || "/og-image.jpg";
+    const { formatListingTitle } = await import(
+      "@/lib/products/listingTitle"
+    );
+    const listingTitle = formatListingTitle(product);
 
     return {
-      title: `${product.name} | Buy Online`,
+      title: `${listingTitle} | SparesX`,
       description:
         product.description ||
-        `Buy ${product.name} from verified sellers on SparesX. Quality assured mobile spare parts with fast delivery.`,
+        `${listingTitle} listed by a verified technician on SparesX. Connect directly with the seller — SparesX does not process payments.`,
       keywords: [
-        product.name,
-        product.category,
+        listingTitle,
+        product.partType,
         product.brand,
+        product.deviceModel,
         "mobile spare parts",
-        "buy online",
-        "genuine parts",
-      ],
+        "technician listing",
+      ].filter(Boolean),
       alternates: {
         canonical: productUrl,
       },
       openGraph: {
-        title: product.name,
-        description: product.description || `Buy ${product.name} online`,
+        title: listingTitle,
+        description:
+          product.description ||
+          `${listingTitle} — connect directly with the seller on SparesX.`,
         type: "website",
         url: productUrl,
-        siteName: "SparesX",
         images: [
           {
             url: productImage,
             width: 800,
             height: 800,
-            alt: product.name,
+            alt: listingTitle,
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: product.name,
-        description: product.description || `Buy ${product.name} online`,
+        title: listingTitle,
+        description:
+          product.description ||
+          `${listingTitle} from a verified technician listing.`,
         images: [productImage],
       },
       robots: {

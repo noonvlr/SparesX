@@ -8,6 +8,10 @@ import {
   useContactFlow,
 } from "@/components/ContactSheet";
 import { cn } from "@/lib/ui/cn";
+import {
+  formatListingTitle,
+  formatPartTypeLabel,
+} from "@/lib/products/listingTitle";
 
 export interface ProductCardData {
   _id: string;
@@ -16,6 +20,7 @@ export interface ProductCardData {
   images?: string[];
   brand?: string;
   partType?: string;
+  deviceModel?: string;
   category?: string;
   deviceCategory?: string;
   condition?: string;
@@ -58,9 +63,10 @@ export default function ProductCard({
 
   const badge =
     product.brand ||
-    product.partType ||
     product.category ||
     product.deviceCategory;
+  const title = formatListingTitle(product);
+  const partLabel = formatPartTypeLabel(product.partType);
 
   return (
     <>
@@ -113,7 +119,7 @@ export default function ProductCard({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={resolveImageUrl(images[imageIndex] || images[0])}
-                  alt={product.name}
+                  alt={title}
                   className="card-image-zoom h-full w-full object-contain p-2 sm:p-3"
                   loading="lazy"
                 />
@@ -141,13 +147,18 @@ export default function ProductCard({
         <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <Link href={`/product/${product._id}`}>
             <h3 className="mb-1.5 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-gray-900 transition-colors group-hover:text-[var(--brand)]">
-              {product.name}
+              {title}
             </h3>
           </Link>
 
           <div className="mb-2 flex flex-wrap gap-1">
-            {badge ? (
+            {partLabel ? (
               <span className="rounded-full bg-[var(--brand-soft)] px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium text-[var(--brand-hover)]">
+                {partLabel}
+              </span>
+            ) : null}
+            {badge ? (
+              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] sm:text-[11px] font-medium text-gray-700">
                 {badge}
               </span>
             ) : null}
@@ -188,7 +199,7 @@ export default function ProductCard({
         open={contact.contactOpen}
         onClose={() => contact.setContactOpen(false)}
         productId={product._id}
-        productName={product.name}
+        productName={title}
         sellerId={contact.sellerId}
         waState={contact.waState}
         loading={contact.loadingContact}

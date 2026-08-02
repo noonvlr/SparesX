@@ -13,6 +13,7 @@ import { AuthPromptSheet } from "@/components/ContactSheet";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
+import { formatListingTitle } from "@/lib/products/listingTitle";
 
 interface Seller {
   _id?: string;
@@ -463,7 +464,7 @@ export default function ProductDetail({
           <section className="space-y-5">
             <Card className="p-5 sm:p-7">
               <h1 className="text-2xl sm:text-4xl font-semibold text-[var(--ink)] leading-tight mb-4 tracking-tight">
-                {product.name}
+                {formatListingTitle(product)}
               </h1>
 
               <div className="flex flex-wrap gap-2 mb-5">

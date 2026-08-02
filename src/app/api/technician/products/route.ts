@@ -33,10 +33,10 @@ export async function POST(req: NextRequest) {
   
   const { name, description, price, deviceCategory, brand, deviceModel, modelNumber, partType, condition, images, priceNegotiable } = await req.json();
   
-  // Validate required fields
-  if (!name || !description || !price || !deviceCategory || !brand || !deviceModel || !partType || !condition) {
+  // Validate required fields (name can be derived from model + partType)
+  if (!description || !price || !deviceCategory || !brand || !deviceModel || !partType || !condition) {
     return NextResponse.json({ 
-      message: 'All fields are required (name, description, price, deviceCategory, brand, deviceModel, partType, condition)' 
+      message: 'All fields are required (description, price, deviceCategory, brand, deviceModel, partType, condition)' 
     }, { status: 400 });
   }
   
@@ -55,6 +55,11 @@ export async function POST(req: NextRequest) {
       { status: 403 },
     );
   }
+
+  const { formatListingTitle } = await import('@/lib/products/listingTitle');
+  const listingName =
+    (typeof name === 'string' && name.trim()) ||
+    formatListingTitle({ deviceModel, partType, name });
   
   // Generate slug for SEO
   const slug = `${deviceCategory}-${brand}-${deviceModel}-${partType}-${Date.now()}`
@@ -63,7 +68,7 @@ export async function POST(req: NextRequest) {
     .replace(/[^a-z0-9-]/g, '');
   
   const product = await Product.create({
-    name,
+    name: listingName,
     description,
     price,
     deviceCategory,
