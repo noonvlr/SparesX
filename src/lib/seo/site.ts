@@ -1,11 +1,13 @@
 /**
- * Single source of truth for the public base URL.
+ * Single source of truth for the public base URL. Canonicals, Open Graph URLs,
+ * robots.txt, and the sitemap all read it.
  *
- * Canonicals, Open Graph URLs, robots.txt, and the sitemap all read this, so
- * the www prefix here is the one Google will treat as canonical. Override with
- * NEXT_PUBLIC_SITE_URL (preferred) or NEXT_PUBLIC_BASE_URL per environment.
+ * The target brand domain is https://www.sparesx.com, but it currently resolves
+ * to a GoDaddy site rather than this app, so canonicals must keep pointing at
+ * the deployment URL. Cutover step: add the domain in Vercel, then set
+ * NEXT_PUBLIC_SITE_URL=https://www.sparesx.com. Nothing else needs to change.
  */
-const FALLBACK_SITE_URL = "https://www.sparesx.com";
+const FALLBACK_SITE_URL = "https://spares-x-h1cj.vercel.app";
 
 function normalize(url: string): string {
   return url.trim().replace(/\/+$/, "");
