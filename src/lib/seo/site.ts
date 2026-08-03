@@ -2,21 +2,19 @@
  * Single source of truth for the public base URL. Canonicals, Open Graph URLs,
  * robots.txt, and the sitemap all read it.
  *
- * The target brand domain is https://www.sparesx.com, but it currently resolves
- * to a GoDaddy site rather than this app, so canonicals must keep pointing at
- * the deployment URL. Cutover step: add the domain in Vercel, then set
- * NEXT_PUBLIC_SITE_URL=https://www.sparesx.com. Nothing else needs to change.
+ * Deliberately does not fall back to NEXT_PUBLIC_BASE_URL: that variable is the
+ * base for internal self-fetches and legitimately points at a deployment URL,
+ * which would silently poison every canonical tag. Override per environment
+ * with NEXT_PUBLIC_SITE_URL only.
  */
-const FALLBACK_SITE_URL = "https://spares-x-h1cj.vercel.app";
+const FALLBACK_SITE_URL = "https://www.sparesx.com";
 
 function normalize(url: string): string {
   return url.trim().replace(/\/+$/, "");
 }
 
 export const SITE_URL = normalize(
-  process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    FALLBACK_SITE_URL,
+  process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE_URL,
 );
 
 export const SITE_NAME = "SparesX";
