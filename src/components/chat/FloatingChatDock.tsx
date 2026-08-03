@@ -127,7 +127,7 @@ function FloatingWindow({
 
   return (
     <div
-      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] glass rounded-2xl shadow-2xl border border-[var(--border)] overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
+      className="fixed bottom-24 z-[90] w-[min(360px,calc(100vw-1.5rem))] h-[min(520px,calc(100vh-7rem))] glass rounded-[var(--radius-lg)] shadow-[var(--shadow-modal)] border border-[var(--glass-border)] overflow-hidden flex flex-col hidden md:flex animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-200"
       style={{ right }}
       role="dialog"
       aria-label={`Chat with ${peer?.name || "user"}`}
@@ -421,14 +421,14 @@ export default function FloatingChatDock() {
             onClick={() => chat.closePanel()}
           />
           <aside
-            className="fixed z-[95] glass shadow-2xl border border-[var(--border)] flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
-              inset-x-0 bottom-0 h-[min(92vh,720px)] rounded-t-3xl
-              md:inset-auto md:right-4 md:bottom-24 md:w-[380px] md:h-[min(640px,calc(100vh-7rem))] md:rounded-2xl"
+            className="fixed z-[95] glass shadow-[var(--shadow-modal)] border border-[var(--glass-border)] flex flex-col animate-in fade-in zoom-in-95 slide-in-from-bottom-6 duration-200
+              inset-x-0 bottom-0 h-[min(92vh,720px)] rounded-t-[var(--radius-xl)]
+              md:inset-auto md:right-4 md:bottom-24 md:w-[380px] md:h-[min(640px,calc(100vh-7rem))] md:rounded-[var(--radius-lg)]"
             role="dialog"
             aria-modal="true"
             aria-label="Messages"
           >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border)] bg-[var(--surface)]/70 rounded-t-3xl md:rounded-t-2xl">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--divider)] bg-[var(--surface)]/70 rounded-t-[var(--radius-xl)] md:rounded-t-[var(--radius-lg)]">
               {chat.panelView === "thread" ? (
                 <IconButton
                   type="button"
@@ -532,7 +532,7 @@ export default function FloatingChatDock() {
               if (suppressClickRef.current) return;
               togglePanel();
             }}
-            className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] shadow-xl shadow-[var(--brand-hover)]/20 hover:shadow-2xl hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-[var(--focus-ring)] touch-none select-none"
+            className="relative w-14 h-14 rounded-full bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--primary-foreground)] shadow-[var(--shadow-lg)] shadow-[var(--brand-hover)]/20 hover:shadow-[var(--shadow-modal)] hover:scale-105 flex items-center justify-center transition duration-200 focus:outline-none focus:ring-4 focus:ring-[var(--focus-ring)] touch-none select-none"
             aria-label="Open messages"
           >
             <svg

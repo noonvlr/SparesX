@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ProductCard, { type ProductCardData } from "@/components/ProductCard";
 import { showToast } from "@/components/ToastHost";
 import { Card, EmptyState } from "@/components/ui/Card";
+import { IconButton } from "@/components/ui/IconButton";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState } from "@/components/feedback";
 import { cn } from "@/lib/ui/cn";
@@ -132,12 +133,14 @@ export default function SavedItemsClient() {
                 key={row._id}
                 className="relative bg-[var(--surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-sm)] border border-dashed border-[var(--border-strong)] overflow-hidden scale-[0.92] sm:scale-[0.95] origin-top aspect-square flex flex-col items-center justify-center p-4 text-center"
               >
-                <button
+                <IconButton
                   type="button"
                   aria-label="Remove unavailable item"
                   disabled={removingId === row.productId}
+                  size="sm"
+                  variant="outline"
                   onClick={() => removeSaved(row.productId)}
-                  className="absolute top-2 left-2 z-20 inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)] shadow-[var(--shadow-sm)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+                  className="absolute top-2 left-2 z-20 rounded-full bg-[var(--surface)]/95 text-[var(--muted)] shadow-[var(--shadow-sm)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                 >
                   <svg
                     className="w-4 h-4"
@@ -152,7 +155,7 @@ export default function SavedItemsClient() {
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                     />
                   </svg>
-                </button>
+                </IconButton>
                 <p className="text-xs sm:text-sm text-[var(--muted)] px-2">
                   Listing no longer available
                 </p>

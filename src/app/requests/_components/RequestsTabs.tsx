@@ -14,16 +14,16 @@ export default function RequestsTabs({
   ];
 
   return (
-    <div className="inline-flex rounded-2xl bg-[var(--surface)]/90 backdrop-blur border border-[var(--border)] p-1.5 shadow-[var(--shadow-sm)] overflow-x-auto max-w-full">
+    <div className="inline-flex rounded-[var(--radius-lg)] bg-[var(--surface)]/90 backdrop-blur border border-[var(--border)] p-1.5 shadow-[var(--shadow-sm)] overflow-x-auto max-w-full">
       {items.map((item) => (
         <Link
           key={item.key}
           href={item.href}
           scroll={false}
           prefetch
-          className={`px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+          className={`px-3 sm:px-4 py-2.5 rounded-[var(--radius)] text-xs sm:text-sm font-semibold transition-all duration-[var(--duration-normal)] whitespace-nowrap ${
             active === item.key
-              ? "bg-[var(--brand)] text-[var(--ink-inverse)] shadow-[var(--shadow-sm)] scale-[1.02]"
+              ? "bg-[var(--brand)] text-[var(--primary-foreground)] shadow-[var(--shadow-sm)] scale-[1.02]"
               : "text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)]"
           }`}
         >

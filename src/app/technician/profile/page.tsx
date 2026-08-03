@@ -481,7 +481,7 @@ export default function TechnicianProfilePage() {
                     className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-[var(--surface)] shadow-[var(--shadow)] bg-[var(--surface)]"
                   />
                 ) : (
-                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-4xl font-semibold border-4 border-[var(--surface)] shadow-[var(--shadow)]">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-[var(--brand)] text-[var(--primary-foreground)] flex items-center justify-center text-4xl font-semibold border-4 border-[var(--surface)] shadow-[var(--shadow)]">
                     {(form.name || "?").charAt(0).toUpperCase()}
                   </div>
                 )}

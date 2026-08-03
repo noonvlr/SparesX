@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { PublicTrustInfo } from "@/lib/trust";
 import { badgesFromUserDoc } from "@/lib/trust";
 import type { PublicBadge } from "@/lib/badges/catalog";
+import { Button } from "@/components/ui/Button";
 
 type Size = "sm" | "md";
 
@@ -17,14 +18,14 @@ const colorClasses: Record<
     ring: "ring-[var(--brand-muted)]",
   },
   gold: {
-    pill: "bg-amber-50 text-amber-900 border-amber-300 ring-1 ring-amber-100",
-    modal: "bg-amber-50 border-amber-200 text-amber-950",
-    ring: "ring-amber-100",
+    pill: "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/30",
+    modal: "bg-[var(--warning-soft)] border-[var(--warning)]/20 text-[var(--ink)]",
+    ring: "ring-[var(--warning)]/20",
   },
   purple: {
-    pill: "bg-violet-50 text-violet-900 border-violet-200",
-    modal: "bg-violet-50 border-violet-200 text-violet-950",
-    ring: "ring-violet-100",
+    pill: "bg-[var(--verified-soft)] text-[var(--verified)] border-[var(--verified)]/25",
+    modal: "bg-[var(--verified-soft)] border-[var(--verified)]/20 text-[var(--ink)]",
+    ring: "ring-[var(--verified)]/20",
   },
 };
 
@@ -37,11 +38,20 @@ function TrustScoreChip({
   label?: string;
   size: Size;
 }) {
-  let tone = "bg-red-50 text-red-800 border-red-200";
-  if (score >= 81) tone = "bg-amber-50 text-amber-900 border-amber-300";
-  else if (score >= 61) tone = "bg-emerald-50 text-emerald-800 border-emerald-200";
-  else if (score >= 41) tone = "bg-yellow-50 text-yellow-900 border-yellow-200";
-  else if (score >= 21) tone = "bg-orange-50 text-orange-800 border-orange-200";
+  let tone =
+    "bg-[var(--danger-soft)] text-[var(--danger)] border-[var(--danger)]/25";
+  if (score >= 81)
+    tone =
+      "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/30";
+  else if (score >= 61)
+    tone =
+      "bg-[var(--success-soft)] text-[var(--success)] border-[var(--success)]/25";
+  else if (score >= 41)
+    tone =
+      "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/20";
+  else if (score >= 21)
+    tone =
+      "bg-[var(--warning-soft)] text-[var(--warning)] border-[var(--warning)]/30";
 
   const text = size === "sm" ? "text-[10px] px-1.5 py-0.5" : "text-xs px-2 py-1";
   return (
@@ -102,9 +112,7 @@ export default function TrustBadges({
 
   return (
     <>
-      <span
-        className={`inline-flex flex-wrap items-center gap-1 ${className}`}
-      >
+      <span className={`inline-flex flex-wrap items-center gap-1 ${className}`}>
         {showScore && typeof trustScore === "number" && (
           <TrustScoreChip score={trustScore} label={trustLabel} size={size} />
         )}
@@ -115,12 +123,13 @@ export default function TrustBadges({
               key={b.key}
               type="button"
               title={b.shortDescription}
+              aria-label={`${b.name} badge — ${b.shortDescription}`}
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 setSelected(b);
               }}
-              className={`inline-flex items-center gap-1 rounded-full border font-semibold tracking-wide ${text} ${tone.pill} hover:opacity-90 cursor-pointer`}
+              className={`inline-flex items-center gap-1 rounded-full border font-semibold tracking-wide ${text} ${tone.pill} hover:opacity-90 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]`}
             >
               <span aria-hidden>{b.icon}</span>
               <span className="hidden sm:inline">{b.name}</span>
@@ -132,14 +141,14 @@ export default function TrustBadges({
 
       {selected && (
         <div
-          className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/40"
+          className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4 bg-[var(--overlay)]"
           onClick={() => setSelected(null)}
           role="dialog"
           aria-modal="true"
           aria-label={selected.name}
         >
           <div
-            className={`w-full max-w-md rounded-2xl border bg-white shadow-xl overflow-hidden ${colorClasses[selected.color].ring} ring-2`}
+            className={`w-full max-w-md rounded-[var(--radius-lg)] border bg-[var(--modal-bg)] shadow-[var(--shadow-modal)] overflow-hidden ${colorClasses[selected.color].ring} ring-2`}
             onClick={(e) => e.stopPropagation()}
           >
             <div
@@ -147,31 +156,37 @@ export default function TrustBadges({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-2xl leading-none mb-2">{selected.icon}</p>
-                  <h3 className="text-lg font-bold">{selected.name}</h3>
-                  <p className="text-sm opacity-80 mt-0.5 capitalize">
+                  <p className="text-2xl leading-none mb-2" aria-hidden>
+                    {selected.icon}
+                  </p>
+                  <h3 className="text-lg font-bold text-[var(--ink)]">
+                    {selected.name}
+                  </h3>
+                  <p className="text-sm text-[var(--muted)] mt-0.5 capitalize">
                     {selected.type} badge
                   </p>
                 </div>
-                <button
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setSelected(null)}
-                  className="rounded-lg px-2 py-1 text-sm font-semibold hover:bg-black/5"
+                  aria-label="Close badge details"
                 >
                   Close
-                </button>
+                </Button>
               </div>
             </div>
-            <div className="px-5 py-4 space-y-3 text-sm text-gray-700">
+            <div className="px-5 py-4 space-y-3 text-sm text-[var(--ink-secondary)]">
               <p>{selected.shortDescription}</p>
               <div>
-                <p className="font-semibold text-gray-900 mb-1">
+                <p className="font-semibold text-[var(--ink)] mb-1">
                   How to earn this
                 </p>
                 <p className="leading-relaxed">{selected.criteria}</p>
               </div>
               {selected.awardedAt && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-[var(--muted)]">
                   Awarded {new Date(selected.awardedAt).toLocaleDateString()}
                 </p>
               )}

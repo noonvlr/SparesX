@@ -40,7 +40,7 @@ export default function MessageBubble({
   return (
     <div className={`flex ${mine ? "justify-end" : "justify-start"} mb-2`}>
       <div
-        className={`max-w-[80%] rounded-2xl px-3.5 py-2.5 text-[15px] shadow-[var(--shadow-sm)] ${
+        className={`max-w-[80%] rounded-[var(--radius-lg)] px-3.5 py-2.5 text-[15px] shadow-[var(--shadow-sm)] ${
           mine
             ? "bg-[var(--chat-bubble-outgoing)] text-[var(--chat-bubble-outgoing-fg)] rounded-br-md"
             : "bg-[var(--chat-bubble-incoming)] text-[var(--ink)] border border-[var(--chat-bubble-incoming-border)] rounded-bl-md"

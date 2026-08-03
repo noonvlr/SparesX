@@ -205,7 +205,7 @@ export default function RequestsBoard() {
       ) : (
         <div className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
           {/* Marketplace-style search hero */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--ink)] via-[var(--brand-hover)] to-[var(--brand)] text-[var(--ink-inverse)] p-5 sm:p-8 shadow-[var(--shadow-lg)]">
+          <div className="relative overflow-hidden rounded-[var(--radius-xl)] bg-gradient-to-br from-[var(--ink)] via-[var(--brand-hover)] to-[var(--brand)] text-[var(--ink-inverse)] p-5 sm:p-8 shadow-[var(--shadow-lg)]">
             <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-[var(--ink-inverse)]/10 blur-2xl" />
             <div className="absolute -left-8 bottom-0 w-32 h-32 rounded-full bg-[var(--info)]/20 blur-2xl" />
             <div className="relative">
@@ -238,7 +238,7 @@ export default function RequestsBoard() {
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Try “Samsung screen”, “battery”, “iPhone 13”…"
-                    className="pl-12 rounded-2xl border-0 shadow-[var(--shadow-md)] h-auto py-3.5"
+                    className="pl-12 rounded-[var(--radius-lg)] border-0 shadow-[var(--shadow-md)] h-auto py-3.5"
                   />
                 </div>
                 {searchInput && (
@@ -249,7 +249,7 @@ export default function RequestsBoard() {
                       setSearchInput("");
                       setSearch("");
                     }}
-                    className="rounded-2xl border-[var(--ink-inverse)]/20 bg-[var(--ink-inverse)]/10 text-[var(--ink-inverse)] hover:bg-[var(--ink-inverse)]/20"
+                    className="rounded-[var(--radius-lg)] border-[var(--ink-inverse)]/20 bg-[var(--ink-inverse)]/10 text-[var(--ink-inverse)] hover:bg-[var(--ink-inverse)]/20"
                   >
                     Clear
                   </Button>
@@ -289,11 +289,11 @@ export default function RequestsBoard() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-36 rounded-2xl" />
+                <Skeleton key={i} className="h-36 rounded-[var(--radius-lg)]" />
               ))}
             </div>
           ) : requests.length === 0 ? (
-            <Card className="border-dashed rounded-3xl">
+            <Card className="border-dashed rounded-[var(--radius-xl)]">
               <EmptyState
                 title={emptyMessage}
                 action={
@@ -315,7 +315,7 @@ export default function RequestsBoard() {
                   <Card
                     key={request._id}
                     hover
-                    className="group relative rounded-2xl overflow-hidden"
+                    className="group relative rounded-[var(--radius-lg)] overflow-hidden"
                     style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                   >
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--brand)] to-[var(--brand-hover)] opacity-0 group-hover:opacity-100 transition" />

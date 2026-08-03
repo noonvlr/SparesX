@@ -430,7 +430,7 @@ export default function AddProductPage() {
         {/* Step 1: Device Category Selection */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
+            <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold">
               1
             </div>
             <label className="text-sm font-semibold text-[var(--ink-secondary)]">
@@ -457,7 +457,7 @@ export default function AddProductPage() {
                   }}
                   className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
                     form.deviceCategory === cat.value
-                      ? "border-[var(--brand)] bg-[var(--brand)] text-white shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)] hover:border-[var(--brand-hover)]"
+                      ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--primary-foreground)] shadow-[var(--shadow-sm)] hover:bg-[var(--brand-hover)] hover:border-[var(--brand-hover)]"
                       : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] shadow-[var(--shadow-sm)]"
                   }`}
                 >
@@ -475,7 +475,7 @@ export default function AddProductPage() {
         {form.deviceCategory && (
           <div className="relative z-20 p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-white flex items-center justify-center text-xs font-bold">
+              <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold">
                 2
               </div>
               <h3 className="text-sm font-semibold text-[var(--brand-hover)]">
@@ -594,7 +594,7 @@ export default function AddProductPage() {
           <>
             <div className="border-t-2 border-[var(--border)] pt-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded-full bg-[var(--ink-secondary)] text-white flex items-center justify-center text-xs font-bold">
+                <div className="w-6 h-6 rounded-full bg-[var(--ink-secondary)] text-[var(--primary-foreground)] flex items-center justify-center text-xs font-bold">
                   3
                 </div>
                 <h3 className="text-sm font-semibold text-[var(--ink-secondary)]">
@@ -814,7 +814,7 @@ export default function AddProductPage() {
                   />
                   <label
                     htmlFor="cameraInput"
-                    className="flex-1 bg-[var(--brand)] text-white py-2.5 rounded-[var(--radius)] font-semibold hover:bg-[var(--brand-hover)] hover:shadow-[var(--shadow-md)] transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2"
+                    className="flex-1 bg-[var(--brand)] text-[var(--primary-foreground)] py-2.5 rounded-[var(--radius)] font-semibold hover:bg-[var(--brand-hover)] hover:shadow-[var(--shadow-md)] transition-all duration-200 cursor-pointer text-center flex items-center justify-center gap-2"
                   >
                     <svg
                       className="w-5 h-5"

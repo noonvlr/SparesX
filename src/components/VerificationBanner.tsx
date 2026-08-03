@@ -94,8 +94,9 @@ export default function VerificationBanner() {
           {showDismiss && (
             <button
               type="button"
-              className="opacity-70 hover:opacity-100"
+              className="opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] rounded-[var(--radius-sm)] px-1"
               onClick={() => setDismissedEmail(true)}
+              aria-label="Dismiss email verification reminder"
             >
               Dismiss
             </button>

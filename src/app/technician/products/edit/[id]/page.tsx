@@ -429,7 +429,7 @@ export default function EditProductPage() {
                   required={!!form.deviceCategory}
                 />
                 {form.brand && (
-                  <Badge tone="brand" className="mt-2 bg-[var(--brand)] text-[var(--ink-inverse)]">
+                  <Badge tone="brand" className="mt-2 bg-[var(--brand)] text-[var(--primary-foreground)]">
                     ✓ {form.brand}
                   </Badge>
                 )}
@@ -584,7 +584,7 @@ export default function EditProductPage() {
                     }
                   />
                   {form.partType && (
-                    <Badge tone="brand" className="mt-2 bg-[var(--brand-hover)] text-[var(--ink-inverse)]">
+                    <Badge tone="brand" className="mt-2 bg-[var(--brand-hover)] text-[var(--primary-foreground)]">
                       ✓{" "}
                       {partTypes.find((p) => p.value === form.partType)?.label}
                     </Badge>

@@ -33,10 +33,10 @@ export const metadata: Metadata = {
 function RequestsFallback() {
   return (
     <div className="space-y-4 animate-pulse">
-      <Skeleton className="h-12 w-64 rounded-2xl" />
+      <Skeleton className="h-12 w-64 rounded-[var(--radius-lg)]" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} className="h-44 rounded-2xl" />
+          <Skeleton key={i} className="h-44 rounded-[var(--radius-lg)]" />
         ))}
       </div>
     </div>

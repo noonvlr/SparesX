@@ -208,9 +208,9 @@ export function ProductSearchBar({
       className="sticky top-[calc(var(--nav-h)+8px)] z-30 md:top-4"
     >
       <div className="relative">
-        <div className="glass flex items-center gap-2.5 rounded-[var(--radius-lg)] px-4 py-3 shadow-[var(--shadow-md)]">
-          <IconSearch className="h-5 w-5 shrink-0 text-[var(--muted)]" />
-          <input
+        <div className="relative">
+          <IconSearch className="pointer-events-none absolute left-4 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-[var(--muted)]" />
+          <Input
             type="search"
             inputMode="search"
             placeholder="Search by name, brand, or model…"
@@ -221,14 +221,14 @@ export function ProductSearchBar({
               if (e.key === "Enter") commitSearch(searchInput);
               if (e.key === "Escape") setShowSuggestions(false);
             }}
-            className="w-full min-w-0 bg-transparent text-sm sm:text-base text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
+            className="h-auto rounded-[var(--radius-lg)] border-[var(--border)] bg-[var(--surface)]/80 py-3 pl-12 pr-10 shadow-[var(--shadow-md)] backdrop-blur-md"
           />
           {searchInput ? (
             <button
               type="button"
               aria-label="Clear search"
               onClick={() => commitSearch("")}
-              className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
+              className="absolute right-3 top-1/2 z-10 -translate-y-1/2 shrink-0 text-[var(--muted)] hover:text-[var(--ink)] transition-colors"
             >
               <svg className="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

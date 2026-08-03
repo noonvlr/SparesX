@@ -204,7 +204,7 @@ export default function MyRequestsPanel() {
           Loading…
         </div>
       ) : requests.length === 0 ? (
-        <Card className="border-dashed rounded-2xl">
+        <Card className="border-dashed rounded-[var(--radius-lg)]">
           <EmptyState
             title="You have no requests yet."
             action={
@@ -222,7 +222,7 @@ export default function MyRequestsPanel() {
         <ul className="space-y-3">
           {requests.map((item) => (
             <li key={item._id}>
-              <Card padding="sm" className="rounded-2xl p-4">
+              <Card padding="sm" className="rounded-[var(--radius-lg)] p-4">
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
                     <p className="font-semibold text-[var(--ink)]">

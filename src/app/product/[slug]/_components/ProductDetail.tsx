@@ -420,7 +420,7 @@ export default function ProductDetail({
               {product.priceNegotiable && (
                 <Badge
                   tone="success"
-                  className="absolute top-3 right-3 z-10 shadow-sm"
+                  className="absolute top-3 right-3 z-10 shadow-[var(--shadow-sm)]"
                 >
                   Negotiable
                 </Badge>
@@ -441,6 +441,7 @@ export default function ProductDetail({
                   <button
                     key={`${img}-${idx}`}
                     type="button"
+                    aria-label={`View image ${idx + 1}`}
                     onClick={() => setSelectedImage(img)}
                     className={cn(
                       "aspect-square rounded-[var(--radius-sm)] border-2 overflow-hidden bg-[var(--surface)] transition-colors",
