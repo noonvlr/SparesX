@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import FeaturedProducts from "@/components/FeaturedProducts";
 import AdSlot from "@/components/AdSlot";
+import HomeSearch from "@/components/HomeSearch";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
@@ -65,7 +66,7 @@ export const revalidate = 60;
 export default async function HomePage() {
   await connectDB();
 
-  const [featuredRaw, categoryRows] = await Promise.all([
+  const [featuredRaw, categoryRows, listingCounts] = await Promise.all([
     Product.find({ status: "approved" })
       .sort({ createdAt: -1 })
       .limit(6)
@@ -74,6 +75,10 @@ export default async function HomePage() {
       )
       .lean(),
     findPublicCategories({ dedupeByName: true }),
+    Product.aggregate<{ _id: string; count: number }>([
+      { $match: { status: "approved", partType: { $nin: [null, ""] } } },
+      { $group: { _id: "$partType", count: { $sum: 1 } } },
+    ]),
   ]);
 
   const featuredProducts = featuredRaw.map((p) => ({
@@ -81,17 +86,24 @@ export default async function HomePage() {
     _id: String(p._id),
   }));
 
-  const categories = categoryRows.map((cat) => ({
-    name: cat.name,
-    icon: cat.icon,
-    slug: cat.slug,
-    href: `/products?partType=${encodeURIComponent(cat.slug)}`,
-  }));
+  const countBySlug = new Map(
+    listingCounts.map((row) => [String(row._id), row.count]),
+  );
+
+  const categories = categoryRows
+    .map((cat) => ({
+      name: cat.name,
+      icon: cat.icon,
+      slug: cat.slug,
+      href: `/products?partType=${encodeURIComponent(cat.slug)}`,
+      listings: countBySlug.get(cat.slug) || 0,
+    }))
+    .sort((a, b) => b.listings - a.listings || a.name.localeCompare(b.name))
+    .slice(0, 10);
 
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || "https://spares-x-h1cj.vercel.app";
 
-  // JSON-LD structured data for SEO
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -111,14 +123,12 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* JSON-LD for SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <main className="min-h-screen bg-[var(--surface-2)]">
-        {/* Hero — full-bleed teal/slate atmosphere, brand-first */}
         <section className="relative overflow-hidden">
           <div
             aria-hidden
@@ -128,14 +138,10 @@ export default async function HomePage() {
             aria-hidden
             className="absolute -top-40 left-1/2 -z-10 h-[420px] w-[780px] -translate-x-1/2 rounded-full bg-[var(--brand)]/15 blur-[100px]"
           />
-          <div
-            aria-hidden
-            className="absolute top-24 right-[-120px] -z-10 h-72 w-72 rounded-full bg-[var(--ink)]/5 blur-3xl"
-          />
 
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
             <div className="mb-6 flex items-center justify-center gap-2.5">
-              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--brand)] text-[var(--ink-inverse)] text-lg sm:text-xl font-bold shadow-[var(--shadow-sm)]">
+              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--brand)] text-[var(--primary-foreground)] text-lg sm:text-xl font-bold shadow-[var(--shadow-sm)]">
                 S
               </span>
               <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--ink)]">
@@ -147,11 +153,15 @@ export default async function HomePage() {
               The spare parts marketplace, built for technicians.
             </h1>
 
-            <p className="mx-auto max-w-2xl text-base sm:text-lg text-[var(--muted)] mb-9 sm:mb-10 px-2">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg text-[var(--muted)] mb-8 sm:mb-9 px-2">
               SparesX is the dedicated marketplace where mobile repair
               technicians list, find, and request spare parts — searchable,
               organized, and built just for the trade.
             </p>
+
+            <div className="mb-8 sm:mb-10 px-2">
+              <HomeSearch />
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
               <Link
@@ -161,19 +171,18 @@ export default async function HomePage() {
                 Browse Parts
               </Link>
               <Link
-                href="/register"
+                href="/requests?tab=submit"
                 className={cn(
                   buttonVariants({ variant: "secondary", size: "lg" }),
                   "w-full sm:w-auto",
                 )}
               >
-                Become a Seller
+                Request a Part
               </Link>
             </div>
           </div>
         </section>
 
-        {/* Categories Section */}
         {categories.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
             <div className="text-center mb-8 sm:mb-10">
@@ -183,9 +192,12 @@ export default async function HomePage() {
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)]">
                 Browse by category
               </h2>
+              <p className="mt-2 text-sm text-[var(--muted)]">
+                Top categories by active listings
+              </p>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-              {categories.map((category: any) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              {categories.map((category) => (
                 <Link
                   key={category.slug}
                   href={category.href}
@@ -197,6 +209,12 @@ export default async function HomePage() {
                   <h3 className="text-xs sm:text-sm font-semibold text-[var(--ink)] text-center">
                     {category.name}
                   </h3>
+                  {category.listings > 0 ? (
+                    <p className="text-[10px] text-[var(--muted)]">
+                      {category.listings} listing
+                      {category.listings === 1 ? "" : "s"}
+                    </p>
+                  ) : null}
                 </Link>
               ))}
             </div>
@@ -207,7 +225,7 @@ export default async function HomePage() {
           <AdSlot id="home-mid" size="leaderboard" className="my-2" />
         </div>
 
-        <FeaturedProducts products={featuredProducts} />
+        <FeaturedProducts products={featuredProducts as any} />
       </main>
     </>
   );

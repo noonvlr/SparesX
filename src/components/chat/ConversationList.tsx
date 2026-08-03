@@ -6,6 +6,34 @@ import OnlineStatus from "@/components/chat/OnlineStatus";
 import TrustBadges from "@/components/TrustBadges";
 import { Avatar, Skeleton } from "@/components/ui/Card";
 
+function formatChatTime(iso?: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  if (sameDay) {
+    return d.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  const isYesterday =
+    d.getFullYear() === yesterday.getFullYear() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getDate() === yesterday.getDate();
+  if (isYesterday) return "Yesterday";
+  return d.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export default function ConversationList({
   conversations,
   activeId,
@@ -105,11 +133,21 @@ export default function ConversationList({
                       activeBadgeKeys={peer?.activeBadgeKeys}
                     />
                   </div>
-                  {unread > 0 && (
-                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[var(--brand)] text-[var(--ink-inverse)] text-[10px] font-bold flex items-center justify-center">
-                      {unread > 99 ? "99+" : unread}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {c.lastMessageTime ? (
+                      <time
+                        dateTime={c.lastMessageTime}
+                        className="text-[10px] text-[var(--muted)] tabular-nums whitespace-nowrap"
+                      >
+                        {formatChatTime(c.lastMessageTime)}
+                      </time>
+                    ) : null}
+                    {unread > 0 && (
+                      <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[var(--brand)] text-[var(--primary-foreground)] text-[10px] font-bold flex items-center justify-center">
+                        {unread > 99 ? "99+" : unread}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-xs text-[var(--muted)] truncate mt-0.5">
                   {c.lastMessage || "No messages yet"}

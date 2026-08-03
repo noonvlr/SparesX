@@ -187,7 +187,7 @@ export function useShellAuth() {
     setSupportUnread(0);
     setChatUnread(0);
     setWaPending(0);
-    showToast("Logged out successfully");
+    showToast("Logged out");
     router.push("/");
   }, [router]);
 

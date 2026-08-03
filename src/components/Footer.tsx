@@ -1,9 +1,13 @@
 import Link from "next/link";
+import BecomeSellerLink from "@/components/BecomeSellerLink";
 
 const YEAR = new Date().getFullYear();
 
 const linkClass =
   "text-[var(--footer-fg)] hover:text-[var(--footer-heading)] transition-colors duration-[var(--duration-normal)]";
+
+const headingClass =
+  "text-xs font-semibold text-[var(--footer-heading)] uppercase tracking-wider mb-4";
 
 export default function Footer() {
   return (
@@ -11,27 +15,26 @@ export default function Footer() {
       className="mt-auto bg-[var(--footer-bg)] text-[var(--footer-fg)] border-t border-[var(--footer-border)]"
       data-theme-transition
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10">
-          <div className="col-span-2 md:col-span-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
+          <div className="sm:col-span-2 lg:col-span-4">
             <Link
               href="/"
               className="text-2xl font-bold text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors"
             >
               SparesX
             </Link>
-            <p className="mt-3 text-sm leading-relaxed text-[var(--footer-muted)] max-w-xs">
-              India-only marketplace connecting buyers and sellers of mobile &amp;
-              device spare parts. SparesX is not the seller — we provide the
-              platform. No in-app payments yet.
+            <p className="mt-4 text-sm leading-relaxed text-[var(--footer-muted)] max-w-sm">
+              A dedicated marketplace for mobile spare parts in India, built for
+              technicians. Every listing is tied to a seller&apos;s Trust Score.
+              SparesX connects buyers and sellers directly — organized listing,
+              no middleman.
             </p>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--footer-heading)] uppercase tracking-wider mb-3">
-              Marketplace
-            </h3>
-            <ul className="space-y-2 text-sm">
+          <div className="lg:col-span-2">
+            <h3 className={headingClass}>Marketplace</h3>
+            <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/products" className={linkClass}>
                   Browse products
@@ -54,17 +57,15 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/trust-score" className={linkClass}>
-                  Trust Score explained
+                  Trust Score
                 </Link>
               </li>
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--footer-heading)] uppercase tracking-wider mb-3">
-              Company
-            </h3>
-            <ul className="space-y-2 text-sm">
+          <div className="lg:col-span-2">
+            <h3 className={headingClass}>Company</h3>
+            <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/about" className={linkClass}>
                   About us
@@ -77,22 +78,18 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/support" className={linkClass}>
-                  Support / Contact admin
+                  Support
                 </Link>
               </li>
               <li>
-                <Link href="/register" className={linkClass}>
-                  Become a seller
-                </Link>
+                <BecomeSellerLink className={linkClass} />
               </li>
             </ul>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold text-[var(--footer-heading)] uppercase tracking-wider mb-3">
-              Legal
-            </h3>
-            <ul className="space-y-2 text-sm">
+          <div className="lg:col-span-4">
+            <h3 className={headingClass}>Legal</h3>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
               <li>
                 <Link href="/privacy" className={linkClass}>
                   Privacy Policy
@@ -133,18 +130,22 @@ export default function Footer() {
                   Report Abuse
                 </Link>
               </li>
-              <li>
-                <a href="mailto:support@sparesx.in" className={linkClass}>
-                  support@sparesx.in
-                </a>
-              </li>
             </ul>
+            <p className="mt-5 text-sm">
+              <a href="mailto:noon.vlr@gmail.com" className={linkClass}>
+                noon.vlr@gmail.com
+              </a>
+              <span className="text-[var(--footer-muted)] mx-2">·</span>
+              <a href="tel:8015606071" className={linkClass}>
+                8015606071
+              </a>
+            </p>
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-[var(--footer-border)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[var(--footer-muted)]">
-          <p>© {YEAR} SparesX. All rights reserved.</p>
-          <p>Made for technicians & spare-part businesses across India.</p>
+        <div className="mt-12 pt-6 border-t border-[var(--footer-border)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[var(--footer-muted)]">
+          <p>© {YEAR} SparesX · Noon Computers. All rights reserved.</p>
+          <p>Made for technicians across India.</p>
         </div>
       </div>
     </footer>

@@ -780,7 +780,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             aria-label="Close more menu"
             onClick={() => setMobileMoreOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--modal-bg)] shadow-[var(--shadow-modal)] border-t border-[var(--glass-border)] pb-[env(safe-area-inset-bottom,0px)] animate-in glass">
+          <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--surface-elevated)] shadow-[var(--shadow-modal)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
             <div className="flex justify-center pt-3 pb-1">
               <span className="h-1 w-10 rounded-full bg-[var(--border-strong)]" />
             </div>

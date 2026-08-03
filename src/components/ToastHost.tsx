@@ -5,12 +5,20 @@ import { useEffect, useState } from "react";
 type ToastPayload = {
   message: string;
   type?: "success" | "error" | "info";
+  /** Auto-dismiss ms (default 2000). */
+  duration?: number;
 };
 
-export function showToast(message: string, type: ToastPayload["type"] = "success") {
+export function showToast(
+  message: string,
+  type: ToastPayload["type"] = "success",
+  duration = 2000,
+) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
-    new CustomEvent("sparesx-toast", { detail: { message, type } }),
+    new CustomEvent("sparesx-toast", {
+      detail: { message, type, duration },
+    }),
   );
 }
 
@@ -26,7 +34,11 @@ export default function ToastHost() {
       if (!detail?.message) return;
       setToast({ ...detail, id: Date.now() });
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => setToast(null), 3200);
+      const ms =
+        typeof detail.duration === "number" && detail.duration > 0
+          ? detail.duration
+          : 2000;
+      timer = setTimeout(() => setToast(null), ms);
     };
     window.addEventListener("sparesx-toast", onToast as EventListener);
     return () => {

@@ -4,7 +4,7 @@ import { PageHeader, Card } from "@/components/ui/Card";
 export const metadata: Metadata = {
   title: "About SparesX",
   description:
-    "Learn about SparesX, India's premier B2B marketplace for mobile spare parts. Connecting verified technicians with quality parts since inception.",
+    "SparesX is a dedicated marketplace for mobile spare parts in India — built for technicians to list, find, and request parts with Trust Scores, not WhatsApp chaos.",
   keywords: [
     "about sparesx",
     "mobile parts marketplace",
@@ -17,14 +17,9 @@ export const metadata: Metadata = {
   openGraph: {
     title: "About SparesX | Mobile Spare Parts Marketplace",
     description:
-      "Learn about SparesX, India's premier B2B marketplace connecting verified technicians with quality mobile spare parts.",
+      "A dedicated marketplace for mobile spare parts in India, built for technicians.",
     type: "website",
     url: "https://spares-x-h1cj.vercel.app/about",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "About SparesX",
-    description: "India's premier B2B marketplace for mobile spare parts.",
   },
   robots: {
     index: true,
@@ -35,45 +30,69 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <PageHeader
-          className="mb-10"
+          className="mb-8"
           title="About SparesX"
-          description="SparesX is an India-only online marketplace that connects buyers and sellers of mobile and device spare parts. Anyone in India can register and sell."
+          description="A dedicated marketplace for mobile spare parts in India, built for technicians."
         />
 
-        <div className="mb-8 rounded-[var(--radius-lg)] border border-[var(--brand-muted)] bg-[var(--brand-soft)] p-5 text-sm text-[var(--ink-secondary)] leading-relaxed">
-          <p className="font-semibold mb-1 text-[var(--brand-hover)]">
-            Important
-          </p>
-          <p>
-            SparesX is not the seller. We only provide the platform for buyers
-            and sellers to connect. There are no in-app payments yet — payment
-            and shipping are arranged directly between users.
-          </p>
-        </div>
+        <div className="space-y-6 text-[var(--ink-secondary)] text-[15px] leading-relaxed">
+          <Card className="p-6 sm:p-7 space-y-4">
+            <p>
+              Every mobile repair technician knows the problem: a drawer full of
+              good parts with nowhere to sell them. A camera module pulled from
+              one repair, a screen left over from another — perfectly usable,
+              but stuck. For years, the only outlet was word of mouth or a
+              crowded WhatsApp group, where listings disappeared within hours
+              and finding a specific part meant scrolling through hundreds of
+              unrelated messages.
+            </p>
+            <p>
+              SparesX was built to solve that problem directly. Rather than
+              another general marketplace where spare parts get lost among
+              unrelated listings, SparesX is built exclusively for mobile device
+              parts — a dedicated space where technicians can list what they
+              have, search for what they need, and request parts that aren&apos;t
+              yet available.
+            </p>
+            <p>
+              We&apos;re a marketplace, not a seller. SparesX doesn&apos;t hold
+              inventory, set prices, or process payments — we simply give
+              technicians and buyers across India a focused platform to connect,
+              verify each other through Trust Scores, and trade directly.
+            </p>
+            <p>
+              We&apos;ve just launched, with real listings and a growing base of
+              verified technicians already on the platform. We&apos;re refining
+              SparesX with the same people it&apos;s built for — technicians who
+              understand better than anyone what a functional, no-nonsense
+              marketplace should look like.
+            </p>
+          </Card>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          <Card className="p-6 sm:p-7">
-            <h2 className="text-xl font-semibold mb-3 text-[var(--ink)]">
-              Our Mission
-            </h2>
-            <p className="text-[var(--muted)]">
-              Help repair professionals and spare-part businesses find each
-              other faster with clear listings, requests, and direct
-              communication.
-            </p>
-          </Card>
-          <Card className="p-6 sm:p-7">
-            <h2 className="text-xl font-semibold mb-3 text-[var(--ink)]">
-              Why SparesX
-            </h2>
-            <p className="text-[var(--muted)]">
-              Built for India&apos;s spare-parts trade: marketplace-only tools,
-              transparent listings, and policies that set clear expectations for
-              buyers and sellers.
-            </p>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-2 text-[var(--ink)]">
+                Our Mission
+              </h2>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
+                Give technicians a focused home for spare parts — list what you
+                have, find what you need, and request what isn&apos;t listed yet,
+                without getting lost in general marketplaces or chat groups.
+              </p>
+            </Card>
+            <Card className="p-6">
+              <h2 className="text-lg font-semibold mb-2 text-[var(--ink)]">
+                Why SparesX
+              </h2>
+              <p className="text-sm text-[var(--muted)] leading-relaxed">
+                Built only for mobile parts in India. Trust Scores help you
+                decide who to deal with. We connect buyers and sellers directly —
+                organized listings, no middleman, and no in-app payments.
+              </p>
+            </Card>
+          </div>
         </div>
       </section>
     </main>
