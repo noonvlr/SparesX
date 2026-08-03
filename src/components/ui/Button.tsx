@@ -31,19 +31,35 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref,
   ) => {
-    const Comp = asChild ? Slot : "button";
+    const classes = cn(buttonVariants({ variant, size }), className);
+
+    // Slot requires exactly one element child — never siblings (e.g. Spinner + Link).
+    if (asChild) {
+      return (
+        <Slot
+          ref={ref as React.Ref<HTMLElement>}
+          className={classes}
+          aria-busy={loading || undefined}
+          aria-disabled={disabled || loading || undefined}
+          {...props}
+        >
+          {children}
+        </Slot>
+      );
+    }
+
     return (
-      <Comp
+      <button
         ref={ref}
-        type={asChild ? undefined : type}
-        disabled={asChild ? undefined : disabled || loading}
+        type={type}
+        disabled={disabled || loading}
         aria-busy={loading || undefined}
-        className={cn(buttonVariants({ variant, size }), className)}
+        className={classes}
         {...props}
       >
         {loading ? <Spinner size="sm" className="text-current" /> : null}
         {children}
-      </Comp>
+      </button>
     );
   },
 );

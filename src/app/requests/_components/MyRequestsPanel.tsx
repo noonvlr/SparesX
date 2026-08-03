@@ -4,10 +4,12 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
+import { cn } from "@/lib/ui/cn";
 
 type MyRequest = {
   _id: string;
@@ -168,11 +170,13 @@ export default function MyRequestsPanel() {
             Update status, edit details, or delete your spare-part requests.
           </p>
         </div>
-        <Button asChild size="sm">
-          <Link href="/requests?tab=submit" scroll={false}>
-            New request
-          </Link>
-        </Button>
+        <Link
+          href="/requests?tab=submit"
+          scroll={false}
+          className={cn(buttonVariants({ size: "sm" }))}
+        >
+          New request
+        </Link>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -183,7 +187,7 @@ export default function MyRequestsPanel() {
             onClick={() => setStatus(s)}
             className={`px-3 py-1.5 rounded-full text-xs font-semibold border capitalize ${
               status === s
-                ? "bg-[var(--brand)] text-[var(--ink-inverse)] border-[var(--brand)]"
+                ? "bg-[var(--brand)] text-[var(--primary-foreground)] border-[var(--brand)]"
                 : "bg-[var(--surface)] text-[var(--muted)] border-[var(--border)]"
             }`}
           >
@@ -204,11 +208,13 @@ export default function MyRequestsPanel() {
           <EmptyState
             title="You have no requests yet."
             action={
-              <Button asChild variant="link">
-                <Link href="/requests?tab=submit" scroll={false}>
-                  Submit your first request
-                </Link>
-              </Button>
+              <Link
+                href="/requests?tab=submit"
+                scroll={false}
+                className={cn(buttonVariants({ variant: "link" }))}
+              >
+                Submit your first request
+              </Link>
             }
           />
         </Card>

@@ -14,7 +14,9 @@ import {
   Field,
   Input,
   Spinner,
+  buttonVariants,
 } from "@/components/ui";
+import { cn } from "@/lib/ui/cn";
 
 type Status = {
   email: string;
@@ -328,11 +330,12 @@ export default function VerifyPage() {
 
         {status?.phoneVerified ? (
           <div className="mt-6">
-            <Button asChild>
-              <Link href="/technician/products/new">
-                Continue to post a listing
-              </Link>
-            </Button>
+            <Link
+              href="/technician/products/new"
+              className={cn(buttonVariants())}
+            >
+              Continue to post a listing
+            </Link>
           </div>
         ) : null}
       </div>
