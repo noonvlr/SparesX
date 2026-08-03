@@ -161,7 +161,7 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] object-cover border border-[var(--border)]"
               />
             ) : (
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-white flex items-center justify-center text-3xl font-semibold">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--primary-foreground)] flex items-center justify-center text-3xl font-semibold">
                 {profile.name.charAt(0).toUpperCase()}
               </div>
             )}
@@ -218,13 +218,14 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
                   <Button type="button" variant="soft" onClick={handleRate}>
                     Rate
                   </Button>
-                  <button
+                  <Button
                     type="button"
+                    variant="outline"
                     onClick={handleReport}
-                    className="px-4 py-2.5 rounded-[var(--radius)] text-[var(--danger)] border border-red-200 text-sm font-semibold hover:bg-[var(--danger-soft)] transition-colors"
+                    className="text-[var(--danger)] border-[var(--danger)]/30 hover:bg-[var(--danger-soft)]"
                   >
                     Report
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

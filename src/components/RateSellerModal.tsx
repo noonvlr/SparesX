@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { StarPicker } from "@/components/StarRatingDisplay";
 import { showToast } from "@/components/ToastHost";
+import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Textarea } from "@/components/ui/Input";
 
 type Props = {
   open: boolean;
@@ -134,13 +137,9 @@ export default function RateSellerModal({
               {sellerName || "Seller"} — behaviour & response
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-[var(--muted)] hover:text-[var(--ink)] text-sm font-semibold"
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             Close
-          </button>
+          </Button>
         </div>
 
         {loading ? (
@@ -162,30 +161,28 @@ export default function RateSellerModal({
               value={response}
               onChange={setResponse}
             />
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
-                Comment (optional)
-              </label>
-              <textarea
+            <Field label="Comment (optional)" htmlFor="rate-comment">
+              <Textarea
+                id="rate-comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value.slice(0, 500))}
                 rows={3}
-                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
                 placeholder="How was dealing with this seller?"
               />
-            </div>
-            <button
+            </Field>
+            <Button
               type="button"
+              className="w-full"
               disabled={submitting}
+              loading={submitting}
               onClick={submit}
-              className="w-full py-3 rounded-[var(--radius)] bg-[var(--brand)] text-[var(--primary-foreground)] font-semibold hover:bg-[var(--brand-hover)] disabled:opacity-50"
             >
               {submitting
                 ? "Submitting…"
                 : updating
                   ? "Update rating"
                   : "Submit rating"}
-            </button>
+            </Button>
           </>
         )}
       </div>

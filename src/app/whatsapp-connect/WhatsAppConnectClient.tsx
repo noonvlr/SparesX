@@ -138,7 +138,7 @@ export default function WhatsAppConnectClient() {
               onClick={() => setTab(key)}
               className={`px-4 py-2 rounded-[var(--radius)] text-sm font-semibold transition ${
                 tab === key
-                  ? "bg-[var(--brand)] text-white"
+                  ? "bg-[var(--brand)] text-[var(--primary-foreground)]"
                   : "bg-[var(--surface)] text-[var(--ink-secondary)] border border-[var(--border)] hover:bg-[var(--surface-2)]"
               }`}
             >
@@ -236,7 +236,7 @@ export default function WhatsAppConnectClient() {
                         <>
                           <Button
                             size="sm"
-                            className="bg-[var(--success)] hover:bg-emerald-700"
+                            variant="success"
                             disabled={actionId === item._id}
                             onClick={() => act(item._id, "approve")}
                           >

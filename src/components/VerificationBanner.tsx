@@ -81,7 +81,7 @@ export default function VerificationBanner() {
   }
 
   return (
-    <div className="bg-[var(--warning-soft)] border-b border-orange-100">
+    <div className="bg-[var(--warning-soft)] border-b border-[var(--warning)]/20">
       <div className="max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-[var(--warning)]">
         <p>{message}</p>
         <div className="flex items-center gap-3 shrink-0">

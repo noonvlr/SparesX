@@ -67,7 +67,7 @@ export function ContactSheet({
             className={cn(
               "w-full",
               waState?.status === "pending" && !waState.unlocked
-                ? "!bg-[var(--warning-soft)] !text-[var(--warning)] border border-orange-200"
+                ? "!bg-[var(--warning-soft)] !text-[var(--warning)] border border-[var(--warning)]/30"
                 : "!bg-[#25D366] hover:!bg-[#1ebe57]",
             )}
           >

@@ -6,6 +6,8 @@ import {
   getModelSuggestions,
   SuggestableModel,
 } from "@/lib/utils/modelSuggest";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
 interface ModelSelectorProps {
   models: SuggestableModel[];
@@ -133,7 +135,7 @@ export default function ModelSelector({
         Model {required ? "*" : ""}
       </label>
       <div className="relative">
-        <input
+        <Input
           type="text"
           placeholder={placeholder}
           value={searchValue}
@@ -143,7 +145,8 @@ export default function ModelSelector({
           }}
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 220)}
-          className="w-full pl-3.5 pr-10 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition"
+          className="pr-10"
+          size="sm"
           required={required}
           autoComplete="off"
         />
@@ -168,7 +171,7 @@ export default function ModelSelector({
       </div>
 
       {value && (
-        <div className="mt-2 inline-block bg-[var(--brand)] text-white px-3 py-1 rounded-full text-sm font-semibold">
+        <div className="mt-2 inline-block bg-[var(--brand)] text-[var(--primary-foreground)] px-3 py-1 rounded-full text-sm font-semibold">
           ✓ {value}
         </div>
       )}
@@ -202,8 +205,8 @@ export default function ModelSelector({
           )}
 
           {suggestions.length > 0 && canCreateNew && (
-            <div className="border-t border-amber-100 bg-amber-50/80 p-3 space-y-2">
-              <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
+            <div className="border-t border-[var(--warning)]/20 bg-[var(--warning-soft)] p-3 space-y-2">
+              <p className="text-xs font-semibold text-[var(--warning)] uppercase tracking-wide">
                 Did you mean?
               </p>
               {suggestions.map((model, idx) => (
@@ -217,7 +220,7 @@ export default function ModelSelector({
                     setOpen(false);
                     setConfirmNew(false);
                   }}
-                  className="w-full px-3 py-2 rounded-lg text-left bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 text-sm font-medium text-gray-800 transition"
+                  className="w-full px-3 py-2 rounded-[var(--radius)] text-left bg-[var(--surface)] border border-[var(--warning)]/30 hover:border-[var(--warning)] hover:bg-[var(--warning-soft)] text-sm font-medium text-[var(--ink)] transition"
                 >
                   {model.name}
                   {model.modelNumber ? ` (${model.modelNumber})` : ""}
@@ -229,38 +232,41 @@ export default function ModelSelector({
           {canCreateNew && (
             <div className="border-t border-[var(--border)] p-3 bg-[var(--surface-2)] space-y-2">
               {!confirmNew ? (
-                <button
+                <Button
                   type="button"
+                  size="sm"
+                  className="w-full"
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleUseTypedModel();
                   }}
                   disabled={creating}
-                  className="w-full px-3 py-2.5 rounded-[var(--radius)] bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
                 >
                   {suggestions.length > 0
                     ? `Continue with “${searchValue.trim()}”`
                     : `Add “${searchValue.trim()}” as new model`}
-                </button>
+                </Button>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-amber-800">
+                  <p className="text-xs text-[var(--warning)]">
                     Close matches exist. Use a suggested model above, or confirm
                     adding your typed model to the catalog.
                   </p>
-                  <button
+                  <Button
                     type="button"
+                    size="sm"
+                    className="w-full"
                     onMouseDown={(e) => {
                       e.preventDefault();
                       createModel(searchValue.trim());
                     }}
                     disabled={creating}
-                    className="w-full px-3 py-2.5 rounded-[var(--radius)] bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)] transition disabled:opacity-60"
+                    loading={creating}
                   >
                     {creating
                       ? "Saving model..."
                       : `Yes, add “${searchValue.trim()}”`}
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>

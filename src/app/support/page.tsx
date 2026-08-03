@@ -4,7 +4,11 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PageHeader, Card } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { Field } from "@/components/ui/Field";
+import { Input, Textarea } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 
 const TYPES = [
   { value: "bug", label: "Bug / Error" },
@@ -234,7 +238,7 @@ function SupportPageInner() {
             )}
             {form.type === "abuse" &&
               (form.productId || form.reportedUserId) && (
-                <div className="rounded-xl bg-rose-50 border border-rose-100 px-4 py-3 text-sm text-rose-900">
+                <Alert tone="danger">
                   Abuse report linked to this listing
                   {form.productId ? (
                     <>
@@ -251,64 +255,50 @@ function SupportPageInner() {
                   ) : null}
                   . Your profile details are attached automatically for admin
                   review.
-                </div>
+                </Alert>
               )}
-            {message && (
-              <div className="rounded-lg bg-green-50 text-green-700 px-4 py-3 text-sm">
-                {message}
-              </div>
-            )}
-            {error && (
-              <div className="rounded-lg bg-red-50 text-red-700 px-4 py-3 text-sm">
-                {error}
-              </div>
-            )}
+            {message && <Alert tone="success">{message}</Alert>}
+            {error && <Alert tone="danger">{error}</Alert>}
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
-                Type
-              </label>
-              <select
+            <Field label="Type" htmlFor="support-type">
+              <Select
+                id="support-type"
                 value={form.type}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, type: e.target.value }))
                 }
-                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--ink)]"
+                size="sm"
               >
                 {TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
                   </option>
                 ))}
-              </select>
-            </div>
+              </Select>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
-                Subject
-              </label>
-              <input
+            <Field label="Subject" htmlFor="support-subject" required>
+              <Input
+                id="support-subject"
                 value={form.subject}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, subject: e.target.value }))
                 }
-                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2.5 text-sm bg-[var(--surface)] text-[var(--ink)]"
                 placeholder="Short summary"
                 maxLength={140}
                 required
+                size="sm"
               />
-            </div>
+            </Field>
 
-            <div>
-              <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-1.5">
-                Details
-              </label>
-              <textarea
+            <Field label="Details" htmlFor="support-message" required>
+              <Textarea
+                id="support-message"
                 value={form.message}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, message: e.target.value }))
                 }
-                className="w-full rounded-[var(--radius)] border border-[var(--border-strong)] px-3 py-2.5 text-sm min-h-[140px] bg-[var(--surface)] text-[var(--ink)]"
+                className="min-h-[140px]"
                 placeholder={
                   form.type === "abuse"
                     ? "Describe the misuse: what happened, when, and any evidence…"
@@ -317,7 +307,7 @@ function SupportPageInner() {
                 maxLength={4000}
                 required
               />
-            </div>
+            </Field>
 
             <Button type="submit" disabled={submitting} className="w-full sm:w-auto">
               {submitting ? "Sending…" : "Send to admin"}

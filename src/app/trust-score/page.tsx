@@ -137,8 +137,8 @@ export default function TrustScorePage() {
               Mobile, Email, KYC, Business, Address. Confirms identity and
               contact checks.
             </li>
-            <li className="rounded-[var(--radius)] bg-amber-50 border border-amber-100 px-4 py-3">
-              <span className="font-semibold text-amber-950">
+            <li className="rounded-[var(--radius)] bg-[var(--warning-soft)] border border-[var(--warning)]/20 px-4 py-3">
+              <span className="font-semibold text-[var(--warning)]">
                 Reputation (gold)
               </span>
               {" — "}
@@ -146,8 +146,8 @@ export default function TrustScorePage() {
               badge is shown. Based on verification + sales + ratings +
               activity (or admin grant while metrics ramp up).
             </li>
-            <li className="rounded-[var(--radius)] bg-violet-50 border border-violet-100 px-4 py-3">
-              <span className="font-semibold text-violet-950">
+            <li className="rounded-[var(--radius)] bg-[var(--info-soft)] border border-[var(--info)]/20 px-4 py-3">
+              <span className="font-semibold text-[var(--info)]">
                 Special (purple)
               </span>
               {" — "}
@@ -171,9 +171,11 @@ export default function TrustScorePage() {
           </p>
         </section>
 
-        <section className="mb-10 rounded-[var(--radius-lg)] bg-[var(--ink)] text-slate-200 p-5 sm:p-7 space-y-3">
-          <h2 className="text-xl font-bold text-white">Fairness notes</h2>
-          <ul className="list-disc pl-5 space-y-2 text-sm text-slate-300">
+        <section className="mb-10 rounded-[var(--radius-lg)] bg-[var(--ink)] text-[var(--ink-inverse)]/80 p-5 sm:p-7 space-y-3">
+          <h2 className="text-xl font-bold text-[var(--primary-foreground)]">
+            Fairness notes
+          </h2>
+          <ul className="list-disc pl-5 space-y-2 text-sm text-[var(--ink-inverse)]/70">
             <li>Users cannot assign badges or scores to themselves.</li>
             <li>
               KYC, business, and many special badges require admin review.
@@ -192,7 +194,7 @@ export default function TrustScorePage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/verify"
-            className="inline-flex px-5 py-2.5 rounded-[var(--radius)] bg-[var(--brand)] text-white text-sm font-semibold hover:bg-[var(--brand-hover)]"
+            className="inline-flex px-5 py-2.5 rounded-[var(--radius)] bg-[var(--brand)] text-[var(--primary-foreground)] text-sm font-semibold hover:bg-[var(--brand-hover)]"
           >
             Complete verification
           </Link>

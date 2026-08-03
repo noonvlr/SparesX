@@ -31,7 +31,7 @@ export default function StarRatingDisplay({
           : "No ratings yet"
       }
     >
-      <span className="inline-flex items-center gap-0.5 text-amber-500">
+      <span className="inline-flex items-center gap-0.5 text-[var(--warning)]">
         {[1, 2, 3, 4, 5].map((i) => {
           const filled = i <= full || (i === full + 1 && hasHalf);
           return (
@@ -49,14 +49,14 @@ export default function StarRatingDisplay({
         })}
       </span>
       <span
-        className={`font-semibold text-gray-800 ${
+        className={`font-semibold text-[var(--ink)] ${
           size === "sm" ? "text-xs" : "text-sm"
         }`}
       >
         {rating > 0 ? rating.toFixed(1) : "New"}
       </span>
       {typeof count === "number" && count > 0 && (
-        <span className="text-xs text-gray-500">({count})</span>
+        <span className="text-xs text-[var(--muted)]">({count})</span>
       )}
     </span>
   );
@@ -73,7 +73,7 @@ export function StarPicker({
 }) {
   return (
     <div>
-      <p className="text-sm font-semibold text-gray-800 mb-1.5">{label}</p>
+      <p className="text-sm font-semibold text-[var(--ink)] mb-1.5">{label}</p>
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -81,7 +81,9 @@ export function StarPicker({
             type="button"
             onClick={() => onChange(n)}
             className={`p-1 rounded-lg transition ${
-              n <= value ? "text-amber-500" : "text-gray-300 hover:text-amber-300"
+              n <= value
+                ? "text-[var(--warning)]"
+                : "text-[var(--muted)] hover:text-[var(--warning)]/60"
             }`}
             aria-label={`${n} stars`}
           >
@@ -90,7 +92,7 @@ export function StarPicker({
             </svg>
           </button>
         ))}
-        <span className="ml-2 text-sm text-gray-600 font-medium">{value}/5</span>
+        <span className="ml-2 text-sm text-[var(--muted)] font-medium">{value}/5</span>
       </div>
     </div>
   );
