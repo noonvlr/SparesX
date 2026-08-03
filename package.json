@@ -14,7 +14,9 @@
     "seed:categories": "node scripts/seed-categories.js",
     "seed:device-categories": "node scripts/seed-device-categories.js",
     "migrate:categories": "node scripts/migrate-categories.js",
-    "reconcile:categories": "node scripts/reconcile-categories.js"
+    "reconcile:categories": "node scripts/reconcile-categories.js",
+    "import:catalog": "tsx scripts/import-catalog-merge.ts",
+    "import:brand-api": "tsx scripts/import-from-brand-api.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.4",

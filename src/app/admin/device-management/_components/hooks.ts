@@ -209,6 +209,8 @@ export function useDeviceHierarchy() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<SelectedNode | null>(null);
   const [draftName, setDraftName] = useState("");
+  const [draftModelNumber, setDraftModelNumber] = useState("");
+  const [draftReleaseYear, setDraftReleaseYear] = useState("");
   const [draftActive, setDraftActive] = useState(true);
   const [draftIcon, setDraftIcon] = useState("");
   const [newDeviceName, setNewDeviceName] = useState("");
@@ -438,6 +440,8 @@ export function useDeviceHierarchy() {
   useEffect(() => {
     if (!selected) {
       setDraftName("");
+      setDraftModelNumber("");
+      setDraftReleaseYear("");
       setDraftActive(true);
       setDraftIcon("");
       setNewChildName("");
@@ -448,6 +452,8 @@ export function useDeviceHierarchy() {
 
     if (selected.type === "device" && selectedDevice) {
       setDraftName(selectedDevice.name);
+      setDraftModelNumber("");
+      setDraftReleaseYear("");
       setDraftActive(selectedDevice.isActive !== false);
       setDraftIcon("");
       setNewChildName("");
@@ -458,6 +464,8 @@ export function useDeviceHierarchy() {
 
     if (selected.type === "brand" && selectedBrand) {
       setDraftName(selectedBrand.name);
+      setDraftModelNumber("");
+      setDraftReleaseYear("");
       setDraftIcon("");
       setNewChildName("");
       setNewPartCategoryName("");
@@ -467,6 +475,12 @@ export function useDeviceHierarchy() {
 
     if (selected.type === "model" && selectedModel) {
       setDraftName(selectedModel.name);
+      setDraftModelNumber(selectedModel.modelNumber || "");
+      setDraftReleaseYear(
+        selectedModel.releaseYear != null
+          ? String(selectedModel.releaseYear)
+          : "",
+      );
       setDraftIcon("");
       setNewChildName("");
       setNewPartCategoryName("");
@@ -476,6 +490,8 @@ export function useDeviceHierarchy() {
 
     if (selected.type === "parts-root") {
       setDraftName("");
+      setDraftModelNumber("");
+      setDraftReleaseYear("");
       setDraftIcon("");
       setNewChildName("");
       setNewPartCategoryName("");
@@ -485,6 +501,8 @@ export function useDeviceHierarchy() {
 
     if (selected.type === "part-category" && selectedPartCategory) {
       setDraftName(selectedPartCategory.name);
+      setDraftModelNumber("");
+      setDraftReleaseYear("");
       setDraftIcon(selectedPartCategory.icon || "");
       setNewChildName("");
       setNewPartCategoryName("");
@@ -1078,6 +1096,16 @@ export function useDeviceHierarchy() {
             .map((model) => (model.slug || slugify(model.name)).toLowerCase()),
         );
         const slug = buildUniqueSlug(name, existingSlugs);
+        const modelNumber = draftModelNumber.trim();
+        const yearParsed = draftReleaseYear.trim()
+          ? parseInt(draftReleaseYear.trim(), 10)
+          : NaN;
+        const releaseYear =
+          !Number.isNaN(yearParsed) &&
+          yearParsed >= 1990 &&
+          yearParsed <= 2100
+            ? yearParsed
+            : undefined;
 
         const updatedModels = brand.models.map((model, index) => {
           if (index !== selected.modelIndex) return model;
@@ -1085,6 +1113,8 @@ export function useDeviceHierarchy() {
             ...model,
             name,
             slug,
+            modelNumber: modelNumber || undefined,
+            releaseYear,
           };
         });
 
@@ -1171,6 +1201,8 @@ export function useDeviceHierarchy() {
   }, [
     selected,
     draftName,
+    draftModelNumber,
+    draftReleaseYear,
     draftActive,
     draftIcon,
     deviceTypes,
@@ -1423,6 +1455,10 @@ export function useDeviceHierarchy() {
     setNewPartCategoryIcon,
     draftName,
     setDraftName,
+    draftModelNumber,
+    setDraftModelNumber,
+    draftReleaseYear,
+    setDraftReleaseYear,
     draftIcon,
     setDraftIcon,
     draftActive,
@@ -1439,6 +1475,7 @@ export function useDeviceHierarchy() {
     disableTarget,
     inlineError,
     toasts,
+    refreshData,
     loading:
       deviceQuery.isLoading ||
       brandQuery.isLoading ||

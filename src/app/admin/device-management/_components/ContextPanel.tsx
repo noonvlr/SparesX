@@ -24,6 +24,10 @@ interface ContextPanelProps {
   availableGlobalCategories: GlobalCategory[];
   draftName: string;
   onDraftNameChange: (value: string) => void;
+  draftModelNumber: string;
+  onDraftModelNumberChange: (value: string) => void;
+  draftReleaseYear: string;
+  onDraftReleaseYearChange: (value: string) => void;
   draftIcon: string;
   onDraftIconChange: (value: string) => void;
   draftActive: boolean;
@@ -57,6 +61,10 @@ export default function ContextPanel({
   availableGlobalCategories,
   draftName,
   onDraftNameChange,
+  draftModelNumber,
+  onDraftModelNumberChange,
+  draftReleaseYear,
+  onDraftReleaseYearChange,
   draftIcon,
   onDraftIconChange,
   draftActive,
@@ -199,15 +207,38 @@ export default function ContextPanel({
 
       {selected.type === "model" && selectedModel ? (
         <div className="space-y-4">
-          <div>
-            <label className="text-sm font-medium text-[var(--ink-secondary)]">
-              Model name
-            </label>
-            <input
+          <Field label="Model name" htmlFor="draft-model-name">
+            <Input
+              id="draft-model-name"
               value={draftName}
               onChange={(event) => onDraftNameChange(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
+              size="sm"
             />
+          </Field>
+          <Field label="Model number" htmlFor="draft-model-number">
+            <Input
+              id="draft-model-number"
+              value={draftModelNumber}
+              onChange={(event) => onDraftModelNumberChange(event.target.value)}
+              placeholder="e.g. SM-S928B"
+              size="sm"
+            />
+          </Field>
+          <Field label="Release year" htmlFor="draft-release-year">
+            <Input
+              id="draft-release-year"
+              type="number"
+              value={draftReleaseYear}
+              onChange={(event) => onDraftReleaseYearChange(event.target.value)}
+              placeholder="e.g. 2024"
+              size="sm"
+            />
+          </Field>
+          <div className="rounded-lg border border-[var(--border)] px-4 py-3 text-sm text-[var(--ink-secondary)]">
+            <p className="text-xs uppercase text-[var(--muted)]">Parent brand</p>
+            <p className="mt-1 font-medium text-[var(--ink)]">
+              {selectedBrand?.name || "Unknown brand"}
+            </p>
           </div>
         </div>
       ) : null}

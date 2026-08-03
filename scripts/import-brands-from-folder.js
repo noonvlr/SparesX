@@ -1,7 +1,11 @@
 /**
  * Import mobile brands + models from compiled brand txt files into CategoryBrand.
  *
- * Usage:
+ * Prefer the safe-merge tooling instead:
+ *   npm run import:brand-api -- --dry-run
+ *   npm run import:catalog -- --file=./scripts/data/catalog-sample.csv --dry-run
+ *
+ * Usage (legacy replace-per-brand):
  *   set MONGODB_URI=mongodb+srv://...@cluster0...mongodb.net/sparesx?appName=Cluster0
  *   node scripts/import-brands-from-folder.js
  *
@@ -9,6 +13,9 @@
  *   set BRANDS_DIR=C:\Users\idree\OneDrive\Desktop\brand api\output\final
  *   set CATEGORY=mobile
  *   set DRY_RUN=true
+ *
+ * Note: This legacy script REPLACES each brand's models array (does not keep
+ * extra DB-only models). Use import:catalog / import:brand-api for safe merge.
  */
 
 const fs = require('fs');

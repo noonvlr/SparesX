@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import DeviceHierarchyTree from "./_components/DeviceHierarchyTree";
 import ContextPanel from "./_components/ContextPanel";
+import CatalogImportPanel from "./_components/CatalogImportPanel";
 import { useDeviceHierarchy } from "./_components/hooks";
 import { AdminPage } from "@/components/layout";
 import { PageHeader } from "@/components/ui/Card";
@@ -41,7 +42,8 @@ function DeviceManagementContent() {
         description="Manage devices, brands, models, and parts categories in one place."
         actions={
           <p className="text-xs text-[var(--muted)] max-w-xs">
-            Tip: Select any node to edit details on the right.
+            Tip: Select any node to edit details on the right. Use bulk import
+            below for CSV/JSON updates.
           </p>
         }
       />
@@ -73,6 +75,10 @@ function DeviceManagementContent() {
           availableGlobalCategories={hierarchy.availableGlobalCategories}
           draftName={hierarchy.draftName}
           onDraftNameChange={hierarchy.setDraftName}
+          draftModelNumber={hierarchy.draftModelNumber}
+          onDraftModelNumberChange={hierarchy.setDraftModelNumber}
+          draftReleaseYear={hierarchy.draftReleaseYear}
+          onDraftReleaseYearChange={hierarchy.setDraftReleaseYear}
           draftIcon={hierarchy.draftIcon}
           onDraftIconChange={hierarchy.setDraftIcon}
           draftActive={hierarchy.draftActive}
@@ -100,6 +106,8 @@ function DeviceManagementContent() {
           isDisabling={hierarchy.isDisabling}
         />
       </div>
+
+      <CatalogImportPanel onImported={hierarchy.refreshData} />
 
       <Modal
         open={!!hierarchy.disableTarget}
