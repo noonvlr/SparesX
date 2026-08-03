@@ -1,17 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProductFilters, { ProductSearchBar } from "./ProductFilters";
 import ProductCard from "@/components/ProductCard";
 import AdSlot from "@/components/AdSlot";
 import { EmptyState, PageHeader, Skeleton } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 
 export default function ProductPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const sort = searchParams.get("sort") || "featured";
+
+  function handleSortChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== "featured") params.set("sort", value);
+    else params.delete("sort");
+    const next = params.toString();
+    router.push(next ? `/products?${next}` : "/products");
+  }
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -70,12 +81,27 @@ export default function ProductPageContent() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-[var(--muted)]">
                 {loading
                   ? "Loading…"
                   : `${total} product${total !== 1 ? "s" : ""} found`}
               </p>
+              <label className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                <span className="whitespace-nowrap">Sort</span>
+                <Select
+                  value={sort}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  size="sm"
+                  className="w-auto min-w-[10.5rem]"
+                  aria-label="Sort products"
+                >
+                  <option value="featured">Featured</option>
+                  <option value="newest">Newest first</option>
+                  <option value="price_asc">Price: low to high</option>
+                  <option value="price_desc">Price: high to low</option>
+                </Select>
+              </label>
             </div>
 
             {loading ? (

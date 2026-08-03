@@ -35,6 +35,21 @@ interface Condition {
   label: string;
 }
 
+const SELLER_TYPES = [
+  { value: "trusted", label: "Trusted sellers" },
+  { value: "kyc", label: "KYC verified" },
+  { value: "business", label: "Business verified" },
+  { value: "phone", label: "Phone verified" },
+  { value: "elite", label: "Elite sellers" },
+] as const;
+
+const SORT_OPTIONS = [
+  { value: "featured", label: "Featured" },
+  { value: "newest", label: "Newest first" },
+  { value: "price_asc", label: "Price: low to high" },
+  { value: "price_desc", label: "Price: high to low" },
+] as const;
+
 const RECENT_SEARCHES_KEY = "sparesx:recentSearches";
 const MAX_RECENT_SEARCHES = 6;
 
@@ -327,8 +342,28 @@ export default function ProductFilters() {
     min: searchParams.get("minPrice") || "",
     max: searchParams.get("maxPrice") || "",
   });
+  const [selectedCity, setSelectedCity] = useState(
+    searchParams.get("city") || "",
+  );
+  const [selectedSellerType, setSelectedSellerType] = useState(
+    searchParams.get("sellerType") || "",
+  );
+  const [selectedSort, setSelectedSort] = useState(
+    searchParams.get("sort") || "featured",
+  );
+  const [negotiableOnly, setNegotiableOnly] = useState(
+    searchParams.get("negotiable") === "1" ||
+      searchParams.get("negotiable") === "true",
+  );
+  const [cities, setCities] = useState<string[]>([]);
 
-  // Load device types + conditions on mount
+  // Keep sort in sync when changed from the results toolbar
+  const urlSort = searchParams.get("sort") || "featured";
+  useEffect(() => {
+    setSelectedSort((prev) => (prev === urlSort ? prev : urlSort));
+  }, [urlSort]);
+
+  // Load device types + conditions + cities on mount
   useEffect(() => {
     fetch("/api/device-categories")
       .then((res) => res.json())
@@ -338,6 +373,11 @@ export default function ProductFilters() {
     fetch("/api/conditions")
       .then((res) => res.json())
       .then((data) => setConditions(data.conditions || []))
+      .catch(() => {});
+
+    fetch("/api/cities")
+      .then((res) => res.json())
+      .then((data) => setCities(data.cities || []))
       .catch(() => {});
   }, []);
 
@@ -474,6 +514,11 @@ export default function ProductFilters() {
     if (selectedCondition) params.set("condition", selectedCondition);
     if (priceRange.min) params.set("minPrice", priceRange.min);
     if (priceRange.max) params.set("maxPrice", priceRange.max);
+    if (selectedCity) params.set("city", selectedCity);
+    if (selectedSellerType) params.set("sellerType", selectedSellerType);
+    if (selectedSort && selectedSort !== "featured")
+      params.set("sort", selectedSort);
+    if (negotiableOnly) params.set("negotiable", "1");
 
     const next = params.toString();
     const current = searchParams.toString();
@@ -488,6 +533,10 @@ export default function ProductFilters() {
     selectedPartType,
     selectedCondition,
     priceRange,
+    selectedCity,
+    selectedSellerType,
+    selectedSort,
+    negotiableOnly,
   ]);
 
   const activeFilterCount = [
@@ -498,6 +547,10 @@ export default function ProductFilters() {
     selectedCondition,
     priceRange.min,
     priceRange.max,
+    selectedCity,
+    selectedSellerType,
+    selectedSort !== "featured" ? selectedSort : "",
+    negotiableOnly ? "1" : "",
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
@@ -508,6 +561,10 @@ export default function ProductFilters() {
     setSelectedPartType("");
     setSelectedCondition("");
     setPriceRange({ min: "", max: "" });
+    setSelectedCity("");
+    setSelectedSellerType("");
+    setSelectedSort("featured");
+    setNegotiableOnly(false);
     setModels([]);
   };
 
@@ -685,6 +742,61 @@ export default function ProductFilters() {
             }
           />
         </div>
+        <label className="mt-2 flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors">
+          <input
+            type="checkbox"
+            checked={negotiableOnly}
+            onChange={(e) => setNegotiableOnly(e.target.checked)}
+            className="h-4 w-4 accent-[var(--brand)]"
+          />
+          <span className="text-sm text-[var(--ink-secondary)]">
+            Negotiable price only
+          </span>
+        </label>
+      </div>
+
+      <div>
+        <label className={fieldLabelClasses}>City</label>
+        <Select
+          value={selectedCity}
+          onChange={(e) => setSelectedCity(e.target.value)}
+        >
+          <option value="">All cities</option>
+          {cities.map((city) => (
+            <option key={city} value={city}>
+              {city}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div>
+        <label className={fieldLabelClasses}>Seller type</label>
+        <Select
+          value={selectedSellerType}
+          onChange={(e) => setSelectedSellerType(e.target.value)}
+        >
+          <option value="">All sellers</option>
+          {SELLER_TYPES.map((type) => (
+            <option key={type.value} value={type.value}>
+              {type.label}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div>
+        <label className={fieldLabelClasses}>Sort by</label>
+        <Select
+          value={selectedSort}
+          onChange={(e) => setSelectedSort(e.target.value)}
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       {activeFilterCount > 0 && (
@@ -708,7 +820,7 @@ export default function ProductFilters() {
       <div className="hidden lg:block rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] p-5">
         <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)] mb-5">
           <IconFilter className="h-4 w-4 text-[var(--brand)]" />
-          Filters
+          Refine search
         </h2>
         <FilterFields />
       </div>
@@ -720,7 +832,7 @@ export default function ProductFilters() {
         className="lg:hidden fixed bottom-[calc(var(--bottom-nav-h)+16px)] right-4 z-40 rounded-full px-4 py-3 shadow-[var(--shadow-lg)]"
       >
         <IconFilter className="h-4.5 w-4.5" />
-        Filters
+        Refine
         {activeFilterCount > 0 && (
           <Badge className="border-0 bg-[var(--ink-inverse)]/25 text-[var(--ink-inverse)]">
             {activeFilterCount}
@@ -729,7 +841,7 @@ export default function ProductFilters() {
       </Button>
 
       {/* Mobile filter sheet */}
-      <Modal open={isOpen} onClose={() => setIsOpen(false)} title="Filters">
+      <Modal open={isOpen} onClose={() => setIsOpen(false)} title="Refine search">
         <FilterFields />
         <div className="pt-5 mt-5 border-t border-[var(--border)]">
           <Button type="button" className="w-full" onClick={() => setIsOpen(false)}>
