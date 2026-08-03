@@ -8,19 +8,39 @@ export const metadata: Metadata = {
 
 export default function SellerGuidelinesPage() {
   return (
-    <LegalPage title="Seller Guidelines" updated="28 July 2026">
-      <ul className="list-disc pl-5 space-y-2">
-        <li>Use clear titles, accurate prices, and honest condition labels.</li>
-        <li>Upload real photos of the item you are selling.</li>
-        <li>Disclose defects, compatibility, and warranty honestly.</li>
-        <li>Respond to buyer enquiries within a reasonable time.</li>
-        <li>Agree payment and delivery terms before completing a deal.</li>
-        <li>Do not misrepresent SparesX as the seller of your goods.</li>
-      </ul>
-      <p className="mt-3">
-        Anyone in India can register and sell on SparesX, provided they follow
-        these guidelines and Indian law.
-      </p>
+    <LegalPage title="Seller Guidelines" updated="3 August 2026">
+      <section>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
+          Seller Expectations
+        </h2>
+        <p>Sellers on SparesX are expected to:</p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>Use clear, accurate titles, prices, and condition labels</li>
+          <li>Upload genuine photographs of the actual item being sold</li>
+          <li>
+            Honestly disclose defects, compatibility limitations, and warranty
+            status
+          </li>
+          <li>Respond to buyer enquiries within a reasonable time</li>
+          <li>
+            Agree on payment and delivery terms with the buyer before completing
+            any transaction
+          </li>
+          <li>
+            Refrain from representing SparesX as the seller of, or a party to,
+            any transaction
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Eligibility</h2>
+        <p>
+          Any individual or business located in India may register and sell on
+          SparesX, subject to these Guidelines, the Terms of Service, and
+          applicable Indian law.
+        </p>
+      </section>
     </LegalPage>
   );
 }

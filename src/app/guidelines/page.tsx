@@ -8,22 +8,38 @@ export const metadata: Metadata = {
 
 export default function CommunityGuidelinesPage() {
   return (
-    <LegalPage title="Community Guidelines" updated="28 July 2026">
-      <p>
-        SparesX is a marketplace for mobile and device spare parts in India. Be
-        professional, honest, and respectful in all interactions.
-      </p>
-      <ul className="list-disc pl-5 space-y-2 mt-3">
-        <li>Communicate clearly and respond in good faith.</li>
-        <li>Do not harass, threaten, or discriminate against other users.</li>
-        <li>Do not spam chats, listings, or requests.</li>
-        <li>Do not share others&apos; private contact details without consent.</li>
-        <li>Report scams and abuse through Support promptly.</li>
-      </ul>
-      <p className="mt-3">
-        Violations may lead to listing removal, chat restrictions, or account
-        suspension.
-      </p>
+    <LegalPage title="Community Guidelines" updated="3 August 2026">
+      <section>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Expectations</h2>
+        <p>
+          SparesX is a platform for mobile and device spare parts commerce across
+          India. All users are expected to conduct themselves professionally,
+          honestly, and respectfully.
+        </p>
+        <p className="mt-2">Users must:</p>
+        <ul className="list-disc pl-5 mt-2 space-y-1">
+          <li>Communicate clearly and in good faith</li>
+          <li>
+            Refrain from harassment, threats, or discriminatory conduct toward
+            any user
+          </li>
+          <li>Refrain from spamming chats, listings, or part requests</li>
+          <li>
+            Refrain from sharing another user&apos;s private contact information
+            without consent
+          </li>
+          <li>Report suspected scams or abuse to Support promptly</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Enforcement</h2>
+        <p>
+          Violation of these Guidelines may result in listing removal, restriction
+          of messaging privileges, or suspension or termination of account access,
+          at SparesX&apos;s discretion.
+        </p>
+      </section>
     </LegalPage>
   );
 }
