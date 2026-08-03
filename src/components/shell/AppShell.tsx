@@ -432,14 +432,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col min-h-0">
       {hideShell && (
-        <header className="sticky top-0 z-40 glass h-[var(--nav-h)] flex items-center justify-between px-4">
+        <header className="sticky top-0 z-40 glass h-[var(--nav-h)] relative flex items-center justify-center px-4">
           <Link
             href="/"
             className="text-lg font-semibold tracking-tight text-[var(--brand)]"
           >
             SparesX
           </Link>
-          <ThemeToggle size="sm" />
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <ThemeToggle size="sm" />
+          </div>
         </header>
       )}
 

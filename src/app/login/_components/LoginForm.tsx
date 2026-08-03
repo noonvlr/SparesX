@@ -58,6 +58,9 @@ export default function LoginForm() {
             <span className="text-[var(--brand)]">Spares</span>
             <span className="text-[var(--ink)]">X</span>
           </span>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            List, find, and request parts across India.
+          </p>
         </div>
         <h2 className="text-2xl font-bold mb-1.5 text-center text-[var(--ink)]">
           Welcome Back
@@ -66,7 +69,9 @@ export default function LoginForm() {
           Login to your SparesX account
         </p>
 
-        <GoogleSignInButton className="mb-6" />
+        <div className="flex justify-center mb-6">
+          <GoogleSignInButton className="w-full max-w-xs" />
+        </div>
 
         <Divider label="Or login with email" className="mb-6" />
 
@@ -88,20 +93,12 @@ export default function LoginForm() {
         </Field>
 
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-1.5">
-            <Label htmlFor="password" className="mb-0">
-              Password
-              <span className="text-[var(--danger)] ml-0.5" aria-hidden>
-                *
-              </span>
-            </Label>
-            <a
-              href="/forgot-password"
-              className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)] font-medium transition"
-            >
-              Forgot password?
-            </a>
-          </div>
+          <Label htmlFor="password">
+            Password
+            <span className="text-[var(--danger)] ml-0.5" aria-hidden>
+              *
+            </span>
+          </Label>
           <Input
             id="password"
             type="password"
@@ -110,6 +107,14 @@ export default function LoginForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <div className="mt-2 flex justify-end">
+            <a
+              href="/forgot-password"
+              className="text-sm text-[var(--brand)] hover:text-[var(--brand-hover)] font-medium transition"
+            >
+              Forgot password?
+            </a>
+          </div>
         </div>
 
         <Button type="submit" className="w-full" size="lg" loading={loading}>

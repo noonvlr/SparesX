@@ -114,7 +114,7 @@ export default function GoogleSignInButton({
         <button
           type="button"
           disabled
-          className="w-full flex items-center justify-center gap-3 bg-[var(--surface)] border-2 border-[var(--border)] text-[var(--muted)] py-3 rounded-[var(--radius)] font-semibold text-base cursor-not-allowed"
+          className="mx-auto w-full max-w-xs flex items-center justify-center gap-3 bg-[var(--surface)] border-2 border-[var(--border)] text-[var(--muted)] py-3 rounded-[var(--radius)] font-semibold text-base cursor-not-allowed"
         >
           Continue with Google
         </button>
@@ -134,7 +134,7 @@ export default function GoogleSignInButton({
       )}
       <div
         ref={btnRef}
-        className="w-full flex justify-center min-h-[44px] [&>div]:w-full!"
+        className="mx-auto w-full max-w-xs flex justify-center min-h-[44px]"
       />
       {!ready && !error && (
         <p className="text-xs text-center text-[var(--muted)] mt-1">
