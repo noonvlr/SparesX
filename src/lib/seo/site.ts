@@ -1,11 +1,11 @@
 /**
  * Single source of truth for the public base URL.
  *
- * Set NEXT_PUBLIC_SITE_URL (preferred) or NEXT_PUBLIC_BASE_URL in the
- * environment. When the custom domain goes live, changing that one variable
- * updates canonicals, Open Graph URLs, robots.txt, and the sitemap together.
+ * Canonicals, Open Graph URLs, robots.txt, and the sitemap all read this, so
+ * the www prefix here is the one Google will treat as canonical. Override with
+ * NEXT_PUBLIC_SITE_URL (preferred) or NEXT_PUBLIC_BASE_URL per environment.
  */
-const FALLBACK_SITE_URL = "https://spares-x-h1cj.vercel.app";
+const FALLBACK_SITE_URL = "https://www.sparesx.com";
 
 function normalize(url: string): string {
   return url.trim().replace(/\/+$/, "");

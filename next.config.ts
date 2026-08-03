@@ -49,11 +49,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Collapse duplicate listing/detail routes onto one canonical pattern.
+  // Collapse duplicate listing/detail routes and hosts onto one canonical form.
   async redirects() {
     return [
       { source: "/browse", destination: "/products", permanent: true },
       { source: "/products/:id", destination: "/product/:id", permanent: true },
+      // www is canonical, so the bare apex must not serve the site too.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "sparesx.com" }],
+        destination: "https://www.sparesx.com/:path*",
+        permanent: true,
+      },
     ];
   },
 };
