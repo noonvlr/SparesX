@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const baseUrl = "https://spares-x-h1cj.vercel.app";
+import { SITE_URL } from "@/lib/seo/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -17,9 +16,19 @@ export default function robots(): MetadataRoute.Robots {
           "/technician/*",
           "/api",
           "/api/*",
+          // Authenticated-only surfaces: no indexable content, wastes crawl budget
+          "/messages",
+          "/messages/*",
+          "/complete-profile",
+          "/verify",
+          "/whatsapp-connect",
+          "/forgot-password",
+          "/login",
+          "/register",
         ],
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }

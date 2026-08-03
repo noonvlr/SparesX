@@ -46,6 +46,13 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Collapse duplicate listing/detail routes onto one canonical pattern.
+  async redirects() {
+    return [
+      { source: "/browse", destination: "/products", permanent: true },
+      { source: "/products/:id", destination: "/product/:id", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     description:
       "Post or browse spare-part requests and connect directly with technicians. SparesX does not process payments.",
     type: "website",
-    url: "https://spares-x-h1cj.vercel.app/requests",
+    url: "/requests",
   },
   robots: {
     index: true,

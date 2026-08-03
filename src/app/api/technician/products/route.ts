@@ -61,11 +61,17 @@ export async function POST(req: NextRequest) {
     (typeof name === 'string' && name.trim()) ||
     formatListingTitle({ deviceModel, partType, name });
   
-  // Generate slug for SEO
-  const slug = `${deviceCategory}-${brand}-${deviceModel}-${partType}-${Date.now()}`
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
+  // Readable SEO slug: brand-model-parttype-condition (suffixed only on clash)
+  const { generateUniqueProductSlug } = await import(
+    '@/lib/products/productSlug'
+  );
+  const slug = await generateUniqueProductSlug({
+    brand,
+    deviceModel,
+    partType,
+    condition,
+  });
+
   
   const product = await Product.create({
     name: listingName,

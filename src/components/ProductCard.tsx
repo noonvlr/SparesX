@@ -15,6 +15,7 @@ import {
   formatListingTitle,
   formatPartTypeLabel,
 } from "@/lib/products/listingTitle";
+import { productPath } from "@/lib/seo/site";
 
 export interface ProductCardData {
   _id: string;
@@ -28,6 +29,7 @@ export interface ProductCardData {
   deviceCategory?: string;
   condition?: string;
   priceNegotiable?: boolean;
+  slug?: string;
 }
 
 function resolveImageUrl(url?: string) {
@@ -55,6 +57,7 @@ export default function ProductCard({
   const [imageIndex, setImageIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
   const contact = useContactFlow(product._id);
+  const detailPath = productPath(product);
 
   useEffect(() => {
     if (!rotateOnHover || !hovered || images.length <= 1) return;
@@ -110,7 +113,7 @@ export default function ProductCard({
           </IconButton>
         ) : null}
 
-        <Link href={`/product/${product._id}`} className="block">
+        <Link href={detailPath} className="block">
           <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)] border-b border-[var(--border-strong)] flex items-center justify-center">
             {product.priceNegotiable ? (
               <div className="absolute top-0 right-0 z-10 overflow-hidden w-20 h-20 pointer-events-none">
@@ -150,7 +153,7 @@ export default function ProductCard({
         </Link>
 
         <div className="flex flex-1 flex-col p-2.5 sm:p-3">
-          <Link href={`/product/${product._id}`}>
+          <Link href={detailPath}>
             <h3 className="mb-1.5 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-[var(--ink)] transition-colors group-hover:text-[var(--brand)]">
               {title}
             </h3>
@@ -216,7 +219,7 @@ export default function ProductCard({
       <AuthPromptSheet
         open={contact.authPrompt}
         onClose={() => contact.setAuthPrompt(false)}
-        nextPath={`/product/${product._id}`}
+        nextPath={detailPath}
       />
     </>
   );

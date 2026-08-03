@@ -12,7 +12,7 @@ export default function ProductHeader({
   if (!product || typeof product === "string") return null;
   const href = product.slug
     ? `/product/${product.slug}`
-    : `/products/${product._id}`;
+    : `/product/${product._id}`;
   const img = product.images?.[0];
 
   return (

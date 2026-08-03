@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     description:
       "A dedicated marketplace for mobile spare parts in India, built for technicians.",
     type: "website",
-    url: "https://spares-x-h1cj.vercel.app/about",
+    url: "/about",
   },
   robots: {
     index: true,

@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     description:
       "Browse technicians on SparesX. Connect with phone-verified and trusted sellers.",
     type: "website",
-    url: "https://spares-x-h1cj.vercel.app/sellers",
+    url: "/sellers",
   },
   twitter: {
     card: "summary_large_image",

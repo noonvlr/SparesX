@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
+import { productPath } from "@/lib/seo/site";
 
 export async function generateMetadata({
   params,
@@ -65,7 +66,7 @@ export default async function PartsPage({
             />
           ) : (
             products.map((product: any) => (
-              <Link key={product._id} href={`/product/${product._id}`}>
+              <Link key={product._id} href={productPath(product)}>
                 <Card hover className="p-4 h-full">
                   <div className="font-semibold text-[var(--ink)] line-clamp-2">
                     {product.name}

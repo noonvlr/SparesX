@@ -8,6 +8,12 @@ import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
 import { findPublicCategories } from "@/lib/categories/publicQuery";
 import { Product } from "@/lib/models/Product";
+import {
+  SITE_CONTACT_EMAIL,
+  SITE_NAME,
+  SITE_OPERATOR,
+  SITE_URL,
+} from "@/lib/seo/site";
 
 export const metadata: Metadata = {
   title: "Buy & Sell Mobile Spare Parts Online",
@@ -101,16 +107,16 @@ export default async function HomePage() {
     .sort((a, b) => b.listings - a.listings || a.name.localeCompare(b.name))
     .slice(0, 10);
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "https://spares-x-h1cj.vercel.app";
+  const baseUrl = SITE_URL;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "SparesX",
+    name: SITE_NAME,
     description:
       "India's premier B2B marketplace for mobile spare parts connecting verified technicians with quality parts",
     url: baseUrl,
+    inLanguage: "en-IN",
     potentialAction: {
       "@type": "SearchAction",
       target: {
@@ -121,11 +127,41 @@ export default async function HomePage() {
     },
   };
 
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    legalName: SITE_OPERATOR,
+    url: baseUrl,
+    logo: `${baseUrl}/og-image.jpg`,
+    description:
+      "Marketplace connecting buyers and sellers of mobile, laptop, and desktop spare parts across India. SparesX does not sell parts or process payments.",
+    areaServed: {
+      "@type": "Country",
+      name: "India",
+    },
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: SITE_CONTACT_EMAIL,
+        areaServed: "IN",
+        availableLanguage: ["en"],
+      },
+    ],
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(organizationSchema),
+        }}
       />
 
       <main className="min-h-screen bg-[var(--surface-2)]">

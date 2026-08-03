@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     description:
       "Browse or request parts, connect with verified technicians, and finalize deals directly. SparesX doesn't process payments.",
     type: "website",
-    url: "https://spares-x-h1cj.vercel.app/how-it-works",
+    url: "/how-it-works",
   },
   twitter: {
     card: "summary_large_image",

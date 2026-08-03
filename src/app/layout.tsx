@@ -4,8 +4,9 @@ import "./globals.css";
 import AppShell from "@/components/shell/AppShell";
 import ChatShell from "@/components/chat/ChatShell";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { SITE_URL } from "@/lib/seo/site";
 
-const siteUrl = "https://spares-x-h1cj.vercel.app";
+const siteUrl = SITE_URL;
 
 export const viewport: Viewport = {
   width: "device-width",

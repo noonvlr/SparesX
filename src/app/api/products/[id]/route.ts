@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
@@ -36,10 +37,16 @@ export async function GET(
       }
     }
 
-    const product = await Product.findById(id).populate(
-      "technician",
-      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount",
-    );
+    const TECHNICIAN_FIELDS =
+      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount";
+
+    // `id` may be a Mongo _id or an SEO slug, so both URL forms resolve.
+    const product = Types.ObjectId.isValid(id)
+      ? await Product.findById(id).populate("technician", TECHNICIAN_FIELDS)
+      : await Product.findOne({ slug: id }).populate(
+          "technician",
+          TECHNICIAN_FIELDS,
+        );
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
