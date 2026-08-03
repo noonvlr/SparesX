@@ -303,9 +303,9 @@ export default function AdminDeviceCategoriesPage() {
                         setFormData({ ...formData, category: dt.slug });
                         setSelectedCategory(dt.slug);
                       }}
-                      className={`p-3 rounded-lg font-semibold transition ${
+                      className={`p-3 rounded-[var(--radius-lg)] font-semibold transition ${
                         formData.category === dt.slug
-                          ? "bg-[var(--brand)] text-white ring-2 ring-[var(--brand-muted)]"
+                          ? "bg-[var(--brand)] text-[var(--primary-foreground)] ring-2 ring-[var(--brand-muted)]"
                           : "bg-[var(--surface-3)] text-[var(--ink-secondary)] hover:bg-[var(--surface-3)]"
                       }`}
                     >
@@ -333,7 +333,7 @@ export default function AdminDeviceCategoriesPage() {
                       });
                     }}
                     required
-                    className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="e.g., Apple"
                   />
                 </div>
@@ -349,7 +349,7 @@ export default function AdminDeviceCategoriesPage() {
                       setFormData({ ...formData, slug: e.target.value })
                     }
                     required
-                    className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="apple"
                   />
                 </div>
@@ -364,7 +364,7 @@ export default function AdminDeviceCategoriesPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, logo: e.target.value })
                     }
-                    className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
+                    className="w-full px-4 py-2 border border-[var(--border-strong)] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
                     placeholder="https://..."
                   />
                 </div>
@@ -399,7 +399,7 @@ export default function AdminDeviceCategoriesPage() {
                 </div>
 
                 {/* Add Model Form Card */}
-                <div className="bg-[var(--brand-soft)] border-2 border-[var(--brand-muted)] rounded-xl p-6 mb-6">
+                <div className="bg-[var(--brand-soft)] border-2 border-[var(--brand-muted)] rounded-[var(--radius-lg)] p-6 mb-6">
                   <h4 className="text-sm font-bold text-[var(--brand-hover)] mb-4 flex items-center gap-2">
                     <span className="text-lg">➕</span> Add a New Model
                   </h4>
@@ -416,7 +416,7 @@ export default function AdminDeviceCategoriesPage() {
                         onChange={(e) =>
                           setNewModel({ ...newModel, name: e.target.value })
                         }
-                        className="w-full px-4 py-2.5 border-2 border-[var(--border-strong)] rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)] focus:outline-none text-base font-medium"
+                        className="w-full px-4 py-2.5 border-2 border-[var(--border-strong)] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-[var(--brand)] focus:border-[var(--brand)] focus:outline-none text-base font-medium"
                         placeholder="e.g., iPhone 15 Pro, Galaxy S24, MacBook Pro 14-inch"
                       />
                       <p className="text-xs text-[var(--ink-secondary)] mt-1">
@@ -439,7 +439,7 @@ export default function AdminDeviceCategoriesPage() {
                               modelNumber: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent text-base"
+                          className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent text-base"
                           placeholder="e.g., A3108, SM-S911B"
                         />
                         <p className="text-xs text-[var(--ink-secondary)] mt-1">
@@ -460,7 +460,7 @@ export default function AdminDeviceCategoriesPage() {
                               releaseYear: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-lg focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent text-base"
+                          className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius-lg)] focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent text-base"
                           placeholder={new Date().getFullYear().toString()}
                           min="2000"
                           max={new Date().getFullYear() + 1}
@@ -475,7 +475,7 @@ export default function AdminDeviceCategoriesPage() {
                     <button
                       type="button"
                       onClick={handleAddModel}
-                      className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-hover)] text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-base shadow-md hover:shadow-lg"
+                      className="w-full bg-[var(--brand)] hover:bg-[var(--brand-hover)] active:bg-[var(--brand-hover)] text-[var(--primary-foreground)] font-semibold py-3 px-4 rounded-[var(--radius-lg)] transition duration-200 flex items-center justify-center gap-2 text-base shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]"
                     >
                       <span>✓</span> Add This Model
                     </button>
@@ -498,7 +498,7 @@ export default function AdminDeviceCategoriesPage() {
                       {formData.models.map((model, index) => (
                         <div
                           key={index}
-                          className="flex items-start justify-between bg-[var(--surface)] border-l-4 border-l-[var(--brand)] p-4 rounded-lg border border-[var(--border)] hover:shadow-md transition group"
+                          className="flex items-start justify-between bg-[var(--surface)] border-l-4 border-l-[var(--brand)] p-4 rounded-[var(--radius-lg)] border border-[var(--border)] hover:shadow-[var(--shadow-md)] transition group"
                         >
                           <div className="flex-1">
                             <p className="font-semibold text-[var(--ink)] text-base">
@@ -520,6 +520,7 @@ export default function AdminDeviceCategoriesPage() {
                           <button
                             type="button"
                             onClick={() => handleRemoveModel(index)}
+                            aria-label="Remove this model"
                             className="ml-4 text-[var(--muted)] hover:text-[var(--danger)] hover:bg-[var(--danger-soft)] p-2 rounded transition opacity-0 group-hover:opacity-100 focus:opacity-100"
                             title="Remove this model"
                           >
@@ -539,7 +540,7 @@ export default function AdminDeviceCategoriesPage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-8 bg-[var(--surface-2)] rounded-lg border-2 border-dashed border-[var(--border-strong)]">
+                    <div className="text-center py-8 bg-[var(--surface-2)] rounded-[var(--radius-lg)] border-2 border-dashed border-[var(--border-strong)]">
                       <p className="text-[var(--muted)] font-medium">
                         No models added yet
                       </p>
@@ -578,9 +579,9 @@ export default function AdminDeviceCategoriesPage() {
                 <button
                   key={dt.slug}
                   onClick={() => setSelectedCategory(dt.slug)}
-                  className={`px-6 py-3 rounded-lg font-semibold transition whitespace-nowrap ${
+                  className={`px-6 py-3 rounded-[var(--radius-lg)] font-semibold transition whitespace-nowrap ${
                     selectedCategory === dt.slug
-                      ? "bg-[var(--brand)] text-white shadow-lg"
+                      ? "bg-[var(--brand)] text-[var(--primary-foreground)] shadow-[var(--shadow-lg)]"
                       : "bg-[var(--surface)] text-[var(--ink-secondary)] border border-[var(--border-strong)] hover:bg-[var(--surface-2)]"
                   }`}
                 >
@@ -596,7 +597,7 @@ export default function AdminDeviceCategoriesPage() {
         </div>
 
         {/* Brands Table */}
-        <div className="bg-[var(--surface)] rounded-xl shadow-lg overflow-hidden border border-[var(--border)]">
+        <div className="bg-[var(--surface)] rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden border border-[var(--border)]">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-[var(--surface-2)] border-b border-[var(--border)]">

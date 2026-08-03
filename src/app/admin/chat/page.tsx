@@ -357,10 +357,10 @@ export default function AdminChatPage() {
                         className={`flex ${isFirst ? "justify-start" : "justify-end"}`}
                       >
                         <div
-                          className={`max-w-[88%] sm:max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm border ${
+                          className={`max-w-[88%] sm:max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-[var(--shadow-sm)] border ${
                             isFirst
-                              ? "bg-[var(--surface)] border-[var(--border)] rounded-bl-md"
-                              : "bg-[var(--brand)] text-[var(--ink-inverse)] border-[var(--brand)] rounded-br-md"
+                              ? "bg-[var(--chat-bubble-incoming)] text-[var(--ink)] border-[var(--chat-bubble-incoming-border)] rounded-bl-md"
+                              : "bg-[var(--chat-bubble-outgoing)] text-[var(--chat-bubble-outgoing-fg)] border-transparent rounded-br-md"
                           }`}
                         >
                           {showName && (
@@ -379,7 +379,7 @@ export default function AdminChatPage() {
                                 className={`text-[11px] shrink-0 disabled:opacity-50 ${
                                   isFirst
                                     ? "text-[var(--danger)] hover:underline"
-                                    : "text-white/80 hover:underline"
+                                    : "text-[var(--chat-bubble-outgoing-fg)]/80 hover:underline"
                                 }`}
                               >
                                 {deletingId === m._id ? "Deleting…" : "Delete"}
@@ -397,13 +397,15 @@ export default function AdminChatPage() {
                               <img
                                 src={m.mediaUrl}
                                 alt="Chat attachment"
-                                className="max-h-64 rounded-xl border border-black/5 object-contain bg-white/80"
+                                className="max-h-64 rounded-xl border border-[var(--border)] object-contain bg-[var(--surface)]/80"
                               />
                             </a>
                           ) : (
                             <p
                               className={`chat-bubble-text whitespace-pre-wrap break-words ${
-                                isFirst ? "text-[var(--ink)]" : "text-white"
+                                isFirst
+                                  ? "text-[var(--ink)]"
+                                  : "text-[var(--chat-bubble-outgoing-fg)]"
                               }`}
                             >
                               {m.text || ""}
@@ -411,7 +413,9 @@ export default function AdminChatPage() {
                           )}
                           <p
                             className={`text-[10px] mt-1.5 text-right ${
-                              isFirst ? "text-[var(--muted)]" : "text-white/70"
+                              isFirst
+                                ? "text-[var(--chat-timestamp)]"
+                                : "text-[var(--chat-timestamp-outgoing)]"
                             }`}
                           >
                             {new Date(m.createdAt).toLocaleString("en-IN", {

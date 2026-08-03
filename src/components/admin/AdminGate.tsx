@@ -28,7 +28,7 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center text-sm text-gray-500">
+      <div className="min-h-[40vh] flex items-center justify-center text-sm text-[var(--muted)]">
         Checking admin access…
       </div>
     );

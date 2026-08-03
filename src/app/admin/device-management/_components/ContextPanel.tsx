@@ -206,7 +206,7 @@ export default function ContextPanel({
             <input
               value={draftName}
               onChange={(event) => onDraftNameChange(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--border-strong)] focus:outline-none"
+              className="mt-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
             />
           </div>
         </div>
@@ -311,7 +311,7 @@ export default function ContextPanel({
                     onAddPartCategory();
                   }
                 }}
-                className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--border-strong)] focus:outline-none"
+                className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
               <input
                 value={newPartCategoryIcon}
@@ -319,13 +319,13 @@ export default function ContextPanel({
                   onNewPartCategoryIconChange(event.target.value)
                 }
                 placeholder="Icon"
-                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--border-strong)] focus:outline-none"
+                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
               <button
                 type="button"
                 onClick={onAddPartCategory}
                 disabled={isAddingPartCategory}
-                className="rounded-lg bg-[var(--success)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--success)] disabled:opacity-60"
+                className="rounded-lg bg-[var(--success)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] hover:bg-[var(--success)] disabled:opacity-60"
               >
                 {isAddingPartCategory ? "Adding..." : "Add Parts Category"}
               </button>
@@ -346,7 +346,7 @@ export default function ContextPanel({
             <input
               value={draftName}
               onChange={(event) => onDraftNameChange(event.target.value)}
-              className="mt-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--border-strong)] focus:outline-none"
+              className="mt-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
             />
           </div>
 
@@ -359,7 +359,7 @@ export default function ContextPanel({
                 value={draftIcon}
                 onChange={(event) => onDraftIconChange(event.target.value)}
                 placeholder="Icon"
-                className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--border-strong)] focus:outline-none"
+                className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
               />
               <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface-2)] text-lg text-[var(--ink-secondary)]">
                 {draftIcon || selectedPartCategory.icon || "P"}
@@ -395,13 +395,13 @@ export default function ContextPanel({
                   onAddChild();
                 }
               }}
-              className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--border-strong)] focus:outline-none"
+              className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--ink)] focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
             />
             <button
               type="button"
               onClick={onAddChild}
               disabled={isAddingChild}
-              className="rounded-lg bg-[var(--success)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--success)] disabled:opacity-60"
+              className="rounded-lg bg-[var(--success)] px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] hover:bg-[var(--success)] disabled:opacity-60"
             >
               {isAddingChild ? "Adding..." : addButtonLabel}
             </button>
