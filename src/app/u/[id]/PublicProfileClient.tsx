@@ -10,6 +10,7 @@ import RateSellerModal from "@/components/RateSellerModal";
 import { openChatUi } from "@/components/chat/openChat";
 import { AuthPromptSheet } from "@/components/ContactSheet";
 import { Card, EmptyState } from "@/components/ui/Card";
+import UploadedImage from "@/components/ui/UploadedImage";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import type { PublicBadge } from "@/lib/badges/catalog";
 
@@ -46,43 +47,42 @@ type RatingRow = {
   rater?: { name?: string; city?: string } | null;
 };
 
-export default function PublicProfileClient({ userId }: { userId: string }) {
+export default function PublicProfileClient({
+  userId,
+  initialProfile,
+  initialListings,
+  initialRatings,
+}: {
+  userId: string;
+  initialProfile: PublicProfile;
+  initialListings: ProductCardData[];
+  initialRatings: RatingRow[];
+}) {
   const router = useRouter();
-  const [profile, setProfile] = useState<PublicProfile | null>(null);
-  const [listings, setListings] = useState<ProductCardData[]>([]);
+  const [profile, setProfile] = useState<PublicProfile | null>(initialProfile);
+  const [listings, setListings] =
+    useState<ProductCardData[]>(initialListings);
   const [isOwn, setIsOwn] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [ratings, setRatings] = useState<RatingRow[]>([]);
+  const [ratings, setRatings] = useState<RatingRow[]>(initialRatings);
   const [showRate, setShowRate] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
 
+  // The server render is anonymous, so re-fetch with the viewer's token purely
+  // to learn whether this is their own profile (which unlocks the edit banner).
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (!token) return;
 
-    setLoading(true);
-    fetch(`/api/users/${userId}/public`, { headers })
+    fetch(`/api/users/${userId}/public`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then(async (res) => {
+        if (!res.ok) return;
         const data = await res.json();
-        if (!res.ok) {
-          setError(data.message || "Profile not found");
-          setProfile(null);
-          return;
-        }
-        setProfile(data.profile);
-        setListings(data.listings || []);
+        if (data.profile) setProfile(data.profile);
+        if (data.listings) setListings(data.listings);
         setIsOwn(!!data.meta?.isOwnProfile);
-        setError("");
-      })
-      .catch(() => setError("Failed to load profile"))
-      .finally(() => setLoading(false));
-
-    fetch(`/api/ratings?sellerId=${userId}&limit=8`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.ratings) setRatings(data.ratings);
       })
       .catch(() => {});
   }, [userId]);
@@ -112,14 +112,6 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
     });
     router.push(`/support?${params.toString()}`);
   };
-
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-16 text-center text-[var(--muted)]">
-        Loading profile…
-      </div>
-    );
-  }
 
   if (error || !profile) {
     return (
@@ -155,9 +147,13 @@ export default function PublicProfileClient({ userId }: { userId: string }) {
         <Card className="p-5 sm:p-8">
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
             {profile.profilePicture ? (
-              <img
+              <UploadedImage
                 src={profile.profilePicture}
-                alt={profile.name}
+                alt={`${profile.name} profile photo`}
+                width={112}
+                height={112}
+                sizes="112px"
+                priority
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] object-cover border border-[var(--border)]"
               />
             ) : (

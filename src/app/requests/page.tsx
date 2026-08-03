@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import RequestsBoard from "./_components/RequestsBoard";
 import { Skeleton } from "@/components/ui/Card";
+import { fetchOpenRequests } from "@/lib/requests/openRequests";
 
 export const metadata: Metadata = {
   title: "Part Requests",
@@ -43,7 +44,14 @@ function RequestsFallback() {
   );
 }
 
-export default function RequestsPage() {
+// Prerender the board and refresh it every few minutes; the client still
+// re-fetches on load so signed-in visitors get contact actions immediately.
+export const revalidate = 180;
+
+export default async function RequestsPage() {
+  // Anonymous, contact-free snapshot so the board is in the initial HTML.
+  const { requests, total } = await fetchOpenRequests({ limit: 50 });
+
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
@@ -57,7 +65,7 @@ export default function RequestsPage() {
           </p>
         </header>
         <Suspense fallback={<RequestsFallback />}>
-          <RequestsBoard />
+          <RequestsBoard initialRequests={requests} initialTotal={total} />
         </Suspense>
       </section>
     </main>

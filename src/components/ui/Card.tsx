@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import UploadedImage from "@/components/ui/UploadedImage";
 import { cn } from "@/lib/ui/cn";
 
 const cardVariants = cva(
@@ -106,6 +107,7 @@ export function Avatar({
     md: "h-10 w-10 text-sm",
     lg: "h-14 w-14 text-lg",
   };
+  const pixelSizes = { sm: 32, md: 40, lg: 56 };
   const initials = (name || "?")
     .split(" ")
     .map((p) => p[0])
@@ -115,16 +117,17 @@ export function Avatar({
 
   if (src) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <UploadedImage
         src={src}
-        alt={name || "Avatar"}
+        alt={name ? `${name} profile photo` : "Profile photo"}
+        width={pixelSizes[size]}
+        height={pixelSizes[size]}
+        sizes={`${pixelSizes[size]}px`}
         className={cn(
           "rounded-full object-cover bg-[var(--surface-3)]",
           sizes[size],
           className,
         )}
-        loading="lazy"
       />
     );
   }

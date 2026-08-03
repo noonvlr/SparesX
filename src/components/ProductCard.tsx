@@ -10,8 +10,10 @@ import {
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Spinner } from "@/components/ui/Spinner";
+import UploadedImage from "@/components/ui/UploadedImage";
 import { cn } from "@/lib/ui/cn";
 import {
+  formatListingAlt,
   formatListingTitle,
   formatPartTypeLabel,
 } from "@/lib/products/listingTitle";
@@ -32,26 +34,19 @@ export interface ProductCardData {
   slug?: string;
 }
 
-function resolveImageUrl(url?: string) {
-  if (!url) return "";
-  if (url.startsWith("data:")) return url;
-  if (url.startsWith("https://")) return url;
-  if (url.startsWith("http://")) return url.replace("http://", "https://");
-  if (url.startsWith("//")) return `https:${url}`;
-  if (url.startsWith("/")) return url;
-  return `/${url}`;
-}
-
 export default function ProductCard({
   product,
   rotateOnHover = true,
   onRemove,
   removing = false,
+  priority = false,
 }: {
   product: ProductCardData;
   rotateOnHover?: boolean;
   onRemove?: () => void;
   removing?: boolean;
+  /** Set on the first row of a grid so the LCP image isn't lazy-loaded. */
+  priority?: boolean;
 }) {
   const images = (product.images || []).filter(Boolean);
   const [imageIndex, setImageIndex] = useState(0);
@@ -72,6 +67,7 @@ export default function ProductCard({
     product.category ||
     product.deviceCategory;
   const title = formatListingTitle(product);
+  const imageAlt = formatListingAlt(product);
   const partLabel = formatPartTypeLabel(product.partType);
 
   return (
@@ -124,12 +120,13 @@ export default function ProductCard({
             ) : null}
             {images.length > 0 ? (
               <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={resolveImageUrl(images[imageIndex] || images[0])}
-                  alt={title}
-                  className="card-image-zoom h-full w-full object-contain p-2 sm:p-3"
-                  loading="lazy"
+                <UploadedImage
+                  src={images[imageIndex] || images[0]}
+                  alt={imageAlt}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 320px"
+                  priority={priority}
+                  className="card-image-zoom object-contain p-2 sm:p-3"
                 />
                 {images.length > 1 ? (
                   <span className="absolute bottom-1.5 right-1.5 rounded-full bg-[var(--ink)]/50 px-2 py-0.5 text-[10px] font-semibold text-[var(--ink-inverse)]">

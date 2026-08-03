@@ -163,6 +163,7 @@ export function ProductSearchBar({
     const params = new URLSearchParams(searchParams.toString());
     if (search) params.set("search", search);
     else params.delete("search");
+    params.delete("page");
 
     const next = params.toString();
     const current = searchParams.toString();

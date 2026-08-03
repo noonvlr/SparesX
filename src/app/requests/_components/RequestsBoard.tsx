@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import RequestForm from "./RequestForm";
 import RequestsTabs from "./RequestsTabs";
@@ -58,15 +58,21 @@ function highlightText(text: string, query: string) {
   );
 }
 
-export default function RequestsBoard() {
+export default function RequestsBoard({
+  initialRequests = [],
+  initialTotal = 0,
+}: {
+  initialRequests?: PartRequest[];
+  initialTotal?: number;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = tabFromSearchParams(searchParams);
 
   const [tab, setTab] = useState<RequestsTab>(initialTab);
-  const [requests, setRequests] = useState<PartRequest[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [requests, setRequests] = useState<PartRequest[]>(initialRequests);
+  const [total, setTotal] = useState(initialTotal);
+  const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -82,8 +88,8 @@ export default function RequestsBoard() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const loadRequests = async (query = search) => {
-    setLoading(true);
+  const loadRequests = async (query = search, silent = false) => {
+    if (!silent) setLoading(true);
     const token = localStorage.getItem("token");
     setIsAuthenticated(!!token);
     const params = new URLSearchParams({ status: "open", limit: "50" });
@@ -105,8 +111,14 @@ export default function RequestsBoard() {
     }
   };
 
+  // The server already rendered the anonymous board, so the first pass refreshes
+  // silently (it only adds contact details for signed-in viewers).
+  const isFirstLoad = useRef(true);
   useEffect(() => {
-    if (tab === "browse") loadRequests(search);
+    if (tab !== "browse") return;
+    const silent = isFirstLoad.current && !search;
+    isFirstLoad.current = false;
+    loadRequests(search, silent);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, tab]);
 

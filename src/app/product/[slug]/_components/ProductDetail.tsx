@@ -13,8 +13,13 @@ import { AuthPromptSheet } from "@/components/ContactSheet";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { buttonVariants } from "@/components/ui/button-variants";
+import UploadedImage from "@/components/ui/UploadedImage";
 import { cn } from "@/lib/ui/cn";
-import { formatListingTitle } from "@/lib/products/listingTitle";
+import { resolveUploadUrl } from "@/lib/ui/imageUrl";
+import {
+  formatListingAlt,
+  formatListingTitle,
+} from "@/lib/products/listingTitle";
 
 interface Seller {
   _id?: string;
@@ -69,15 +74,6 @@ interface SimilarProduct {
   condition?: string;
 }
 
-function resolveImageUrl(url?: string) {
-  if (!url) return "";
-  if (url.startsWith("data:") || url.startsWith("https://")) return url;
-  if (url.startsWith("http://")) return url.replace("http://", "https://");
-  if (url.startsWith("//")) return `https:${url}`;
-  if (url.startsWith("/")) return url;
-  return `/${url}`;
-}
-
 function getUserIdFromToken(): string | null {
   if (typeof window === "undefined") return null;
   const token = localStorage.getItem("token");
@@ -110,7 +106,7 @@ export default function ProductDetail({
   const [product, setProduct] = useState(initialProduct);
   const [similarProducts, setSimilarProducts] = useState(initialSimilar);
   const [selectedImage, setSelectedImage] = useState(
-    resolveImageUrl(initialProduct.images?.[0] || ""),
+    resolveUploadUrl(initialProduct.images?.[0] || ""),
   );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
@@ -150,7 +146,7 @@ export default function ProductDetail({
         if (data.product) {
           setProduct(data.product);
           if (data.product.images?.[0]) {
-            setSelectedImage(resolveImageUrl(data.product.images[0]));
+            setSelectedImage(resolveUploadUrl(data.product.images[0]));
           }
           const tech = data.product.technician;
           if (tech && typeof tech === "object") {
@@ -391,7 +387,8 @@ export default function ProductDetail({
     return "Request WhatsApp";
   })();
 
-  const images = (product.images || []).map(resolveImageUrl).filter(Boolean);
+  const images = (product.images || []).map(resolveUploadUrl).filter(Boolean);
+  const imageAlt = formatListingAlt(product);
 
   return (
     <main className="min-h-screen bg-[var(--surface-2)] pb-28 lg:pb-10">
@@ -426,10 +423,13 @@ export default function ProductDetail({
                 </Badge>
               )}
               {selectedImage ? (
-                <img
+                <UploadedImage
                   src={selectedImage}
-                  alt={product.name}
-                  className="w-full h-full object-contain p-4"
+                  alt={imageAlt}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 560px"
+                  priority
+                  className="object-contain p-4"
                 />
               ) : (
                 <p className="text-[var(--muted)]">No image available</p>
@@ -450,11 +450,13 @@ export default function ProductDetail({
                         : "border-[var(--border)]",
                     )}
                   >
-                    <img
+                    <UploadedImage
                       src={img}
-                      alt={`${product.name} ${idx + 1}`}
+                      alt={`${imageAlt} — view ${idx + 1}`}
+                      width={96}
+                      height={96}
+                      sizes="96px"
                       className="w-full h-full object-contain p-1"
-                      loading="lazy"
                     />
                   </button>
                 ))}

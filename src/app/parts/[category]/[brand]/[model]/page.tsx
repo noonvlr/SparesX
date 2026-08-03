@@ -1,87 +1,211 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers } from "next/headers";
-import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
-import { productPath } from "@/lib/seo/site";
+import ProductCard from "@/components/ProductCard";
+import { EmptyState, PageHeader } from "@/components/ui/Card";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { fetchProductList } from "@/lib/products/listQuery";
+import { SITE_NAME, absoluteUrl, productPath } from "@/lib/seo/site";
 
-export async function generateMetadata({
-  params,
-}: {
+type Params = {
   params: Promise<{ category: string; brand: string; model: string }>;
-}): Promise<Metadata> {
-  const { category, brand, model } = await params;
-  const title = `${decodeURIComponent(category)} ${decodeURIComponent(
-    brand,
-  )} ${decodeURIComponent(model)} Parts - SparesX`;
-  const description = `Browse ${brand} ${model} spare parts in ${category}. Verified listings from technicians.`;
+};
+
+/** Decoded, title-cased URL segments for display and metadata. */
+function decodeSegments(raw: {
+  category: string;
+  brand: string;
+  model: string;
+}) {
+  const clean = (value: string) =>
+    decodeURIComponent(value).replace(/[-_]+/g, " ").trim();
+
+  const titleCase = (value: string) =>
+    value.replace(/\b\w/g, (c) => c.toUpperCase());
+
+  return {
+    category: titleCase(clean(raw.category)),
+    brand: titleCase(clean(raw.brand)),
+    model: clean(raw.model),
+    path: `/parts/${raw.category}/${raw.brand}/${raw.model}`,
+  };
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const raw = await params;
+  const { category, brand, model, path } = decodeSegments(raw);
+
+  const title = `${brand} ${model} ${category} Parts`;
+  const description = `Buy ${brand} ${model} ${category.toLowerCase()} spare parts from verified technicians across India. Compare prices and condition, then contact the seller directly on ${SITE_NAME}.`;
+
+  const { total } = await fetchProductList({
+    category: raw.category,
+    search: `${brand} ${model}`,
+  });
 
   return {
     title,
     description,
+    alternates: { canonical: path },
     openGraph: {
-      title,
+      title: `${title} | ${SITE_NAME}`,
       description,
       type: "website",
+      url: path,
     },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | ${SITE_NAME}`,
+      description,
+    },
+    // An empty landing page is thin content; keep it out of the index.
+    robots: { index: total > 0, follow: true },
   };
 }
 
-export default async function PartsPage({
-  params,
-}: {
-  params: Promise<{ category: string; brand: string; model: string }>;
-}) {
-  const { category, brand, model } = await params;
-  const headerList = await headers();
-  const host = headerList.get("host");
-  const protocol = host?.includes("localhost") ? "http" : "https";
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || (host ? `${protocol}://${host}` : "");
+export default async function PartsPage({ params }: Params) {
+  const raw = await params;
+  const { category, brand, model, path } = decodeSegments(raw);
 
-  const search = `${decodeURIComponent(brand)} ${decodeURIComponent(model)}`;
-  const res = await fetch(
-    `${baseUrl}/api/products?category=${encodeURIComponent(
-      category,
-    )}&search=${encodeURIComponent(search)}`,
-    { cache: "no-store" },
-  );
-  const data = res.ok ? await res.json() : { products: [] };
-  const products = data.products || [];
+  const { products, total } = await fetchProductList({
+    category: raw.category,
+    search: `${brand} ${model}`,
+    limit: "24",
+  });
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Products",
+        item: absoluteUrl("/products"),
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: `${brand} ${model} ${category}`,
+        item: absoluteUrl(path),
+      },
+    ],
+  };
+
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: `${brand} ${model} ${category} parts`,
+    numberOfItems: products.length,
+    itemListElement: products.map((product, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: absoluteUrl(productPath(product)),
+      name: product.name,
+    })),
+  };
+
+  const browseHref = `/products?brand=${encodeURIComponent(
+    brand,
+  )}&deviceModel=${encodeURIComponent(model)}`;
 
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      {products.length > 0 ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+        />
+      ) : null}
+
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <nav
+          aria-label="Breadcrumb"
+          className="mb-4 text-sm text-[var(--muted)]"
+        >
+          <Link href="/" className="hover:text-[var(--brand)]">
+            Home
+          </Link>
+          <span className="mx-2">/</span>
+          <Link href="/products" className="hover:text-[var(--brand)]">
+            Products
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-[var(--ink-secondary)]">
+            {brand} {model}
+          </span>
+        </nav>
+
         <PageHeader
-          className="mb-8"
-          title={`${decodeURIComponent(category)} • ${decodeURIComponent(brand)} • ${decodeURIComponent(model)}`}
-          description="Verified listings for this device model."
+          className="mb-6"
+          title={`${brand} ${model} ${category} parts`}
+          description={`${total} verified listing${total === 1 ? "" : "s"} for the ${brand} ${model}. Every seller is identity-checked, and you contact them directly — SparesX does not process payments or hold stock.`}
         />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {products.length === 0 ? (
-            <EmptyState
-              className="col-span-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
-              title="No listings yet"
-              description="Try a broader category or submit a request."
-            />
-          ) : (
-            products.map((product: any) => (
-              <Link key={product._id} href={productPath(product)}>
-                <Card hover className="p-4 h-full">
-                  <div className="font-semibold text-[var(--ink)] line-clamp-2">
-                    {product.name}
-                  </div>
-                  <div className="text-sm text-[var(--muted)] mt-1">
-                    {product.category} • {product.condition}
-                  </div>
-                  <div className="text-[var(--brand)] font-bold mt-2">
-                    ₹{product.price?.toLocaleString()}
-                  </div>
-                </Card>
-              </Link>
-            ))
-          )}
+        <div className="mb-8 max-w-3xl space-y-3 text-sm leading-relaxed text-[var(--ink-secondary)]">
+          <p>
+            Looking for {category.toLowerCase()} parts for the {brand} {model}?
+            Independent repair technicians across India list their spare
+            inventory here, so you can compare condition and price before
+            committing. Listings usually include displays, batteries, charging
+            ports, cameras, and housings, depending on what sellers currently
+            hold.
+          </p>
+          <p>
+            Check each seller&apos;s trust score and verification badges before
+            you reach out. If nobody has the part you need yet,{" "}
+            <Link
+              href="/requests?tab=submit"
+              className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            >
+              post a part request
+            </Link>{" "}
+            and sellers will come to you.
+          </p>
         </div>
+
+        {products.length === 0 ? (
+          <EmptyState
+            className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
+            title="No listings for this model yet"
+            description="Post a request and verified sellers will contact you when they have the part."
+            action={
+              <Link
+                href="/requests?tab=submit"
+                className={buttonVariants({ variant: "primary" })}
+              >
+                Post a request
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+              {products.map((product, index) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  priority={index < 4}
+                />
+              ))}
+            </div>
+
+            {total > products.length ? (
+              <div className="mt-8 text-center">
+                <Link
+                  href={browseHref}
+                  className={buttonVariants({ variant: "outline" })}
+                >
+                  See all {total} {brand} {model} listings
+                </Link>
+              </div>
+            ) : null}
+          </>
+        )}
       </section>
     </main>
   );
