@@ -22,7 +22,8 @@ function norm(value: string | null | undefined) {
 }
 
 /**
- * Find open part requests that roughly match a seller's approved inventory.
+ * Find open part requests that match a seller's approved inventory.
+ * Prefer catalog ObjectId overlap; fall back to string fields.
  * No requester PII (email/phone) — sellers use the public board to engage.
  */
 export async function matchOpenRequestsForSeller(
@@ -36,10 +37,28 @@ export async function matchOpenRequestsForSeller(
     technician: sellerId,
     status: "approved",
   })
-    .select("brand partType category deviceCategory deviceModel")
+    .select(
+      "brand partType category deviceCategory deviceModel brandId partCategoryId deviceTypeId",
+    )
     .lean();
 
   if (products.length === 0) return [];
+
+  const brandIds = new Set(
+    products
+      .map((p) => (p.brandId ? String(p.brandId) : ""))
+      .filter(Boolean),
+  );
+  const partIds = new Set(
+    products
+      .map((p) => (p.partCategoryId ? String(p.partCategoryId) : ""))
+      .filter(Boolean),
+  );
+  const deviceTypeIds = new Set(
+    products
+      .map((p) => (p.deviceTypeId ? String(p.deviceTypeId) : ""))
+      .filter(Boolean),
+  );
 
   const brands = new Set(
     products.map((p) => norm(p.brand)).filter((v) => v.length >= 2),
@@ -56,11 +75,18 @@ export async function matchOpenRequestsForSeller(
     products.map((p) => norm(p.deviceCategory)).filter((v) => v.length >= 2),
   );
 
-  if (brands.size === 0 && parts.size === 0) return [];
+  if (
+    brandIds.size === 0 &&
+    partIds.size === 0 &&
+    brands.size === 0 &&
+    parts.size === 0
+  ) {
+    return [];
+  }
 
   const openRequests = await RequestModel.find({ status: "open" })
     .select(
-      "category brand deviceModel deviceCategory description createdAt userId",
+      "category brand deviceModel deviceCategory description createdAt userId brandId partCategoryId deviceTypeId",
     )
     .sort({ createdAt: -1 })
     .limit(120)
@@ -78,20 +104,38 @@ export async function matchOpenRequestsForSeller(
     const category = norm(req.category);
     const model = norm(req.deviceModel);
     const device = norm(req.deviceCategory);
+    const reqBrandId = req.brandId ? String(req.brandId) : "";
+    const reqPartId = req.partCategoryId ? String(req.partCategoryId) : "";
+    const reqDeviceTypeId = req.deviceTypeId ? String(req.deviceTypeId) : "";
 
-    if (brand && brands.has(brand)) {
+    if (reqBrandId && brandIds.has(reqBrandId)) {
+      score += 35;
+      reasons.push("Catalog brand in your stock");
+    } else if (brand && brands.has(brand)) {
       score += 30;
       reasons.push("Brand in your stock");
     }
-    if (category && [...parts].some((p) => category.includes(p) || p.includes(category))) {
+
+    if (reqPartId && partIds.has(reqPartId)) {
+      score += 30;
+      reasons.push("Catalog part match");
+    } else if (
+      category &&
+      [...parts].some((p) => category.includes(p) || p.includes(category))
+    ) {
       score += 25;
       reasons.push("Part type match");
     }
+
     if (model && [...models].some((m) => model.includes(m) || m.includes(model))) {
       score += 25;
       reasons.push("Model match");
     }
-    if (device && devices.has(device)) {
+
+    if (reqDeviceTypeId && deviceTypeIds.has(reqDeviceTypeId)) {
+      score += 15;
+      reasons.push("Catalog device type");
+    } else if (device && devices.has(device)) {
       score += 15;
       reasons.push("Device type match");
     }

@@ -14,6 +14,9 @@ export async function notifyOnPartRequestCreated(params: {
   deviceModel?: string | null;
   deviceCategory?: string | null;
   description?: string | null;
+  brandId?: string | null;
+  partCategoryId?: string | null;
+  deviceTypeId?: string | null;
 }) {
   try {
     const requester = await User.findById(params.requesterId)
@@ -25,6 +28,9 @@ export async function notifyOnPartRequestCreated(params: {
       brand: params.brand,
       deviceModel: params.deviceModel,
       deviceCategory: params.deviceCategory,
+      brandId: params.brandId,
+      partCategoryId: params.partCategoryId,
+      deviceTypeId: params.deviceTypeId,
       city: requester?.city || null,
       excludeUserId: params.requesterId,
       limit: 20,

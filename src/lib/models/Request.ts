@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 export type RequestStatus = "open" | "fulfilled" | "closed";
 
@@ -12,7 +12,11 @@ export interface IRequest extends Document {
   deviceModel?: string;
   description: string;
   status: RequestStatus;
-  userId?: mongoose.Types.ObjectId;
+  userId?: Types.ObjectId;
+  /** Catalog ObjectId refs when resolvable from string fields */
+  deviceTypeId?: Types.ObjectId | null;
+  brandId?: Types.ObjectId | null;
+  partCategoryId?: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +37,24 @@ const RequestSchema: Schema<IRequest> = new Schema(
       default: "open",
     },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
+    deviceTypeId: {
+      type: Schema.Types.ObjectId,
+      ref: "DeviceType",
+      default: null,
+      index: true,
+    },
+    brandId: {
+      type: Schema.Types.ObjectId,
+      ref: "CategoryBrand",
+      default: null,
+      index: true,
+    },
+    partCategoryId: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      default: null,
+      index: true,
+    },
   },
   { timestamps: true },
 );

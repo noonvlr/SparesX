@@ -168,6 +168,13 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
+    const { resolveCatalogRefs } = await import("@/lib/catalog/resolveRefs");
+    const catalogRefs = await resolveCatalogRefs({
+      deviceCategory: deviceCategory || "",
+      brand,
+      partType: category,
+    });
+
     const request = await RequestModel.create({
       name,
       email,
@@ -179,6 +186,9 @@ export async function POST(req: NextRequest) {
       description,
       status: "open",
       userId: auth.id,
+      deviceTypeId: catalogRefs.deviceTypeId || null,
+      brandId: catalogRefs.brandId || null,
+      partCategoryId: catalogRefs.partCategoryId || null,
     });
 
     const { notifyOnPartRequestCreated } = await import(
@@ -192,6 +202,13 @@ export async function POST(req: NextRequest) {
       deviceModel: deviceModel || model || "",
       deviceCategory: deviceCategory || "",
       description,
+      brandId: catalogRefs.brandId ? String(catalogRefs.brandId) : null,
+      partCategoryId: catalogRefs.partCategoryId
+        ? String(catalogRefs.partCategoryId)
+        : null,
+      deviceTypeId: catalogRefs.deviceTypeId
+        ? String(catalogRefs.deviceTypeId)
+        : null,
     });
 
     return NextResponse.json({ request }, { status: 201 });

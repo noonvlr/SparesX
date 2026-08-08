@@ -1,14 +1,20 @@
+import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
 import { productPath } from "@/lib/seo/site";
 import { formatListingTitle } from "@/lib/products/listingTitle";
+import { resolveCatalogRefs } from "@/lib/catalog/resolveRefs";
 
 export type RequestMatchInput = {
   category?: string | null;
   brand?: string | null;
   deviceModel?: string | null;
   deviceCategory?: string | null;
+  /** Preferred structured refs when available */
+  brandId?: string | Types.ObjectId | null;
+  partCategoryId?: string | Types.ObjectId | null;
+  deviceTypeId?: string | Types.ObjectId | null;
   /** Optional city hint from requester profile */
   city?: string | null;
   excludeUserId?: string | null;
@@ -40,9 +46,15 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function asOid(value: string | Types.ObjectId | null | undefined) {
+  if (!value) return null;
+  const s = String(value);
+  return Types.ObjectId.isValid(s) ? new Types.ObjectId(s) : null;
+}
+
 /**
- * Find approved listings that roughly match a part request.
- * Scoring: brand + part + model + city proximity (same city bonus).
+ * Find approved listings that match a part request.
+ * Prefer catalog ObjectId refs; fall back to string fields when refs missing.
  */
 export async function matchListingsForRequest(
   input: RequestMatchInput,
@@ -50,10 +62,27 @@ export async function matchListingsForRequest(
   await connectDB();
   const limit = Math.min(20, Math.max(1, input.limit || 8));
 
+  let brandId = asOid(input.brandId);
+  let partCategoryId = asOid(input.partCategoryId);
+  let deviceTypeId = asOid(input.deviceTypeId);
+
+  if (!brandId || !partCategoryId || !deviceTypeId) {
+    const resolved = await resolveCatalogRefs({
+      deviceCategory: input.deviceCategory,
+      brand: input.brand,
+      partType: input.category,
+    });
+    brandId = brandId || resolved.brandId || null;
+    partCategoryId = partCategoryId || resolved.partCategoryId || null;
+    deviceTypeId = deviceTypeId || resolved.deviceTypeId || null;
+  }
+
   const query: Record<string, unknown> = { status: "approved" };
   const and: Record<string, unknown>[] = [];
 
-  if (input.brand?.trim()) {
+  if (brandId) {
+    and.push({ brandId });
+  } else if (input.brand?.trim()) {
     and.push({
       brand: {
         $regex: `^${escapeRegex(input.brand.trim())}$`,
@@ -62,7 +91,9 @@ export async function matchListingsForRequest(
     });
   }
 
-  if (input.category?.trim()) {
+  if (partCategoryId) {
+    and.push({ partCategoryId });
+  } else if (input.category?.trim()) {
     const cat = escapeRegex(input.category.trim());
     and.push({
       $or: [
@@ -73,7 +104,9 @@ export async function matchListingsForRequest(
     });
   }
 
-  if (input.deviceCategory?.trim()) {
+  if (deviceTypeId) {
+    and.push({ deviceTypeId });
+  } else if (input.deviceCategory?.trim()) {
     and.push({
       deviceCategory: input.deviceCategory.trim().toLowerCase(),
     });
@@ -90,14 +123,14 @@ export async function matchListingsForRequest(
     });
   }
 
-  // Need at least brand or category to avoid dumping the whole catalog
+  // Need at least brand or category/part to avoid dumping the whole catalog
   if (and.length === 0) return [];
 
   query.$and = and;
 
   const products = await Product.find(query)
     .select(
-      "_id slug name brand deviceModel partType category condition price technician",
+      "_id slug name brand deviceModel partType category condition price technician brandId partCategoryId deviceTypeId",
     )
     .sort({ updatedAt: -1 })
     .limit(60)
@@ -134,14 +167,35 @@ export async function matchListingsForRequest(
     let score = 0;
     const reasons: string[] = [];
 
-    if (input.brand?.trim()) {
+    if (brandId && p.brandId && String(p.brandId) === String(brandId)) {
+      score += 35;
+      reasons.push("Catalog brand match");
+    } else if (input.brand?.trim()) {
       score += 30;
       reasons.push("Brand match");
     }
-    if (input.category?.trim()) {
+
+    if (
+      partCategoryId &&
+      p.partCategoryId &&
+      String(p.partCategoryId) === String(partCategoryId)
+    ) {
+      score += 30;
+      reasons.push("Catalog part match");
+    } else if (input.category?.trim()) {
       score += 25;
       reasons.push("Part type match");
     }
+
+    if (
+      deviceTypeId &&
+      p.deviceTypeId &&
+      String(p.deviceTypeId) === String(deviceTypeId)
+    ) {
+      score += 10;
+      reasons.push("Catalog device type");
+    }
+
     if (
       input.deviceModel?.trim() &&
       String(p.deviceModel || "")

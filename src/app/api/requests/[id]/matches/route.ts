@@ -44,6 +44,13 @@ export async function GET(
       brand: requestDoc.brand,
       deviceModel: requestDoc.deviceModel,
       deviceCategory: requestDoc.deviceCategory,
+      brandId: requestDoc.brandId ? String(requestDoc.brandId) : null,
+      partCategoryId: requestDoc.partCategoryId
+        ? String(requestDoc.partCategoryId)
+        : null,
+      deviceTypeId: requestDoc.deviceTypeId
+        ? String(requestDoc.deviceTypeId)
+        : null,
       city,
       excludeUserId: requestDoc.userId
         ? String(requestDoc.userId)
