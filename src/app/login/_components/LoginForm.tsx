@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { showToast } from "@/components/ToastHost";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import { resolvePostAuthPath } from "@/lib/auth/postAuthRedirect";
+import { setAccessToken } from "@/lib/auth/clientAuth";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -27,12 +28,12 @@ export default function LoginForm() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
       if (res.ok) {
-        localStorage.setItem("token", data.token);
-        window.dispatchEvent(new Event("sparesx-auth-changed"));
+        if (data.token) setAccessToken(data.token);
         showToast("Logged in successfully");
 
         if (data.profileComplete === false && data.role !== "admin") {

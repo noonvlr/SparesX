@@ -8,6 +8,7 @@ import {
   loadGoogleScript,
 } from "@/lib/auth/googleClient";
 import { resolvePostAuthPath } from "@/lib/auth/postAuthRedirect";
+import { setAccessToken } from "@/lib/auth/clientAuth";
 
 export default function GoogleSignInButton({
   className = "",
@@ -31,6 +32,7 @@ export default function GoogleSignInButton({
         const res = await fetch("/api/auth/google", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ idToken: credential }),
         });
         const data = await res.json().catch(() => ({}));
@@ -39,8 +41,7 @@ export default function GoogleSignInButton({
           return;
         }
 
-        localStorage.setItem("token", data.token);
-        window.dispatchEvent(new Event("sparesx-auth-changed"));
+        if (data.token) setAccessToken(data.token);
         showToast("Signed in with Google");
 
         if (data.profileComplete === false) {

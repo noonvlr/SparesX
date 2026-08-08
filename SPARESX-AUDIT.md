@@ -337,7 +337,7 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- HttpOnly cookie migration
+- HttpOnly cookie **full cutover** (Phase 11 foundation done; CSRF + mass client migrate + socket cookie still open)
 - Catalog ObjectId rewrite
 - Atlas Search (Mongo `$text` covers MVP in Phase 6)
 - Redis socket adapter / shared rate-limit store
@@ -366,12 +366,13 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Site setting `requireListingApproval` (admin toggle; create/relist respect it)
 - Site-settings PATCH no longer blocks non-secret updates when encryption key missing
 
-### Phase 10 additions
+### Phase 11 additions
 
-- Transactional email on listing approve/reject + support reply (SMTP when configured)
-- Admin support inbox pagination (`page`/`limit`, unread filter server-side)
-- Admin reports 30-day daily series (listings + requests)
-- Sitemap includes `/support` and active seller `/u/{id}` profiles
+- Dual-mode auth foundation: HttpOnly `sparesx_session` cookie set on login/Google/change-password
+- `requireUser` / `requireAdmin` accept Bearer **or** cookie
+- Logout clears cookie + bumps session version
+- Client `authFetch` / `clientAuth` helpers; shell + login/Google use credentials:"include"
+- localStorage token still issued (sockets + legacy call sites)
 
 ---
 

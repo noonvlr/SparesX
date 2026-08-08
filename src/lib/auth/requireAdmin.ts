@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 
@@ -9,11 +10,11 @@ export type AdminPayload = { id: string; role: string };
 export async function requireAdmin(
   req: NextRequest,
 ): Promise<AdminPayload | NextResponse> {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
+  const token = getTokenFromRequest(req);
+  if (!token) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-  const payload = verifyJwt(authHeader.split(" ")[1]);
+  const payload = verifyJwt(token);
   if (!payload?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }

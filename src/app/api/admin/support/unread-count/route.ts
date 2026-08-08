@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { SupportRequest } from "@/lib/models/SupportRequest";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET(req: NextRequest) {
-  try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    const payload = verifyJwt(authHeader.split(" ")[1]);
-    if (!payload || payload.role !== "admin") {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-    }
+  const admin = await requireAdmin(req);
+  if (isAdminError(admin)) return admin;
 
+  try {
     await connectDB();
     const unreadCount = await SupportRequest.countDocuments({
       adminUnread: { $ne: false },
     });
-
     return NextResponse.json({ unreadCount }, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { message: "Failed to fetch unread count", unreadCount: 0 },
+      { message: "Failed to fetch unread count" },
       { status: 500 },
     );
   }

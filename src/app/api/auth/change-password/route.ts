@@ -39,12 +39,13 @@ export async function POST(req: NextRequest) {
       user.sessionVersion = (user.sessionVersion || 0) + 1;
       await user.save();
       const { signJwt } = await import("@/lib/auth/jwt");
+      const { applySessionCookie } = await import("@/lib/auth/cookies");
       const token = signJwt({
         _id: user._id,
         role: user.role,
         sessionVersion: user.sessionVersion,
       });
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           message: "Password set successfully. You can now also sign in with email.",
           hasPassword: true,
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest) {
         },
         { status: 200 },
       );
+      applySessionCookie(res, token);
+      return res;
     }
 
     if (!currentPassword) {
@@ -81,13 +84,14 @@ export async function POST(req: NextRequest) {
     await user.save();
 
     const { signJwt } = await import("@/lib/auth/jwt");
+    const { applySessionCookie } = await import("@/lib/auth/cookies");
     const token = signJwt({
       _id: user._id,
       role: user.role,
       sessionVersion: user.sessionVersion,
     });
 
-    return NextResponse.json(
+    const res = NextResponse.json(
       {
         message: "Password updated successfully",
         hasPassword: true,
@@ -95,6 +99,8 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
+    applySessionCookie(res, token);
+    return res;
   } catch (error) {
     return errorResponse(error);
   }

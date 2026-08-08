@@ -1,22 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 
 export type AuthUser = { id: string; role: string };
 
 /**
- * Authenticate Bearer JWT and re-validate against DB
- * (blocked + current role + session version).
+ * Authenticate via Bearer JWT or HttpOnly session cookie,
+ * then re-validate against DB (blocked + role + session version).
  */
 export async function requireUser(
   req: NextRequest,
 ): Promise<AuthUser | NextResponse> {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
+  const token = getTokenFromRequest(req);
+  if (!token) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-  const payload = verifyJwt(authHeader.split(" ")[1]);
+  const payload = verifyJwt(token);
   if (!payload?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }

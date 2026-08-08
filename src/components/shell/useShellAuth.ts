@@ -6,6 +6,11 @@ import { useChatDockOptional } from "@/components/chat/ChatProvider";
 import { openChatUi } from "@/components/chat/openChat";
 import { announceChatOffline } from "@/lib/chat/announceOffline";
 import { showToast } from "@/components/ToastHost";
+import {
+  authFetch,
+  clearAccessToken,
+  getAccessToken,
+} from "@/lib/auth/clientAuth";
 
 export function useShellAuth() {
   const chatDock = useChatDockOptional();
@@ -21,7 +26,7 @@ export function useShellAuth() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     if (token) {
       setIsAuthenticated(true);
       try {
@@ -30,22 +35,30 @@ export function useShellAuth() {
       } catch {
         setUserRole(null);
       }
-
-      fetch("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.user?.name) setUserName(data.user.name);
-          setProfilePicture(data.user?.profilePicture || null);
-        })
-        .catch(() => {});
-    } else {
-      setIsAuthenticated(false);
-      setUserRole(null);
-      setUserName(null);
-      setProfilePicture(null);
     }
+
+    // Cookie-or-Bearer: works even if localStorage was cleared but cookie remains
+    authFetch("/api/auth/me")
+      .then(async (r) => {
+        if (!r.ok) {
+          if (!token) {
+            setIsAuthenticated(false);
+            setUserRole(null);
+            setUserName(null);
+            setProfilePicture(null);
+          }
+          return null;
+        }
+        return r.json();
+      })
+      .then((data) => {
+        if (!data?.user) return;
+        setIsAuthenticated(true);
+        if (data.user.role) setUserRole(data.user.role);
+        if (data.user.name) setUserName(data.user.name);
+        setProfilePicture(data.user.profilePicture || null);
+      })
+      .catch(() => {});
   }, [pathname]);
 
   // Admin support unread badge — poll + listen for inbox updates
@@ -56,12 +69,8 @@ export function useShellAuth() {
     }
 
     const fetchUnread = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
-        const res = await fetch("/api/admin/support/unread-count", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/admin/support/unread-count");
         const data = await res.json();
         if (res.ok) setSupportUnread(data.unreadCount || 0);
       } catch {
@@ -98,12 +107,8 @@ export function useShellAuth() {
     }
 
     const fetchPending = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
-        const res = await fetch("/api/whatsapp-connect?box=incoming", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/whatsapp-connect?box=incoming");
         const data = await res.json();
         if (res.ok) {
           const count =
@@ -138,12 +143,8 @@ export function useShellAuth() {
     }
 
     const fetchUnread = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
-        const res = await fetch("/api/chat/unread-count", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/chat/unread-count");
         const data = await res.json();
         if (res.ok) setChatUnread(data.unreadTotal || 0);
       } catch {
@@ -172,16 +173,10 @@ export function useShellAuth() {
   }, [isAuthenticated, pathname]);
 
   const handleLogout = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        await fetch("/api/auth/logout", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } catch {
-        // ignore — client logout still proceeds
-      }
+    try {
+      await authFetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore — client logout still proceeds
     }
     await announceChatOffline();
     try {
@@ -190,8 +185,7 @@ export function useShellAuth() {
     } catch {
       // ignore
     }
-    localStorage.removeItem("token");
-    window.dispatchEvent(new Event("sparesx-auth-changed"));
+    clearAccessToken();
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName(null);
@@ -212,12 +206,8 @@ export function useShellAuth() {
     }
 
     const fetchNotifs = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
       try {
-        const res = await fetch("/api/notifications/unread-count", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/notifications/unread-count");
         const data = await res.json();
         if (res.ok) setNotifUnread(data.unreadCount || 0);
       } catch {

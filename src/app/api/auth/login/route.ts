@@ -87,7 +87,8 @@ export async function POST(req: NextRequest) {
       role: user.role,
       sessionVersion: user.sessionVersion || 0,
     });
-    return NextResponse.json(
+    const { applySessionCookie } = await import("@/lib/auth/cookies");
+    const res = NextResponse.json(
       {
         token,
         role: user.role,
@@ -98,6 +99,8 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
+    applySessionCookie(res, token);
+    return res;
   } catch {
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
