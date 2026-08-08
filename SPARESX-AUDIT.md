@@ -314,7 +314,7 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Pin `algorithms: ['HS256']` on `jwt.verify`
 - Generic errors on forgot-password verify/reset (enumeration)
 - Cap message `limit` / Socket `maxHttpBufferSize`
-- Product backlog: bulk tools, demand analytics
+- Product backlog: ~~bulk tools, demand analytics~~ (Phase 8 MVP)
 - HttpOnly cookies + refresh tokens
 - ObjectId-normalized catalog
 - Atlas Search when scale demands
@@ -366,13 +366,11 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Site setting `requireListingApproval` (admin toggle; create/relist respect it)
 - Site-settings PATCH no longer blocks non-secret updates when encryption key missing
 
-### Phase 7 additions
+### Phase 8 additions
 
-- Seller notified on listing approve/reject (`listing_approved` / `listing_rejected`)
-- Buyers in product chats notified when listing marked sold (`listing_sold`)
-- Verification / trust flag changes notify the user (`verification_update`)
-- Admin support reply creates inbox notification (`support_reply`)
-- Register: IP rate limit (8/hour) + softer duplicate-email message
+- Admin bulk approve/reject (`POST /api/admin/products/bulk`, multi-select UI)
+- Admin request demand analytics (top parts/brands/devices · 30d + open last 7d)
+- Upload rate limit (30/hour per user+IP)
 
 ---
 

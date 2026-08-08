@@ -44,6 +44,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { checkRateLimit, clientIpFromRequest } = await import(
+      "@/lib/security/authRateLimit"
+    );
+    const ip = clientIpFromRequest(req);
+    const rate = checkRateLimit({
+      key: `upload:${userId}:${ip}`,
+      limit: 30,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: "Too many uploads. Try again later." },
+        { status: 429 },
+      );
+    }
+
     const formData = await req.formData();
     const files = formData
       .getAll("files")

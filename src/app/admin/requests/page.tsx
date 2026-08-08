@@ -44,6 +44,13 @@ export default function AdminRequestsPage() {
     closed: 0,
   });
   const [selected, setSelected] = useState<SpareRequest | null>(null);
+  const [demand, setDemand] = useState<{
+    windowDays: number;
+    openLast7Days: number;
+    topCategories: { name: string; count: number }[];
+    topBrands: { name: string; count: number }[];
+    topDeviceCategories: { name: string; count: number }[];
+  } | null>(null);
 
   const load = useCallback(async (nextStatus = status, nextQ = q) => {
     const token = localStorage.getItem("token");
@@ -66,6 +73,7 @@ export default function AdminRequestsPage() {
       }
       setRequests(data.requests || []);
       setStatusCounts(data.statusCounts || statusCounts);
+      setDemand(data.demand || null);
       setError("");
     } catch {
       setError("Failed to load requests");
@@ -124,7 +132,7 @@ export default function AdminRequestsPage() {
     <AdminPage>
       <PageHeader
         title="Manage requests"
-        description="Moderate spare-part requests — mark fulfilled, close, or delete"
+        description="Moderate spare-part requests and watch demand signals from the last 30 days"
         actions={
           <Link
             href="/requests"
@@ -134,6 +142,54 @@ export default function AdminRequestsPage() {
           </Link>
         }
       />
+
+      {demand && (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 mb-6">
+          <Card padding="md">
+            <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide">
+              Open (7 days)
+            </p>
+            <p className="text-2xl font-bold text-[var(--ink)] mt-1">
+              {demand.openLast7Days}
+            </p>
+            <p className="text-xs text-[var(--muted)] mt-1">
+              New open requests this week
+            </p>
+          </Card>
+          {(
+            [
+              ["Top parts", demand.topCategories],
+              ["Top brands", demand.topBrands],
+              ["Device types", demand.topDeviceCategories],
+            ] as const
+          ).map(([label, rows]) => (
+            <Card key={label} padding="md">
+              <p className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wide mb-2">
+                {label} · {demand.windowDays}d
+              </p>
+              {rows.length === 0 ? (
+                <p className="text-sm text-[var(--muted)]">No data yet</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {rows.slice(0, 5).map((row) => (
+                    <li
+                      key={`${label}-${row.name}`}
+                      className="flex items-center justify-between gap-2 text-sm"
+                    >
+                      <span className="truncate capitalize text-[var(--ink)]">
+                        {row.name}
+                      </span>
+                      <span className="font-semibold text-[var(--ink-secondary)] tabular-nums">
+                        {row.count}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-4">
         {(

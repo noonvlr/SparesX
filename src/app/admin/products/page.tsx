@@ -68,6 +68,8 @@ export default function AdminProductsPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState(emptyEdit);
   const [saving, setSaving] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const token = () => localStorage.getItem("token");
 
@@ -92,6 +94,7 @@ export default function AdminProductsPage() {
       }
       setProducts(data.products || []);
       setStatusCounts(data.statusCounts || statusCounts);
+      setSelectedIds([]);
       setError("");
     } catch {
       setError("Failed to load products");
@@ -182,6 +185,55 @@ export default function AdminProductsPage() {
     }
   }
 
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === products.length) {
+      setSelectedIds([]);
+      return;
+    }
+    setSelectedIds(products.map((p) => p._id));
+  }
+
+  async function bulkAction(action: "approve" | "reject") {
+    const t = token();
+    if (!t || selectedIds.length === 0) return;
+    if (
+      !confirm(
+        `${action === "approve" ? "Approve" : "Reject"} ${selectedIds.length} listing${selectedIds.length === 1 ? "" : "s"}?`,
+      )
+    ) {
+      return;
+    }
+    setBulkBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/products/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${t}`,
+        },
+        body: JSON.stringify({ ids: selectedIds, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Bulk update failed");
+        return;
+      }
+      setSelectedIds([]);
+      await load();
+    } catch {
+      setError("Bulk update failed");
+    } finally {
+      setBulkBusy(false);
+    }
+  }
+
   return (
     <AdminPage>
       <PageHeader
@@ -244,6 +296,42 @@ export default function AdminProductsPage() {
         </Alert>
       )}
 
+      {selectedIds.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">
+          <span className="text-sm text-[var(--ink-secondary)]">
+            {selectedIds.length} selected
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="success"
+            loading={bulkBusy}
+            onClick={() => void bulkAction("approve")}
+          >
+            Approve selected
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="soft"
+            loading={bulkBusy}
+            onClick={() => void bulkAction("reject")}
+            className="bg-[var(--warning-soft)] text-[var(--warning)]"
+          >
+            Reject selected
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={bulkBusy}
+            onClick={() => setSelectedIds([])}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-[var(--muted)]">
           <Spinner /> Loading…
@@ -252,6 +340,15 @@ export default function AdminProductsPage() {
         <Table>
           <THead>
             <TR>
+              <TH className="w-10">
+                <Checkbox
+                  checked={
+                    products.length > 0 && selectedIds.length === products.length
+                  }
+                  onChange={toggleSelectAll}
+                  aria-label="Select all products"
+                />
+              </TH>
               <TH>Product</TH>
               <TH>Fitment</TH>
               <TH>Price</TH>
@@ -263,13 +360,20 @@ export default function AdminProductsPage() {
           <TBody>
             {products.length === 0 && (
               <TR>
-                <TD colSpan={6} className="text-center text-[var(--muted)] py-8">
+                <TD colSpan={7} className="text-center text-[var(--muted)] py-8">
                   No products found.
                 </TD>
               </TR>
             )}
             {products.map((p) => (
               <TR key={p._id} className="align-top">
+                <TD>
+                  <Checkbox
+                    checked={selectedIds.includes(p._id)}
+                    onChange={() => toggleSelect(p._id)}
+                    aria-label={`Select ${p.name}`}
+                  />
+                </TD>
                 <TD>
                   <div className="flex gap-3">
                     {p.images?.[0] ? (
