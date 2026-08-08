@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     "part request",
     "find mobile parts",
     "technician network",
-    "verified sellers",
+    "seller matching",
   ],
   alternates: {
     canonical: "/requests",

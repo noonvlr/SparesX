@@ -7,11 +7,16 @@ import {
   revokeAllRefreshTokensForUser,
   revokeRefreshToken,
 } from "@/lib/auth/refreshTokens";
+import { assertCsrfForCookieMutation } from "@/lib/auth/csrf";
 
 /**
  * POST /api/auth/logout — invalidate session + refresh tokens and clear cookies.
+ * Requires CSRF when a session cookie is present (cookie-auth logout).
  */
 export async function POST(req: NextRequest) {
+  const csrfError = assertCsrfForCookieMutation(req);
+  if (csrfError) return csrfError;
+
   const token = getTokenFromRequest(req);
   if (token) {
     const payload = verifyJwt(token);

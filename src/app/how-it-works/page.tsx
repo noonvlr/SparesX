@@ -4,7 +4,7 @@ import { PageHeader, Card } from "@/components/ui/Card";
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "See how SparesX works for technicians: browse or request parts, get responses from verified sellers, and finalize deals directly — SparesX does not process payments.",
+    "See how SparesX works for technicians: browse or request parts, connect with sellers, and finalize deals directly — SparesX does not process payments.",
   keywords: [
     "how it works",
     "buying process",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "How It Works | SparesX",
     description:
-      "Browse or request parts, connect with verified technicians, and finalize deals directly. SparesX doesn't process payments.",
+      "Browse or request parts, connect with technicians, and finalize deals directly. SparesX doesn't process payments.",
     type: "website",
     url: "/how-it-works",
   },
@@ -51,8 +51,8 @@ export default function HowItWorksPage() {
               text: "Search products or submit a request with exact part details.",
             },
             {
-              title: "Verified Responses",
-              text: "Technicians respond with availability and pricing.",
+              title: "Seller Responses",
+              text: "Technicians respond with availability and pricing. Check badges and Trust Score on their profile before you deal.",
             },
             {
               title: "Connect & Finalize",

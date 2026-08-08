@@ -232,18 +232,18 @@
 
 ## 🔐 **AUTHENTICATION & AUTHORIZATION**
 
-### JWT-based Authentication
+### Cookie session authentication
 
-- Tokens stored in localStorage
-- JWT verification via `/lib/auth/jwt.ts`
-- Middleware protection via `/lib/auth/middleware.ts`
+- HttpOnly `sparesx_session` (access JWT) + `sparesx_refresh` (rotating)
+- CSRF via `sparesx_csrf` + `X-CSRF-Token` on cookie mutations
+- Edge middleware: `/admin/*` and `/technician/*` require session cookies
+- API protection via `requireUser` / `requireAdmin`
 
 ### User Roles
 
 - **`admin`** - Full platform access
-- **`technician`** - Can list products, manage profile
-- **`buyer`** - Can browse, request parts
-- **`seller`** - Can sell products (future)
+- **`technician`** - Can list products, manage profile (primary seller/buyer account)
+- Legacy docs may mention separate buyer/seller roles — product uses technician accounts for both
 
 ---
 
@@ -256,8 +256,11 @@ Located in `/src/lib/models/`:
 - **`Category.ts`** - Product categories
 - **`DeviceType.ts`** - Device types
 - **`CategoryBrand.ts`** - Device brands with models
-- **`Order.ts`** - Orders
-- **`Request.ts`** - Spare part requests
+- **`Request.ts`** / part-request models - Spare part requests
+- **`RefreshToken.ts`** - Rotating refresh tokens
+- **`PushSubscription.ts`** - Web push subscriptions
+
+*(No Order / checkout model — SparesX does not process payments.)*
 
 ---
 

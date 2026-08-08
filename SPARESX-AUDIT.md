@@ -337,8 +337,38 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- *(none blocking — phases 11–32 closed the audit remediation track)*
+- *(none blocking — phases 11–39 closed security + trust-copy remediation)*
 - Optional ops: run `npm run backfill:catalog-refs` on production data; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX`, `OTP_PEPPER` when ready
+- Lawyer review of legal pages before payments / KYC claims
+- Authenticity / testing fields (P2-9) — product decision later
+
+### Phase 33 additions
+
+- Marketing/FAQ honesty: no blanket “every seller verified”; no “track orders”; badges/Trust Score explained accurately
+
+### Phase 34 additions
+
+- India-only `+91` hard lock in validation + profile/complete-profile country selectors
+
+### Phase 35 additions
+
+- Report Abuse policy page CTA → `/support?type=abuse`
+
+### Phase 36 additions
+
+- Edge middleware also gates `/technician/*`
+
+### Phase 37 additions
+
+- Logout requires CSRF when session cookie is present
+
+### Phase 38 additions
+
+- README replaced with SparesX ops docs (env, auth, chat, scripts)
+
+### Phase 39 additions
+
+- Remove unused Bearer `lib/auth/middleware.ts`; PROJECT_STRUCTURE auth/models cleanup; chat dock Report → Support
 
 ### Phase 25 additions
 

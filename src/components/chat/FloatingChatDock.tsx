@@ -170,6 +170,15 @@ function FloatingWindow({
             light
           />
         </div>
+        {peer?._id ? (
+          <Link
+            href={`/support?type=abuse&reportedUserId=${encodeURIComponent(peer._id)}&subject=${encodeURIComponent(`Chat abuse report: ${peer.name || peer._id}`)}`}
+            className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1"
+            title="Report this user"
+          >
+            Report
+          </Link>
+        ) : null}
         <IconButton
           type="button"
           size="sm"

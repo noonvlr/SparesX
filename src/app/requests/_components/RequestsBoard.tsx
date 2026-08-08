@@ -198,7 +198,7 @@ export default function RequestsBoard({
             <ul className="space-y-3 text-sm text-[var(--muted)]">
               <li className="flex gap-2">
                 <span className="text-[var(--brand)] font-bold">1.</span>
-                Your request is shared with verified sellers.
+                Your request is shared with matching sellers.
               </li>
               <li className="flex gap-2">
                 <span className="text-[var(--brand)] font-bold">2.</span>

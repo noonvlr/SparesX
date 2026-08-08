@@ -13,7 +13,7 @@ const faqs = [
   {
     question: "Who can sell on SparesX?",
     answer:
-      "Any verified technician or spare-parts business can list on SparesX after completing registration.",
+      "Technicians and spare-parts businesses in India can list after registering, completing their profile, and verifying their phone number. SparesX does not run KYC or government ID checks today.",
   },
   {
     question: "Is it free to list a part?",
@@ -43,26 +43,26 @@ const faqs = [
   {
     question: "How are sellers verified?",
     answer:
-      "Every seller is reviewed for legitimacy and service quality before approval, and builds a Trust Score based on their activity and reliability on the platform.",
+      "Sellers can earn badges such as phone verified, email verified, or admin-approved business/KYC when those checks are completed. Not every listing is KYC-verified. Trust Score and reviews reflect activity on SparesX — always check a seller's profile before dealing.",
   },
   {
     question: "What is the Trust Score?",
     answer:
-      "A rating that reflects a seller's reliability based on their history on SparesX. Check a seller's profile before buying to see their score.",
+      "A rating that reflects a seller's reliability based on their history on SparesX. Check a seller's profile before buying to see their score and badges.",
   },
   {
     question: "What if something goes wrong with a purchase?",
     answer:
-      "Since SparesX isn't party to the transaction, first resolve issues directly with the seller. If that doesn't work, you can raise it through our Dispute Resolution process or report the seller.",
+      "Since SparesX isn't party to the transaction, first resolve issues directly with the seller. If that doesn't work, you can raise it through our Dispute Resolution process or report the seller via Support.",
   },
   {
     question: "Is SparesX available outside India?",
-    answer: "SparesX currently operates only within India.",
+    answer: "SparesX currently operates only within India (+91 numbers).",
   },
   {
-    question: "How long does seller verification take?",
+    question: "How long does phone verification take?",
     answer:
-      "Verification is typically reviewed within a few business days. You'll be notified once your account is approved.",
+      "Phone OTP verification is usually instant once SMS delivery succeeds. Optional admin business/KYC badges are reviewed separately when submitted.",
   },
   {
     question: "Can I edit or delete a listing after posting it?",
@@ -77,7 +77,7 @@ const faqs = [
   {
     question: "Can I list more than one part at a time?",
     answer:
-      "Yes, there's no limit on the number of active listings a verified seller can post.",
+      "Yes, there's no limit on the number of active listings a phone-verified seller can post.",
   },
   {
     question: "What counts as a prohibited item?",

@@ -19,19 +19,19 @@ import {
 export const metadata: Metadata = {
   title: "Buy & Sell Mobile Spare Parts Online",
   description:
-    "SparesX is a marketplace for mobile repair technicians to list, find, and request spare parts. Browse verified technician listings, trust scores, and connect directly with sellers.",
+    "SparesX is a B2B marketplace for mobile repair technicians to list, find, and request spare parts. Browse listings, check trust scores and badges, and connect directly with sellers — SparesX does not process payments.",
   keywords: [
     "mobile spare parts",
     "technician marketplace",
     "phone repair parts India",
-    "verified technician parts",
+    "technician spare parts",
     "request spare parts",
     "mobile battery screen camera",
   ],
   openGraph: {
     title: "Buy & Sell Mobile Spare Parts Online | SparesX",
     description:
-      "List, find, and request spare parts with verified technicians. Trust scores and badges help you connect directly — SparesX does not process payments.",
+      "List, find, and request spare parts with technicians across India. Trust scores and badges help you connect directly — SparesX does not process payments.",
     url: "/",
     siteName: "SparesX",
     type: "website",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Buy & Sell Mobile Spare Parts Online | SparesX",
     description:
-      "Marketplace for technicians: verified listings, trust scores, and direct seller connections.",
+      "Marketplace for technicians: listings, trust scores, and direct seller connections.",
     images: ["/og-image.jpg"],
   },
   alternates: {
@@ -119,7 +119,7 @@ export default async function HomePage() {
     "@type": "WebSite",
     name: SITE_NAME,
     description:
-      "India's premier B2B marketplace for mobile spare parts connecting verified technicians with quality parts",
+      "India's B2B marketplace for mobile spare parts connecting technicians with quality parts",
     url: baseUrl,
     inLanguage: "en-IN",
     potentialAction: {

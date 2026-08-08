@@ -6,12 +6,15 @@ import {
 } from "@/lib/auth/cookieNames";
 
 /**
- * Defense-in-depth for admin shells. APIs still enforce requireAdmin.
- * Cookie presence only (Edge-safe) — role checks remain in AdminGate / APIs.
+ * Defense-in-depth for admin + technician shells.
+ * APIs still enforce requireAdmin / requireUser.
+ * Cookie presence only (Edge-safe) — role checks remain in client gates / APIs.
  */
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (!pathname.startsWith("/admin")) {
+  const gated =
+    pathname.startsWith("/admin") || pathname.startsWith("/technician");
+  if (!gated) {
     return NextResponse.next();
   }
 
@@ -30,5 +33,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/technician/:path*"],
 };

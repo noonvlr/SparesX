@@ -5,7 +5,7 @@ import LoginForm from "./_components/LoginForm";
 export const metadata: Metadata = {
   title: "Login",
   description:
-    "Login to your SparesX account to manage listings, track orders, and connect with buyers or sellers.",
+    "Login to your SparesX account to manage listings, messages, and connect with buyers or sellers.",
   alternates: {
     canonical: "/login",
   },

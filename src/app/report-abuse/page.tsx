@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import LegalPage from "@/components/legal/LegalPage";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/ui/cn";
 
 export const metadata: Metadata = {
   title: "Report Abuse Policy",
@@ -8,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function ReportAbusePage() {
   return (
-    <LegalPage title="Report Abuse Policy" updated="3 August 2026">
+    <LegalPage title="Report Abuse Policy" updated="9 August 2026">
       <section>
         <h2 className="text-xl font-bold text-[var(--ink)] mb-2">What to Report</h2>
         <p>Please report the following to Support:</p>
@@ -24,11 +27,19 @@ export default function ReportAbusePage() {
       <section>
         <h2 className="text-xl font-bold text-[var(--ink)] mb-2">How to Report</h2>
         <p>
-          Please include relevant links, screenshots, and usernames wherever
-          possible to help us investigate promptly. We aim to review reports
-          within 3–5 business days.
+          Use the Support form so reports land in the admin queue. Include
+          relevant links, screenshots, and usernames wherever possible. We aim
+          to review reports within 3–5 business days.
         </p>
-        <p className="mt-2">
+        <p className="mt-4">
+          <Link
+            href="/support?type=abuse&subject=Abuse%20report"
+            className={cn(buttonVariants({ variant: "primary", size: "md" }))}
+          >
+            Open Support report form
+          </Link>
+        </p>
+        <p className="mt-4 text-sm text-[var(--muted)]">
           Reports made in bad faith or with the intent to harass another user may
           themselves be subject to enforcement action.
         </p>
@@ -37,6 +48,14 @@ export default function ReportAbusePage() {
       <section>
         <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Contact</h2>
         <p>
+          Prefer the{" "}
+          <Link
+            href="/support?type=abuse"
+            className="text-[var(--brand)] font-semibold underline-offset-2 hover:underline"
+          >
+            Support form
+          </Link>{" "}
+          for abuse reports. You can also email{" "}
           <a href="mailto:noon.vlr@gmail.com">noon.vlr@gmail.com</a>
           {" | "}
           <a href="tel:8015606071">8015606071</a>

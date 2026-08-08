@@ -19,11 +19,7 @@ import {
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { safeNextPath } from "@/lib/auth/postAuthRedirect";
 
-const COUNTRY_CODES = [
-  { code: "+91", label: "🇮🇳 +91" },
-  { code: "+1", label: "🇺🇸 +1" },
-  { code: "+44", label: "🇬🇧 +44" },
-];
+const COUNTRY_CODES = [{ code: "+91", label: "🇮🇳 +91 (India)" }];
 
 export default function CompleteProfileClient() {
   const router = useRouter();

@@ -104,8 +104,8 @@ export async function generateMetadata({
     filtered && summary ? summary : "Browse Mobile Spare Parts";
   const description =
     filtered && summary
-      ? `${summary} listed by verified technicians on ${SITE_NAME}. Compare prices and contact sellers directly.`
-      : "Browse spare parts listed by verified technicians on SparesX. Filter by device, brand, model, part type, condition, city, and seller verification.";
+      ? `${summary} listed by technicians on ${SITE_NAME}. Compare prices and contact sellers directly.`
+      : "Browse spare parts listed by technicians on SparesX. Filter by device, brand, model, part type, condition, city, and seller badges, then contact the seller directly.";
 
   return {
     title,
@@ -116,7 +116,7 @@ export async function generateMetadata({
       "phone repair parts",
       "laptop spare parts",
       "technician marketplace",
-      "verified technician listings",
+      "technician listings",
     ],
     alternates: { canonical: "/products" },
     openGraph: {
@@ -175,7 +175,7 @@ export default async function BrowseProductsPage({
       <div className="max-w-7xl mx-auto py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
         <PageHeader
           title={summary || "Browse products"}
-          description="Spare parts listed by verified technicians across India. Filter by device, brand, model, part type, condition, city, and seller verification, then contact the seller directly — SparesX does not process payments."
+          description="Spare parts listed by technicians across India. Filter by device, brand, model, part type, condition, city, and seller badges, then contact the seller directly — SparesX does not process payments."
         />
 
         <div className="mb-6">

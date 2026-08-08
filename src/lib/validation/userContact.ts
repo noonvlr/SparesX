@@ -19,7 +19,14 @@ export function normalizePinCode(value: unknown): string {
 
 export function normalizeCountryCode(value: unknown): string {
   const cc = String(value ?? "").trim();
-  return cc || "+91";
+  // SparesX is India-only — always store +91
+  if (!cc || cc === "+91" || cc === "91") return "+91";
+  return "+91";
+}
+
+export function isIndiaCountryCode(value: unknown): boolean {
+  const cc = String(value ?? "").trim();
+  return !cc || cc === "+91" || cc === "91";
 }
 
 export function normalizeAbout(value: unknown): string {
@@ -128,6 +135,13 @@ export function parseContactFields(
   }
 
   if (has("countryCode") || input.countryCode !== undefined) {
+    const raw = String(input.countryCode ?? "").trim();
+    if (raw && !isIndiaCountryCode(raw)) {
+      return {
+        ok: false,
+        message: "SparesX currently supports India (+91) numbers only",
+      };
+    }
     data.countryCode = normalizeCountryCode(input.countryCode);
   }
 

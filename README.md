@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SparesX
 
-## Getting Started
+India B2B marketplace for mobile / laptop spare parts. Technicians list and request parts; buyers and sellers connect directly. **SparesX does not process payments, escrow, or shipping.**
 
-First, run the development server:
+Stack: Next.js App Router, MongoDB, JWT session cookies + CSRF, optional Socket.io chat server.
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env   # if present; otherwise create .env
+npm run dev            # Next.js + Socket.io (concurrent)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Web: [http://localhost:3000](http://localhost:3000)
+- Socket only: `npm run start:socket` (default port from `server/index.ts`, often `4001`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Required env (minimum)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Purpose |
+|---|---|
+| `MONGODB_URI` | Mongo connection string |
+| `JWT_SECRET` | HS256 signing secret |
+| `NEXT_PUBLIC_BASE_URL` / `SITE_URL` | Canonical site URL |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob uploads (production) |
 
-## Learn More
+### Recommended env
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Purpose |
+|---|---|
+| `SMTP_*` or Site Settings SMTP | Password reset + email verification |
+| `SETTINGS_ENCRYPTION_KEY` | Encrypt SMS/SMTP secrets in Site Settings (≥32 chars) |
+| `GOOGLE_CLIENT_ID` / `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google Sign-In |
+| `NEXT_PUBLIC_SOCKET_URL` | Public Socket.io URL when not same-host |
+| `REDIS_URL` / `SOCKET_REDIS_URL` | Multi-instance Socket.io adapter |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Web push |
+| `ATLAS_SEARCH_INDEX` | Optional Atlas `$search` for products |
+| `OTP_PEPPER` | OTP HMAC pepper (falls back to `JWT_SECRET`) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Auth model
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- HttpOnly `sparesx_session` (access JWT, ~1h) + `sparesx_refresh` (7d, rotating)
+- Readable `sparesx_auth` flag for UI soft-gates
+- CSRF: `sparesx_csrf` cookie + `X-CSRF-Token` on cookie-authenticated mutations
+- Clients use `authFetch` (`credentials: "include"`); silent refresh on 401
 
-## Deploy on Vercel
+## Useful scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+npm run backfill:catalog-refs   # Product ObjectId refs
+npm run backfill:slugs
+npm run seed:device-types
+npm run seo:audit
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Admin seed
+
+Create the first admin user in Mongo (or via your existing seed path), then sign in at `/login`. Admin UI is under `/admin/*` (middleware requires a session cookie; APIs still use `requireAdmin`).
+
+## Chat modes
+
+1. **REST-only** — messages work without the socket process (polling / fetch).
+2. **Socket.io** — run `npm run start:socket` (or `npm run dev`) and set `NEXT_PUBLIC_SOCKET_URL` when the socket host differs from the web app.
+
+## Production notes
+
+- Set cookie `secure` via `NODE_ENV=production`
+- Do not commit `.env`
+- Optional: run catalog backfill after deploying ObjectId catalog refs
+- Legal pages are placeholders for counsel review before payments or KYC claims
+
+## License
+
+Private — all rights reserved unless otherwise stated.

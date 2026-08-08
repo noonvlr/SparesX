@@ -61,7 +61,7 @@ function originAllowed(req: NextRequest): boolean {
 
 /**
  * Cookie-authenticated mutating requests must send matching X-CSRF-Token.
- * Bearer-authenticated requests skip (token already in localStorage).
+ * Legacy Bearer Authorization (if present) skips CSRF — prefer cookie auth.
  */
 export function assertCsrfForCookieMutation(
   req: NextRequest,
