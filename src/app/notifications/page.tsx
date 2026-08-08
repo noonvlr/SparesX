@@ -7,6 +7,7 @@ import { Card, EmptyState, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LoadingState, ErrorState } from "@/components/feedback";
 import { authFetch } from "@/lib/auth/clientAuth";
+import PushEnableButton from "@/components/PushEnableButton";
 
 type Notif = {
   _id: string;
@@ -93,17 +94,20 @@ export default function NotificationsPage() {
       title="Notifications"
       description="WhatsApp requests, chat alerts, and marketplace updates"
       actions={
-        unread > 0 ? (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            loading={marking}
-            onClick={() => void markAllRead()}
-          >
-            Mark all read
-          </Button>
-        ) : null
+        <div className="flex flex-wrap items-center gap-2">
+          <PushEnableButton />
+          {unread > 0 ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              loading={marking}
+              onClick={() => void markAllRead()}
+            >
+              Mark all read
+            </Button>
+          ) : null}
+        </div>
       }
     >
       {items.length === 0 ? (

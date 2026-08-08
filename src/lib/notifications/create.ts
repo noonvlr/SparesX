@@ -22,6 +22,14 @@ export async function createNotification(params: {
       href: params.href?.slice(0, 300),
       meta: params.meta,
     });
+
+    const { sendPushToUser } = await import("@/lib/push/send");
+    void sendPushToUser({
+      userId: params.userId,
+      title: params.title,
+      body: params.body,
+      href: params.href,
+    });
   } catch (err) {
     console.warn("[notification] create failed:", err);
   }

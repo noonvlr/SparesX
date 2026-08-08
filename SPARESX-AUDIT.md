@@ -337,11 +337,28 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- Drop localStorage socket JWT entirely *(Phase 20: JWT no longer written; socket cookie-only; legacy token cleared on auth)*
-- Full catalog ObjectId rewrite / backfill of historical listings (Phase 18 stores refs on new creates)
-- Atlas Search when scale demands (Mongo `$text` covers MVP)
-- Redis socket adapter (rate limits now Mongo-shared; socket adapter still optional)
-- Web push notification channel (email + in-app covered)
+- *(none blocking — phases 11–24 closed the audit remediation track)*
+- Optional ops: run `npm run backfill:catalog-refs` on production data; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX` when infrastructure is ready
+
+### Phase 21 additions
+
+- `scripts/backfill-catalog-refs.ts` + `npm run backfill:catalog-refs` to populate Product ObjectId refs on historical listings
+
+### Phase 22 additions
+
+- Optional Socket.io Redis adapter when `REDIS_URL` / `SOCKET_REDIS_URL` is set (`@socket.io/redis-adapter` + `ioredis`)
+
+### Phase 23 additions
+
+- Web push MVP: `PushSubscription` model, `/api/push/*`, `public/sw.js`, `PushEnableButton` on notifications
+- `createNotification` also fans out via web-push when VAPID env is configured
+
+### Phase 24 additions
+
+- Product list filters prefer catalog ObjectId refs (`deviceTypeId` / `brandId`) alongside string fields
+- Optional Atlas Search path when `ATLAS_SEARCH_INDEX` is set (falls back to Mongo `$text`)
+
+---
 
 ### Phase 3 additions
 

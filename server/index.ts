@@ -75,8 +75,23 @@ async function main() {
       credentials: true,
     },
     maxHttpBufferSize: 256 * 1024,
-    // Ready for @socket.io/redis-adapter later
   });
+
+  const redisUrl = process.env.REDIS_URL || process.env.SOCKET_REDIS_URL;
+  if (redisUrl) {
+    try {
+      const { createAdapter } = await import("@socket.io/redis-adapter");
+      const { Redis } = await import("ioredis");
+      const pubClient = new Redis(redisUrl);
+      const subClient = pubClient.duplicate();
+      io.adapter(createAdapter(pubClient, subClient));
+      console.log("[socket] Redis adapter enabled");
+    } catch (err) {
+      console.warn("[socket] Redis adapter failed; continuing without it", err);
+    }
+  } else {
+    console.log("[socket] Redis adapter skipped (set REDIS_URL to enable)");
+  }
 
   io.use(async (socket, next) => {
     try {

@@ -266,7 +266,20 @@ export async function fetchProductList(
   const andClauses: Record<string, unknown>[] = [];
 
   if (deviceCategory) {
-    query.deviceCategory = deviceCategory.toLowerCase();
+    const slug = deviceCategory.toLowerCase();
+    try {
+      const { resolveCatalogRefs } = await import("@/lib/catalog/resolveRefs");
+      const refs = await resolveCatalogRefs({ deviceCategory: slug });
+      if (refs.deviceTypeId) {
+        andClauses.push({
+          $or: [{ deviceCategory: slug }, { deviceTypeId: refs.deviceTypeId }],
+        });
+      } else {
+        query.deviceCategory = slug;
+      }
+    } catch {
+      query.deviceCategory = slug;
+    }
   } else if (category) {
     // Legacy `category` may be a device slug or a part-type slug
     andClauses.push({
@@ -283,10 +296,36 @@ export async function fetchProductList(
   }
 
   if (brand) {
-    query.brand = {
-      $regex: `^${escapeRegex(brand)}$`,
-      $options: "i",
-    };
+    try {
+      const { resolveCatalogRefs } = await import("@/lib/catalog/resolveRefs");
+      const refs = await resolveCatalogRefs({
+        deviceCategory: deviceCategory || undefined,
+        brand,
+      });
+      if (refs.brandId) {
+        andClauses.push({
+          $or: [
+            {
+              brand: {
+                $regex: `^${escapeRegex(brand)}$`,
+                $options: "i",
+              },
+            },
+            { brandId: refs.brandId },
+          ],
+        });
+      } else {
+        query.brand = {
+          $regex: `^${escapeRegex(brand)}$`,
+          $options: "i",
+        };
+      }
+    } catch {
+      query.brand = {
+        $regex: `^${escapeRegex(brand)}$`,
+        $options: "i",
+      };
+    }
   }
 
   if (deviceModel) {
@@ -307,12 +346,18 @@ export async function fetchProductList(
   }
 
   let usedTextSearch = false;
+  let usedAtlasSearch = false;
   const trimmedSearch = search?.trim();
   if (trimmedSearch) {
     const textQuery = sanitizeTextSearch(trimmedSearch);
     if (textQuery.length >= 2) {
-      query.$text = { $search: textQuery };
-      usedTextSearch = true;
+      const { atlasSearchEnabled } = await import("@/lib/products/atlasSearch");
+      if (atlasSearchEnabled()) {
+        usedAtlasSearch = true;
+      } else {
+        query.$text = { $search: textQuery };
+        usedTextSearch = true;
+      }
     } else {
       andClauses.push(buildSearchFilter(trimmedSearch));
     }
@@ -329,10 +374,82 @@ export async function fetchProductList(
 
   const sortSpec = resolveSort(sort);
   // Prefer text relevance when searching and sort is default featured
-  const findSort =
+  let findSort: Record<string, 1 | -1 | { $meta: "textScore" }> =
     usedTextSearch && (params.sort || "featured") === "featured"
       ? { score: { $meta: "textScore" as const }, ...sortSpec }
       : sortSpec;
+
+  // Atlas Search aggregation path (when ATLAS_SEARCH_INDEX is configured)
+  if (usedAtlasSearch && trimmedSearch) {
+    try {
+      const {
+        buildAtlasProductSearchStage,
+      } = await import("@/lib/products/atlasSearch");
+      const textQuery = sanitizeTextSearch(trimmedSearch);
+      const matchQuery = { ...query };
+      delete matchQuery.$text;
+      const pipeline: Record<string, unknown>[] = [
+        buildAtlasProductSearchStage(textQuery),
+        { $match: matchQuery },
+        {
+          $facet: {
+            total: [{ $count: "count" }],
+            docs: [
+              { $sort: sortSpec },
+              { $skip: (page - 1) * limit },
+              { $limit: limit },
+              {
+                $project: {
+                  _id: 1,
+                  slug: 1,
+                  name: 1,
+                  price: 1,
+                  images: 1,
+                  brand: 1,
+                  partType: 1,
+                  deviceModel: 1,
+                  category: 1,
+                  deviceCategory: 1,
+                  condition: 1,
+                  priceNegotiable: 1,
+                  technician: 1,
+                },
+              },
+            ],
+          },
+        },
+      ];
+      const [facet] = await Product.aggregate(pipeline as any[]);
+      const total = facet?.total?.[0]?.count || 0;
+      const docs = facet?.docs || [];
+      const products: ProductListItem[] = docs.map(
+        (doc: Record<string, any>) => ({
+          _id: String(doc._id),
+          slug: doc.slug || undefined,
+          name: doc.name || "",
+          price: typeof doc.price === "number" ? doc.price : 0,
+          images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
+          brand: doc.brand || undefined,
+          partType: doc.partType || undefined,
+          deviceModel: doc.deviceModel || undefined,
+          category: doc.category || undefined,
+          deviceCategory: doc.deviceCategory || undefined,
+          condition: doc.condition || undefined,
+          priceNegotiable: Boolean(doc.priceNegotiable),
+          technician: doc.technician ? String(doc.technician) : undefined,
+        }),
+      );
+      return { products, total, page, pages: Math.ceil(total / limit) || 1 };
+    } catch (err) {
+      console.warn("[products] Atlas Search failed; falling back to $text", err);
+      query.$text = { $search: sanitizeTextSearch(trimmedSearch) };
+      usedTextSearch = true;
+      usedAtlasSearch = false;
+      if ((params.sort || "featured") === "featured") {
+        findSort = { score: { $meta: "textScore" as const }, ...sortSpec };
+      }
+    }
+  }
 
   try {
     const total = await Product.countDocuments(query);
