@@ -66,9 +66,6 @@ export async function generateMetadata({
       openGraph: {
         title: heading,
         description,
-        // "product" is a valid OG type; Next's typings omit it from the union,
-        // so cast through the metadata object rather than emitting a body meta.
-        ...( { type: "product" } as unknown as { type: "website" }),
         url: canonicalUrl,
         siteName: SITE_NAME,
         locale: "en_IN",
@@ -228,6 +225,13 @@ export default async function ProductSlugPage({
 
   return (
     <>
+      {/*
+        Next's Metadata API rewrites unknown openGraph.type values, so the
+        product OG type has to be emitted as a raw meta tag. App Router hoists
+        it into <head>. Google rich results use the JSON-LD Product block;
+        this mainly helps Facebook/WhatsApp link previews.
+      */}
+      <meta property="og:type" content="product" />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
