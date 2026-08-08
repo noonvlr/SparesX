@@ -16,10 +16,14 @@ import type { ChatConversation, ChatMessage } from "@/types/chat";
 import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
 import { getSocketUrl } from "@/lib/chat/socketUrl";
 import { announceChatOffline } from "@/lib/chat/announceOffline";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, getAccessToken, getCachedUserId, resolveSessionUserId } from "@/lib/auth/clientAuth";
 const MAX_FLOATING = 3;
 
 function currentUserId(): string | null {
+  return currentUserIdFromToken() || getCachedUserId();
+}
+
+function currentUserIdFromToken(): string | null {
   try {
     const token = getAccessToken();
     if (!token) return null;
@@ -649,7 +653,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-    const syncAuth = () => setUserId(currentUserId());
+    const syncAuth = () => {
+      void resolveSessionUserId().then((id) => setUserId(id));
+    };
     syncAuth();
     window.addEventListener("storage", syncAuth);
     window.addEventListener("focus", syncAuth);
@@ -675,211 +681,226 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
   // Auth + socket lifecycle
   useEffect(() => {
-    const syncAuth = () => {
-      const uid = currentUserId();
+    let cancelled = false;
+    let cleanup: (() => void) | undefined;
+
+    (async () => {
+      const uid =
+        currentUserIdFromToken() || (await resolveSessionUserId());
+      if (cancelled) return;
       setUserId(uid);
-      return uid;
-    };
-
-    const uid = syncAuth();
-    if (!uid) {
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-      setSocketConnected(false);
-      return;
-    }
-
-    void loadConversations();
-    void refreshUnread();
-
-    const socketUrl = getSocketUrl();
-    if (!socketUrl) {
-      // Vercel / no companion server: stay on REST presence + polling
-      socketRef.current?.disconnect();
-      socketRef.current = null;
-      setSocketConnected(false);
-      return;
-    }
-
-    const token = getAccessToken();
-    let socket = socketRef.current;
-    if (!socket || !socket.connected) {
-      socket = io(socketUrl, {
-        auth: token ? { token } : {},
-        withCredentials: true,
-        transports: ["websocket", "polling"],
-        reconnection: true,
-        reconnectionAttempts: Infinity,
-        reconnectionDelay: 500,
-        reconnectionDelayMax: 3000,
-        timeout: 10000,
-      });
-      socketRef.current = socket;
-      (globalThis as any).__sparesx_socket = socket;
-    }
-
-    const onConnect = () => setSocketConnected(true);
-    const onDisconnect = () => setSocketConnected(false);
-    const onConnectError = (error: Error) => {
-      console.error("[chat] socket connect_error", error.message);
-      setSocketConnected(false);
-    };
-    const onPresenceSnapshot = (payload: { userIds?: string[] }) => {
-      const ids = new Set((payload.userIds || []).map(String));
-      setOnlineMap((prev) => {
-        const next = { ...prev };
-        for (const key of Object.keys(next)) {
-          next[key] = ids.has(key);
-        }
-        for (const id of ids) {
-          if (id !== String(uid)) next[id] = true;
-        }
-        return next;
-      });
-    };
-
-    const isViewing = (conversationId: string) => {
-      const id = String(conversationId);
-      if (activeIdRef.current === id && panelOpenRef.current) return true;
-      return (
-        floatingRef.current.includes(id) && !minimizedRef.current.has(id)
-      );
-    };
-
-    const onNew = (payload: { message: ChatMessage; conversationId: string }) => {
-      const cid = String(payload.conversationId);
-      const msg = normalizeMessage(payload.message);
-      appendMessage(cid, msg);
-
-      const mine = String(msg.senderId) === String(uid);
-      if (!mine) {
-        playMessageSound();
-        if (isViewing(cid)) {
-          socket?.emit("mark-read", { conversationId: cid });
-        } else {
-          setConversations((prev) => {
-            const exists = prev.some((c) => c._id === cid);
-            if (!exists) {
-              void loadConversations();
-              return prev;
-            }
-            return prev
-              .map((c) =>
-                c._id === cid
-                  ? {
-                      ...c,
-                      lastMessage:
-                        msg.type === "image" ? "📷 Photo" : msg.text,
-                      lastMessageTime: msg.createdAt,
-                      unreadCount: (c.unreadCount || 0) + 1,
-                    }
-                  : c,
-              )
-              .sort(
-                (a, b) =>
-                  new Date(b.lastMessageTime || 0).getTime() -
-                  new Date(a.lastMessageTime || 0).getTime(),
-              );
-          });
-          void refreshUnread();
-        }
+      if (!uid) {
+        socketRef.current?.disconnect();
+        socketRef.current = null;
+        setSocketConnected(false);
+        return;
       }
-    };
 
-    const onSent = (payload: { message: ChatMessage; conversationId: string }) => {
-      appendMessage(String(payload.conversationId), payload.message);
       void loadConversations();
-    };
+      void refreshUnread();
 
-    const onDelivered = (payload: { messageId: string }) => {
-      const mid = String(payload.messageId);
-      setMessagesById((prev) => {
-        const next: typeof prev = {};
-        for (const [cid, list] of Object.entries(prev)) {
-          next[cid] = list.map((m) =>
-            m._id === mid ? { ...m, delivered: true } : m,
-          );
+      const socketUrl = getSocketUrl();
+      if (!socketUrl) {
+        socketRef.current?.disconnect();
+        socketRef.current = null;
+        setSocketConnected(false);
+        return;
+      }
+
+      const token = getAccessToken();
+      let socket = socketRef.current;
+      if (!socket || !socket.connected) {
+        socket = io(socketUrl, {
+          auth: token ? { token } : {},
+          withCredentials: true,
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionAttempts: Infinity,
+          reconnectionDelay: 500,
+          reconnectionDelayMax: 3000,
+          timeout: 10000,
+        });
+        socketRef.current = socket;
+        (globalThis as any).__sparesx_socket = socket;
+      }
+
+      const onConnect = () => setSocketConnected(true);
+      const onDisconnect = () => setSocketConnected(false);
+      const onConnectError = (error: Error) => {
+        console.error("[chat] socket connect_error", error.message);
+        setSocketConnected(false);
+      };
+      const onPresenceSnapshot = (payload: { userIds?: string[] }) => {
+        const ids = new Set((payload.userIds || []).map(String));
+        setOnlineMap((prev) => {
+          const next = { ...prev };
+          for (const key of Object.keys(next)) {
+            next[key] = ids.has(key);
+          }
+          for (const id of ids) {
+            if (id !== String(uid)) next[id] = true;
+          }
+          return next;
+        });
+      };
+
+      const isViewing = (conversationId: string) => {
+        const id = String(conversationId);
+        if (activeIdRef.current === id && panelOpenRef.current) return true;
+        return (
+          floatingRef.current.includes(id) && !minimizedRef.current.has(id)
+        );
+      };
+
+      const onNew = (payload: {
+        message: ChatMessage;
+        conversationId: string;
+      }) => {
+        const cid = String(payload.conversationId);
+        const msg = normalizeMessage(payload.message);
+        appendMessage(cid, msg);
+
+        const mine = String(msg.senderId) === String(uid);
+        if (!mine) {
+          playMessageSound();
+          if (isViewing(cid)) {
+            socket?.emit("mark-read", { conversationId: cid });
+          } else {
+            setConversations((prev) => {
+              const exists = prev.some((c) => c._id === cid);
+              if (!exists) {
+                void loadConversations();
+                return prev;
+              }
+              return prev
+                .map((c) =>
+                  c._id === cid
+                    ? {
+                        ...c,
+                        lastMessage:
+                          msg.type === "image" ? "📷 Photo" : msg.text,
+                        lastMessageTime: msg.createdAt,
+                        unreadCount: (c.unreadCount || 0) + 1,
+                      }
+                    : c,
+                )
+                .sort(
+                  (a, b) =>
+                    new Date(b.lastMessageTime || 0).getTime() -
+                    new Date(a.lastMessageTime || 0).getTime(),
+                );
+            });
+            void refreshUnread();
+          }
         }
-        return next;
-      });
-    };
+      };
 
-    const onRead = (payload: { conversationId: string }) => {
-      const cid = String(payload.conversationId);
-      setMessagesById((prev) => ({
-        ...prev,
-        [cid]: (prev[cid] || []).map((m) =>
-          String(m.senderId) === String(uid)
-            ? { ...m, read: true, delivered: true }
-            : m,
-        ),
-      }));
-    };
+      const onSent = (payload: {
+        message: ChatMessage;
+        conversationId: string;
+      }) => {
+        appendMessage(String(payload.conversationId), payload.message);
+        void loadConversations();
+      };
 
-    const onTyping = (payload: { conversationId: string; userId: string }) => {
-      if (String(payload.userId) === String(uid)) return;
-      const cid = String(payload.conversationId);
-      setTypingById((p) => ({ ...p, [cid]: true }));
-      if (remoteTypingTimers.current[cid]) {
-        clearTimeout(remoteTypingTimers.current[cid]);
-      }
-      remoteTypingTimers.current[cid] = setTimeout(() => {
-        setTypingById((p) => ({ ...p, [cid]: false }));
-      }, 1800);
-    };
-    const onStopTyping = (payload: { conversationId: string }) => {
-      const cid = String(payload.conversationId);
-      if (remoteTypingTimers.current[cid]) {
-        clearTimeout(remoteTypingTimers.current[cid]);
-        delete remoteTypingTimers.current[cid];
-      }
-      setTypingById((p) => ({
-        ...p,
-        [cid]: false,
-      }));
-    };
-    const onOnline = (p: { userId: string }) =>
-      setOnlineMap((m) => ({ ...m, [p.userId]: true }));
-    const onOffline = (p: { userId: string }) =>
-      setOnlineMap((m) => ({ ...m, [p.userId]: false }));
-    const onConversationUpdated = () => {
-      void loadConversations();
-    };
+      const onDelivered = (payload: { messageId: string }) => {
+        const mid = String(payload.messageId);
+        setMessagesById((prev) => {
+          const next: typeof prev = {};
+          for (const [cid, list] of Object.entries(prev)) {
+            next[cid] = list.map((m) =>
+              m._id === mid ? { ...m, delivered: true } : m,
+            );
+          }
+          return next;
+        });
+      };
 
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-    socket.on("connect_error", onConnectError);
-    socket.on("presence-snapshot", onPresenceSnapshot);
-    socket.on("new-message", onNew);
-    socket.on("message-sent", onSent);
-    socket.on("message-delivered", onDelivered);
-    socket.on("message-read", onRead);
-    socket.on("typing", onTyping);
-    socket.on("stop-typing", onStopTyping);
-    socket.on("user-online", onOnline);
-    socket.on("user-offline", onOffline);
-    socket.on("conversation-updated", onConversationUpdated);
-    if (socket.connected) setSocketConnected(true);
+      const onRead = (payload: { conversationId: string }) => {
+        const cid = String(payload.conversationId);
+        setMessagesById((prev) => ({
+          ...prev,
+          [cid]: (prev[cid] || []).map((m) =>
+            String(m.senderId) === String(uid)
+              ? { ...m, read: true, delivered: true }
+              : m,
+          ),
+        }));
+      };
 
-    const poll = setInterval(refreshUnread, 20000);
+      const onTyping = (payload: {
+        conversationId: string;
+        userId: string;
+      }) => {
+        if (String(payload.userId) === String(uid)) return;
+        const cid = String(payload.conversationId);
+        setTypingById((p) => ({ ...p, [cid]: true }));
+        if (remoteTypingTimers.current[cid]) {
+          clearTimeout(remoteTypingTimers.current[cid]);
+        }
+        remoteTypingTimers.current[cid] = setTimeout(() => {
+          setTypingById((p) => ({ ...p, [cid]: false }));
+        }, 1800);
+      };
+      const onStopTyping = (payload: { conversationId: string }) => {
+        const cid = String(payload.conversationId);
+        if (remoteTypingTimers.current[cid]) {
+          clearTimeout(remoteTypingTimers.current[cid]);
+          delete remoteTypingTimers.current[cid];
+        }
+        setTypingById((p) => ({
+          ...p,
+          [cid]: false,
+        }));
+      };
+      const onOnline = (p: { userId: string }) =>
+        setOnlineMap((m) => ({ ...m, [p.userId]: true }));
+      const onOffline = (p: { userId: string }) =>
+        setOnlineMap((m) => ({ ...m, [p.userId]: false }));
+      const onConversationUpdated = () => {
+        void loadConversations();
+      };
+
+      socket.on("connect", onConnect);
+      socket.on("disconnect", onDisconnect);
+      socket.on("connect_error", onConnectError);
+      socket.on("presence-snapshot", onPresenceSnapshot);
+      socket.on("new-message", onNew);
+      socket.on("message-sent", onSent);
+      socket.on("message-delivered", onDelivered);
+      socket.on("message-read", onRead);
+      socket.on("typing", onTyping);
+      socket.on("stop-typing", onStopTyping);
+      socket.on("user-online", onOnline);
+      socket.on("user-offline", onOffline);
+      socket.on("conversation-updated", onConversationUpdated);
+      if (socket.connected) setSocketConnected(true);
+
+      const poll = setInterval(refreshUnread, 20000);
+
+      cleanup = () => {
+        clearInterval(poll);
+        socket.off("connect", onConnect);
+        socket.off("disconnect", onDisconnect);
+        socket.off("connect_error", onConnectError);
+        socket.off("presence-snapshot", onPresenceSnapshot);
+        socket.off("new-message", onNew);
+        socket.off("message-sent", onSent);
+        socket.off("message-delivered", onDelivered);
+        socket.off("message-read", onRead);
+        socket.off("typing", onTyping);
+        socket.off("stop-typing", onStopTyping);
+        socket.off("user-online", onOnline);
+        socket.off("user-offline", onOffline);
+        socket.off("conversation-updated", onConversationUpdated);
+        Object.values(remoteTypingTimers.current).forEach(clearTimeout);
+        remoteTypingTimers.current = {};
+      };
+    })();
 
     return () => {
-      clearInterval(poll);
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-      socket.off("connect_error", onConnectError);
-      socket.off("presence-snapshot", onPresenceSnapshot);
-      socket.off("new-message", onNew);
-      socket.off("message-sent", onSent);
-      socket.off("message-delivered", onDelivered);
-      socket.off("message-read", onRead);
-      socket.off("typing", onTyping);
-      socket.off("stop-typing", onStopTyping);
-      socket.off("user-online", onOnline);
-      socket.off("user-offline", onOffline);
-      socket.off("conversation-updated", onConversationUpdated);
-      Object.values(remoteTypingTimers.current).forEach(clearTimeout);
-      remoteTypingTimers.current = {};
+      cancelled = true;
+      cleanup?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appendMessage, loadConversations, refreshUnread, userId]);
