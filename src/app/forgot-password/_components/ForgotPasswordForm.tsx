@@ -107,8 +107,8 @@ export default function ForgotPasswordForm() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -252,7 +252,7 @@ export default function ForgotPasswordForm() {
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Create a strong password"
                   className="pr-16"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
                 <Button
@@ -279,7 +279,7 @@ export default function ForgotPasswordForm() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   className="pr-16"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
                 <Button

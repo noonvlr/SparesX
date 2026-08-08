@@ -10,8 +10,8 @@ import { notifySavedSearchesForProduct } from "@/lib/saved-searches/match";
 const MAX_BULK = 50;
 
 /**
- * Bulk approve or reject listings.
- * Body: { ids: string[], action: "approve" | "reject" }
+ * Bulk approve, reject, or clear duplicate flags.
+ * Body: { ids: string[], action: "approve" | "reject" | "clear_duplicate" }
  */
 export async function POST(req: NextRequest) {
   const admin = await requireAdmin(req);
@@ -19,10 +19,17 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const action = body?.action === "reject" ? "reject" : body?.action;
-    if (action !== "approve" && action !== "reject") {
+    const action = String(body?.action || "").trim();
+    if (
+      action !== "approve" &&
+      action !== "reject" &&
+      action !== "clear_duplicate"
+    ) {
       return NextResponse.json(
-        { message: 'action must be "approve" or "reject"' },
+        {
+          message:
+            'action must be "approve", "reject", or "clear_duplicate"',
+        },
         { status: 400 },
       );
     }
@@ -30,7 +37,10 @@ export async function POST(req: NextRequest) {
     const rawIds: unknown[] = Array.isArray(body?.ids) ? body.ids : [];
     const validIds = rawIds
       .map((id) => String(id || "").trim())
-      .filter((id): id is string => Boolean(id) && mongoose.Types.ObjectId.isValid(id));
+      .filter(
+        (id): id is string =>
+          Boolean(id) && mongoose.Types.ObjectId.isValid(id),
+      );
     const ids = [...new Set(validIds)].slice(0, MAX_BULK);
 
     if (ids.length === 0) {
@@ -41,10 +51,28 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
+
+    if (action === "clear_duplicate") {
+      const result = await Product.updateMany(
+        { _id: { $in: ids } },
+        { $pull: { tags: "possible_duplicate" } },
+      );
+      return NextResponse.json(
+        {
+          message: `Cleared duplicate flag on ${result.modifiedCount} listing(s)`,
+          updated: result.modifiedCount,
+          requested: ids.length,
+        },
+        { status: 200 },
+      );
+    }
+
     const nextStatus = action === "approve" ? "approved" : "rejected";
     const products = await Product.find({ _id: { $in: ids } });
     const sellerIds = [
-      ...new Set(products.map((p) => String(p.technician || "")).filter(Boolean)),
+      ...new Set(
+        products.map((p) => String(p.technician || "")).filter(Boolean),
+      ),
     ];
     const { User } = await import("@/lib/models/User");
     const sellers = await User.find({ _id: { $in: sellerIds } })
@@ -64,6 +92,11 @@ export async function POST(req: NextRequest) {
       product.status = nextStatus;
       product.soldVia = null;
       product.soldAt = null;
+      if (action === "approve") {
+        product.tags = (product.tags || []).filter(
+          (t) => t !== "possible_duplicate",
+        );
+      }
       await product.save();
       updated += 1;
 
@@ -74,9 +107,12 @@ export async function POST(req: NextRequest) {
       if (sellerId) {
         void createNotification({
           userId: sellerId,
-          type: nextStatus === "approved" ? "listing_approved" : "listing_rejected",
+          type:
+            nextStatus === "approved" ? "listing_approved" : "listing_rejected",
           title:
-            nextStatus === "approved" ? "Listing approved" : "Listing rejected",
+            nextStatus === "approved"
+              ? "Listing approved"
+              : "Listing rejected",
           body: title,
           href: "/technician/products",
           meta: { productId: String(product._id) },

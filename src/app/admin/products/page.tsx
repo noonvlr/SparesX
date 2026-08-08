@@ -35,6 +35,7 @@ type Product = {
   images?: string[];
   status: string;
   featured?: boolean;
+  tags?: string[];
   technician?: { name?: string; email?: string; mobile?: string };
   createdAt: string;
 };
@@ -58,6 +59,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("all");
+  const [tagFilter, setTagFilter] = useState("");
   const [q, setQ] = useState("");
   const [statusCounts, setStatusCounts] = useState({
     all: 0,
@@ -65,6 +67,7 @@ export default function AdminProductsPage() {
     approved: 0,
     rejected: 0,
   });
+  const [duplicateCount, setDuplicateCount] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState(emptyEdit);
@@ -72,7 +75,7 @@ export default function AdminProductsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  const load = useCallback(async (nextStatus = status, nextQ = q) => {
+  const load = useCallback(async (nextStatus = status, nextQ = q, nextTag = tagFilter) => {
     if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
@@ -82,6 +85,7 @@ export default function AdminProductsPage() {
     try {
       const params = new URLSearchParams({ status: nextStatus, limit: "100" });
       if (nextQ.trim()) params.set("q", nextQ.trim());
+      if (nextTag) params.set("tag", nextTag);
       const res = await authFetch(`/api/admin/products?${params}`);
       const data = await res.json();
       if (!res.ok) {
@@ -90,6 +94,7 @@ export default function AdminProductsPage() {
       }
       setProducts(data.products || []);
       setStatusCounts(data.statusCounts || statusCounts);
+      setDuplicateCount(Number(data.duplicateCount) || 0);
       setSelectedIds([]);
       setError("");
     } catch {
@@ -97,12 +102,12 @@ export default function AdminProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [status, q]);
+  }, [status, q, tagFilter]);
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
+  }, [status, tagFilter]);
 
   async function patchProduct(id: string, body: Record<string, unknown>) {
     if (!isLoggedInClient()) return;
@@ -191,11 +196,19 @@ export default function AdminProductsPage() {
     setSelectedIds(products.map((p) => p._id));
   }
 
-  async function bulkAction(action: "approve" | "reject") {
+  async function bulkAction(
+    action: "approve" | "reject" | "clear_duplicate",
+  ) {
     if (!isLoggedInClient() || selectedIds.length === 0) return;
+    const label =
+      action === "approve"
+        ? "Approve"
+        : action === "reject"
+          ? "Reject"
+          : "Clear duplicate flag on";
     if (
       !confirm(
-        `${action === "approve" ? "Approve" : "Reject"} ${selectedIds.length} listing${selectedIds.length === 1 ? "" : "s"}?`,
+        `${label} ${selectedIds.length} listing${selectedIds.length === 1 ? "" : "s"}?`,
       )
     ) {
       return;
@@ -252,13 +265,28 @@ export default function AdminProductsPage() {
             key={value}
             type="button"
             size="sm"
-            variant={status === value ? "primary" : "outline"}
-            onClick={() => setStatus(value)}
+            variant={status === value && !tagFilter ? "primary" : "outline"}
+            onClick={() => {
+              setTagFilter("");
+              setStatus(value);
+            }}
             className="rounded-full"
           >
             {label} ({statusCounts[value] ?? 0})
           </Button>
         ))}
+        <Button
+          type="button"
+          size="sm"
+          variant={tagFilter === "possible_duplicate" ? "primary" : "outline"}
+          onClick={() => {
+            setTagFilter("possible_duplicate");
+            setStatus("all");
+          }}
+          className="rounded-full"
+        >
+          Possible duplicates ({duplicateCount})
+        </Button>
       </div>
 
       <form
@@ -310,6 +338,17 @@ export default function AdminProductsPage() {
           >
             Reject selected
           </Button>
+          {tagFilter === "possible_duplicate" ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              loading={bulkBusy}
+              onClick={() => void bulkAction("clear_duplicate")}
+            >
+              Clear duplicate flag
+            </Button>
+          ) : null}
           <Button
             type="button"
             size="sm"
@@ -384,6 +423,11 @@ export default function AdminProductsPage() {
                             ★ Featured
                           </Badge>
                         )}
+                        {p.tags?.includes("possible_duplicate") ? (
+                          <Badge tone="warning" className="ml-2">
+                            Duplicate?
+                          </Badge>
+                        ) : null}
                       </p>
                       <p className="text-xs text-[var(--muted)] line-clamp-2">
                         {p.description}

@@ -2,7 +2,7 @@
 
 export const INDIAN_PHONE_REGEX = /^[6-9]\d{9}$/;
 export const PIN_CODE_REGEX = /^\d{6}$/;
-export const MIN_PASSWORD_LENGTH = 6;
+export const MIN_PASSWORD_LENGTH = 8;
 export const MAX_ABOUT_LENGTH = 500;
 
 export function normalizePhone(value: unknown): string {

@@ -4,6 +4,7 @@ import { User } from "@/lib/models/User";
 import { hashPassword } from "@/lib/utils/hash";
 import { sendPasswordResetSuccessEmail } from "@/lib/services/emailService";
 import { verifyOtp } from "@/lib/security/secrets";
+import { validatePassword } from "@/lib/validation/userContact";
 import {
   checkRateLimitAsync,
   clientIpFromRequest,
@@ -24,11 +25,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (String(newPassword).length < 6) {
-      return NextResponse.json(
-        { message: "Password must be at least 6 characters" },
-        { status: 400 },
-      );
+    const pwError = validatePassword(newPassword);
+    if (pwError) {
+      return NextResponse.json({ message: pwError }, { status: 400 });
     }
 
     const normalized = String(email).toLowerCase().trim();

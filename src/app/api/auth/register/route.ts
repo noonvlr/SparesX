@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { hashPassword } from "@/lib/utils/hash";
-import { parseContactFields } from "@/lib/validation/userContact";
+import { parseContactFields, validatePassword } from "@/lib/validation/userContact";
 import {
   checkRateLimitAsync,
   clientIpFromRequest,
@@ -55,13 +55,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: parsed.message }, { status: 400 });
     }
 
-    const pw = String(password);
-    if (pw.length < 6) {
-      return NextResponse.json(
-        { message: "Password must be at least 6 characters" },
-        { status: 400 },
-      );
+    const pwError = validatePassword(password);
+    if (pwError) {
+      return NextResponse.json({ message: pwError }, { status: 400 });
     }
+
+    const pw = String(password);
 
     await connectDB();
     const existing = await User.findOne({ email: parsed.data.email }).select(

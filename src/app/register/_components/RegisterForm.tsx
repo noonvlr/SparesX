@@ -234,8 +234,8 @@ export default function RegisterForm() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters");
       return;
     }
 
@@ -432,7 +432,7 @@ export default function RegisterForm() {
                   onChange={handleChange}
                   className="pr-12"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <IconButton
                   type="button"
@@ -484,7 +484,7 @@ export default function RegisterForm() {
                   variant={passwordMatch ? "default" : "error"}
                   className="pr-12"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <IconButton
                   type="button"

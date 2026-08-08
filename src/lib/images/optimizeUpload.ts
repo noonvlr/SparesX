@@ -17,8 +17,8 @@ function toPlainBuffer(data: Uint8Array): Buffer {
 }
 
 /**
- * Auto-orient, resize to fit within MAX_EDGE (no upscale), convert to WebP
- * (GIF kept as GIF to preserve animation).
+ * Auto-orient from EXIF, then re-encode. Sharp discards metadata by default
+ * (no withMetadata) — GPS/camera EXIF is stripped for privacy.
  */
 export async function optimizeUploadImage(
   input: Buffer,

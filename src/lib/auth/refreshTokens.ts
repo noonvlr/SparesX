@@ -65,6 +65,21 @@ export async function revokeRefreshToken(rawToken: string): Promise<void> {
   );
 }
 
+/** Resolve user id from a raw refresh cookie (for logout / session revoke). */
+export async function findUserIdByRefreshToken(
+  rawToken: string,
+): Promise<string | null> {
+  await connectDB();
+  const tokenHash = hashRefreshToken(rawToken);
+  const existing = await RefreshToken.findOne({
+    tokenHash,
+    revokedAt: null,
+  }).lean();
+  if (!existing) return null;
+  if (existing.expiresAt.getTime() <= Date.now()) return null;
+  return String(existing.user);
+}
+
 export async function revokeAllRefreshTokensForUser(userId: string): Promise<void> {
   await connectDB();
   await RefreshToken.updateMany(

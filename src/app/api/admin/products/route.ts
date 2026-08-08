@@ -16,6 +16,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status");
     const q = searchParams.get("q");
     const featured = searchParams.get("featured");
+    const tag = searchParams.get("tag")?.trim();
     const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
 
@@ -23,6 +24,7 @@ export async function GET(req: NextRequest) {
     if (status && status !== "all") query.status = status;
     if (featured === "true") query.featured = true;
     if (featured === "false") query.featured = { $ne: true };
+    if (tag) query.tags = tag;
     if (q?.trim()) {
       const rx = { $regex: q.trim(), $options: "i" };
       query.$or = [
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const [products, total, counts] = await Promise.all([
+    const [products, total, counts, duplicateCount] = await Promise.all([
       Product.find(query)
         .populate("technician", "name email mobile")
         .sort({ createdAt: -1 })
@@ -50,6 +52,7 @@ export async function GET(req: NextRequest) {
           },
         },
       ]),
+      Product.countDocuments({ tags: "possible_duplicate" }),
     ]);
 
     const statusCounts = { pending: 0, approved: 0, rejected: 0, all: 0 };
@@ -67,6 +70,7 @@ export async function GET(req: NextRequest) {
         page,
         pages: Math.ceil(total / limit) || 1,
         statusCounts,
+        duplicateCount,
       },
       { status: 200 },
     );

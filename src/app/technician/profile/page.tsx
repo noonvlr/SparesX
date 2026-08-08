@@ -773,8 +773,8 @@ export default function TechnicianProfilePage() {
             title="Security"
             description={
               profile?.hasPassword
-                ? "Change your password. Minimum 6 characters."
-                : "Add a password so you can also sign in with email (Google Sign-In still works). Minimum 6 characters."
+                ? "Change your password. Minimum 8 characters."
+                : "Add a password so you can also sign in with email (Google Sign-In still works). Minimum 8 characters."
             }
           >
             {profile?.googleLinked ? (
@@ -822,7 +822,7 @@ export default function TechnicianProfilePage() {
                   value={pwNew}
                   onChange={(e) => setPwNew(e.target.value)}
                   autoComplete="new-password"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
               </Field>
@@ -838,7 +838,7 @@ export default function TechnicianProfilePage() {
                   value={pwConfirm}
                   onChange={(e) => setPwConfirm(e.target.value)}
                   autoComplete="new-password"
-                  minLength={6}
+                  minLength={8}
                   required
                 />
               </Field>
