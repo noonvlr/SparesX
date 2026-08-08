@@ -360,6 +360,13 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Admin approve/reject clears `soldVia` / `soldAt`
 - Chat `listMessages` limit capped; Socket `maxHttpBufferSize` 256KB
 
+### Phase 4 additions
+
+- In-app notifications (`Notification` model, `/notifications`, shell badge)
+- Events: WhatsApp request/approve/decline, offline chat messages
+- Admin device-types / device-categories GETs require admin
+- Presence snapshot + online/offline scoped to conversation peers only
+
 ---
 
 ## Well-protected areas (positive)

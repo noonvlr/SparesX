@@ -289,6 +289,17 @@ export async function POST(req: NextRequest) {
       { upsert: true, new: true },
     );
 
+    const { createNotification } = await import("@/lib/notifications/create");
+    const requester = await User.findById(auth.id).select("name").lean();
+    await createNotification({
+      userId: sellerId,
+      type: "whatsapp_request",
+      title: "New WhatsApp connect request",
+      body: `${requester?.name || "A technician"} wants to contact you on WhatsApp.`,
+      href: "/whatsapp-connect",
+      meta: { connectId: String(doc._id), requesterId: auth.id },
+    });
+
     return NextResponse.json(
       {
         message:

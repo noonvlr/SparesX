@@ -22,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
           "/complete-profile",
           "/verify",
           "/whatsapp-connect",
+          "/notifications",
           "/forgot-password",
           "/login",
           "/register",

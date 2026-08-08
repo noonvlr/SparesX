@@ -128,6 +128,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     supportUnread,
     chatUnread,
     waPending,
+    notifUnread,
     handleLogout,
     openMessages,
   } = auth;
@@ -254,6 +255,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         label: "WhatsApp",
         icon: <IconChat className="h-5 w-5" />,
         badge: waPending,
+      },
+      {
+        href: "/notifications",
+        label: "Notifications",
+        icon: <IconBookmark className="h-5 w-5" />,
+        badge: notifUnread,
       },
       { href: "/support", label: "Support", icon: <IconChat className="h-5 w-5" /> },
       {
@@ -424,6 +431,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (isAuthenticated) {
       links.push({ href: "/dashboard/buyer/saved", label: "Saved" });
       links.push({ href: "/whatsapp-connect", label: "WhatsApp", badge: waPending });
+      links.push({
+        href: "/notifications",
+        label: "Notifications",
+        badge: notifUnread,
+      });
     }
     links.push({ href: "/support", label: "Support" });
     return links;
@@ -507,6 +519,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex items-center gap-2 shrink-0">
               <ThemeToggle size="sm" />
+              {isAuthenticated && userRole !== "admin" ? (
+                <Link
+                  href="/notifications"
+                  className="relative rounded-[var(--radius)] p-2 text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]"
+                  aria-label="Notifications"
+                >
+                  <IconBookmark className="h-5 w-5" />
+                  <UnreadCount count={notifUnread} />
+                </Link>
+              ) : null}
               {!isAuthenticated ? (
                 <>
                   <Link

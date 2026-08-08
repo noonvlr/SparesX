@@ -42,6 +42,24 @@ export async function PATCH(
       row.respondedAt = new Date();
       await row.save();
 
+      const { createNotification } = await import(
+        "@/lib/notifications/create"
+      );
+      await createNotification({
+        userId: String(row.requester),
+        type: action === "approve" ? "whatsapp_approved" : "whatsapp_declined",
+        title:
+          action === "approve"
+            ? "WhatsApp request approved"
+            : "WhatsApp request declined",
+        body:
+          action === "approve"
+            ? "You can now contact this seller on WhatsApp."
+            : "The seller declined your WhatsApp request.",
+        href: "/whatsapp-connect",
+        meta: { connectId: String(row._id) },
+      });
+
       return NextResponse.json({
         message:
           action === "approve"

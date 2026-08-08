@@ -6,12 +6,15 @@ import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET(req: NextRequest) {
   try {
+    const admin = await requireAdmin(req);
+    if (isAdminError(admin)) return admin;
+
     await connectDB();
 
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
 
-    let query: any = {};
+    let query: Record<string, unknown> = {};
     if (category) {
       const deviceType = await DeviceType.findOne({ slug: category });
       if (deviceType) {
@@ -23,12 +26,12 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { brands, count: brands.length },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error: any) {
     return NextResponse.json(
       { error: error.message || "Failed to fetch brands" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

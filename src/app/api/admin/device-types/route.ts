@@ -3,8 +3,11 @@ import { connectDB } from "@/lib/db/connect";
 import DeviceType from "@/lib/models/DeviceType";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
+    const admin = await requireAdmin(req);
+    if (isAdminError(admin)) return admin;
+
     await connectDB();
 
     const deviceTypes = await DeviceType.find({})

@@ -15,7 +15,6 @@ import {
   addSocket,
   removeSocket,
   isOnline,
-  listOnlineUserIds,
   setViewing,
   isViewing,
 } from "./presence";
@@ -24,13 +23,34 @@ function uid(socket: Socket) {
   return socket.data.userId as string;
 }
 
+async function listConversationPeerIds(userId: string): Promise<string[]> {
+  try {
+    const { Conversation } = await import(
+      "../../src/lib/models/Conversation"
+    );
+    const { connectDB } = await import("../../src/lib/db/connect");
+    await connectDB();
+    const convs = await Conversation.find({ participants: userId })
+      .select("participants")
+      .limit(200)
+      .lean();
+    const peers = new Set<string>();
+    for (const c of convs) {
+      for (const p of c.participants || []) {
+        const id = String(p);
+        if (id && id !== userId) peers.add(id);
+      }
+    }
+    return [...peers];
+  } catch {
+    return [];
+  }
+}
+
 export function registerSocketHandlers(io: Server, socket: Socket) {
   const userId = uid(socket);
   const becameOnline = addSocket(userId, socket.id);
   socket.join(userId);
-  socket.emit("presence-snapshot", {
-    userIds: listOnlineUserIds(),
-  });
 
   void (async () => {
     try {
@@ -38,8 +58,15 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     } catch {
       // ignore
     }
+
+    const peers = await listConversationPeerIds(userId);
+    const onlinePeers = peers.filter((id) => isOnline(id));
+    socket.emit("presence-snapshot", { userIds: onlinePeers });
+
     if (becameOnline) {
-      socket.broadcast.emit("user-online", { userId });
+      for (const peerId of peers) {
+        io.to(peerId).emit("user-online", { userId });
+      }
     }
   })();
 
@@ -189,6 +216,20 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           fromUserId: userId,
           unreadCount: unread,
         });
+        void import("../../src/lib/notifications/create").then(
+          ({ createNotification }) =>
+            createNotification({
+              userId: receiverId,
+              type: "chat_message",
+              title: "New chat message",
+              body: String(result.conversation.lastMessage || "You have a new message").slice(
+                0,
+                200,
+              ),
+              href: "/messages",
+              meta: { conversationId: convId, fromUserId: userId },
+            }),
+        );
       }
 
       io.to(userId).emit("conversation-updated", {
@@ -296,10 +337,20 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
       } catch {
         // ignore
       }
-      socket.broadcast.emit("user-offline", {
-        userId,
-        lastSeen: new Date().toISOString(),
-      });
+      try {
+        const peers = await listConversationPeerIds(userId);
+        for (const peerId of peers) {
+          io.to(peerId).emit("user-offline", {
+            userId,
+            lastSeen: new Date().toISOString(),
+          });
+        }
+      } catch {
+        socket.broadcast.emit("user-offline", {
+          userId,
+          lastSeen: new Date().toISOString(),
+        });
+      }
     }
   });
 }

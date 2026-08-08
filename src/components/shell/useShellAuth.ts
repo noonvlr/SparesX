@@ -16,6 +16,7 @@ export function useShellAuth() {
   const [supportUnread, setSupportUnread] = useState(0);
   const [chatUnread, setChatUnread] = useState(0);
   const [waPending, setWaPending] = useState(0);
+  const [notifUnread, setNotifUnread] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -198,9 +199,50 @@ export function useShellAuth() {
     setSupportUnread(0);
     setChatUnread(0);
     setWaPending(0);
+    setNotifUnread(0);
     showToast("Logged out");
     router.push("/");
   }, [router]);
+
+  // In-app notifications badge
+  useEffect(() => {
+    if (!isAuthenticated || userRole === "admin") {
+      setNotifUnread(0);
+      return;
+    }
+
+    const fetchNotifs = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/notifications/unread-count", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok) setNotifUnread(data.unreadCount || 0);
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 30000);
+    const onUpdated = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail?.unreadCount === "number") {
+        setNotifUnread(detail.unreadCount);
+      } else {
+        fetchNotifs();
+      }
+    };
+    window.addEventListener("sparesx-notifications-updated", onUpdated);
+    window.addEventListener("focus", fetchNotifs);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("sparesx-notifications-updated", onUpdated);
+      window.removeEventListener("focus", fetchNotifs);
+    };
+  }, [isAuthenticated, userRole, pathname]);
 
   const openMessages = useCallback(() => {
     if (chatDock?.openPanel) chatDock.openPanel();
@@ -215,6 +257,7 @@ export function useShellAuth() {
     supportUnread,
     chatUnread,
     waPending,
+    notifUnread,
     handleLogout,
     openMessages,
     pathname,
