@@ -547,6 +547,93 @@
   animation: shimmer 2s infinite;
 }
 
+/* Homepage marketplace stats */
+@keyframes homeStatsEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeStatBarSweep {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.85;
+  }
+}
+
+@keyframes homeStatNumberPop {
+  0% {
+    opacity: 0.35;
+    transform: translateY(4px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes homeStatGlow {
+  0%,
+  100% {
+    box-shadow: var(--shadow-sm);
+  }
+  50% {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 28%, transparent),
+      var(--shadow-md);
+  }
+}
+
+.home-stats-enter {
+  animation: homeStatsEnter 0.55s var(--ease-standard) both;
+}
+
+.home-stat-bar {
+  transform-origin: left center;
+  animation: homeStatBarSweep 1.1s var(--ease-standard) both;
+}
+
+.home-stat-bar--delayed {
+  animation-delay: 0.18s;
+}
+
+.home-stat-number {
+  animation: homeStatNumberPop 0.7s var(--ease-standard) both;
+}
+
+.home-stat-number--brand {
+  animation-delay: 0.12s;
+}
+
+.home-stat-card--sold {
+  animation: homeStatGlow 2.4s ease-in-out 0.8s 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-stats-enter,
+  .home-stat-bar,
+  .home-stat-number,
+  .home-stat-card--sold {
+    animation: none !important;
+  }
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

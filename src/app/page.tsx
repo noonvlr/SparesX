@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import FeaturedProducts from "@/components/FeaturedProducts";
 import AdSlot from "@/components/AdSlot";
 import HomeSearch from "@/components/HomeSearch";
+import HomeMarketplaceStats from "@/components/HomeMarketplaceStats";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
@@ -221,28 +222,10 @@ export default async function HomePage() {
               </Link>
             </div>
 
-            <dl className="mt-10 sm:mt-12 mx-auto flex max-w-md items-stretch justify-center gap-0 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]/80 shadow-[var(--shadow-sm)] backdrop-blur-sm">
-              <div className="flex-1 px-5 py-4 sm:px-8 sm:py-5">
-                <dt className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-                  Live listings
-                </dt>
-                <dd className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)] tabular-nums">
-                  {listedCount.toLocaleString("en-IN")}
-                </dd>
-              </div>
-              <div
-                aria-hidden
-                className="w-px self-stretch bg-[var(--border)]"
-              />
-              <div className="flex-1 px-5 py-4 sm:px-8 sm:py-5">
-                <dt className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-                  Parts sold
-                </dt>
-                <dd className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--brand)] tabular-nums">
-                  {soldCount.toLocaleString("en-IN")}
-                </dd>
-              </div>
-            </dl>
+            <HomeMarketplaceStats
+              listedCount={listedCount}
+              soldCount={soldCount}
+            />
           </div>
         </section>
 

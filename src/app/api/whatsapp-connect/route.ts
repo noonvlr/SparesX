@@ -13,6 +13,8 @@ import {
   getPublicConnectStatus,
   pendingExpiryDate,
 } from "@/lib/whatsapp/connect";
+import { formatListingTitle } from "@/lib/products/listingTitle";
+import { productUrl } from "@/lib/seo/site";
 
 /**
  * GET /api/whatsapp-connect?sellerId=&productId=
@@ -96,9 +98,25 @@ export async function GET(req: NextRequest) {
     }
 
     let productName: string | undefined;
+    let productUrlValue: string | undefined;
+    let brand: string | undefined;
+    let deviceModel: string | undefined;
+    let partType: string | undefined;
+    let price: number | null | undefined;
+    let condition: string | null | undefined;
     if (productId && mongoose.Types.ObjectId.isValid(productId)) {
-      const p = await Product.findById(productId).select("name").lean();
-      productName = p?.name;
+      const p = await Product.findById(productId)
+        .select("name slug brand deviceModel partType price condition")
+        .lean();
+      if (p) {
+        productName = formatListingTitle(p);
+        productUrlValue = productUrl(p);
+        brand = p.brand || undefined;
+        deviceModel = p.deviceModel || undefined;
+        partType = p.partType || undefined;
+        price = typeof p.price === "number" ? p.price : null;
+        condition = p.condition || null;
+      }
     }
 
     const status = await getPublicConnectStatus({
@@ -106,6 +124,12 @@ export async function GET(req: NextRequest) {
       sellerId,
       productId,
       productName,
+      productUrl: productUrlValue,
+      brand,
+      deviceModel,
+      partType,
+      price,
+      condition,
     });
 
     return NextResponse.json(status, { status: 200 });

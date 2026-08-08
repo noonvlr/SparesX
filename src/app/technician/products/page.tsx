@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,12 +10,16 @@ import MarkSoldModal from "@/components/MarkSoldModal";
 import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
 
+type ProductTab = "active" | "sold";
+
 export default function MyProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [relisting, setRelisting] = useState<string | null>(null);
   const [soldTarget, setSoldTarget] = useState<any | null>(null);
+  const [tab, setTab] = useState<ProductTab>("active");
   const [currentImageIndex, setCurrentImageIndex] = useState<{
     [key: string]: number;
   }>({});
@@ -42,11 +46,25 @@ export default function MyProductsPage() {
       });
   }, []);
 
+  const counts = useMemo(() => {
+    const total = products.length;
+    const sold = products.filter((p) => p.status === "sold").length;
+    const active = products.filter((p) => p.status !== "sold").length;
+    return { total, active, sold };
+  }, [products]);
+
+  const visibleProducts = useMemo(() => {
+    if (tab === "sold") {
+      return products.filter((p) => p.status === "sold");
+    }
+    return products.filter((p) => p.status !== "sold");
+  }, [products, tab]);
+
   // Auto-rotate images for products with multiple images (Desktop only or on hover)
   useEffect(() => {
     const intervals: { [key: string]: NodeJS.Timeout } = {};
 
-    products.forEach((product) => {
+    visibleProducts.forEach((product) => {
       if (product.images && product.images.length > 1) {
         const isDesktop =
           typeof window !== "undefined" && window.innerWidth >= 1024;
@@ -67,7 +85,7 @@ export default function MyProductsPage() {
     return () => {
       Object.values(intervals).forEach((interval) => clearInterval(interval));
     };
-  }, [products, hoveredProductId]);
+  }, [visibleProducts, hoveredProductId]);
 
   async function handleDelete(productId: string) {
     if (!confirm("Are you sure you want to delete this product?")) return;
@@ -84,6 +102,35 @@ export default function MyProductsPage() {
       alert("Failed to delete product");
     }
     setDeleting(null);
+  }
+
+  async function handleRelist(productId: string) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setRelisting(productId);
+    try {
+      const res = await fetch(`/api/technician/products/relist/${productId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.message || "Failed to relist product");
+        return;
+      }
+      setProducts((prev) =>
+        prev.map((p) =>
+          p._id === productId
+            ? { ...p, status: "approved", soldVia: null, soldAt: null }
+            : p,
+        ),
+      );
+      setTab("active");
+    } catch {
+      alert("Failed to relist product");
+    } finally {
+      setRelisting(null);
+    }
   }
 
   if (loading)
@@ -114,27 +161,72 @@ export default function MyProductsPage() {
         </Link>
       }
     >
-      {/* Stats Section */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
-        <div className="bg-[var(--brand-soft)] rounded-[var(--radius)] border border-[var(--border)] px-4 py-2">
-          <p className="text-[var(--brand-hover)] text-xs font-medium">
+      {/* Stats */}
+      <div className="mb-5 grid grid-cols-3 gap-2.5 sm:gap-3">
+        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[var(--muted)] text-[11px] sm:text-xs font-medium">
             Total
           </p>
-          <p className="text-lg font-semibold text-[var(--ink)] leading-none">
-            {products.length}
+          <p className="text-lg sm:text-xl font-semibold text-[var(--ink)] leading-none tabular-nums">
+            {counts.total}
           </p>
         </div>
-        <div className="bg-[var(--success-soft)] rounded-[var(--radius)] border border-[var(--border)] px-4 py-2">
-          <p className="text-[var(--success)] text-xs font-medium">
+        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--success-soft)] px-3 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[var(--success)] text-[11px] sm:text-xs font-medium">
             Active
           </p>
-          <p className="text-lg font-semibold text-[var(--ink)] leading-none">
-            {products.filter((p) => p.status === "approved").length}
+          <p className="text-lg sm:text-xl font-semibold text-[var(--ink)] leading-none tabular-nums">
+            {counts.active}
+          </p>
+        </div>
+        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[var(--muted)] text-[11px] sm:text-xs font-medium">
+            Sold
+          </p>
+          <p className="text-lg sm:text-xl font-semibold text-[var(--ink)] leading-none tabular-nums">
+            {counts.sold}
           </p>
         </div>
       </div>
 
-      {/* Products Grid */}
+      {/* Active / Sold tabs */}
+      <div
+        role="tablist"
+        aria-label="Product status"
+        className="mb-5 flex gap-1 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)] p-1"
+      >
+        {(
+          [
+            { id: "active" as const, label: "Active", count: counts.active },
+            { id: "sold" as const, label: "Sold", count: counts.sold },
+          ] as const
+        ).map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            onClick={() => setTab(item.id)}
+            className={cn(
+              "flex-1 rounded-[var(--radius)] px-3 py-2.5 text-sm font-semibold transition-colors",
+              tab === item.id
+                ? "bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-sm)]"
+                : "text-[var(--muted)] hover:text-[var(--ink)]",
+            )}
+          >
+            {item.label}
+            <span
+              className={cn(
+                "ml-1.5 tabular-nums",
+                tab === item.id ? "text-[var(--brand)]" : "text-[var(--muted)]",
+              )}
+            >
+              ({item.count})
+            </span>
+          </button>
+        ))}
+      </div>
+
       {products.length === 0 ? (
         <Card>
           <EmptyState
@@ -150,9 +242,34 @@ export default function MyProductsPage() {
             }
           />
         </Card>
+      ) : visibleProducts.length === 0 ? (
+        <Card>
+          <EmptyState
+            title={tab === "sold" ? "No sold products" : "No active listings"}
+            description={
+              tab === "sold"
+                ? "When you mark a listing sold, it will show up here so you can relist it later."
+                : "All your listings are sold. Relist one from the Sold tab, or add a new product."
+            }
+            action={
+              tab === "sold" ? (
+                <Button type="button" variant="secondary" onClick={() => setTab("active")}>
+                  View active
+                </Button>
+              ) : (
+                <Link
+                  href="/technician/products/new"
+                  className={cn(buttonVariants())}
+                >
+                  Add Product
+                </Link>
+              )
+            }
+          />
+        </Card>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <Card
               key={product._id}
               hover
@@ -163,7 +280,6 @@ export default function MyProductsPage() {
                 onMouseLeave={() => setHoveredProductId(null)}
                 className="flex flex-col h-full"
               >
-                {/* Product Image with Carousel */}
                 <div className="relative w-full h-36 sm:h-44 lg:h-48 bg-[var(--surface-3)] overflow-hidden flex items-center justify-center border-b border-[var(--border)]">
                   {product.images && product.images.length > 0 ? (
                     <>
@@ -205,7 +321,6 @@ export default function MyProductsPage() {
                   )}
                 </div>
 
-                {/* Product Info */}
                 <div className="p-4 sm:p-5 flex flex-col flex-1">
                   <h2 className="font-semibold text-base sm:text-lg mb-3 line-clamp-2 text-[var(--ink)] transition-colors group-hover:text-[var(--brand)]">
                     {product.name}
@@ -244,6 +359,13 @@ export default function MyProductsPage() {
                             : "Pending"}
                       </Badge>
                     )}
+                    {product.status === "sold" && product.soldVia ? (
+                      <Badge tone="neutral">
+                        {product.soldVia === "sparesx"
+                          ? "Via SparesX"
+                          : "Elsewhere"}
+                      </Badge>
+                    ) : null}
                   </div>
 
                   <div className="mb-4 mt-auto">
@@ -253,7 +375,30 @@ export default function MyProductsPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--border)]">
-                    {product.status !== "sold" ? (
+                    {product.status === "sold" ? (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => void handleRelist(product._id)}
+                          disabled={relisting === product._id}
+                          loading={relisting === product._id}
+                        >
+                          Relist
+                        </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="flex-1 bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--ink-inverse)] shadow-none"
+                          onClick={() => handleDelete(product._id)}
+                          disabled={deleting === product._id}
+                          loading={deleting === product._id}
+                        >
+                          Delete
+                        </Button>
+                      </>
+                    ) : (
                       <>
                         <Link
                           href={`/technician/products/edit/${product._id}`}
@@ -273,21 +418,18 @@ export default function MyProductsPage() {
                         >
                           Sold
                         </Button>
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="flex-1 bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--ink-inverse)] shadow-none"
+                          onClick={() => handleDelete(product._id)}
+                          disabled={deleting === product._id}
+                          loading={deleting === product._id}
+                        >
+                          Delete
+                        </Button>
                       </>
-                    ) : null}
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      className={cn(
-                        "bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--ink-inverse)] shadow-none",
-                        product.status === "sold" ? "flex-1" : "flex-1",
-                      )}
-                      onClick={() => handleDelete(product._id)}
-                      disabled={deleting === product._id}
-                      loading={deleting === product._id}
-                    >
-                      {deleting === product._id ? "Deleting..." : "Delete"}
-                    </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -311,6 +453,7 @@ export default function MyProductsPage() {
               ),
             );
             setSoldTarget(null);
+            setTab("sold");
           }}
         />
       ) : null}

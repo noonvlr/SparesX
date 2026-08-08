@@ -13,6 +13,11 @@ type ModalProps = {
   /** Bottom sheet on mobile */
   sheet?: boolean;
   footer?: React.ReactNode;
+  /**
+   * `glass` (default) keeps frosted chrome. `solid` uses an opaque elevated
+   * surface — prefer for forms/confirmations where transparency is distracting.
+   */
+  surface?: "glass" | "solid";
 };
 
 function getFocusable(root: HTMLElement) {
@@ -31,6 +36,7 @@ export function Modal({
   className,
   sheet = true,
   footer,
+  surface = "glass",
 }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -99,7 +105,10 @@ export function Modal({
         ref={panelRef}
         tabIndex={-1}
         className={cn(
-          "relative w-full sm:max-w-lg bg-[var(--modal-bg)] shadow-[var(--shadow-modal)] border border-[var(--glass-border)] outline-none glass",
+          "relative w-full sm:max-w-lg shadow-[var(--shadow-modal)] outline-none",
+          surface === "solid"
+            ? "bg-[var(--surface-elevated)] border border-[var(--border)]"
+            : "bg-[var(--modal-bg)] border border-[var(--glass-border)] glass",
           sheet
             ? "rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-lg)] max-h-[90dvh] overflow-y-auto"
             : "rounded-[var(--radius-lg)] max-h-[90dvh] overflow-y-auto m-4",
@@ -107,7 +116,14 @@ export function Modal({
         )}
       >
         {title ? (
-          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--divider)] sticky top-0 bg-[var(--surface-elevated)] z-10">
+          <div
+            className={cn(
+              "flex items-center justify-between gap-3 px-5 py-4 border-b border-[var(--divider)] sticky top-0 z-10",
+              surface === "solid"
+                ? "bg-[var(--surface-elevated)]"
+                : "bg-[var(--surface-elevated)]",
+            )}
+          >
             <h2
               id={titleId}
               className="text-base font-semibold text-[var(--ink)]"

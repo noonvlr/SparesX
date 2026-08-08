@@ -55,12 +55,71 @@ export async function isWhatsAppUnlocked(
   return !!row;
 }
 
+export type WaProductContext = {
+  productName?: string;
+  productUrl?: string;
+  brand?: string;
+  deviceModel?: string;
+  partType?: string;
+  price?: number | null;
+  condition?: string | null;
+};
+
+/** Build a WhatsApp prefill that identifies the exact listing + deep link. */
+export function buildWhatsAppInterestMessage(params: {
+  sellerName?: string;
+  product?: WaProductContext;
+}): string {
+  const greet = params.sellerName
+    ? `Hi ${params.sellerName},`
+    : "Hi,";
+  const p = params.product;
+  if (!p?.productName && !p?.productUrl) {
+    return `${greet} I'm connecting from SparesX.`;
+  }
+
+  const lines: string[] = [
+    `${greet} I'm interested in this spare part on SparesX:`,
+    "",
+    `• ${p.productName || "Listing"}`,
+  ];
+
+  const deviceBits = [p.brand, p.deviceModel].filter(Boolean).join(" ");
+  if (deviceBits) lines.push(`• Device: ${deviceBits}`);
+  if (p.partType) {
+    const part = String(p.partType)
+      .replace(/[-_]/g, " ")
+      .trim()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+    lines.push(`• Part: ${part}`);
+  }
+  if (p.condition) {
+    lines.push(
+      `• Condition: ${p.condition === "new" ? "New" : p.condition === "used" ? "Used" : p.condition}`,
+    );
+  }
+  if (typeof p.price === "number" && Number.isFinite(p.price)) {
+    lines.push(`• Price: ₹${p.price.toLocaleString("en-IN")}`);
+  }
+  if (p.productUrl) {
+    lines.push("", `View listing: ${p.productUrl}`);
+  }
+  lines.push("", "Please let me know if it's still available.");
+  return lines.join("\n");
+}
+
 export function buildWaMeLink(params: {
   countryCode?: string;
   whatsappNumber?: string;
   mobile?: string;
   productName?: string;
   sellerName?: string;
+  productUrl?: string;
+  brand?: string;
+  deviceModel?: string;
+  partType?: string;
+  price?: number | null;
+  condition?: string | null;
 }) {
   const code = (params.countryCode || "+91").replace(/\D/g, "");
   const number = (params.whatsappNumber || params.mobile || "").replace(
@@ -69,13 +128,20 @@ export function buildWaMeLink(params: {
   );
   if (!number) return null;
   const phone = `${code}${number}`.replace(/^0+/, "");
-  const text = params.productName
-    ? encodeURIComponent(
-        `Hi${params.sellerName ? ` ${params.sellerName}` : ""}, I'm interested in "${params.productName}" on SparesX.`,
-      )
-    : encodeURIComponent(
-        `Hi${params.sellerName ? ` ${params.sellerName}` : ""}, connecting from SparesX.`,
-      );
+  const text = encodeURIComponent(
+    buildWhatsAppInterestMessage({
+      sellerName: params.sellerName,
+      product: {
+        productName: params.productName,
+        productUrl: params.productUrl,
+        brand: params.brand,
+        deviceModel: params.deviceModel,
+        partType: params.partType,
+        price: params.price,
+        condition: params.condition,
+      },
+    }),
+  );
   return `https://wa.me/${phone}?text=${text}`;
 }
 
@@ -102,8 +168,24 @@ export async function getPublicConnectStatus(params: {
   sellerId: string;
   productId?: string;
   productName?: string;
+  productUrl?: string;
+  brand?: string;
+  deviceModel?: string;
+  partType?: string;
+  price?: number | null;
+  condition?: string | null;
 }): Promise<PublicConnectStatus> {
-  const { viewerId, sellerId, productName } = params;
+  const {
+    viewerId,
+    sellerId,
+    productName,
+    productUrl,
+    brand,
+    deviceModel,
+    partType,
+    price,
+    condition,
+  } = params;
 
   if (viewerId === sellerId) {
     return {
@@ -140,6 +222,12 @@ export async function getPublicConnectStatus(params: {
           whatsappNumber: seller.whatsappNumber,
           mobile: seller.mobile,
           productName,
+          productUrl,
+          brand,
+          deviceModel,
+          partType,
+          price,
+          condition,
           sellerName: seller.name,
         })
       : null;
