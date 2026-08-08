@@ -74,14 +74,17 @@ async function main() {
       origin: corsOrigin,
       credentials: true,
     },
+    maxHttpBufferSize: 256 * 1024,
     // Ready for @socket.io/redis-adapter later
   });
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     try {
       const token =
         socket.handshake.auth?.token ||
-        socket.handshake.headers?.authorization?.toString().replace(/^Bearer\s+/i, "");
+        socket.handshake.headers?.authorization
+          ?.toString()
+          .replace(/^Bearer\s+/i, "");
       if (!token) {
         console.warn("[socket] missing auth token", socket.handshake.headers.origin);
         return next(new Error("Unauthorized"));
@@ -91,8 +94,22 @@ async function main() {
         console.warn("[socket] invalid auth token", socket.handshake.headers.origin);
         return next(new Error("Unauthorized"));
       }
-      socket.data.userId = payload.id;
-      socket.data.role = payload.role;
+
+      const { User } = await import("../src/lib/models/User");
+      const user = await User.findById(payload.id)
+        .select("isBlocked role sessionVersion")
+        .lean();
+      if (!user || user.isBlocked) {
+        return next(new Error("Unauthorized"));
+      }
+      const currentSv =
+        typeof user.sessionVersion === "number" ? user.sessionVersion : 0;
+      if (payload.sv !== currentSv) {
+        return next(new Error("Unauthorized"));
+      }
+
+      socket.data.userId = String(user._id);
+      socket.data.role = String(user.role);
       next();
     } catch {
       console.warn("[socket] auth verification failed", socket.handshake.headers.origin);

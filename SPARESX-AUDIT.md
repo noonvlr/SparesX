@@ -338,20 +338,27 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - HttpOnly cookie migration
 - Catalog ObjectId rewrite
 - Atlas Search
-- Redis socket adapter
+- Redis socket adapter / shared rate-limit store
 - Full notification system
-- Request–seller matching MVP
 - Flip create → `pending` (policy)
 
 ---
 
 ## Recommended next 5 (after Phase 2)
 
-1. Short-lived JWT + refresh / session version for logout & block
-2. Request–seller matching MVP (device + part + city)
-3. Richer `/parts` content + internal linking
-4. Trust score explainability on `/u/[id]`
-5. Shared rate-limit store if Socket scales horizontally
+1. ~~Session version for logout & block~~ **Done in Phase 3** (`sessionVersion` + `/api/auth/logout`)
+2. ~~Request–seller matching MVP~~ **Done in Phase 3** (`/api/requests/[id]/matches`)
+3. ~~Richer `/parts` internal linking~~ **Done in Phase 3**
+4. ~~Trust score explainability on `/u/[id]`~~ **Done in Phase 3**
+5. Shared rate-limit store if Socket scales horizontally *(still open)*
+
+### Phase 3 additions
+
+- JWT claim `sv` must match `User.sessionVersion` (API + Socket)
+- Google refuses auto-link onto unverified local password accounts
+- Product detail post-unlock returns `whatsappUrl` + `maskedNumber` (raw digits owner-only)
+- Admin approve/reject clears `soldVia` / `soldAt`
+- Chat `listMessages` limit capped; Socket `maxHttpBufferSize` 256KB
 
 ---
 

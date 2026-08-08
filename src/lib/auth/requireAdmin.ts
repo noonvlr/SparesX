@@ -19,12 +19,23 @@ export async function requireAdmin(
   }
 
   await connectDB();
-  const user = await User.findById(payload.id).select("isBlocked role").lean();
+  const user = await User.findById(payload.id)
+    .select("isBlocked role sessionVersion")
+    .lean();
   if (!user || user.isBlocked) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
   if (user.role !== "admin") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
+  const currentSv =
+    typeof user.sessionVersion === "number" ? user.sessionVersion : 0;
+  if (payload.sv !== currentSv) {
+    return NextResponse.json(
+      { message: "Session expired. Please log in again." },
+      { status: 401 },
+    );
   }
 
   return { id: String(user._id), role: "admin" };

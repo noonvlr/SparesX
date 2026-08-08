@@ -78,6 +78,11 @@ export async function PATCH(
           return NextResponse.json({ message: "Invalid status" }, { status: 400 });
         }
         product.status = body.status;
+        // Approving / rejecting a previously sold listing must clear sold fields
+        if (body.status === "approved" || body.status === "rejected") {
+          product.soldVia = null;
+          product.soldAt = null;
+        }
       } else if (key === "condition") {
         if (!["new", "used"].includes(body.condition)) {
           return NextResponse.json(

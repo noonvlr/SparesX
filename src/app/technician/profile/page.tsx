@@ -411,6 +411,10 @@ export default function TechnicianProfilePage() {
         showToast(data.message || "Could not update password", "error");
         return;
       }
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        window.dispatchEvent(new Event("sparesx-auth-changed"));
+      }
       setPwCurrent("");
       setPwNew("");
       setPwConfirm("");

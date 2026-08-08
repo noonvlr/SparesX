@@ -36,11 +36,19 @@ export async function POST(req: NextRequest) {
     // Google / passwordless accounts: first-time set (no current password)
     if (!user.password) {
       user.password = await hashPassword(newPassword);
+      user.sessionVersion = (user.sessionVersion || 0) + 1;
       await user.save();
+      const { signJwt } = await import("@/lib/auth/jwt");
+      const token = signJwt({
+        _id: user._id,
+        role: user.role,
+        sessionVersion: user.sessionVersion,
+      });
       return NextResponse.json(
         {
           message: "Password set successfully. You can now also sign in with email.",
           hasPassword: true,
+          token,
         },
         { status: 200 },
       );
@@ -69,10 +77,22 @@ export async function POST(req: NextRequest) {
     }
 
     user.password = await hashPassword(newPassword);
+    user.sessionVersion = (user.sessionVersion || 0) + 1;
     await user.save();
 
+    const { signJwt } = await import("@/lib/auth/jwt");
+    const token = signJwt({
+      _id: user._id,
+      role: user.role,
+      sessionVersion: user.sessionVersion,
+    });
+
     return NextResponse.json(
-      { message: "Password updated successfully", hasPassword: true },
+      {
+        message: "Password updated successfully",
+        hasPassword: true,
+        token,
+      },
       { status: 200 },
     );
   } catch (error) {

@@ -211,6 +211,18 @@ export async function PATCH(
       );
     }
 
+    // Revoke outstanding JWTs when blocking or changing role
+    if (updateData.isBlocked === true || role !== undefined) {
+      const current = await User.findById(id).select("sessionVersion role").lean();
+      if (current) {
+        const roleChanging =
+          role !== undefined && String(role) !== String(current.role);
+        if (updateData.isBlocked === true || roleChanging) {
+          updateData.sessionVersion = (current.sessionVersion || 0) + 1;
+        }
+      }
+    }
+
     if (typeof updateData.isTrusted === "boolean") {
       if (updateData.isTrusted) {
         updateData.trustedAt = new Date();

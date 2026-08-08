@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
     user.password = await hashPassword(String(newPassword));
     user.passwordResetOTP = undefined;
     user.passwordResetOTPExpiry = undefined;
+    user.sessionVersion = (user.sessionVersion || 0) + 1;
     await user.save();
 
     sendPasswordResetSuccessEmail({

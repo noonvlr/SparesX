@@ -61,8 +61,25 @@ export async function POST(req: NextRequest) {
     await connectDB();
 
     let user =
-      (await User.findOne({ googleId })) ||
-      (await User.findOne({ email }));
+      (await User.findOne({ googleId })) || null;
+
+    if (!user) {
+      const byEmail = await User.findOne({ email });
+      if (byEmail) {
+        // Prevent pre-account takeover: do not auto-link Google onto an
+        // unverified local password account created by someone else.
+        if (byEmail.password && !byEmail.emailVerified && !byEmail.googleId) {
+          return NextResponse.json(
+            {
+              message:
+                "An account with this email already exists. Sign in with your password and verify your email before linking Google.",
+            },
+            { status: 409 },
+          );
+        }
+        user = byEmail;
+      }
+    }
 
     if (user?.isBlocked) {
       return NextResponse.json(
@@ -112,7 +129,11 @@ export async function POST(req: NextRequest) {
       if (dirty) await user.save();
     }
 
-    const token = signJwt({ _id: user._id, role: user.role });
+    const token = signJwt({
+      _id: user._id,
+      role: user.role,
+      sessionVersion: user.sessionVersion || 0,
+    });
     return NextResponse.json(
       {
         token,

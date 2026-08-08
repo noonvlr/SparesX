@@ -74,6 +74,106 @@ export function computeTrustScore(user: IUser): number {
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
+export type TrustScoreFactor = {
+  label: string;
+  points: number;
+  active: boolean;
+};
+
+/** Human-readable breakdown of how trust score is built (public-safe). */
+export function explainTrustScore(user: {
+  phoneVerified?: boolean;
+  emailVerified?: boolean;
+  kycVerified?: boolean;
+  businessVerified?: boolean;
+  addressVerified?: boolean;
+  isTrusted?: boolean;
+  createdAt?: Date | string | null;
+  completedSales?: number;
+  averageRating?: number;
+  responseRate?: number;
+  complaintRate?: number;
+  specialBadgeKeys?: string[];
+}): { score: number; factors: TrustScoreFactor[]; summary: string } {
+  const factors: TrustScoreFactor[] = [];
+  const push = (label: string, points: number, active: boolean) => {
+    factors.push({ label, points, active });
+  };
+
+  push("Phone verified", 10, !!user.phoneVerified);
+  push("Email verified", 5, !!user.emailVerified);
+  push("KYC verified", 20, !!user.kycVerified);
+  push("Business verified", 10, !!user.businessVerified);
+  push("Address verified", 5, !!user.addressVerified);
+
+  const ageDays = daysSince(user.createdAt);
+  let agePts = 0;
+  if (ageDays >= 365) agePts = 10;
+  else if (ageDays >= 90) agePts = 7;
+  else if (ageDays >= 30) agePts = 4;
+  else if (ageDays >= 7) agePts = 2;
+  push("Account age", agePts, agePts > 0);
+
+  const sales = user.completedSales || 0;
+  let salesPts = 0;
+  if (sales >= 250) salesPts = 15;
+  else if (sales >= 25) salesPts = 10;
+  else if (sales >= 5) salesPts = 5;
+  else if (sales >= 1) salesPts = 2;
+  push("Completed sales", salesPts, salesPts > 0);
+
+  const rating = user.averageRating || 0;
+  let ratingPts = 0;
+  if (rating >= 4.9) ratingPts = 15;
+  else if (rating >= 4.7) ratingPts = 12;
+  else if (rating >= 4.0) ratingPts = 8;
+  else if (rating >= 3.0) ratingPts = 3;
+  push("Buyer ratings", ratingPts, ratingPts > 0);
+
+  const responseRate = user.responseRate ?? 0;
+  let respPts = 0;
+  if (responseRate >= 90) respPts = 5;
+  else if (responseRate >= 70) respPts = 3;
+  push("Response rate", respPts, respPts > 0);
+
+  const complaintRate = user.complaintRate ?? 0;
+  let complaintPts = 0;
+  if (sales > 0 && complaintRate < 2) complaintPts = 5;
+  else if (sales > 0 && complaintRate < 5) complaintPts = 2;
+  push("Low complaint rate", complaintPts, complaintPts > 0);
+
+  push("Trusted seller flag", 5, !!user.isTrusted);
+  push(
+    "Verified technician badge",
+    3,
+    (user.specialBadgeKeys || []).includes("verified_technician"),
+  );
+  push(
+    "Official store badge",
+    2,
+    (user.specialBadgeKeys || []).includes("official_store"),
+  );
+
+  const score = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round(factors.reduce((sum, f) => sum + (f.active ? f.points : 0), 0)),
+    ),
+  );
+
+  const band = trustBandFromScore(score);
+  const earned = factors.filter((f) => f.active).map((f) => f.label);
+  const summary =
+    earned.length > 0
+      ? `${band.label} score (${score}/100) based on: ${earned.slice(0, 4).join(", ")}${
+          earned.length > 4 ? "…" : ""
+        }.`
+      : `${band.label} score (${score}/100). Verify phone and email to start building trust.`;
+
+  return { score, factors, summary };
+}
+
 function qualifiesTrustedAuto(user: IUser) {
   const ageDays = daysSince(user.createdAt);
   const sales = user.completedSales || 0;

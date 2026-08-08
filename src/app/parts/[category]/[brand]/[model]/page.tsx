@@ -168,6 +168,35 @@ export default async function PartsPage({ params }: Params) {
             </Link>{" "}
             and sellers will come to you.
           </p>
+          <nav
+            aria-label="Related searches"
+            className="flex flex-wrap gap-2 pt-1"
+          >
+            <Link
+              href={`/products?brand=${encodeURIComponent(brand)}`}
+              className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
+            >
+              All {brand} parts
+            </Link>
+            <Link
+              href={`/products?brand=${encodeURIComponent(brand)}&deviceModel=${encodeURIComponent(model)}`}
+              className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
+            >
+              {brand} {model} listings
+            </Link>
+            <Link
+              href={`/products?partType=${encodeURIComponent(raw.category)}`}
+              className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
+            >
+              Browse {category.toLowerCase()}
+            </Link>
+            <Link
+              href="/sellers"
+              className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
+            >
+              Find sellers
+            </Link>
+          </nav>
         </div>
 
         {products.length === 0 ? (

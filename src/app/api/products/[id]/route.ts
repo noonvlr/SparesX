@@ -88,9 +88,29 @@ export async function GET(
       };
 
       if (whatsappUnlocked) {
-        productObj.technician.whatsappNumber = tech.whatsappNumber;
+        const {
+          buildWaMeLink,
+          maskPhone,
+        } = await import("@/lib/whatsapp/connect");
+        const waUrl = buildWaMeLink({
+          countryCode: tech.countryCode,
+          whatsappNumber: tech.whatsappNumber,
+          mobile: tech.mobile,
+          productName: productObj.name,
+          sellerName: tech.name,
+        });
+        const digits = tech.whatsappNumber || tech.mobile || "";
+        productObj.technician.whatsappUrl = waUrl;
+        productObj.technician.maskedNumber = maskPhone(
+          tech.countryCode,
+          digits,
+        );
         productObj.technician.countryCode = tech.countryCode;
-        productObj.technician.mobile = tech.mobile;
+        // Owner may still need raw digits for their own listing management
+        if (isOwner) {
+          productObj.technician.whatsappNumber = tech.whatsappNumber;
+          productObj.technician.mobile = tech.mobile;
+        }
       }
 
       productObj.whatsappUnlocked = whatsappUnlocked && !isOwner;

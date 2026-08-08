@@ -82,7 +82,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token = signJwt({ _id: user._id, role: user.role });
+    const token = signJwt({
+      _id: user._id,
+      role: user.role,
+      sessionVersion: user.sessionVersion || 0,
+    });
     return NextResponse.json(
       {
         token,

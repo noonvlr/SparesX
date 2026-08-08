@@ -6,7 +6,8 @@ import { User } from "@/lib/models/User";
 export type AuthUser = { id: string; role: string };
 
 /**
- * Authenticate Bearer JWT and re-validate against DB (blocked + current role).
+ * Authenticate Bearer JWT and re-validate against DB
+ * (blocked + current role + session version).
  */
 export async function requireUser(
   req: NextRequest,
@@ -21,9 +22,20 @@ export async function requireUser(
   }
 
   await connectDB();
-  const user = await User.findById(payload.id).select("isBlocked role").lean();
+  const user = await User.findById(payload.id)
+    .select("isBlocked role sessionVersion")
+    .lean();
   if (!user || user.isBlocked) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const currentSv =
+    typeof user.sessionVersion === "number" ? user.sessionVersion : 0;
+  if (payload.sv !== currentSv) {
+    return NextResponse.json(
+      { message: "Session expired. Please log in again." },
+      { status: 401 },
+    );
   }
 
   return { id: String(user._id), role: String(user.role) };

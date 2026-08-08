@@ -35,6 +35,8 @@ type PublicProfile = {
   ratingCount?: number;
   badges?: PublicBadge[];
   activeBadgeKeys?: string[];
+  trustSummary?: string;
+  trustFactors?: { label: string; points: number; active: boolean }[];
 };
 
 type RatingRow = {
@@ -198,6 +200,32 @@ export default function PublicProfileClient({
                 showScore
                 size="md"
               />
+
+              {profile.trustSummary ? (
+                <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5 space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+                    Why this trust score
+                  </p>
+                  <p className="text-sm text-[var(--ink-secondary)]">
+                    {profile.trustSummary}
+                  </p>
+                  {profile.trustFactors && profile.trustFactors.length > 0 ? (
+                    <ul className="flex flex-wrap gap-1.5">
+                      {profile.trustFactors
+                        .filter((f) => f.active)
+                        .map((f) => (
+                          <li
+                            key={f.label}
+                            className="text-[11px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2 py-0.5 text-[var(--ink-secondary)]"
+                          >
+                            {f.label}
+                            {f.points > 0 ? ` +${f.points}` : ""}
+                          </li>
+                        ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
 
               {location && (
                 <p className="text-sm text-[var(--ink-secondary)]">

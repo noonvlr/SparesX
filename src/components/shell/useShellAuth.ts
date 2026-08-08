@@ -171,6 +171,17 @@ export function useShellAuth() {
   }, [isAuthenticated, pathname]);
 
   const handleLogout = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch {
+        // ignore — client logout still proceeds
+      }
+    }
     await announceChatOffline();
     try {
       (globalThis as unknown as { __sparesx_socket?: { disconnect?: () => void } })

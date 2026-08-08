@@ -11,6 +11,16 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
 import { cn } from "@/lib/ui/cn";
 
+type MatchItem = {
+  productId: string;
+  title: string;
+  price: number;
+  href: string;
+  city?: string | null;
+  seller: { name: string; trustScore?: number };
+  reasons: string[];
+};
+
 type MyRequest = {
   _id: string;
   category: string;
@@ -45,6 +55,10 @@ export default function MyRequestsPanel() {
     phone: "",
   });
   const [saving, setSaving] = useState(false);
+  const [matchesById, setMatchesById] = useState<Record<string, MatchItem[]>>(
+    {},
+  );
+  const [loadingMatches, setLoadingMatches] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -77,6 +91,28 @@ export default function MyRequestsPanel() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function loadMatches(requestId: string) {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    setLoadingMatches(requestId);
+    try {
+      const res = await fetch(`/api/requests/${requestId}/matches`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMatchesById((prev) => ({
+          ...prev,
+          [requestId]: data.matches || [],
+        }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setLoadingMatches(null);
+    }
+  }
 
   function startEdit(item: MyRequest) {
     setEditingId(item._id);
@@ -313,6 +349,54 @@ export default function MyRequestsPanel() {
                     <p className="text-sm text-[var(--ink-secondary)] whitespace-pre-wrap">
                       {item.description}
                     </p>
+
+                    {item.status === "open" ? (
+                      <div className="mt-3 space-y-2">
+                        {!matchesById[item._id] ? (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            loading={loadingMatches === item._id}
+                            onClick={() => void loadMatches(item._id)}
+                          >
+                            Find matching listings
+                          </Button>
+                        ) : matchesById[item._id].length === 0 ? (
+                          <p className="text-xs text-[var(--muted)]">
+                            No matching live listings yet. Sellers may still
+                            respond to your request.
+                          </p>
+                        ) : (
+                          <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] p-3 space-y-2">
+                            <p className="text-xs font-semibold text-[var(--ink)]">
+                              Matching listings ({matchesById[item._id].length})
+                            </p>
+                            <ul className="space-y-2">
+                              {matchesById[item._id].map((m) => (
+                                <li key={m.productId}>
+                                  <Link
+                                    href={m.href}
+                                    className="block text-sm font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
+                                  >
+                                    {m.title} — ₹
+                                    {m.price.toLocaleString("en-IN")}
+                                  </Link>
+                                  <p className="text-[11px] text-[var(--muted)]">
+                                    {m.seller.name}
+                                    {m.city ? ` · ${m.city}` : ""}
+                                    {m.reasons?.length
+                                      ? ` · ${m.reasons.slice(0, 2).join(", ")}`
+                                      : ""}
+                                  </p>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+
                     <div className="flex flex-wrap gap-2 mt-3">
                       {item.status !== "fulfilled" && (
                         <Button

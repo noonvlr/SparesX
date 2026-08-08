@@ -60,6 +60,8 @@ export interface IUser extends Document {
   emailOtpSendWindowStart?: Date;
   passwordResetOTP?: string;
   passwordResetOTPExpiry?: Date;
+  /** Bumped on logout, password change, block — invalidates outstanding JWTs */
+  sessionVersion: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -137,6 +139,7 @@ const UserSchema: Schema<IUser> = new Schema(
     emailOtpSendWindowStart: { type: Date },
     passwordResetOTP: { type: String, default: undefined },
     passwordResetOTPExpiry: { type: Date, default: undefined },
+    sessionVersion: { type: Number, default: 0 },
   },
   { timestamps: true },
 );

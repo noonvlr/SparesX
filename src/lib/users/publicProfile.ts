@@ -4,7 +4,14 @@ import { User } from "@/lib/models/User";
 import { Product } from "@/lib/models/Product";
 import { SellerRating } from "@/lib/models/SellerRating";
 import { pickTrustFields } from "@/lib/trust";
+import { explainTrustScore } from "@/lib/badges/engine";
 import type { PublicBadge } from "@/lib/badges/catalog";
+
+export type TrustFactorPublic = {
+  label: string;
+  points: number;
+  active: boolean;
+};
 
 export type PublicProfileData = {
   _id: string;
@@ -27,6 +34,8 @@ export type PublicProfileData = {
   ratingCount?: number;
   badges?: PublicBadge[];
   activeBadgeKeys?: string[];
+  trustSummary?: string;
+  trustFactors?: TrustFactorPublic[];
 };
 
 export type PublicProfileListing = {
@@ -78,7 +87,7 @@ export async function fetchPublicProfile(
 
   const user = await User.findById(id)
     .select(
-      "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount",
+      "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount completedSales responseRate complaintRate",
     )
     .lean();
 
@@ -135,6 +144,7 @@ export async function fetchPublicProfile(
   }
 
   const trust = pickTrustFields(user);
+  const explained = explainTrustScore(user as never);
 
   return {
     profile: {
@@ -149,6 +159,8 @@ export async function fetchPublicProfile(
         ? new Date(user.createdAt).toISOString()
         : undefined,
       ...trust,
+      trustSummary: explained.summary,
+      trustFactors: explained.factors.filter((f) => f.active || f.points >= 5),
     },
     listings,
     ratings,

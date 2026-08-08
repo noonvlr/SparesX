@@ -269,7 +269,8 @@ export async function listMessages(params: {
   cursor?: string;
   limit?: number;
 }) {
-  const { conversationId, userId, cursor, limit = 40 } = params;
+  const { conversationId, userId, cursor } = params;
+  const limit = Math.min(50, Math.max(1, params.limit ?? 40));
   await connectDB();
 
   const conversation = await Conversation.findById(conversationId).lean();
