@@ -11,6 +11,10 @@ import {
 } from "@/lib/chat/rateLimit";
 import { isPeerBlocked } from "@/lib/chat/peerBlock";
 import { pickTrustFields } from "@/lib/trust";
+import {
+  recomputeResponseRate,
+  RESPONSE_WINDOW_MS,
+} from "@/lib/trust/responseRate";
 
 void User;
 void Product;
@@ -400,6 +404,16 @@ export async function sendMessage(params: {
   conversation.unreadCounts.set(senderId, 0);
   await conversation.save();
 
+  // Closed-loop responseRate: new inbound burst → opportunity on receiver;
+  // first reply within 24h → hit on sender.
+  void trackResponseRateOnSend({
+    conversationId: conversation._id,
+    senderId,
+    receiverId,
+    messageCreatedAt: message.createdAt,
+    previousUnread,
+  });
+
   if (!receiverViewing) {
     void notifyOfflineChatMessage({
       receiverId,
@@ -411,6 +425,67 @@ export async function sendMessage(params: {
   }
 
   return { message, conversation, receiverId };
+}
+
+async function trackResponseRateOnSend(params: {
+  conversationId: Types.ObjectId;
+  senderId: string;
+  receiverId: string;
+  messageCreatedAt: Date;
+  previousUnread: number;
+}) {
+  try {
+    const {
+      conversationId,
+      senderId,
+      receiverId,
+      messageCreatedAt,
+      previousUnread,
+    } = params;
+
+    if (previousUnread === 0) {
+      await User.updateOne(
+        { _id: toOid(receiverId) },
+        { $inc: { chatInboundOpportunities: 1 } },
+      );
+      await recomputeResponseRate(receiverId);
+    }
+
+    const lastInbound = await Message.findOne({
+      conversationId,
+      senderId: toOid(receiverId),
+      receiverId: toOid(senderId),
+      createdAt: { $lt: messageCreatedAt },
+    })
+      .sort({ createdAt: -1 })
+      .select("_id createdAt")
+      .lean();
+
+    if (!lastInbound?.createdAt) return;
+
+    const alreadyReplied = await Message.exists({
+      conversationId,
+      senderId: toOid(senderId),
+      createdAt: {
+        $gt: lastInbound.createdAt,
+        $lt: messageCreatedAt,
+      },
+    });
+    if (alreadyReplied) return;
+
+    const withinWindow =
+      messageCreatedAt.getTime() - new Date(lastInbound.createdAt).getTime() <=
+      RESPONSE_WINDOW_MS;
+    if (!withinWindow) return;
+
+    await User.updateOne(
+      { _id: toOid(senderId) },
+      { $inc: { chatResponseHits: 1 } },
+    );
+    await recomputeResponseRate(senderId);
+  } catch (err) {
+    console.warn("[chat] responseRate track failed:", err);
+  }
 }
 
 async function notifyOfflineChatMessage(params: {
@@ -485,6 +560,27 @@ export async function markConversationRead(params: {
 
   conversation.unreadCounts.set(userId, 0);
   await conversation.save();
+
+  // Clear collapsed chat notifications when the thread is opened.
+  try {
+    const { Notification } = await import("@/lib/models/Notification");
+    await Notification.updateMany(
+      {
+        user: toOid(userId),
+        readAt: null,
+        $or: [
+          { collapseKey: `chat:${conversationId}` },
+          {
+            type: "chat_message",
+            "meta.conversationId": conversationId,
+          },
+        ],
+      },
+      { $set: { readAt: now } },
+    );
+  } catch (err) {
+    console.warn("[chat] mark notifications read failed:", err);
+  }
 
   const senderIds = await Message.distinct("senderId", {
     conversationId: conversation._id,

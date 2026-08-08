@@ -12,7 +12,7 @@ import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
 import BulkInventoryPanel from "./_components/BulkInventoryPanel";
 
-type ProductTab = "active" | "sold";
+type ProductTab = "active" | "pending" | "rejected" | "sold";
 
 export default function MyProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -48,15 +48,23 @@ export default function MyProductsPage() {
   const counts = useMemo(() => {
     const total = products.length;
     const sold = products.filter((p) => p.status === "sold").length;
-    const active = products.filter((p) => p.status !== "sold").length;
-    return { total, active, sold };
+    const active = products.filter((p) => p.status === "approved").length;
+    const pending = products.filter((p) => p.status === "pending").length;
+    const rejected = products.filter((p) => p.status === "rejected").length;
+    return { total, active, sold, pending, rejected };
   }, [products]);
 
   const visibleProducts = useMemo(() => {
     if (tab === "sold") {
       return products.filter((p) => p.status === "sold");
     }
-    return products.filter((p) => p.status !== "sold");
+    if (tab === "pending") {
+      return products.filter((p) => p.status === "pending");
+    }
+    if (tab === "rejected") {
+      return products.filter((p) => p.status === "rejected");
+    }
+    return products.filter((p) => p.status === "approved");
   }, [products, tab]);
 
   // Auto-rotate images for products with multiple images (Desktop only or on hover)
@@ -165,7 +173,7 @@ export default function MyProductsPage() {
       }
     >
       {/* Stats */}
-      <div className="mb-5 grid grid-cols-3 gap-2.5 sm:gap-3">
+      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 sm:px-4 sm:py-3">
           <p className="text-[var(--muted)] text-[11px] sm:text-xs font-medium">
             Total
@@ -176,10 +184,18 @@ export default function MyProductsPage() {
         </div>
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--success-soft)] px-3 py-2.5 sm:px-4 sm:py-3">
           <p className="text-[var(--success)] text-[11px] sm:text-xs font-medium">
-            Active
+            Live
           </p>
           <p className="text-lg sm:text-xl font-semibold text-[var(--ink)] leading-none tabular-nums">
             {counts.active}
+          </p>
+        </div>
+        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--warning-soft)] px-3 py-2.5 sm:px-4 sm:py-3">
+          <p className="text-[var(--warning)] text-[11px] sm:text-xs font-medium">
+            In review
+          </p>
+          <p className="text-lg sm:text-xl font-semibold text-[var(--ink)] leading-none tabular-nums">
+            {counts.pending}
           </p>
         </div>
         <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5 sm:px-4 sm:py-3">
@@ -192,15 +208,21 @@ export default function MyProductsPage() {
         </div>
       </div>
 
-      {/* Active / Sold tabs */}
+      {/* Status tabs */}
       <div
         role="tablist"
         aria-label="Product status"
-        className="mb-5 flex gap-1 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)] p-1"
+        className="mb-5 flex flex-wrap gap-1 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface-2)] p-1"
       >
         {(
           [
-            { id: "active" as const, label: "Active", count: counts.active },
+            { id: "active" as const, label: "Live", count: counts.active },
+            { id: "pending" as const, label: "Pending", count: counts.pending },
+            {
+              id: "rejected" as const,
+              label: "Rejected",
+              count: counts.rejected,
+            },
             { id: "sold" as const, label: "Sold", count: counts.sold },
           ] as const
         ).map((item) => (
@@ -211,7 +233,7 @@ export default function MyProductsPage() {
             aria-selected={tab === item.id}
             onClick={() => setTab(item.id)}
             className={cn(
-              "flex-1 rounded-[var(--radius)] px-3 py-2.5 text-sm font-semibold transition-colors",
+              "min-w-[4.5rem] flex-1 rounded-[var(--radius)] px-3 py-2.5 text-sm font-semibold transition-colors",
               tab === item.id
                 ? "bg-[var(--surface)] text-[var(--ink)] shadow-[var(--shadow-sm)]"
                 : "text-[var(--muted)] hover:text-[var(--ink)]",
@@ -248,16 +270,40 @@ export default function MyProductsPage() {
       ) : visibleProducts.length === 0 ? (
         <Card>
           <EmptyState
-            title={tab === "sold" ? "No sold products" : "No active listings"}
+            title={
+              tab === "sold"
+                ? "No sold products"
+                : tab === "pending"
+                  ? "Nothing in review"
+                  : tab === "rejected"
+                    ? "No rejected listings"
+                    : "No live listings"
+            }
             description={
               tab === "sold"
                 ? "When you mark a listing sold, it will show up here so you can relist it later."
-                : "All your listings are sold. Relist one from the Sold tab, or add a new product."
+                : tab === "pending"
+                  ? "New listings appear here until a moderator approves them."
+                  : tab === "rejected"
+                    ? "Rejected listings would show here so you can edit and resubmit."
+                    : "Approve pending listings or add a new product to go live."
             }
             action={
               tab === "sold" ? (
-                <Button type="button" variant="secondary" onClick={() => setTab("active")}>
-                  View active
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setTab("active")}
+                >
+                  View live
+                </Button>
+              ) : tab === "pending" || tab === "rejected" ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setTab("active")}
+                >
+                  View live
                 </Button>
               ) : (
                 <Link
@@ -339,10 +385,18 @@ export default function MyProductsPage() {
                     {product.condition && (
                       <Badge
                         tone={
-                          product.condition === "new" ? "success" : "warning"
+                          product.condition === "new"
+                            ? "success"
+                            : product.condition === "refurbished"
+                              ? "brand"
+                              : "warning"
                         }
                       >
-                        {product.condition === "new" ? "New" : "Used"}
+                        {product.condition === "new"
+                          ? "New"
+                          : product.condition === "refurbished"
+                            ? "Refurbished"
+                            : "Used"}
                       </Badge>
                     )}
                     {product.status && (
@@ -352,16 +406,32 @@ export default function MyProductsPage() {
                             ? "success"
                             : product.status === "sold"
                               ? "neutral"
-                              : "warning"
+                              : product.status === "rejected"
+                                ? "danger"
+                                : "warning"
                         }
                       >
                         {product.status === "approved"
                           ? "Live"
                           : product.status === "sold"
                             ? "Sold"
-                            : "Pending"}
+                            : product.status === "rejected"
+                              ? "Rejected"
+                              : "Pending review"}
                       </Badge>
                     )}
+                    {product.status === "pending" ? (
+                      <p className="basis-full text-xs text-[var(--muted)]">
+                        Waiting for moderator approval before it appears in
+                        search.
+                      </p>
+                    ) : null}
+                    {product.status === "rejected" ? (
+                      <p className="basis-full text-xs text-[var(--danger)]">
+                        This listing was rejected. Edit details and resubmit, or
+                        delete it.
+                      </p>
+                    ) : null}
                     {product.status === "sold" && product.soldVia ? (
                       <Badge tone="neutral">
                         {product.soldVia === "sparesx"
@@ -410,17 +480,19 @@ export default function MyProductsPage() {
                             "flex-1",
                           )}
                         >
-                          Edit
+                          {product.status === "rejected" ? "Edit & resubmit" : "Edit"}
                         </Link>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => setSoldTarget(product)}
-                        >
-                          Sold
-                        </Button>
+                        {product.status === "approved" ? (
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => setSoldTarget(product)}
+                          >
+                            Sold
+                          </Button>
+                        ) : null}
                         <Button
                           variant="danger"
                           size="sm"

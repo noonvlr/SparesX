@@ -39,6 +39,10 @@ export interface IUser extends Document {
   averageRating: number;
   ratingCount: number;
   responseRate: number;
+  /** Inbound chat bursts used as denominator for responseRate */
+  chatInboundOpportunities: number;
+  /** Replies within 24h of an inbound burst (numerator) */
+  chatResponseHits: number;
   complaintRate: number;
   trustScore: number;
   /** Snapshot of active badge keys for fast public reads */
@@ -121,6 +125,8 @@ const UserSchema: Schema<IUser> = new Schema(
     averageRating: { type: Number, default: 0 },
     ratingCount: { type: Number, default: 0 },
     responseRate: { type: Number, default: 0 },
+    chatInboundOpportunities: { type: Number, default: 0 },
+    chatResponseHits: { type: Number, default: 0 },
     complaintRate: { type: Number, default: 0 },
     trustScore: { type: Number, default: 0 },
     activeBadgeKeys: { type: [String], default: [] },

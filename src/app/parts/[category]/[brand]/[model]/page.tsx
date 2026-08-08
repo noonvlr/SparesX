@@ -58,8 +58,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       title: `${title} | ${SITE_NAME}`,
       description,
     },
-    // An empty landing page is thin content; keep it out of the index.
-    robots: { index: total > 0, follow: true },
+    // Empty or single-listing hubs are thin doorway pages — keep out of the index.
+    robots: { index: total >= 2, follow: true },
   };
 }
 
