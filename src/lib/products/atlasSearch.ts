@@ -23,6 +23,14 @@ export function buildAtlasProductSearchStage(query: string) {
               query,
               path: ["name", "brand", "deviceModel", "partType", "modelNumber"],
               fuzzy: { maxEdits: 1 },
+              score: { boost: { value: 3 } },
+            },
+          },
+          {
+            text: {
+              query,
+              path: "tags",
+              score: { boost: { value: 1.5 } },
             },
           },
           {
@@ -32,6 +40,7 @@ export function buildAtlasProductSearchStage(query: string) {
             },
           },
         ],
+        minimumShouldMatch: 1,
       },
     },
   };

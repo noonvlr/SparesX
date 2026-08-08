@@ -122,6 +122,13 @@ function sanitizeTextSearch(search: string) {
     .slice(0, 120);
 }
 
+async function prepareSearchQuery(raw: string): Promise<string> {
+  const { expandSearchSynonyms } = await import(
+    "@/lib/products/searchSynonyms"
+  );
+  return expandSearchSynonyms(sanitizeTextSearch(raw));
+}
+
 type SortKey = "featured" | "newest" | "price_asc" | "price_desc";
 
 function resolveSort(sortParam?: string | null): Record<string, 1 | -1> {
@@ -347,15 +354,16 @@ export async function fetchProductList(
 
   let usedTextSearch = false;
   let usedAtlasSearch = false;
+  let preparedSearch = "";
   const trimmedSearch = search?.trim();
   if (trimmedSearch) {
-    const textQuery = sanitizeTextSearch(trimmedSearch);
-    if (textQuery.length >= 2) {
+    preparedSearch = await prepareSearchQuery(trimmedSearch);
+    if (preparedSearch.length >= 2) {
       const { atlasSearchEnabled } = await import("@/lib/products/atlasSearch");
       if (atlasSearchEnabled()) {
         usedAtlasSearch = true;
       } else {
-        query.$text = { $search: textQuery };
+        query.$text = { $search: preparedSearch };
         usedTextSearch = true;
       }
     } else {
@@ -380,24 +388,40 @@ export async function fetchProductList(
       : sortSpec;
 
   // Atlas Search aggregation path (when ATLAS_SEARCH_INDEX is configured)
-  if (usedAtlasSearch && trimmedSearch) {
+  if (usedAtlasSearch && preparedSearch) {
     try {
       const {
         buildAtlasProductSearchStage,
       } = await import("@/lib/products/atlasSearch");
-      const textQuery = sanitizeTextSearch(trimmedSearch);
       const matchQuery = { ...query };
       delete matchQuery.$text;
+      const preferRelevance = (params.sort || "featured") === "featured";
+      const docsPipeline: Record<string, unknown>[] = preferRelevance
+        ? [
+            { $addFields: { searchScore: { $meta: "searchScore" } } },
+            {
+              $sort: {
+                searchScore: -1,
+                featured: -1,
+                createdAt: -1,
+              },
+            },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+          ]
+        : [
+            { $sort: sortSpec },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+          ];
       const pipeline: Record<string, unknown>[] = [
-        buildAtlasProductSearchStage(textQuery),
+        buildAtlasProductSearchStage(preparedSearch),
         { $match: matchQuery },
         {
           $facet: {
             total: [{ $count: "count" }],
             docs: [
-              { $sort: sortSpec },
-              { $skip: (page - 1) * limit },
-              { $limit: limit },
+              ...docsPipeline,
               {
                 $project: {
                   _id: 1,
@@ -442,7 +466,7 @@ export async function fetchProductList(
       return { products, total, page, pages: Math.ceil(total / limit) || 1 };
     } catch (err) {
       console.warn("[products] Atlas Search failed; falling back to $text", err);
-      query.$text = { $search: sanitizeTextSearch(trimmedSearch) };
+      query.$text = { $search: preparedSearch };
       usedTextSearch = true;
       usedAtlasSearch = false;
       if ((params.sort || "featured") === "featured") {
@@ -483,7 +507,7 @@ export async function fetchProductList(
     // Text index may not exist yet — fall back to regex token match
     if (usedTextSearch) {
       delete query.$text;
-      andClauses.push(buildSearchFilter(trimmedSearch!));
+      andClauses.push(buildSearchFilter(preparedSearch || trimmedSearch!));
       query.$and = andClauses;
       const total = await Product.countDocuments(query);
       const docs = await Product.find(query)
