@@ -572,6 +572,14 @@ export async function setConversationTyping(params: {
     throw Object.assign(new Error("Forbidden"), { status: 403 });
   }
 
+  const peerId = conversation.participants
+    .map((p) => String(p))
+    .find((id) => id !== String(userId));
+  if (peerId && (await isPeerBlocked(userId, peerId))) {
+    // Silent no-op for blocked peers (do not leak block state via typing).
+    return { typingUserId: null, typingUntil: null };
+  }
+
   if (typing) {
     await Conversation.updateOne(
       { _id: conversation._id },

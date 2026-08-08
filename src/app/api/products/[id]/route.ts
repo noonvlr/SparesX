@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { getOptionalUser } from "@/lib/auth/getOptionalUser";
 
 // Ensure User schema is registered for technician populate
 void User;
@@ -22,22 +22,9 @@ export async function GET(
     const resolvedParams = params instanceof Promise ? await params : params;
     const { id } = resolvedParams;
 
-    const { getTokenFromRequest } = await import(
-      "@/lib/auth/getTokenFromRequest"
-    );
-    const token = getTokenFromRequest(req);
-    let userId: string | null = null;
-    let isAuthenticated = false;
-
-    if (token) {
-      try {
-        const decoded = verifyJwt(token);
-        userId = decoded?.id || null;
-        isAuthenticated = !!userId;
-      } catch {
-        // continue as public
-      }
-    }
+    const auth = await getOptionalUser(req);
+    const userId = auth?.id || null;
+    const isAuthenticated = !!userId;
 
     const TECHNICIAN_FIELDS =
       "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount";

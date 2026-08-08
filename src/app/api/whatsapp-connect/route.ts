@@ -168,6 +168,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { isPeerBlocked } = await import("@/lib/chat/peerBlock");
+    if (await isPeerBlocked(auth.id, sellerId)) {
+      return NextResponse.json(
+        { message: "You cannot contact this seller" },
+        { status: 403 },
+      );
+    }
+
     const seller = await User.findById(sellerId)
       .select("_id isBlocked whatsappNumber mobile")
       .lean();

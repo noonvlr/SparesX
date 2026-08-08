@@ -42,6 +42,8 @@ export async function isWhatsAppUnlocked(
 ): Promise<boolean> {
   if (!viewerId || !peerId || viewerId === peerId) return false;
   await connectDB();
+  const { isPeerBlocked } = await import("@/lib/chat/peerBlock");
+  if (await isPeerBlocked(viewerId, peerId)) return false;
   // Either direction: if A unlocked B, both can use WhatsApp with each other
   const row = await WhatsAppConnect.findOne({
     status: "approved",
@@ -193,6 +195,16 @@ export async function getPublicConnectStatus(params: {
       unlocked: false,
       canRequest: false,
       reason: "This is your listing",
+    };
+  }
+
+  const { isPeerBlocked } = await import("@/lib/chat/peerBlock");
+  if (await isPeerBlocked(viewerId, sellerId)) {
+    return {
+      status: "none",
+      unlocked: false,
+      canRequest: false,
+      reason: "You cannot contact this seller",
     };
   }
 

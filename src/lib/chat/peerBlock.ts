@@ -32,6 +32,23 @@ export async function blockPeer(blockerId: string, blockedId: string) {
     { $setOnInsert: { blocker: toOid(blockerId), blocked: toOid(blockedId) } },
     { upsert: true },
   );
+
+  // Revoke WhatsApp unlock / pending requests between the pair on block.
+  try {
+    const { WhatsAppConnect } = await import("@/lib/models/WhatsAppConnect");
+    await WhatsAppConnect.updateMany(
+      {
+        status: { $in: ["pending", "approved"] },
+        $or: [
+          { requester: toOid(blockerId), seller: toOid(blockedId) },
+          { requester: toOid(blockedId), seller: toOid(blockerId) },
+        ],
+      },
+      { $set: { status: "declined", respondedAt: new Date() } },
+    );
+  } catch {
+    // Block succeeds even if WA revoke fails
+  }
 }
 
 export async function unblockPeer(blockerId: string, blockedId: string) {

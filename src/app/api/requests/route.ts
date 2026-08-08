@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { RequestModel } from "@/lib/models/Request";
-import { verifyJwt } from "@/lib/auth/jwt";
-import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
+import { getOptionalUser } from "@/lib/auth/getOptionalUser";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 function escapeRegex(value: string) {
@@ -22,11 +21,7 @@ export async function GET(req: NextRequest) {
     const deviceCategory = searchParams.get("deviceCategory");
     const mine = searchParams.get("mine") === "1";
 
-    const token = getTokenFromRequest(req);
-    let payload: { id: string; role: string } | null = null;
-    if (token) {
-      payload = verifyJwt(token);
-    }
+    const payload = await getOptionalUser(req);
 
     if (mine) {
       if (!payload?.id) {

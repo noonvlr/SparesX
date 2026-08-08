@@ -91,6 +91,11 @@ export async function checkRatingEligibility(params: {
 
   await connectDB();
 
+  const { isPeerBlocked } = await import("@/lib/chat/peerBlock");
+  if (await isPeerBlocked(raterId, sellerId)) {
+    return { eligible: false, reason: "You cannot rate this seller" };
+  }
+
   const rater = await User.findById(raterId)
     .select("phoneVerified isBlocked")
     .lean();

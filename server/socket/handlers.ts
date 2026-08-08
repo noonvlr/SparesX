@@ -260,12 +260,14 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     try {
       const { Conversation } = await import("../../src/lib/models/Conversation");
       const { connectDB } = await import("../../src/lib/db/connect");
+      const { isPeerBlocked } = await import("../../src/lib/chat/peerBlock");
       await connectDB();
       const conv = await Conversation.findById(conversationId)
         .select("participants")
         .lean();
       if (!conv || !assertParticipant(conv as any, userId)) return;
       if (!assertParticipant(conv as any, peerId)) return;
+      if (await isPeerBlocked(userId, String(peerId))) return;
       io.to(peerId).emit("typing", { conversationId, userId });
     } catch {
       // ignore typing failures
@@ -278,12 +280,14 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     try {
       const { Conversation } = await import("../../src/lib/models/Conversation");
       const { connectDB } = await import("../../src/lib/db/connect");
+      const { isPeerBlocked } = await import("../../src/lib/chat/peerBlock");
       await connectDB();
       const conv = await Conversation.findById(conversationId)
         .select("participants")
         .lean();
       if (!conv || !assertParticipant(conv as any, userId)) return;
       if (!assertParticipant(conv as any, peerId)) return;
+      if (await isPeerBlocked(userId, String(peerId))) return;
       io.to(peerId).emit("stop-typing", { conversationId, userId });
     } catch {
       // ignore

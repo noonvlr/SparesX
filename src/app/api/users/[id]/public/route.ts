@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { getOptionalUser } from "@/lib/auth/getOptionalUser";
 import { fetchPublicProfile } from "@/lib/users/publicProfile";
 
 /**
@@ -23,15 +23,8 @@ export async function GET(
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    let viewerId: string | null = null;
-    const { getTokenFromRequest } = await import(
-      "@/lib/auth/getTokenFromRequest"
-    );
-    const token = getTokenFromRequest(req);
-    if (token) {
-      const payload = verifyJwt(token);
-      if (payload?.id) viewerId = payload.id;
-    }
+    const viewer = await getOptionalUser(req);
+    const viewerId = viewer?.id || null;
 
     return NextResponse.json(
       {

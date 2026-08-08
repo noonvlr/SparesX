@@ -21,7 +21,8 @@ npm run dev            # Next.js + Socket.io (concurrent)
 |---|---|
 | `MONGODB_URI` | Mongo connection string |
 | `JWT_SECRET` | HS256 signing secret |
-| `NEXT_PUBLIC_BASE_URL` / `SITE_URL` | Canonical site URL |
+| `NEXT_PUBLIC_BASE_URL` | Deploy / SSR self-fetch base URL |
+| `NEXT_PUBLIC_SITE_URL` | Public canonical host (SEO: canonicals, OG, sitemap) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob uploads (production) |
 
 ### Recommended env
