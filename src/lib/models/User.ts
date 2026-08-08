@@ -44,6 +44,8 @@ export interface IUser extends Document {
   /** Replies within 24h of an inbound burst (numerator) */
   chatResponseHits: number;
   complaintRate: number;
+  /** Upheld abuse reports counted into complaintRate */
+  complaintCount: number;
   trustScore: number;
   /** Snapshot of active badge keys for fast public reads */
   activeBadgeKeys: string[];
@@ -128,6 +130,7 @@ const UserSchema: Schema<IUser> = new Schema(
     chatInboundOpportunities: { type: Number, default: 0 },
     chatResponseHits: { type: Number, default: 0 },
     complaintRate: { type: Number, default: 0 },
+    complaintCount: { type: Number, default: 0 },
     trustScore: { type: Number, default: 0 },
     activeBadgeKeys: { type: [String], default: [] },
     specialBadgeKeys: { type: [String], default: [] },

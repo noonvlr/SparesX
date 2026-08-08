@@ -21,6 +21,11 @@ export interface ISupportRequest extends Document {
   adminReply?: string;
   /** Listed seller / user being reported */
   reportedUser?: Types.ObjectId;
+  /**
+   * When an abuse ticket is resolved/closed, whether it counts against the
+   * reported seller's complaintRate. Defaults to true on resolve.
+   */
+  complaintUpheld?: boolean | null;
   /** Product context for abuse reports */
   product?: Types.ObjectId;
   /** Unread for admin (new ticket / new user activity) */
@@ -53,6 +58,7 @@ const SupportRequestSchema: Schema<ISupportRequest> = new Schema(
     },
     adminReply: { type: String, trim: true, maxlength: 4000 },
     reportedUser: { type: Schema.Types.ObjectId, ref: "User", index: true },
+    complaintUpheld: { type: Boolean, default: null },
     product: { type: Schema.Types.ObjectId, ref: "Product", index: true },
     adminUnread: { type: Boolean, default: true, index: true },
     adminReadAt: { type: Date },

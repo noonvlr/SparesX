@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
 import { SITE_URL } from "@/lib/seo/site";
+import { slugifyPathSegment } from "@/lib/seo/partsPath";
 
 /** Rebuild hourly — avoids sticky failed prerenders and keeps crawl data fresh. */
 export const revalidate = 3600;
@@ -43,14 +44,6 @@ const staticRoutes = [
   { path: "/terms", priority: 0.3, changeFrequency: "yearly" as const },
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" as const },
 ];
-
-function slugifySegment(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
 
 function asDate(value: unknown): Date {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -121,9 +114,9 @@ async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
 
   const partsEntries: MetadataRoute.Sitemap = [];
   for (const hub of partHubs) {
-    const category = slugifySegment(String(hub._id.partType || ""));
-    const brand = slugifySegment(String(hub._id.brand || ""));
-    const model = slugifySegment(String(hub._id.deviceModel || ""));
+    const category = slugifyPathSegment(String(hub._id.partType || ""));
+    const brand = slugifyPathSegment(String(hub._id.brand || ""));
+    const model = slugifyPathSegment(String(hub._id.deviceModel || ""));
     if (!category || !brand || !model) continue;
     partsEntries.push({
       url: `${SITE_URL}/parts/${category}/${brand}/${model}`,

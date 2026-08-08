@@ -843,7 +843,12 @@ export default function ProductFilters() {
               Include nearby cities
             </span>
           </label>
-        ) : null}
+        ) : (
+          <p className="mt-2 text-xs text-[var(--muted)]">
+            Leave empty to browse all India. If you&apos;re signed in with a
+            profile city, same-city listings are ranked first.
+          </p>
+        )}
       </div>
 
       <div>

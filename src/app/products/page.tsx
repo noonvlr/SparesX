@@ -54,6 +54,35 @@ function toListParams(raw: RawSearchParams): ProductListParams {
   };
 }
 
+/** Soft-rank by profile city when the URL has no city filter. */
+async function withPreferCity(
+  params: ProductListParams,
+): Promise<ProductListParams> {
+  if (params.city?.trim()) return params;
+  try {
+    const { cookies } = await import("next/headers");
+    const { SESSION_COOKIE } = await import("@/lib/auth/cookieNames");
+    const { verifyJwt } = await import("@/lib/auth/jwt");
+    const token = (await cookies()).get(SESSION_COOKIE)?.value?.trim();
+    if (!token) return params;
+    const payload = verifyJwt(token);
+    if (!payload?.id) return params;
+    const { connectDB } = await import("@/lib/db/connect");
+    const { User } = await import("@/lib/models/User");
+    await connectDB();
+    const user = await User.findById(payload.id)
+      .select("city isBlocked sessionVersion")
+      .lean();
+    if (!user || user.isBlocked) return params;
+    const sv = typeof user.sessionVersion === "number" ? user.sessionVersion : 0;
+    if (payload.sv !== sv) return params;
+    if (!user.city?.trim()) return params;
+    return { ...params, preferCity: user.city.trim() };
+  } catch {
+    return params;
+  }
+}
+
 /** Filtered and paginated views are near-duplicates, so only /products is indexed. */
 function isFilteredView(raw: RawSearchParams) {
   const pageNumber = parseInt(firstParam(raw.page) || "1", 10) || 1;
@@ -144,7 +173,7 @@ export default async function BrowseProductsPage({
   searchParams: Promise<RawSearchParams>;
 }) {
   const raw = await searchParams;
-  const params = toListParams(raw);
+  const params = await withPreferCity(toListParams(raw));
   const { products, total, page, pages } = await fetchProductList(params);
 
   const summary = describeFilters(params);

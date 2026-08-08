@@ -145,21 +145,21 @@ export default async function PartsPage({ params }: Params) {
         <PageHeader
           className="mb-6"
           title={`${brand} ${model} ${category} parts`}
-          description={`${total} listing${total === 1 ? "" : "s"} for the ${brand} ${model}. Check seller badges and Trust Score, then contact them directly — SparesX does not process payments or hold stock.`}
+          description={`${total} live listing${total === 1 ? "" : "s"} for ${brand} ${model} ${category.toLowerCase()} — compare condition and price, then message the seller on ${SITE_NAME}.`}
         />
 
         <div className="mb-8 max-w-3xl space-y-3 text-sm leading-relaxed text-[var(--ink-secondary)]">
           <p>
-            Looking for {category.toLowerCase()} parts for the {brand} {model}?
-            Independent repair technicians across India list their spare
-            inventory here, so you can compare condition and price before
-            committing. Listings usually include displays, batteries, charging
-            ports, cameras, and housings, depending on what sellers currently
-            hold.
+            This hub collects technician-listed {category.toLowerCase()} for the{" "}
+            {brand} {model} currently available on {SITE_NAME}. Unlike a retail
+            catalog, stock changes as repair shops sell through their inventory,
+            so prices and condition vary by seller.
           </p>
           <p>
-            Check each seller&apos;s trust score and verification badges before
-            you reach out. If nobody has the part you need yet,{" "}
+            Looking for {category.toLowerCase()} parts for the {brand} {model}?
+            Compare listings below, then check each seller&apos;s trust score and
+            verification badges before you reach out. If nobody has the part you
+            need yet,{" "}
             <Link
               href="/requests?tab=submit"
               className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"

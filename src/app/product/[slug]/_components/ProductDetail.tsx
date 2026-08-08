@@ -26,6 +26,7 @@ import {
   formatDeviceLabel,
   formatProductHeading,
 } from "@/lib/seo/productMeta";
+import { partsPath } from "@/lib/seo/site";
 import { authFetch, getCachedUserId, isLoggedInClient, resolveSessionUserId } from "@/lib/auth/clientAuth";
 
 interface Seller {
@@ -399,6 +400,11 @@ export default function ProductDetail({
   const partLabel = formatPartTypeLabel(product.partType);
   const conditionLabel = formatConditionLabel(product.condition);
   const deviceLabel = formatDeviceLabel(product);
+  const hubHref = partsPath({
+    partType: product.partType,
+    brand: product.brand,
+    deviceModel: product.deviceModel,
+  });
 
   const specRows: Array<{ label: string; value: ReactNode }> = [
     product.brand
@@ -406,7 +412,10 @@ export default function ProductDetail({
           label: "Brand",
           value: (
             <Link
-              href={`/products?brand=${encodeURIComponent(product.brand)}`}
+              href={
+                hubHref ||
+                `/products?brand=${encodeURIComponent(product.brand)}`
+              }
               className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
             >
               {product.brand}
@@ -417,15 +426,18 @@ export default function ProductDetail({
     product.deviceModel
       ? {
           label: "Compatible model",
-          value: product.brand ? (
+          value: (
             <Link
-              href={`/products?brand=${encodeURIComponent(product.brand)}&deviceModel=${encodeURIComponent(product.deviceModel)}`}
+              href={
+                hubHref ||
+                (product.brand
+                  ? `/products?brand=${encodeURIComponent(product.brand)}&deviceModel=${encodeURIComponent(product.deviceModel)}`
+                  : `/products?deviceModel=${encodeURIComponent(product.deviceModel)}`)
+              }
               className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
             >
               {deviceLabel}
             </Link>
-          ) : (
-            deviceLabel
           ),
         }
       : null,
@@ -437,7 +449,10 @@ export default function ProductDetail({
           label: "Part type",
           value: product.partType ? (
             <Link
-              href={`/products?partType=${encodeURIComponent(product.partType)}`}
+              href={
+                hubHref ||
+                `/products?partType=${encodeURIComponent(product.partType)}`
+              }
               className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
             >
               {partLabel}
@@ -494,6 +509,22 @@ export default function ProductDetail({
               })}
             </ol>
           </nav>
+        ) : null}
+
+        {hubHref ? (
+          <p className="mb-4 text-sm text-[var(--ink-secondary)]">
+            More{" "}
+            <Link
+              href={hubHref}
+              className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            >
+              {[product.brand, product.deviceModel, partLabel]
+                .filter(Boolean)
+                .join(" ")}{" "}
+              parts
+            </Link>{" "}
+            from technicians across India.
+          </p>
         ) : null}
 
         <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3">

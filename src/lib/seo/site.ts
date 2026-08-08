@@ -44,3 +44,5 @@ export function productUrl(product: {
 }): string {
   return absoluteUrl(productPath(product));
 }
+
+export { partsPath, slugifyPathSegment } from "@/lib/seo/partsPath";

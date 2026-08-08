@@ -5,6 +5,25 @@ import { fetchProductList } from "@/lib/products/listQuery";
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
+    const cityParam = searchParams.get("city");
+
+    // Soft profile-city preference when no explicit city filter is set.
+    let preferCity: string | undefined;
+    if (!cityParam?.trim()) {
+      try {
+        const { getOptionalUser } = await import("@/lib/auth/getOptionalUser");
+        const auth = await getOptionalUser(req);
+        if (auth) {
+          const { connectDB } = await import("@/lib/db/connect");
+          const { User } = await import("@/lib/models/User");
+          await connectDB();
+          const profile = await User.findById(auth.id).select("city").lean();
+          if (profile?.city?.trim()) preferCity = profile.city.trim();
+        }
+      } catch {
+        // Preference is best-effort; listing still works anonymously.
+      }
+    }
 
     const result = await fetchProductList({
       page: searchParams.get("page"),
@@ -19,8 +38,9 @@ export async function GET(req: NextRequest) {
       minPrice: searchParams.get("minPrice"),
       maxPrice: searchParams.get("maxPrice"),
       search: searchParams.get("search"),
-      city: searchParams.get("city"),
+      city: cityParam,
       nearby: searchParams.get("nearby"),
+      preferCity,
       sellerType: searchParams.get("sellerType"),
       sort: searchParams.get("sort"),
       negotiable: searchParams.get("negotiable"),
@@ -38,7 +58,7 @@ export async function GET(req: NextRequest) {
           searchParams.get("deviceModel") ||
           searchParams.get("model") ||
           undefined,
-        city: searchParams.get("city") || undefined,
+        city: cityParam || preferCity || undefined,
         meta: { resultCount: result.total },
       });
     }

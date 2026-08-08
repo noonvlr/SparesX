@@ -232,6 +232,11 @@ export type ProductListParams = {
   city?: string | null;
   /** When "1"/true with city — include metro/region nearby cities */
   nearby?: string | null;
+  /**
+   * Soft city preference (e.g. profile city): boost same-city sellers on
+   * featured sort without filtering other cities out. Ignored when `city` set.
+   */
+  preferCity?: string | null;
   sellerType?: string | null;
   sort?: string | null;
   negotiable?: string | null;
@@ -301,6 +306,13 @@ export async function fetchProductList(
   const minPrice = parseFloat(params.minPrice || "0");
   const maxPrice = parseFloat(params.maxPrice || "0");
   const { search, city, sellerType, sort, negotiable } = params;
+  const preferCityRaw =
+    !city && params.preferCity ? String(params.preferCity).trim() : "";
+  let softPreferredCity: string | null = null;
+  if (preferCityRaw) {
+    const { canonicalizeCity } = await import("@/lib/geo/nearbyCities");
+    softPreferredCity = canonicalizeCity(preferCityRaw) || preferCityRaw;
+  }
   const nearby =
     params.nearby === "1" ||
     params.nearby === "true" ||
@@ -418,9 +430,31 @@ export async function fetchProductList(
   }
 
   const sortSpec = resolveSort(sort);
-  const preferredCity = sellerResolution?.preferredCity || null;
+  const preferredCity =
+    sellerResolution?.preferredCity || softPreferredCity || null;
   const cityBySellerId = sellerResolution?.cityBySellerId || new Map();
   const { isSameCity } = await import("@/lib/geo/nearbyCities");
+
+  async function ensureSellerCities(
+    docs: Array<{ technician?: unknown }>,
+  ): Promise<void> {
+    if (!softPreferredCity || sellerResolution) return;
+    const missing = [
+      ...new Set(
+        docs
+          .map((d) => (d.technician ? String(d.technician) : ""))
+          .filter((id) => id && !cityBySellerId.has(id)),
+      ),
+    ];
+    if (missing.length === 0) return;
+    const { User } = await import("@/lib/models/User");
+    const sellers = await User.find({ _id: { $in: missing } })
+      .select("_id city")
+      .lean();
+    for (const s of sellers) {
+      if (s.city) cityBySellerId.set(String(s._id), String(s.city));
+    }
+  }
 
   const decorate = (doc: Record<string, any>): ProductListItem => {
     const techId = doc.technician ? String(doc.technician) : undefined;
@@ -522,6 +556,7 @@ export async function fetchProductList(
       const [facet] = await Product.aggregate(pipeline as any[]);
       const total = facet?.total?.[0]?.count || 0;
       const docs = facet?.docs || [];
+      await ensureSellerCities(docs);
       let products = orderBySameCity(docs.map(decorate));
       if (preferSameCity) {
         products = products.slice((page - 1) * limit, page * limit);
@@ -550,6 +585,7 @@ export async function fetchProductList(
       .sort(findSort)
       .lean();
 
+    await ensureSellerCities(docs);
     let products = orderBySameCity(docs.map(decorate));
     if (preferSameCity) {
       products = products.slice((page - 1) * limit, page * limit);
@@ -572,6 +608,7 @@ export async function fetchProductList(
         .sort(sortSpec)
         .lean();
 
+      await ensureSellerCities(docs);
       const products = orderBySameCity(docs.map(decorate));
 
       return { products, total, page, pages: Math.ceil(total / limit) };

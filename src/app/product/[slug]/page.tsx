@@ -10,7 +10,7 @@ import {
   formatProductHeading,
 } from "@/lib/seo/productMeta";
 import { formatPartTypeLabel } from "@/lib/products/listingTitle";
-import { SITE_NAME, absoluteUrl, productPath, productUrl } from "@/lib/seo/site";
+import { SITE_NAME, absoluteUrl, partsPath, productPath, productUrl } from "@/lib/seo/site";
 
 /** Origin for server-side self-fetch (must be this instance, not the public domain). */
 async function requestOrigin() {
@@ -147,6 +147,11 @@ export default async function ProductSlugPage({
   const brandHref = product.brand
     ? `/products?brand=${encodeURIComponent(product.brand)}`
     : null;
+  const hubHref = partsPath({
+    partType: product.partType,
+    brand: product.brand,
+    deviceModel: product.deviceModel,
+  });
   const partHref = product.partType
     ? `/products?partType=${encodeURIComponent(product.partType)}${
         product.brand ? `&brand=${encodeURIComponent(product.brand)}` : ""
@@ -156,12 +161,27 @@ export default async function ProductSlugPage({
   const breadcrumbs = [
     { name: "Home", href: "/" },
     { name: "Products", href: "/products" },
-    ...(product.brand && brandHref
-      ? [{ name: product.brand, href: brandHref }]
-      : []),
-    ...(product.partType && partHref
-      ? [{ name: partTypeLabel, href: partHref }]
-      : []),
+    ...(hubHref
+      ? [
+          {
+            name: [
+              product.brand,
+              product.deviceModel,
+              formatPartTypeLabel(product.partType),
+            ]
+              .filter(Boolean)
+              .join(" "),
+            href: hubHref,
+          },
+        ]
+      : [
+          ...(product.brand && brandHref
+            ? [{ name: product.brand, href: brandHref }]
+            : []),
+          ...(product.partType && partHref
+            ? [{ name: partTypeLabel, href: partHref }]
+            : []),
+        ]),
     { name: heading, href: productPath(product) },
   ];
 

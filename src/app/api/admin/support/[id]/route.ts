@@ -13,13 +13,16 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
-    const { status, adminReply, markRead } = body;
+    const { status, adminReply, markRead, complaintUpheld } = body;
 
     await connectDB();
     const ticket = await SupportRequest.findById(id);
     if (!ticket) {
       return NextResponse.json({ message: "Ticket not found" }, { status: 404 });
     }
+
+    const previousStatus = ticket.status;
+    const previousUpheld = ticket.complaintUpheld;
 
     if (markRead) {
       ticket.adminUnread = false;
@@ -64,7 +67,35 @@ export async function PATCH(
       }
     }
 
+    // Closed-loop complaintRate: abuse tickets with a reported seller.
+    if (
+      ticket.type === "abuse" &&
+      ticket.reportedUser &&
+      (status || typeof complaintUpheld === "boolean")
+    ) {
+      const terminal =
+        ticket.status === "resolved" || ticket.status === "closed";
+      if (terminal) {
+        ticket.complaintUpheld =
+          typeof complaintUpheld === "boolean" ? complaintUpheld : true;
+      } else if (previousStatus === "resolved" || previousStatus === "closed") {
+        ticket.complaintUpheld = null;
+      }
+    }
+
     await ticket.save();
+
+    if (
+      ticket.type === "abuse" &&
+      ticket.reportedUser &&
+      (ticket.status !== previousStatus ||
+        ticket.complaintUpheld !== previousUpheld)
+    ) {
+      const { recomputeComplaintRate } = await import(
+        "@/lib/trust/complaintRate"
+      );
+      void recomputeComplaintRate(ticket.reportedUser);
+    }
 
     const unreadCount = await SupportRequest.countDocuments({
       adminUnread: { $ne: false },

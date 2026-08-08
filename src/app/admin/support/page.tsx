@@ -38,6 +38,7 @@ export default function AdminSupportPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [reply, setReply] = useState("");
   const [saving, setSaving] = useState(false);
+  const [upholdComplaint, setUpholdComplaint] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
@@ -89,7 +90,10 @@ export default function AdminSupportPage() {
   }, [status]);
 
   useEffect(() => {
-    if (selected) setReply(selected.adminReply || "");
+    if (selected) {
+      setReply(selected.adminReply || "");
+      setUpholdComplaint(selected.complaintUpheld !== false);
+    }
   }, [selectedId]);
 
   async function markAsRead(ticketId: string) {
@@ -146,6 +150,9 @@ export default function AdminSupportPage() {
           status: nextStatus || selected.status,
           adminReply: reply,
           markRead: true,
+          ...(selected.type === "abuse" && selected.reportedUser
+            ? { complaintUpheld: upholdComplaint }
+            : {}),
         }),
       });
       if (res.ok) {
@@ -377,6 +384,21 @@ export default function AdminSupportPage() {
                   placeholder="Write a reply the user will see on their Support page..."
                 />
               </Field>
+
+              {selected.type === "abuse" && selected.reportedUser ? (
+                <label className="flex items-start gap-2.5 text-sm text-[var(--ink-secondary)]">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 h-4 w-4 accent-[var(--brand)]"
+                    checked={upholdComplaint}
+                    onChange={(e) => setUpholdComplaint(e.target.checked)}
+                  />
+                  <span>
+                    Count as upheld complaint against the reported seller
+                    (updates their complaint rate when you resolve or close).
+                  </span>
+                </label>
+              ) : null}
 
               <div className="flex flex-wrap gap-2">
                 <Button
