@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product, type SoldVia } from "@/lib/models/Product";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 const SOLD_VIA: SoldVia[] = ["sparesx", "other"];
 
@@ -13,13 +13,9 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const payload = verifyJwt(authHeader.split(" ")[1]);
-  if (!payload || payload.role !== "technician") {
+  const auth = await requireUser(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.role !== "technician") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
@@ -44,7 +40,7 @@ export async function POST(
 
   await connectDB();
 
-  const product = await Product.findOne({ _id: id, technician: payload.id });
+  const product = await Product.findOne({ _id: id, technician: auth.id });
   if (!product) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
@@ -86,7 +82,7 @@ export async function POST(
     const conversations = await Conversation.find({ productId: product._id })
       .select("participants")
       .lean();
-    const sellerId = String(payload.id);
+    const sellerId = String(auth.id);
     const buyerIds = new Set<string>();
     for (const c of conversations) {
       for (const p of c.participants || []) {

@@ -24,9 +24,12 @@ export async function GET(
     }
 
     let viewerId: string | null = null;
-    const authHeader = req.headers.get("authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      const payload = verifyJwt(authHeader.split(" ")[1]);
+    const { getTokenFromRequest } = await import(
+      "@/lib/auth/getTokenFromRequest"
+    );
+    const token = getTokenFromRequest(req);
+    if (token) {
+      const payload = verifyJwt(token);
       if (payload?.id) viewerId = payload.id;
     }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 import {
   normalizeEmail,
   normalizeAbout,
@@ -15,17 +15,13 @@ import {
 
 // Get technician profile
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-  const token = authHeader.split(" ")[1];
-  const payload = verifyJwt(token);
-  if (!payload || payload.role !== "technician") {
+  const auth = await requireUser(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.role !== "technician") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
   await connectDB();
-  const user = await User.findById(payload.id).select(USER_CLIENT_EXCLUDE);
+  const user = await User.findById(auth.id).select(USER_CLIENT_EXCLUDE);
   if (!user || user.isBlocked) {
     return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
@@ -37,19 +33,15 @@ export async function GET(req: NextRequest) {
 
 // Update technician profile
 export async function PUT(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-  const token = authHeader.split(" ")[1];
-  const payload = verifyJwt(token);
-  if (!payload || payload.role !== "technician") {
+  const auth = await requireUser(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.role !== "technician") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();
   await connectDB();
-  const user = await User.findById(payload.id);
+  const user = await User.findById(auth.id);
   if (!user) {
     return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
@@ -148,7 +140,7 @@ export async function PUT(req: NextRequest) {
 
   await user.save();
 
-  const updatedUser = await User.findById(payload.id).select(USER_CLIENT_EXCLUDE);
+  const updatedUser = await User.findById(auth.id).select(USER_CLIENT_EXCLUDE);
   return NextResponse.json(
     {
       message: "Profile updated",

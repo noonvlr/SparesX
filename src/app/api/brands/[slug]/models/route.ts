@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { CategoryBrand, IModel } from "@/lib/models/CategoryBrand";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import { slugifyModelName } from "@/lib/utils/modelSuggest";
 
 function normalizeKey(name: string, modelNumber?: string) {
@@ -82,26 +82,10 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    const token = authHeader.split(" ")[1];
-    const payload = verifyJwt(token);
-    if (!payload?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    const admin = await requireAdmin(req);
+    if (isAdminError(admin)) return admin;
 
     await connectDB();
-    const actor = await (
-      await import("@/lib/models/User")
-    ).User.findById(payload.id)
-      .select("role isBlocked")
-      .lean();
-    if (!actor || actor.isBlocked || actor.role !== "admin") {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-    }
-
     const { slug } = await params;
     const body = await req.json();
     const category = String(body.category || "").toLowerCase().trim();

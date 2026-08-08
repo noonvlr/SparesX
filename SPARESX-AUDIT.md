@@ -337,7 +337,7 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- HttpOnly cookie **full cutover** (Phase 11 foundation done; CSRF + mass client migrate + socket cookie still open)
+- HttpOnly cookie **full cutover** (Phase 11–13: dual-mode APIs + most clients on `authFetch`; CSRF + socket cookie + remaining legacy call sites still open)
 - Catalog ObjectId rewrite
 - Atlas Search (Mongo `$text` covers MVP in Phase 6)
 - Redis socket adapter / shared rate-limit store
@@ -380,6 +380,12 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Admin chat: Load more pagination + `authFetch`
 - Focused `authFetch` migrate: AdminGate (role via `/api/auth/me`), uploads, notifications, dashboards, demand, saved count
 - Upload + technician products accept cookie-or-Bearer via `getTokenFromRequest` / `requireUser`
+
+### Phase 13 additions
+
+- Dual-mode `requireUser` / `requireAdmin` on remaining Bearer-only APIs: technician edit/delete/sold/relist/profile, support, requests POST, admin support/categories/reconcile, brand model POST, part-category disable
+- Optional cookie auth for requests GET, product detail, public profile viewer
+- Mass client `authFetch` migrate for seller ops, support, requests, saved, admin support/categories/reports, WhatsApp connect, ratings, product filters
 
 ---
 

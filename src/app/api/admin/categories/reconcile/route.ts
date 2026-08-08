@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import { reconcilePartCategories } from "@/lib/categories/reconcile";
 
 /**
@@ -9,13 +9,9 @@ import { reconcilePartCategories } from "@/lib/categories/reconcile";
  */
 export async function POST(req: NextRequest) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-    const decoded = verifyJwt(token);
-    if (!decoded || decoded.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const admin = await requireAdmin(req);
+    if (isAdminError(admin)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: admin.status });
     }
 
     await connectDB();

@@ -22,8 +22,10 @@ export async function GET(
     const resolvedParams = params instanceof Promise ? await params : params;
     const { id } = resolvedParams;
 
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.replace("Bearer ", "");
+    const { getTokenFromRequest } = await import(
+      "@/lib/auth/getTokenFromRequest"
+    );
+    const token = getTokenFromRequest(req);
     let userId: string | null = null;
     let isAuthenticated = false;
 

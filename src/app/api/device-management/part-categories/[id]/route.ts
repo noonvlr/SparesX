@@ -3,7 +3,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import Category from "@/lib/models/Category";
 import DeviceType from "@/lib/models/DeviceType";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 const slugify = (value: string) =>
@@ -15,18 +15,6 @@ const slugify = (value: string) =>
 
 const escapeRegex = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-async function requireAdmin(req: NextRequest) {
-  const token = req.headers.get("authorization")?.split(" ")[1];
-  if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const payload = verifyJwt(token);
-  if (!payload || payload.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-  return null;
-}
 
 async function buildUniqueSlug(baseSlug: string, excludeId: string) {
   let slug = baseSlug;
@@ -42,8 +30,10 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authError = await requireAdmin(req);
-  if (authError) return authError;
+  const admin = await requireAdmin(req);
+  if (isAdminError(admin)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: admin.status });
+  }
 
   try {
     const { id } = await params;

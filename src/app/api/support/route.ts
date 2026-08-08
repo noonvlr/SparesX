@@ -3,21 +3,15 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import { SupportRequest } from "@/lib/models/SupportRequest";
 import { User } from "@/lib/models/User";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    const payload = verifyJwt(authHeader.split(" ")[1]);
-    if (!payload?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireUser(req);
+    if (isAuthError(auth)) return auth;
 
     await connectDB();
-    const tickets = await SupportRequest.find({ user: payload.id })
+    const tickets = await SupportRequest.find({ user: auth.id })
       .sort({ userUnread: -1, updatedAt: -1 })
       .lean();
 
@@ -34,16 +28,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const auth = await requireUser(req);
+    if (isAuthError(auth)) {
       return NextResponse.json(
         { message: "Login required to contact admin" },
         { status: 401 },
       );
-    }
-    const payload = verifyJwt(authHeader.split(" ")[1]);
-    if (!payload?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { checkRateLimit, clientIpFromRequest } = await import(
@@ -51,7 +41,7 @@ export async function POST(req: NextRequest) {
     );
     const ip = clientIpFromRequest(req);
     const rate = checkRateLimit({
-      key: `support-post:${payload.id}:${ip}`,
+      key: `support-post:${auth.id}:${ip}`,
       limit: 8,
       windowMs: 60 * 60 * 1000,
     });
@@ -82,13 +72,13 @@ export async function POST(req: NextRequest) {
     const ticketType = allowedTypes.has(type) ? type : "issue";
 
     await connectDB();
-    const user = await User.findById(payload.id).select("name email");
+    const user = await User.findById(auth.id).select("name email");
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
     const ticketData: Record<string, unknown> = {
-      user: payload.id,
+      user: auth.id,
       name: user.name,
       email: user.email,
       type: ticketType,
@@ -123,14 +113,8 @@ export async function POST(req: NextRequest) {
 /** Mark the current user's tickets as read (after viewing admin replies). */
 export async function PATCH(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
-    const payload = verifyJwt(authHeader.split(" ")[1]);
-    if (!payload?.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-    }
+    const auth = await requireUser(req);
+    if (isAuthError(auth)) return auth;
 
     const body = await req.json().catch(() => ({}));
     const ticketId = body?.ticketId as string | undefined;
@@ -139,12 +123,12 @@ export async function PATCH(req: NextRequest) {
 
     if (ticketId) {
       await SupportRequest.updateOne(
-        { _id: ticketId, user: payload.id },
+        { _id: ticketId, user: auth.id },
         { $set: { userUnread: false } },
       );
     } else {
       await SupportRequest.updateMany(
-        { user: payload.id, userUnread: true },
+        { user: auth.id, userUnread: true },
         { $set: { userUnread: false } },
       );
     }

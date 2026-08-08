@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { RequestModel } from "@/lib/models/Request";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -20,8 +22,7 @@ export async function GET(req: NextRequest) {
     const deviceCategory = searchParams.get("deviceCategory");
     const mine = searchParams.get("mine") === "1";
 
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.replace(/^Bearer\s+/i, "");
+    const token = getTokenFromRequest(req);
     let payload: { id: string; role: string } | null = null;
     if (token) {
       payload = verifyJwt(token);
@@ -128,19 +129,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const auth = await requireUser(req);
+    if (isAuthError(auth)) {
       return NextResponse.json(
         { message: "Login required to submit a request." },
-        { status: 401 },
-      );
-    }
-
-    const token = authHeader.split(" ")[1];
-    const payload = verifyJwt(token);
-    if (!payload?.id) {
-      return NextResponse.json(
-        { message: "Invalid session. Please login again." },
         { status: 401 },
       );
     }
@@ -169,7 +161,7 @@ export async function POST(req: NextRequest) {
     );
     const ip = clientIpFromRequest(req);
     const rate = checkRateLimit({
-      key: `request-post:${payload.id}:${ip}`,
+      key: `request-post:${auth.id}:${ip}`,
       limit: 10,
       windowMs: 60 * 60 * 1000,
     });
@@ -191,7 +183,7 @@ export async function POST(req: NextRequest) {
       deviceModel: deviceModel || model || "",
       description,
       status: "open",
-      userId: payload.id,
+      userId: auth.id,
     });
 
     const { notifyOnPartRequestCreated } = await import(
@@ -199,7 +191,7 @@ export async function POST(req: NextRequest) {
     );
     void notifyOnPartRequestCreated({
       requestId: String(request._id),
-      requesterId: String(payload.id),
+      requesterId: String(auth.id),
       category,
       brand,
       deviceModel: deviceModel || model || "",

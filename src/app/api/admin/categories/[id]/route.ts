@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import Category from "@/lib/models/Category";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import { revalidateCategoryCaches } from "@/lib/categories/revalidate";
 
 // PUT update category
@@ -10,14 +10,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyJwt(token);
-    if (!decoded || decoded.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const admin = await requireAdmin(req);
+    if (isAdminError(admin)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: admin.status });
     }
 
     const { id } = await params;
@@ -93,14 +88,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = req.headers.get("authorization")?.split(" ")[1];
-    if (!token) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded = verifyJwt(token);
-    if (!decoded || decoded.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const admin = await requireAdmin(req);
+    if (isAdminError(admin)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: admin.status });
     }
 
     const { id } = await params;

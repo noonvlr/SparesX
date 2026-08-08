@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
-import { verifyJwt } from "@/lib/auth/jwt";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 /**
  * Owner relists a sold product — back to approved and public browse.
@@ -10,20 +10,16 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  const payload = verifyJwt(authHeader.split(" ")[1]);
-  if (!payload || payload.role !== "technician") {
+  const auth = await requireUser(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.role !== "technician") {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
 
   const { id } = await params;
   await connectDB();
 
-  const product = await Product.findOne({ _id: id, technician: payload.id });
+  const product = await Product.findOne({ _id: id, technician: auth.id });
   if (!product) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
