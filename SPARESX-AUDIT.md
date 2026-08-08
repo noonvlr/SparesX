@@ -337,11 +337,11 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- HttpOnly cookie **full cutover** (Phase 11–14: dual-mode APIs, CSRF for cookie mutations, socket cookie fallback; remaining chat REST + drop localStorage token still open)
-- Catalog ObjectId rewrite
-- Atlas Search (Mongo `$text` covers MVP in Phase 6)
-- Redis socket adapter / shared rate-limit store
-- Full email/push notification channels *(Phase 10–12: listing, support reply, saved-search, part-request email; push still open)*
+- Drop localStorage socket JWT entirely (Phase 16: REST is cookie-first; socket still may use optional token)
+- Full catalog ObjectId rewrite / backfill of historical listings (Phase 18 stores refs on new creates)
+- Atlas Search when scale demands (Mongo `$text` covers MVP)
+- Redis socket adapter (rate limits now Mongo-shared; socket adapter still optional)
+- Web push notification channel (email + in-app covered)
 
 ### Phase 3 additions
 
@@ -394,6 +394,28 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - `authFetch` auto-attaches CSRF header on mutating methods
 - Socket.io accepts `sparesx_session` cookie fallback; client connects with `withCredentials: true`
 - Remaining admin/product/verify client surfaces migrated to `authFetch`
+
+### Phase 15 additions
+
+- Chat REST clients (`ChatProvider`, dock, MessageInput, MessagesClient, announceOffline) use `authFetch`
+
+### Phase 16 additions
+
+- Cookie-first REST: `authFetch` no longer attaches Bearer; CSRF required for cookie mutations
+- Chat resolves user id via `/api/auth/me` when JWT not in localStorage; socket still accepts optional token + cookie
+
+### Phase 17 additions
+
+- Shared Mongo `RateLimitBucket` store via `checkRateLimitAsync` (memory fallback); auth/upload/support/request/rating routes migrated
+
+### Phase 18 additions
+
+- Optional Product catalog ObjectId refs (`deviceTypeId`, `brandId`, `partCategoryId`) resolved on listing create
+- Condition enum adds `refurbished` (API + edit UI + `/api/conditions`)
+
+### Phase 19 additions
+
+- Audit deferred list updated: Atlas Search + web push remain large follow-ups; HttpOnly cutover and shared rate limits largely closed
 
 ---
 
