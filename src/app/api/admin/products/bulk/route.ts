@@ -43,6 +43,18 @@ export async function POST(req: NextRequest) {
     await connectDB();
     const nextStatus = action === "approve" ? "approved" : "rejected";
     const products = await Product.find({ _id: { $in: ids } });
+    const sellerIds = [
+      ...new Set(products.map((p) => String(p.technician || "")).filter(Boolean)),
+    ];
+    const { User } = await import("@/lib/models/User");
+    const sellers = await User.find({ _id: { $in: sellerIds } })
+      .select("name email")
+      .lean();
+    const sellerMap = new Map(sellers.map((s) => [String(s._id), s]));
+    const { absoluteUrl } = await import("@/lib/seo/site");
+    const { sendListingModerationEmail } = await import(
+      "@/lib/services/emailService"
+    );
 
     let updated = 0;
     for (const product of products) {
@@ -57,6 +69,7 @@ export async function POST(req: NextRequest) {
 
       const sellerId = String(product.technician || "");
       const title = formatListingTitle(product);
+      const seller = sellerMap.get(sellerId);
 
       if (sellerId) {
         void createNotification({
@@ -67,6 +80,16 @@ export async function POST(req: NextRequest) {
           body: title,
           href: "/technician/products",
           meta: { productId: String(product._id) },
+        });
+      }
+
+      if (seller?.email) {
+        void sendListingModerationEmail({
+          recipientEmail: seller.email,
+          recipientName: seller.name || "Seller",
+          listingTitle: title,
+          status: nextStatus,
+          href: absoluteUrl("/technician/products"),
         });
       }
 

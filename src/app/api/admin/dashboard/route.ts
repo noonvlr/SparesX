@@ -13,6 +13,7 @@ export async function GET(req: NextRequest) {
   if (isAdminError(admin)) return admin;
 
   await connectDB();
+  const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const [
     userCount,
     technicianCount,
@@ -23,6 +24,8 @@ export async function GET(req: NextRequest) {
     blockedUsers,
     conversationCount,
     messageCount,
+    listingSeries,
+    requestSeries,
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ role: "technician" }),
@@ -33,7 +36,75 @@ export async function GET(req: NextRequest) {
     User.countDocuments({ isBlocked: true }),
     Conversation.countDocuments(),
     Message.countDocuments(),
+    Product.aggregate([
+      { $match: { createdAt: { $gte: since30 } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          listings: { $sum: 1 },
+          approved: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "approved"] }, 1, 0],
+            },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
+    RequestModel.aggregate([
+      { $match: { createdAt: { $gte: since30 } } },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
+          },
+          requests: { $sum: 1 },
+          open: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "open"] }, 1, 0],
+            },
+          },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]),
   ]);
+
+  const byDay = new Map<
+    string,
+    { date: string; listings: number; approved: number; requests: number; open: number }
+  >();
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    byDay.set(key, {
+      date: key,
+      listings: 0,
+      approved: 0,
+      requests: 0,
+      open: 0,
+    });
+  }
+  for (const row of listingSeries) {
+    const key = String(row._id);
+    const bucket = byDay.get(key);
+    if (bucket) {
+      bucket.listings = row.listings || 0;
+      bucket.approved = row.approved || 0;
+    }
+  }
+  for (const row of requestSeries) {
+    const key = String(row._id);
+    const bucket = byDay.get(key);
+    if (bucket) {
+      bucket.requests = row.requests || 0;
+      bucket.open = row.open || 0;
+    }
+  }
 
   return NextResponse.json(
     {
@@ -46,6 +117,7 @@ export async function GET(req: NextRequest) {
       blockedUsers,
       conversationCount,
       messageCount,
+      series: Array.from(byDay.values()),
     },
     { status: 200 },
   );

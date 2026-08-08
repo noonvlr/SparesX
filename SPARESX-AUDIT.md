@@ -341,7 +341,7 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Catalog ObjectId rewrite
 - Atlas Search (Mongo `$text` covers MVP in Phase 6)
 - Redis socket adapter / shared rate-limit store
-- Full email/push notification channels
+- Full email/push notification channels *(Phase 10: listing + support reply email; push still open)*
 
 ### Phase 3 additions
 
@@ -366,13 +366,12 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Site setting `requireListingApproval` (admin toggle; create/relist respect it)
 - Site-settings PATCH no longer blocks non-secret updates when encryption key missing
 
-### Phase 9 additions
+### Phase 10 additions
 
-- Admin requests paginated (`page`/`limit`/`total`)
-- Upload magic-byte sniff; reject invalid / unprocessable images (no raw fallback)
-- Seller demand matches (`/api/technician/demand` + dashboard panel)
-- Support ticket POST rate limit (8/hour)
-- Approved listing edits re-notify matching saved searches
+- Transactional email on listing approve/reject + support reply (SMTP when configured)
+- Admin support inbox pagination (`page`/`limit`, unread filter server-side)
+- Admin reports 30-day daily series (listings + requests)
+- Sitemap includes `/support` and active seller `/u/{id}` profiles
 
 ---
 

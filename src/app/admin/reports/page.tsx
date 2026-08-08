@@ -1,11 +1,64 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AdminPage } from "@/components/layout";
 import { Card, PageHeader } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+
+type DayPoint = {
+  date: string;
+  listings: number;
+  approved: number;
+  requests: number;
+  open: number;
+};
+
+function MiniBars({
+  points,
+  valueKey,
+  color,
+  label,
+}: {
+  points: DayPoint[];
+  valueKey: keyof DayPoint;
+  color: string;
+  label: string;
+}) {
+  const max = Math.max(
+    1,
+    ...points.map((p) => Number(p[valueKey] || 0)),
+  );
+  const total = points.reduce((sum, p) => sum + Number(p[valueKey] || 0), 0);
+
+  return (
+    <Card padding="md">
+      <div className="flex items-baseline justify-between gap-2 mb-3">
+        <p className="text-sm font-semibold text-[var(--ink)]">{label}</p>
+        <p className="text-xs text-[var(--muted)]">{total} in 30 days</p>
+      </div>
+      <div className="flex items-end gap-[2px] h-28">
+        {points.map((p) => {
+          const value = Number(p[valueKey] || 0);
+          const height = Math.max(2, Math.round((value / max) * 100));
+          return (
+            <div
+              key={`${label}-${p.date}`}
+              title={`${p.date}: ${value}`}
+              className="flex-1 rounded-t-[2px] opacity-90 hover:opacity-100"
+              style={{ height: `${height}%`, background: color }}
+            />
+          );
+        })}
+      </div>
+      <div className="flex justify-between mt-2 text-[10px] text-[var(--muted)]">
+        <span>{points[0]?.date?.slice(5)}</span>
+        <span>{points[points.length - 1]?.date?.slice(5)}</span>
+      </div>
+    </Card>
+  );
+}
 
 export default function AdminReportsPage() {
   const [stats, setStats] = useState<any>(null);
@@ -30,6 +83,11 @@ export default function AdminReportsPage() {
       })
       .catch(() => setError("Failed to load reports"));
   }, []);
+
+  const series: DayPoint[] = useMemo(
+    () => (Array.isArray(stats?.series) ? stats.series : []),
+    [stats],
+  );
 
   if (error) {
     return (
@@ -80,8 +138,38 @@ export default function AdminReportsPage() {
     <AdminPage>
       <PageHeader
         title="Reports"
-        description="Live platform counts across marketplace, support, and chat."
+        description="Live platform counts plus a 30-day view of new listings and part requests."
       />
+
+      {series.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <MiniBars
+            points={series}
+            valueKey="listings"
+            color="var(--brand)"
+            label="New listings / day"
+          />
+          <MiniBars
+            points={series}
+            valueKey="requests"
+            color="var(--warning)"
+            label="New part requests / day"
+          />
+          <MiniBars
+            points={series}
+            valueKey="approved"
+            color="var(--success)"
+            label="Approved listings created / day"
+          />
+          <MiniBars
+            points={series}
+            valueKey="open"
+            color="var(--info)"
+            label="Open requests created / day"
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {rows.map((row) => (
           <Link key={row.label} href={row.href} className="block">

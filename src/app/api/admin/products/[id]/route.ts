@@ -124,7 +124,15 @@ export async function PATCH(
       const { formatListingTitle } = await import(
         "@/lib/products/listingTitle"
       );
+      const { absoluteUrl } = await import("@/lib/seo/site");
+      const { sendListingModerationEmail } = await import(
+        "@/lib/services/emailService"
+      );
       const title = formatListingTitle(product);
+      const tech =
+        product.technician && typeof product.technician === "object"
+          ? (product.technician as { name?: string; email?: string })
+          : null;
       if (product.status === "approved") {
         void createNotification({
           userId: sellerId,
@@ -142,6 +150,15 @@ export async function PATCH(
           body: title,
           href: "/technician/products",
           meta: { productId: String(product._id) },
+        });
+      }
+      if (tech?.email) {
+        void sendListingModerationEmail({
+          recipientEmail: tech.email,
+          recipientName: tech.name || "Seller",
+          listingTitle: title,
+          status: product.status,
+          href: absoluteUrl("/technician/products"),
         });
       }
     }

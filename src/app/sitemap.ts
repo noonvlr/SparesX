@@ -1,16 +1,19 @@
 import type { MetadataRoute } from "next";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
+import { User } from "@/lib/models/User";
 import { SITE_URL } from "@/lib/seo/site";
 
 const PRODUCT_LIMIT = 20000;
 const PARTS_HUB_LIMIT = 2000;
+const SELLER_LIMIT = 5000;
 
 const staticRoutes = [
   { path: "", priority: 1.0, changeFrequency: "daily" as const },
   { path: "/products", priority: 0.9, changeFrequency: "daily" as const },
   { path: "/requests", priority: 0.8, changeFrequency: "daily" as const },
   { path: "/sellers", priority: 0.8, changeFrequency: "weekly" as const },
+  { path: "/support", priority: 0.5, changeFrequency: "monthly" as const },
   { path: "/how-it-works", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/about", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/faq", priority: 0.7, changeFrequency: "monthly" as const },
@@ -102,7 +105,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    return [...staticEntries, ...productEntries, ...partsEntries];
+    const activeSellerIds = await Product.distinct("technician", {
+      status: "approved",
+    });
+    const sellers = await User.find({
+      _id: { $in: activeSellerIds },
+      isBlocked: { $ne: true },
+      role: { $in: ["technician", "admin"] },
+    })
+      .select("_id updatedAt")
+      .sort({ updatedAt: -1 })
+      .limit(SELLER_LIMIT)
+      .lean();
+
+    const sellerEntries: MetadataRoute.Sitemap = sellers.map((seller) => ({
+      url: `${SITE_URL}/u/${seller._id}`,
+      lastModified: seller.updatedAt || new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.6,
+    }));
+
+    return [
+      ...staticEntries,
+      ...productEntries,
+      ...partsEntries,
+      ...sellerEntries,
+    ];
   } catch (error) {
     console.error("Error generating sitemap:", error);
     return staticEntries;

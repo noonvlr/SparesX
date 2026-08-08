@@ -38,13 +38,13 @@ export default function AdminSupportPage() {
   const [reply, setReply] = useState("");
   const [saving, setSaving] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const selected = tickets.find((t) => t._id === selectedId) || null;
 
-  const visibleTickets =
-    status === "unread" ? tickets.filter(isUnread) : tickets;
-
-  const load = async (filter = status) => {
+  const load = async (filter = status, nextPage = page) => {
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Not authenticated");
@@ -53,8 +53,12 @@ export default function AdminSupportPage() {
     }
     setLoading(true);
     try {
-      const apiStatus = filter === "unread" ? "all" : filter;
-      const res = await fetch(`/api/admin/support?status=${apiStatus}`, {
+      const params = new URLSearchParams({
+        status: filter,
+        page: String(nextPage),
+        limit: "40",
+      });
+      const res = await fetch(`/api/admin/support?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -64,6 +68,9 @@ export default function AdminSupportPage() {
       }
       setTickets(data.tickets || []);
       setUnreadCount(data.unreadCount || 0);
+      setPage(data.page || nextPage);
+      setPages(data.pages || 1);
+      setTotal(data.total || 0);
       setError("");
       window.dispatchEvent(
         new CustomEvent("support-unread-updated", {
@@ -78,7 +85,8 @@ export default function AdminSupportPage() {
   };
 
   useEffect(() => {
-    load();
+    setPage(1);
+    load(status, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -159,7 +167,7 @@ export default function AdminSupportPage() {
             }),
           );
         }
-        await load();
+        await load(status, page);
       }
     } finally {
       setSaving(false);
@@ -212,13 +220,14 @@ export default function AdminSupportPage() {
             <div className="flex items-center justify-center gap-2 p-6 text-sm text-[var(--muted)]">
               <Spinner size="sm" /> Loading…
             </div>
-          ) : visibleTickets.length === 0 ? (
+          ) : tickets.length === 0 ? (
             <div className="p-6 text-sm text-[var(--muted)]">
               No tickets in this view.
             </div>
           ) : (
+            <>
             <ul className="divide-y divide-[var(--divider)] max-h-[70vh] overflow-y-auto">
-              {visibleTickets.map((ticket) => {
+              {tickets.map((ticket) => {
                 const unread = isUnread(ticket);
                 return (
                   <li key={ticket._id}>
@@ -277,6 +286,40 @@ export default function AdminSupportPage() {
                 );
               })}
             </ul>
+            {pages > 1 && (
+              <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={page <= 1 || loading}
+                  onClick={() => {
+                    const next = Math.max(1, page - 1);
+                    setPage(next);
+                    void load(status, next);
+                  }}
+                >
+                  Previous
+                </Button>
+                <span className="text-xs text-[var(--muted)]">
+                  Page {page} / {pages} · {total} total
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={page >= pages || loading}
+                  onClick={() => {
+                    const next = Math.min(pages, page + 1);
+                    setPage(next);
+                    void load(status, next);
+                  }}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+            </>
           )}
         </Card>
 

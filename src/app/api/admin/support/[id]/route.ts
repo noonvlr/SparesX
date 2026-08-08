@@ -52,6 +52,21 @@ export async function PATCH(
           href: "/support",
           meta: { ticketId: String(ticket._id) },
         });
+
+        const { absoluteUrl } = await import("@/lib/seo/site");
+        const { sendSupportReplyEmail } = await import(
+          "@/lib/services/emailService"
+        );
+        const toEmail = ticket.email;
+        if (toEmail) {
+          void sendSupportReplyEmail({
+            recipientEmail: toEmail,
+            recipientName: ticket.name || "there",
+            subject: ticket.subject || "Your support request",
+            replyPreview: trimmed,
+            href: absoluteUrl("/support"),
+          });
+        }
       }
     }
 

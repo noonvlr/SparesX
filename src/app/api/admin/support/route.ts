@@ -20,21 +20,43 @@ export async function GET(req: NextRequest) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "40", 10) || 40),
+    );
 
     const query: Record<string, unknown> = {};
-    if (status && status !== "all") query.status = status;
+    if (status === "unread") {
+      query.adminUnread = { $ne: false };
+    } else if (status && status !== "all") {
+      query.status = status;
+    }
 
-    const [tickets, unreadCount] = await Promise.all([
+    const [tickets, total, unreadCount] = await Promise.all([
       SupportRequest.find(query)
         .populate("user", "name email profilePicture role")
         .populate("reportedUser", "name email mobile")
         .populate("product", "name status")
         .sort({ adminUnread: -1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
         .lean(),
+      SupportRequest.countDocuments(query),
       SupportRequest.countDocuments({ adminUnread: { $ne: false } }),
     ]);
 
-    return NextResponse.json({ tickets, unreadCount }, { status: 200 });
+    return NextResponse.json(
+      {
+        tickets,
+        unreadCount,
+        total,
+        page,
+        pages: Math.ceil(total / limit) || 1,
+        limit,
+      },
+      { status: 200 },
+    );
   } catch (error) {
     return NextResponse.json(
       { message: "Failed to fetch support tickets" },

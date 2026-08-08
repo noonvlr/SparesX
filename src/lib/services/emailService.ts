@@ -375,6 +375,126 @@ export async function sendPasswordResetSuccessEmail({
   }
 }
 
+function escapeHtml(value: string) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function simpleNoticeTemplate(params: {
+  headline: string;
+  greetingName: string;
+  bodyHtml: string;
+  ctaLabel: string;
+  ctaUrl: string;
+  accent: string;
+}) {
+  const name = escapeHtml(params.greetingName || "there");
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head><meta charset="UTF-8"></head>
+      <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;margin:0;padding:20px;color:#333;">
+        <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,.08);">
+          <div style="background:${params.accent};padding:24px;text-align:center;color:#fff;">
+            <h1 style="margin:0;font-size:22px;">SparesX</h1>
+            <p style="margin:8px 0 0;font-size:14px;opacity:.95;">${escapeHtml(params.headline)}</p>
+          </div>
+          <div style="padding:28px 32px;">
+            <p style="font-size:16px;margin:0 0 12px;">Hi ${name},</p>
+            ${params.bodyHtml}
+            <p style="margin:28px 0 0;text-align:center;">
+              <a href="${escapeHtml(params.ctaUrl)}" style="display:inline-block;background:${params.accent};color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:600;">
+                ${escapeHtml(params.ctaLabel)}
+              </a>
+            </p>
+          </div>
+          <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:12px;color:#999;border-top:1px solid #eee;">
+            © 2026 SparesX · Automated message — please do not reply
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
+export async function sendListingModerationEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  listingTitle: string;
+  status: "approved" | "rejected";
+  href: string;
+}): Promise<boolean> {
+  try {
+    const transporter = getTransporter();
+    if (!transporter || !params.recipientEmail) return false;
+
+    const approved = params.status === "approved";
+    const auth = getAuthConfig();
+    const title = escapeHtml(params.listingTitle);
+    const info = await transporter.sendMail({
+      from: `SparesX <${auth.user}>`,
+      to: params.recipientEmail,
+      subject: approved
+        ? "Your SparesX listing was approved"
+        : "Your SparesX listing was rejected",
+      html: simpleNoticeTemplate({
+        headline: approved ? "Listing approved" : "Listing rejected",
+        greetingName: params.recipientName,
+        bodyHtml: approved
+          ? `<p style="color:#555;margin:0 0 10px;">Your listing <strong>${title}</strong> is now live on SparesX.</p>`
+          : `<p style="color:#555;margin:0 0 10px;">Your listing <strong>${title}</strong> was not approved. You can edit and resubmit from My Products.</p>`,
+        ctaLabel: "Open My Products",
+        ctaUrl: params.href,
+        accent: approved ? "#059669" : "#d97706",
+      }),
+    });
+    console.log("Listing moderation email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending listing moderation email:", error);
+    return false;
+  }
+}
+
+export async function sendSupportReplyEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  subject: string;
+  replyPreview: string;
+  href: string;
+}): Promise<boolean> {
+  try {
+    const transporter = getTransporter();
+    if (!transporter || !params.recipientEmail) return false;
+
+    const auth = getAuthConfig();
+    const info = await transporter.sendMail({
+      from: `SparesX <${auth.user}>`,
+      to: params.recipientEmail,
+      subject: `Support reply: ${String(params.subject || "Your ticket").slice(0, 80)}`,
+      html: simpleNoticeTemplate({
+        headline: "Support replied",
+        greetingName: params.recipientName,
+        bodyHtml: `
+          <p style="color:#555;margin:0 0 10px;">We replied to your ticket <strong>${escapeHtml(params.subject)}</strong>.</p>
+          <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;color:#374151;text-align:left;white-space:pre-wrap;">${escapeHtml(params.replyPreview.slice(0, 500))}</div>
+        `,
+        ctaLabel: "View support inbox",
+        ctaUrl: params.href,
+        accent: "#2563eb",
+      }),
+    });
+    console.log("Support reply email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending support reply email:", error);
+    return false;
+  }
+}
+
 /**
  * Test email configuration
  */
