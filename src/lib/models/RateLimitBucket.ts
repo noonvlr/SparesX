@@ -10,10 +10,13 @@ const RateLimitSchema = new Schema<RateLimitDoc>(
   {
     _id: { type: String, required: true },
     count: { type: Number, required: true, default: 0 },
-    resetAt: { type: Date, required: true, index: true },
+    resetAt: { type: Date, required: true },
   },
   { versionKey: false },
 );
+
+/** TTL: Mongo removes the bucket shortly after resetAt passes. */
+RateLimitSchema.index({ resetAt: 1 }, { expireAfterSeconds: 0 });
 
 export const RateLimitBucket: Model<RateLimitDoc> =
   mongoose.models.RateLimitBucket ||

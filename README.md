@@ -69,6 +69,7 @@ Create the first admin user in Mongo (or via your existing seed path), then sign
 - Set cookie `secure` via `NODE_ENV=production`
 - Do not commit `.env`
 - Optional: run catalog backfill after deploying ObjectId catalog refs
+- Ops checklist: [`docs/SPARESX-OPS-CHECKLIST.md`](docs/SPARESX-OPS-CHECKLIST.md)
 - Legal pages are placeholders for counsel review before payments or KYC claims
 
 ## License

@@ -132,6 +132,15 @@ export async function getOrCreateConversation(params: {
         [peerId, 0],
       ]),
     });
+    try {
+      const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+      void trackMarketplaceEvent({
+        type: "chat_start",
+        productId: productId || undefined,
+      });
+    } catch {
+      // ignore
+    }
   } catch (err: unknown) {
     // Race: another request created the same pair — return existing
     const code = (err as { code?: number })?.code;
@@ -413,19 +422,23 @@ async function notifyOfflineChatMessage(params: {
 }) {
   try {
     const { createNotification } = await import("@/lib/notifications/create");
-    await createNotification({
+    const deepLink = `/messages?open=${encodeURIComponent(params.conversationId)}`;
+    const result = await createNotification({
       userId: params.receiverId,
       type: "chat_message",
       title: "New chat message",
       body: String(params.preview || "You have a new message").slice(0, 200),
-      href: "/messages",
+      href: deepLink,
+      collapseKey: `chat:${params.conversationId}`,
       meta: {
         conversationId: params.conversationId,
         fromUserId: params.senderId,
       },
     });
 
-    if (!params.sendEmail) return;
+    // Email only on the first unread burst (sendEmail) and when we created
+    // a fresh notification row — not on every collapsed update.
+    if (!params.sendEmail || !result.created) return;
 
     const receiver = await User.findById(params.receiverId)
       .select("email name")
@@ -434,15 +447,12 @@ async function notifyOfflineChatMessage(params: {
       const { sendChatMessageEmail } = await import(
         "@/lib/services/emailService"
       );
-      const base =
-        process.env.NEXT_PUBLIC_BASE_URL ||
-        process.env.SITE_URL ||
-        "https://www.sparesx.com";
+      const { absoluteUrl } = await import("@/lib/seo/site");
       void sendChatMessageEmail({
         recipientEmail: receiver.email,
         recipientName: receiver.name || receiver.email.split("@")[0],
         preview: params.preview,
-        href: `${base.replace(/\/$/, "")}/messages`,
+        href: absoluteUrl(deepLink),
       });
     }
   } catch (err) {

@@ -22,10 +22,12 @@ export async function GET(req: NextRequest) {
       Math.max(1, parseInt(searchParams.get("limit") || "8", 10) || 8),
     );
     const items = await matchOpenRequestsForSeller(auth.id, limit);
-    return NextResponse.json({ items }, { status: 200 });
+    const { getDemandSupplyGaps } = await import("@/lib/analytics/events");
+    const opportunities = await getDemandSupplyGaps(8);
+    return NextResponse.json({ items, opportunities }, { status: 200 });
   } catch {
     return NextResponse.json(
-      { message: "Failed to load demand matches", items: [] },
+      { message: "Failed to load demand matches", items: [], opportunities: [] },
       { status: 500 },
     );
   }

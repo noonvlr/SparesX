@@ -60,6 +60,20 @@ export async function PATCH(
         meta: { connectId: String(row._id) },
       });
 
+      if (action === "approve") {
+        try {
+          const { trackMarketplaceEvent } = await import(
+            "@/lib/analytics/events"
+          );
+          void trackMarketplaceEvent({
+            type: "whatsapp_approved",
+            productId: row.product ? String(row.product) : undefined,
+          });
+        } catch {
+          // ignore
+        }
+      }
+
       return NextResponse.json({
         message:
           action === "approve"

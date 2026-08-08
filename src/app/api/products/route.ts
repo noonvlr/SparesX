@@ -25,6 +25,23 @@ export async function GET(req: NextRequest) {
       negotiable: searchParams.get("negotiable"),
     });
 
+    const searchQ = searchParams.get("search")?.trim();
+    if (searchQ && searchQ.length >= 2) {
+      const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+      void trackMarketplaceEvent({
+        type: "search",
+        query: searchQ,
+        brand: searchParams.get("brand") || undefined,
+        partType: searchParams.get("partType") || undefined,
+        deviceModel:
+          searchParams.get("deviceModel") ||
+          searchParams.get("model") ||
+          undefined,
+        city: searchParams.get("city") || undefined,
+        meta: { resultCount: result.total },
+      });
+    }
+
     return NextResponse.json(result, { status: 200 });
   } catch {
     return NextResponse.json(

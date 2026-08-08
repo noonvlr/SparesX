@@ -142,6 +142,21 @@ export async function GET(
       .limit(8)
       .lean();
 
+    if (productObj.status === "approved" || productObj.status === "sold") {
+      const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+      void trackMarketplaceEvent({
+        type: "product_view",
+        productId: String(productObj._id),
+        brand: productObj.brand || undefined,
+        partType: productObj.partType || productObj.category || undefined,
+        deviceModel: productObj.deviceModel || undefined,
+        city:
+          productObj.technician && typeof productObj.technician === "object"
+            ? productObj.technician.city || undefined
+            : undefined,
+      });
+    }
+
     return NextResponse.json(
       {
         product: productObj,

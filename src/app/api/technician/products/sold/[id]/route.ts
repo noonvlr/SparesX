@@ -73,6 +73,35 @@ export async function POST(
   product.featured = false;
   await product.save();
 
+  // Closed-loop trust: SparesX-attributed sales bump completedSales + badges.
+  if (soldVia === "sparesx") {
+    try {
+      const { User } = await import("@/lib/models/User");
+      await User.findByIdAndUpdate(auth.id, {
+        $inc: { completedSales: 1 },
+      });
+      const { recomputeUserBadges } = await import("@/lib/badges/engine");
+      void recomputeUserBadges(auth.id);
+    } catch (err) {
+      console.warn("[sold] completedSales bump failed:", err);
+    }
+  }
+
+  try {
+    const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+    void trackMarketplaceEvent({
+      type: "listing_sold",
+      productId: String(product._id),
+      brand: product.brand || undefined,
+      partType: product.partType || undefined,
+      deviceModel: product.deviceModel || undefined,
+      city: undefined,
+      meta: { soldVia },
+    });
+  } catch {
+    // analytics optional
+  }
+
   try {
     const { Conversation } = await import("@/lib/models/Conversation");
     const { createNotification } = await import("@/lib/notifications/create");

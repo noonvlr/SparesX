@@ -1,0 +1,55 @@
+# SparesX — Ops checklist (Phase 62)
+
+Use this after deploys and when diagnosing SEO / auth / scale issues.
+
+## Required production env
+
+| Variable | Notes |
+|---|---|
+| `MONGODB_URI` | Production cluster |
+| `JWT_SECRET` | Strong random (≥32 chars) |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.sparesx.com` (SEO canonical host) |
+| `NEXT_PUBLIC_BASE_URL` | Deploy URL used for SSR self-fetch |
+| `BLOB_READ_WRITE_TOKEN` | Uploads |
+| `OTP_PEPPER` | Recommended; falls back to `JWT_SECRET` |
+
+## Optional
+
+| Variable | Notes |
+|---|---|
+| `VAPID_*` | Web push (private key **server-only**) |
+| `ATLAS_SEARCH_INDEX` | Atlas `$search` (with `searchScore` ranking) |
+| `REDIS_URL` / `SOCKET_REDIS_URL` | Only when multi-instance Socket.io is needed |
+| SMTP / Google OAuth | Auth + transactional email |
+
+## Post-deploy checks
+
+1. `GET /robots.txt` → 200, Sitemap points at `https://www.sparesx.com/sitemap.xml`
+2. `GET /sitemap.xml` → 200, includes product + `/parts/...` + `/u/...` URLs
+3. Spot-check one approved product: SSR title, canonical, JSON-LD Product (+ AggregateRating when seller has ratings)
+4. Login → refresh → logout; password reset invalidates sessions
+5. WhatsApp request before approval never returns full number
+6. Google Search Console: submit sitemap; inspect a top product URL
+
+## Catalog backfill (staging first)
+
+```bash
+npm run backfill:catalog-refs -- --dry-run --requests
+# review unmatched samples, then on staging only:
+npm run backfill:catalog-refs -- --write --requests
+```
+
+Do **not** run `--write` against production without a reviewed dry-run report.
+
+## Observability notes
+
+- App logs are primarily `console.*` today; use `src/lib/observability/log.ts` for new paths (redacts secrets).
+- Recommended next step: Sentry (or equivalent) for Next.js + Socket server — not required for soft launch if Vercel logs are watched.
+- `RateLimitBucket` documents TTL-expire after `resetAt`.
+- `MarketplaceEvent` raw rows TTL-expire after 180 days.
+
+## Funnel events (no PII)
+
+Tracked types: `search`, `product_view`, `chat_start`, `whatsapp_request`, `whatsapp_approved`, `request_created`, `listing_sold`.
+
+Seller demand API (`/api/technician/demand`) returns matching open requests plus aggregated `opportunities` (high demand / low supply).

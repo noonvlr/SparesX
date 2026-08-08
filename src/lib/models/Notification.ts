@@ -24,6 +24,8 @@ export interface INotification extends Document {
   href?: string;
   readAt?: Date | null;
   meta?: Record<string, unknown>;
+  /** Collapse key for upserting unread alerts (e.g. chat:conversationId) */
+  collapseKey?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -62,12 +64,17 @@ const NotificationSchema = new Schema<INotification>(
     href: { type: String, trim: true, maxlength: 300 },
     readAt: { type: Date, default: null },
     meta: { type: Schema.Types.Mixed },
+    collapseKey: { type: String, trim: true, maxlength: 120, default: null },
   },
   { timestamps: true },
 );
 
 NotificationSchema.index({ user: 1, createdAt: -1 });
 NotificationSchema.index({ user: 1, readAt: 1 });
+NotificationSchema.index(
+  { user: 1, collapseKey: 1, readAt: 1 },
+  { sparse: true },
+);
 
 export const Notification: Model<INotification> =
   mongoose.models.Notification ||

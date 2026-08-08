@@ -211,6 +211,18 @@ export async function POST(req: NextRequest) {
         : null,
     });
 
+    try {
+      const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+      void trackMarketplaceEvent({
+        type: "request_created",
+        brand: brand || undefined,
+        partType: category || undefined,
+        deviceModel: deviceModel || model || undefined,
+      });
+    } catch {
+      // ignore
+    }
+
     return NextResponse.json({ request }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

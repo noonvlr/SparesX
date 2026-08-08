@@ -181,7 +181,23 @@ export default async function ProductSlugPage({
     itemCondition:
       product.condition === "used"
         ? "https://schema.org/UsedCondition"
-        : "https://schema.org/NewCondition",
+        : product.condition === "refurbished"
+          ? "https://schema.org/RefurbishedCondition"
+          : "https://schema.org/NewCondition",
+    ...(typeof product.technician?.averageRating === "number" &&
+    product.technician.averageRating > 0 &&
+    typeof product.technician?.ratingCount === "number" &&
+    product.technician.ratingCount > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: product.technician.averageRating,
+            reviewCount: product.technician.ratingCount,
+            bestRating: 5,
+            worstRating: 1,
+          },
+        }
+      : {}),
     offers: {
       "@type": "Offer",
       price: product.price,
@@ -192,7 +208,9 @@ export default async function ProductSlugPage({
       itemCondition:
         product.condition === "used"
           ? "https://schema.org/UsedCondition"
-          : "https://schema.org/NewCondition",
+          : product.condition === "refurbished"
+            ? "https://schema.org/RefurbishedCondition"
+            : "https://schema.org/NewCondition",
       url: canonicalUrl,
       seller: product.technician?.name
         ? {

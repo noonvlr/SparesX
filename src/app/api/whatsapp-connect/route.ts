@@ -308,6 +308,16 @@ export async function POST(req: NextRequest) {
       meta: { connectId: String(doc._id), requesterId: auth.id },
     });
 
+    try {
+      const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+      void trackMarketplaceEvent({
+        type: "whatsapp_request",
+        productId: productId || undefined,
+      });
+    } catch {
+      // ignore
+    }
+
     return NextResponse.json(
       {
         message:
