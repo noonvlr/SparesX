@@ -4,7 +4,7 @@ import { User } from "@/lib/models/User";
 import { sendOtpEmail } from "@/lib/services/otpMailer";
 import { generateOtp, hashOtp } from "@/lib/security/secrets";
 import {
-  checkRateLimit,
+  checkRateLimitAsync,
   clientIpFromRequest,
 } from "@/lib/security/authRateLimit";
 
@@ -32,12 +32,12 @@ export async function POST(req: NextRequest) {
 
     const normalized = String(email).toLowerCase().trim();
     const ip = clientIpFromRequest(req);
-    const ipLimit = checkRateLimit({
+    const ipLimit = await checkRateLimitAsync({
       key: `reset-req:ip:${ip}`,
       limit: 10,
       windowMs: 15 * 60 * 1000,
     });
-    const emailLimit = checkRateLimit({
+    const emailLimit = await checkRateLimitAsync({
       key: `reset-req:email:${normalized}`,
       limit: 5,
       windowMs: 15 * 60 * 1000,

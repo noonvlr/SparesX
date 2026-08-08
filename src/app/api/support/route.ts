@@ -36,11 +36,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { checkRateLimit, clientIpFromRequest } = await import(
+    const { checkRateLimitAsync, clientIpFromRequest } = await import(
       "@/lib/security/authRateLimit"
     );
     const ip = clientIpFromRequest(req);
-    const rate = checkRateLimit({
+    const rate = await checkRateLimitAsync({
       key: `support-post:${auth.id}:${ip}`,
       limit: 8,
       windowMs: 60 * 60 * 1000,

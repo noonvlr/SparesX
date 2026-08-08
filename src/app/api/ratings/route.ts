@@ -11,7 +11,7 @@ import {
   recomputeSellerRatingStats,
 } from "@/lib/ratings/engine";
 import {
-  checkRateLimit,
+  checkRateLimitAsync,
   clientIpFromRequest,
 } from "@/lib/security/authRateLimit";
 
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
     }
 
     const ip = clientIpFromRequest(req);
-    const rate = checkRateLimit({
+    const rate = await checkRateLimitAsync({
       key: `rating-post:${auth.id}:${ip}`,
       limit: 20,
       windowMs: 60 * 60 * 1000,

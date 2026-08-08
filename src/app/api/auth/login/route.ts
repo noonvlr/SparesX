@@ -5,7 +5,7 @@ import { comparePassword } from "@/lib/utils/hash";
 import { signJwt } from "@/lib/auth/jwt";
 import { isProfileComplete } from "@/lib/auth/profileComplete";
 import {
-  checkRateLimit,
+  checkRateLimitAsync,
   clientIpFromRequest,
 } from "@/lib/security/authRateLimit";
 
@@ -22,12 +22,12 @@ export async function POST(req: NextRequest) {
 
     const normalized = String(email).toLowerCase().trim();
     const ip = clientIpFromRequest(req);
-    const ipLimit = checkRateLimit({
+    const ipLimit = await checkRateLimitAsync({
       key: `login:ip:${ip}`,
       limit: 30,
       windowMs: 15 * 60 * 1000,
     });
-    const emailLimit = checkRateLimit({
+    const emailLimit = await checkRateLimitAsync({
       key: `login:email:${normalized}`,
       limit: 10,
       windowMs: 15 * 60 * 1000,

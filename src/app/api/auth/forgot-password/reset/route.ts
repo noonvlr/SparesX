@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/utils/hash";
 import { sendPasswordResetSuccessEmail } from "@/lib/services/emailService";
 import { hashOtp } from "@/lib/security/secrets";
 import {
-  checkRateLimit,
+  checkRateLimitAsync,
   clientIpFromRequest,
 } from "@/lib/security/authRateLimit";
 
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const normalized = String(email).toLowerCase().trim();
     const ip = clientIpFromRequest(req);
-    const attemptLimit = checkRateLimit({
+    const attemptLimit = await checkRateLimitAsync({
       key: `reset-done:${ip}:${normalized}`,
       limit: 8,
       windowMs: 15 * 60 * 1000,

@@ -4,7 +4,7 @@ import { User } from "@/lib/models/User";
 import { hashPassword } from "@/lib/utils/hash";
 import { parseContactFields } from "@/lib/validation/userContact";
 import {
-  checkRateLimit,
+  checkRateLimitAsync,
   clientIpFromRequest,
 } from "@/lib/security/authRateLimit";
 
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const { password, profilePicture } = body;
 
     const ip = clientIpFromRequest(req);
-    const rate = checkRateLimit({
+    const rate = await checkRateLimitAsync({
       key: `register:${ip}`,
       limit: 8,
       windowMs: 60 * 60 * 1000,
