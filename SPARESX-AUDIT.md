@@ -366,11 +366,13 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Site setting `requireListingApproval` (admin toggle; create/relist respect it)
 - Site-settings PATCH no longer blocks non-secret updates when encryption key missing
 
-### Phase 8 additions
+### Phase 9 additions
 
-- Admin bulk approve/reject (`POST /api/admin/products/bulk`, multi-select UI)
-- Admin request demand analytics (top parts/brands/devices · 30d + open last 7d)
-- Upload rate limit (30/hour per user+IP)
+- Admin requests paginated (`page`/`limit`/`total`)
+- Upload magic-byte sniff; reject invalid / unprocessable images (no raw fallback)
+- Seller demand matches (`/api/technician/demand` + dashboard panel)
+- Support ticket POST rate limit (8/hour)
+- Approved listing edits re-notify matching saved searches
 
 ---
 

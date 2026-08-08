@@ -14,19 +14,6 @@ const ALLOWED_MIME = new Set([
   "image/gif",
 ]);
 
-function extensionForMime(mime: string) {
-  switch (mime) {
-    case "image/png":
-      return "png";
-    case "image/webp":
-      return "webp";
-    case "image/gif":
-      return "gif";
-    default:
-      return "jpg";
-  }
-}
-
 function optionalUserId(req: NextRequest): string | null {
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) return null;
@@ -113,24 +100,32 @@ export async function POST(req: NextRequest) {
     }
 
     const idPart = userId ? userId.slice(-6) : "anon";
+    const { sniffImageMime } = await import("@/lib/images/sniffImage");
 
     for (const file of files) {
       // Copy bytes into a plain Buffer — File.arrayBuffer() can be SharedArrayBuffer
       const ab = await file.arrayBuffer();
       const raw = Buffer.from(new Uint8Array(ab));
+      const sniffed = sniffImageMime(raw);
+      if (!sniffed) {
+        return NextResponse.json(
+          { error: "File content is not a valid JPEG, PNG, WebP, or GIF image" },
+          { status: 400 },
+        );
+      }
+
       let optimized;
       try {
         const { optimizeUploadImage } = await import(
           "@/lib/images/optimizeUpload"
         );
-        optimized = await optimizeUploadImage(raw, file.type);
+        optimized = await optimizeUploadImage(raw, sniffed);
       } catch (optErr) {
-        console.warn("[Upload] optimize failed, storing original:", optErr);
-        optimized = {
-          buffer: raw,
-          contentType: file.type || "image/jpeg",
-          ext: extensionForMime((file.type || "").toLowerCase()),
-        };
+        console.warn("[Upload] optimize failed:", optErr);
+        return NextResponse.json(
+          { error: "Could not process image. Try a different file." },
+          { status: 400 },
+        );
       }
 
       // Final copy for Blob/fetch (rejects SharedArrayBuffer-backed views)

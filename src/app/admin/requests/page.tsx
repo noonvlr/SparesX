@@ -44,6 +44,9 @@ export default function AdminRequestsPage() {
     closed: 0,
   });
   const [selected, setSelected] = useState<SpareRequest | null>(null);
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [demand, setDemand] = useState<{
     windowDays: number;
     openLast7Days: number;
@@ -52,7 +55,7 @@ export default function AdminRequestsPage() {
     topDeviceCategories: { name: string; count: number }[];
   } | null>(null);
 
-  const load = useCallback(async (nextStatus = status, nextQ = q) => {
+  const load = useCallback(async (nextStatus = status, nextQ = q, nextPage = page) => {
     const token = localStorage.getItem("token");
     if (!token) {
       setError("Not authenticated");
@@ -61,7 +64,11 @@ export default function AdminRequestsPage() {
     }
     setLoading(true);
     try {
-      const params = new URLSearchParams({ status: nextStatus });
+      const params = new URLSearchParams({
+        status: nextStatus,
+        page: String(nextPage),
+        limit: "40",
+      });
       if (nextQ.trim()) params.set("q", nextQ.trim());
       const res = await fetch(`/api/admin/requests?${params}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -74,16 +81,20 @@ export default function AdminRequestsPage() {
       setRequests(data.requests || []);
       setStatusCounts(data.statusCounts || statusCounts);
       setDemand(data.demand || null);
+      setPage(data.page || nextPage);
+      setPages(data.pages || 1);
+      setTotal(data.total || 0);
       setError("");
     } catch {
       setError("Failed to load requests");
     } finally {
       setLoading(false);
     }
-  }, [status, q]);
+  }, [status, q, page]);
 
   useEffect(() => {
-    load();
+    setPage(1);
+    load(status, q, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -101,7 +112,7 @@ export default function AdminRequestsPage() {
         body: JSON.stringify({ status: next }),
       });
       if (res.ok) {
-        await load();
+        await load(status, q, page);
         setSelected((s) => (s && s._id === id ? { ...s, status: next } : s));
       }
     } finally {
@@ -121,7 +132,7 @@ export default function AdminRequestsPage() {
       });
       if (res.ok) {
         if (selected?._id === id) setSelected(null);
-        await load();
+        await load(status, q, page);
       }
     } finally {
       setBusyId(null);
@@ -217,7 +228,8 @@ export default function AdminRequestsPage() {
         className="flex gap-2 mb-6"
         onSubmit={(e) => {
           e.preventDefault();
-          load(status, q);
+          setPage(1);
+          load(status, q, 1);
         }}
       >
         <Input
@@ -281,6 +293,39 @@ export default function AdminRequestsPage() {
                 </li>
               ))}
             </ul>
+          )}
+          {pages > 1 && (
+            <div className="flex items-center justify-between gap-2 border-t border-[var(--border)] px-3 py-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={page <= 1 || loading}
+                onClick={() => {
+                  const next = Math.max(1, page - 1);
+                  setPage(next);
+                  void load(status, q, next);
+                }}
+              >
+                Previous
+              </Button>
+              <span className="text-xs text-[var(--muted)]">
+                Page {page} / {pages} · {total} total
+              </span>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={page >= pages || loading}
+                onClick={() => {
+                  const next = Math.min(pages, page + 1);
+                  setPage(next);
+                  void load(status, q, next);
+                }}
+              >
+                Next
+              </Button>
+            </div>
           )}
         </Card>
 

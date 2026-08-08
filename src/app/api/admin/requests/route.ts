@@ -15,6 +15,11 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
     const q = searchParams.get("q");
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.min(
+      100,
+      Math.max(1, parseInt(searchParams.get("limit") || "40", 10) || 40),
+    );
 
     const query: Record<string, unknown> = {};
     if (status && status !== "all") query.status = status;
@@ -35,71 +40,81 @@ export async function GET(req: NextRequest) {
     const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const since7 = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-    const [requests, counts, topCategories, topBrands, topDevices, openLast7] =
-      await Promise.all([
-        RequestModel.find(query)
-          .populate("userId", "name email mobile")
-          .sort({ createdAt: -1 })
-          .lean(),
-        RequestModel.aggregate([
-          { $group: { _id: "$status", count: { $sum: 1 } } },
-        ]),
-        RequestModel.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: since30 },
-              category: { $exists: true, $nin: [null, ""] },
-            },
+    const [
+      requests,
+      total,
+      counts,
+      topCategories,
+      topBrands,
+      topDevices,
+      openLast7,
+    ] = await Promise.all([
+      RequestModel.find(query)
+        .populate("userId", "name email mobile")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      RequestModel.countDocuments(query),
+      RequestModel.aggregate([
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      RequestModel.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: since30 },
+            category: { $exists: true, $nin: [null, ""] },
           },
-          {
-            $group: {
-              _id: { $toLower: { $trim: { input: "$category" } } },
-              count: { $sum: 1 },
-              label: { $first: "$category" },
-            },
+        },
+        {
+          $group: {
+            _id: { $toLower: { $trim: { input: "$category" } } },
+            count: { $sum: 1 },
+            label: { $first: "$category" },
           },
-          { $sort: { count: -1 } },
-          { $limit: 8 },
-        ]),
-        RequestModel.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: since30 },
-              brand: { $exists: true, $nin: [null, ""] },
-            },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 8 },
+      ]),
+      RequestModel.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: since30 },
+            brand: { $exists: true, $nin: [null, ""] },
           },
-          {
-            $group: {
-              _id: { $toLower: { $trim: { input: "$brand" } } },
-              count: { $sum: 1 },
-              label: { $first: "$brand" },
-            },
+        },
+        {
+          $group: {
+            _id: { $toLower: { $trim: { input: "$brand" } } },
+            count: { $sum: 1 },
+            label: { $first: "$brand" },
           },
-          { $sort: { count: -1 } },
-          { $limit: 8 },
-        ]),
-        RequestModel.aggregate([
-          {
-            $match: {
-              createdAt: { $gte: since30 },
-              deviceCategory: { $exists: true, $nin: [null, ""] },
-            },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 8 },
+      ]),
+      RequestModel.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: since30 },
+            deviceCategory: { $exists: true, $nin: [null, ""] },
           },
-          {
-            $group: {
-              _id: { $toLower: { $trim: { input: "$deviceCategory" } } },
-              count: { $sum: 1 },
-              label: { $first: "$deviceCategory" },
-            },
+        },
+        {
+          $group: {
+            _id: { $toLower: { $trim: { input: "$deviceCategory" } } },
+            count: { $sum: 1 },
+            label: { $first: "$deviceCategory" },
           },
-          { $sort: { count: -1 } },
-          { $limit: 6 },
-        ]),
-        RequestModel.countDocuments({
-          status: "open",
-          createdAt: { $gte: since7 },
-        }),
-      ]);
+        },
+        { $sort: { count: -1 } },
+        { $limit: 6 },
+      ]),
+      RequestModel.countDocuments({
+        status: "open",
+        createdAt: { $gte: since7 },
+      }),
+    ]);
 
     const statusCounts = { open: 0, fulfilled: 0, closed: 0, all: 0 };
     for (const row of counts) {
@@ -119,6 +134,10 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       requests,
+      total,
+      page,
+      pages: Math.ceil(total / limit) || 1,
+      limit,
       statusCounts,
       demand: {
         windowDays: 30,

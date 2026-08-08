@@ -46,6 +46,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
+    const { checkRateLimit, clientIpFromRequest } = await import(
+      "@/lib/security/authRateLimit"
+    );
+    const ip = clientIpFromRequest(req);
+    const rate = checkRateLimit({
+      key: `support-post:${payload.id}:${ip}`,
+      limit: 8,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { message: "Too many support tickets. Try again later." },
+        { status: 429 },
+      );
+    }
+
     const { type, subject, message, productId, reportedUserId } =
       await req.json();
     if (!subject?.trim() || !message?.trim()) {
