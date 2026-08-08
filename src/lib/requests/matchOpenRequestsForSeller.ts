@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { RequestModel } from "@/lib/models/Request";
+import { requestBoardHref } from "@/lib/requests/demandLinks";
 
 export type SellerDemandItem = {
   requestId: string;
@@ -152,7 +153,12 @@ export async function matchOpenRequestsForSeller(
       createdAt: new Date(req.createdAt).toISOString(),
       score,
       reasons,
-      href: "/requests",
+      href: requestBoardHref({
+        brand: req.brand,
+        deviceModel: req.deviceModel,
+        category: req.category,
+        requestId: String(req._id),
+      }),
     });
   }
 

@@ -27,7 +27,8 @@ export function hasBearerAuth(req: NextRequest): boolean {
   );
 }
 
-function originAllowed(req: NextRequest): boolean {
+/** Same-site Origin/Referer check used by CSRF and cookie refresh. */
+export function originAllowed(req: NextRequest): boolean {
   const origin = req.headers.get("origin");
   if (!origin) {
     const referer = req.headers.get("referer");
@@ -60,6 +61,22 @@ function originAllowed(req: NextRequest): boolean {
 }
 
 /**
+ * Origin/Referer gate for cookie-only endpoints that intentionally skip the
+ * double-submit CSRF header (notably `/api/auth/refresh` under SameSite=Lax).
+ */
+export function assertSameOriginForCookieRequest(
+  req: NextRequest,
+): NextResponse | null {
+  if (!originAllowed(req)) {
+    return NextResponse.json(
+      { message: "Invalid request origin" },
+      { status: 403 },
+    );
+  }
+  return null;
+}
+
+/**
  * Cookie-authenticated mutating requests must send matching X-CSRF-Token.
  * Legacy Bearer Authorization (if present) skips CSRF — prefer cookie auth.
  */
@@ -72,12 +89,8 @@ export function assertCsrfForCookieMutation(
   const session = req.cookies.get(SESSION_COOKIE)?.value?.trim();
   if (!session) return null;
 
-  if (!originAllowed(req)) {
-    return NextResponse.json(
-      { message: "Invalid request origin" },
-      { status: 403 },
-    );
-  }
+  const originError = assertSameOriginForCookieRequest(req);
+  if (originError) return originError;
 
   const cookieToken = req.cookies.get(CSRF_COOKIE)?.value?.trim() || "";
   const headerToken = req.headers.get("x-csrf-token")?.trim() || "";

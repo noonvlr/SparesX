@@ -31,6 +31,13 @@ Use this after deploys and when diagnosing SEO / auth / scale issues.
 5. WhatsApp request before approval never returns full number
 6. Google Search Console: submit sitemap; inspect a top product URL
 
+## Auth / CSRF notes
+
+- Session, refresh, CSRF, and auth-flag cookies are **`SameSite=Lax`**.
+- Cookie mutations require `sparesx_csrf` + `X-CSRF-Token` (via `authFetch`).
+- **`POST /api/auth/refresh`** intentionally skips the CSRF header (cookie rotation only) but still rejects cross-origin Origin/Referer. **Do not** change refresh cookies to `SameSite=None` without adding full CSRF (or equivalent) on that route first.
+- Bearer `Authorization` skips CSRF by design; browser clients should use cookies.
+
 ## Catalog backfill (staging first)
 
 ```bash

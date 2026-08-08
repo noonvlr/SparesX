@@ -43,6 +43,9 @@ npm run dev            # Next.js + Socket.io (concurrent)
 - HttpOnly `sparesx_session` (access JWT, ~1h) + `sparesx_refresh` (7d, rotating)
 - Readable `sparesx_auth` flag for UI soft-gates
 - CSRF: `sparesx_csrf` cookie + `X-CSRF-Token` on cookie-authenticated mutations
+- Session/refresh/CSRF cookies use `SameSite=Lax` (never switch refresh to `SameSite=None` without full CSRF on `/api/auth/refresh`)
+- `/api/auth/refresh` skips the CSRF header by design but still enforces same-origin Origin/Referer
+- Bearer `Authorization` skips CSRF (not a classic cookie CSRF vector); prefer cookie + `authFetch`
 - Clients use `authFetch` (`credentials: "include"`); silent refresh on 401
 
 ## Useful scripts

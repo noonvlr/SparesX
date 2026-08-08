@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, useRef, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import ModelSelector from "@/components/ModelSelector";
 import { Alert } from "@/components/ui/Alert";
@@ -57,6 +57,20 @@ function isAllowedImageFile(file: File): boolean {
 }
 
 export default function AddProductPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[50vh] flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-[var(--brand-muted)] border-t-[var(--brand)] rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <AddProductForm />
+    </Suspense>
+  );
+}
+
+function AddProductForm() {
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -96,13 +110,99 @@ export default function AddProductPage() {
     "checking",
   );
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const prefillSeeded = useRef(false);
+  const pendingModel = useRef<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     uploadImages,
     uploading: uploadingImages,
     uploadError,
     setUploadError,
   } = useImageUpload();
+
+  // Demand-panel deep links: ?brand=&deviceModel=&partType=&deviceCategory=
+  useEffect(() => {
+    if (dataLoading || prefillSeeded.current || deviceCategories.length === 0) {
+      return;
+    }
+    const dc = searchParams.get("deviceCategory")?.trim() || "";
+    const brand = searchParams.get("brand")?.trim() || "";
+    const model = searchParams.get("deviceModel")?.trim() || "";
+    const part = searchParams.get("partType")?.trim() || "";
+    prefillSeeded.current = true;
+    if (!dc && !brand && !model && !part) return;
+
+    const matchedDevice = deviceCategories.find(
+      (c) =>
+        c.value.toLowerCase() === dc.toLowerCase() ||
+        c.label.toLowerCase() === dc.toLowerCase(),
+    );
+    if (matchedDevice) {
+      setForm((f) => ({ ...f, deviceCategory: matchedDevice.value }));
+    }
+    if (brand) {
+      setBrandSearch(brand);
+      setForm((f) => ({ ...f, brand }));
+    }
+    if (part) {
+      setPartTypeSearch(part);
+      setForm((f) => ({ ...f, partType: part }));
+    }
+    if (model) pendingModel.current = model;
+  }, [dataLoading, deviceCategories, searchParams]);
+
+  // Resolve brand slug once brand list loads for the device category
+  useEffect(() => {
+    if (!brandSearch || brands.length === 0 || form.brandSlug) return;
+    const match = brands.find(
+      (b) => b.name.toLowerCase() === brandSearch.toLowerCase(),
+    );
+    if (match) {
+      setForm((f) => ({
+        ...f,
+        brand: match.name,
+        brandSlug: match.slug,
+      }));
+    }
+  }, [brands, brandSearch, form.brandSlug]);
+
+  // Apply pending model after models load for the selected brand
+  useEffect(() => {
+    if (!form.brandSlug || !pendingModel.current || models.length === 0) return;
+    const wanted = pendingModel.current;
+    const match = models.find(
+      (m) => m.name.toLowerCase() === wanted.toLowerCase(),
+    );
+    if (match) {
+      setForm((f) => ({
+        ...f,
+        deviceModel: match.name,
+        modelNumber: match.modelNumber || "",
+      }));
+      setModelSearch(match.name);
+    } else {
+      setForm((f) => ({ ...f, deviceModel: wanted }));
+      setModelSearch(wanted);
+    }
+    pendingModel.current = null;
+  }, [models, form.brandSlug]);
+
+  // Resolve part-type slug/label once part types load
+  useEffect(() => {
+    if (!form.partType || partTypes.length === 0) return;
+    const match = partTypes.find(
+      (p) =>
+        p.value.toLowerCase() === form.partType.toLowerCase() ||
+        p.label.toLowerCase() === form.partType.toLowerCase(),
+    );
+    if (match && form.partType !== match.value) {
+      setForm((f) => ({ ...f, partType: match.value }));
+      setPartTypeSearch(match.label);
+    } else if (match) {
+      setPartTypeSearch(match.label);
+    }
+  }, [partTypes, form.partType]);
 
   // Fetch all static data on mount
   useEffect(() => {

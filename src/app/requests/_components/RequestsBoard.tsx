@@ -69,25 +69,46 @@ export default function RequestsBoard({
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = tabFromSearchParams(searchParams);
+  const initialQuery =
+    searchParams.get("q") ||
+    searchParams.get("search") ||
+    searchParams.get("brand") ||
+    "";
+  const focusId = searchParams.get("focus") || "";
 
   const [tab, setTab] = useState<RequestsTab>(initialTab);
   const [requests, setRequests] = useState<PartRequest[]>(initialRequests);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState(initialQuery);
+  const [search, setSearch] = useState(initialQuery.trim());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authPromptId, setAuthPromptId] = useState<string | null>(null);
 
-  // Keep local tab in sync when switching Browse / Submit / Mine on the same page
+  // Keep local tab + deep-link query in sync with the URL
   useEffect(() => {
     setTab(tabFromSearchParams(searchParams));
+    const nextQuery =
+      searchParams.get("q") ||
+      searchParams.get("search") ||
+      searchParams.get("brand") ||
+      "";
+    if (nextQuery) {
+      setSearchInput(nextQuery);
+      setSearch(nextQuery.trim());
+    }
   }, [searchParams]);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  useEffect(() => {
+    if (!focusId || loading || tab !== "browse") return;
+    const el = document.getElementById(`request-${focusId}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusId, loading, tab, requests]);
 
   const loadRequests = async (query = search, silent = false) => {
     if (!silent) setLoading(true);
@@ -324,12 +345,18 @@ export default function RequestsBoard({
                 const hours = Math.max(1, Math.round(ageMs / 36e5));
                 const ageLabel =
                   hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
+                const isFocused = Boolean(focusId && request._id === focusId);
 
                 return (
                   <Card
+                    id={`request-${request._id}`}
                     key={request._id}
                     hover
-                    className="group relative rounded-[var(--radius-lg)] overflow-hidden"
+                    className={
+                      isFocused
+                        ? "group relative rounded-[var(--radius-lg)] overflow-hidden ring-2 ring-[var(--brand)] border-[var(--brand)]"
+                        : "group relative rounded-[var(--radius-lg)] overflow-hidden"
+                    }
                     style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
                   >
                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[var(--brand)] to-[var(--brand-hover)] opacity-0 group-hover:opacity-100 transition" />

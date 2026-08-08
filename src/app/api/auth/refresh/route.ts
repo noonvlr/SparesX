@@ -8,13 +8,21 @@ import {
   REFRESH_COOKIE,
 } from "@/lib/auth/cookies";
 import { rotateRefreshToken } from "@/lib/auth/refreshTokens";
+import { assertSameOriginForCookieRequest } from "@/lib/auth/csrf";
 
 /**
  * POST /api/auth/refresh — rotate refresh cookie and issue new access JWT.
- * CSRF not required (cookie pair only; no body side effects beyond session).
+ *
+ * Double-submit CSRF is intentionally skipped: refresh cookies are SameSite=Lax
+ * and this endpoint only rotates session cookies. A same-origin Origin/Referer
+ * check still applies. Do not switch refresh cookies to SameSite=None without
+ * adding full CSRF (or equivalent) here first.
  */
 export async function POST(req: NextRequest) {
   try {
+    const originError = assertSameOriginForCookieRequest(req);
+    if (originError) return originError;
+
     const raw = req.cookies.get(REFRESH_COOKIE)?.value?.trim();
     if (!raw) {
       const res = NextResponse.json({ message: "Unauthorized" }, { status: 401 });

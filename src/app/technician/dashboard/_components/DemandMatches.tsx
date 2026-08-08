@@ -6,6 +6,7 @@ import { Card, Badge } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { authFetch } from "@/lib/auth/clientAuth";
+import { listPartHref, requestBoardHref } from "@/lib/requests/demandLinks";
 
 type DemandItem = {
   requestId: string;
@@ -72,22 +73,50 @@ export default function DemandMatches() {
             Aggregated from recent requests and searches — no buyer identities.
           </p>
           <ul className="space-y-2">
-            {opportunities.slice(0, 5).map((row) => (
-              <li
-                key={`${row.brand}-${row.partType}-${row.deviceModel || ""}`}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
-              >
-                <p className="text-sm font-medium text-[var(--ink)] capitalize">
-                  {[row.brand, row.deviceModel, row.partType]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                <p className="text-xs text-[var(--muted)]">
-                  {row.requests} requests · {row.listings} listings
-                  {row.searches ? ` · ${row.searches} searches` : ""}
-                </p>
-              </li>
-            ))}
+            {opportunities.slice(0, 5).map((row) => {
+              const boardHref = requestBoardHref({
+                brand: row.brand,
+                deviceModel: row.deviceModel,
+                category: row.partType,
+              });
+              const createHref = listPartHref({
+                brand: row.brand,
+                deviceModel: row.deviceModel,
+                partType: row.partType,
+              });
+              return (
+                <li
+                  key={`${row.brand}-${row.partType}-${row.deviceModel || ""}`}
+                  className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-medium text-[var(--ink)] capitalize">
+                      {[row.brand, row.deviceModel, row.partType]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                    <p className="text-xs text-[var(--muted)]">
+                      {row.requests} requests · {row.listings} listings
+                      {row.searches ? ` · ${row.searches} searches` : ""}
+                    </p>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Link
+                      href={boardHref}
+                      className="text-xs font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+                    >
+                      View requests
+                    </Link>
+                    <Link
+                      href={createHref}
+                      className="text-xs font-semibold text-[var(--ink-secondary)] hover:text-[var(--brand)]"
+                    >
+                      List this part
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </Card>
       )}
@@ -120,36 +149,69 @@ export default function DemandMatches() {
           </>
         ) : (
           <ul className="space-y-3">
-            {items.map((item) => (
-              <li
-                key={item.requestId}
-                className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] p-3 md:p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
-                  <p className="font-semibold text-[var(--ink)] capitalize">
-                    {item.category}
+            {items.map((item) => {
+              const href = item.href || requestBoardHref({
+                brand: item.brand,
+                deviceModel: item.deviceModel,
+                category: item.category,
+                requestId: item.requestId,
+              });
+              const createHref = listPartHref({
+                brand: item.brand,
+                deviceModel: item.deviceModel,
+                partType: item.category,
+                deviceCategory: item.deviceCategory,
+              });
+              return (
+                <li
+                  key={item.requestId}
+                  className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] p-3 md:p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+                    <Link
+                      href={href}
+                      className="font-semibold text-[var(--ink)] capitalize hover:text-[var(--brand)]"
+                    >
+                      {item.category}
+                    </Link>
+                    <p className="text-xs text-[var(--muted)]">
+                      {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                    </p>
+                  </div>
+                  <p className="text-xs text-[var(--ink-secondary)] mb-2">
+                    {[item.deviceCategory, item.brand, item.deviceModel]
+                      .filter(Boolean)
+                      .join(" · ") || "Device not specified"}
                   </p>
-                  <p className="text-xs text-[var(--muted)]">
-                    {new Date(item.createdAt).toLocaleDateString("en-IN")}
+                  <p className="text-sm text-[var(--ink)] line-clamp-2 mb-2">
+                    {item.description}
                   </p>
-                </div>
-                <p className="text-xs text-[var(--ink-secondary)] mb-2">
-                  {[item.deviceCategory, item.brand, item.deviceModel]
-                    .filter(Boolean)
-                    .join(" · ") || "Device not specified"}
-                </p>
-                <p className="text-sm text-[var(--ink)] line-clamp-2 mb-2">
-                  {item.description}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {item.reasons.slice(0, 3).map((reason) => (
-                    <Badge key={reason} tone="neutral" className="text-[10px]">
-                      {reason}
-                    </Badge>
-                  ))}
-                </div>
-              </li>
-            ))}
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {item.reasons.slice(0, 3).map((reason) => (
+                      <Badge key={reason} tone="neutral" className="text-[10px]">
+                        {reason}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={href}
+                      className={cn(buttonVariants({ size: "sm", variant: "soft" }))}
+                    >
+                      Open on board
+                    </Link>
+                    <Link
+                      href={createHref}
+                      className={cn(
+                        buttonVariants({ size: "sm", variant: "secondary" }),
+                      )}
+                    >
+                      List this part
+                    </Link>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </Card>

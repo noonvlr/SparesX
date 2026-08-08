@@ -226,6 +226,8 @@ Most `/dashboard/buyer/*` and `/dashboard/seller/*` routes **redirect** into the
 
 - HttpOnly `sparesx_session` (access JWT) + `sparesx_refresh` (rotating)
 - CSRF via `sparesx_csrf` + `X-CSRF-Token` on cookie mutations
+- Cookies are `SameSite=Lax`. `/api/auth/refresh` omits CSRF header but checks Origin/Referer — do not move refresh to `SameSite=None` without CSRF there
+- Bearer Authorization skips CSRF; prefer cookie sessions via `authFetch`
 - Edge middleware: `/admin/*` and `/technician/*` require session cookies
 - API protection via `requireUser` / `requireAdmin`
 
