@@ -28,6 +28,7 @@ type Settings = {
   smtpPassMasked: string;
   smtpFrom: string;
   smtpConfigured: boolean;
+  requireListingApproval: boolean;
   encryptionReady: boolean;
 };
 
@@ -49,6 +50,7 @@ const empty: Settings = {
   smtpPassMasked: "",
   smtpFrom: "",
   smtpConfigured: false,
+  requireListingApproval: false,
   encryptionReady: false,
 };
 
@@ -117,6 +119,7 @@ export default function SiteSettingsPage() {
           smtpUser: settings.smtpUser,
           smtpFrom: settings.smtpFrom,
           smtpPass: smtpPass || undefined,
+          requireListingApproval: settings.requireListingApproval,
         }),
       });
       const data = await res.json();
@@ -198,6 +201,32 @@ export default function SiteSettingsPage() {
       )}
 
       <form onSubmit={save} className="space-y-8">
+        <Card padding="md" className="space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--ink)]">
+            Marketplace moderation
+          </h2>
+          <label className="flex items-start gap-3 text-sm cursor-pointer">
+            <Checkbox
+              checked={settings.requireListingApproval}
+              onChange={(e) =>
+                setSettings((s) => ({
+                  ...s,
+                  requireListingApproval: e.target.checked,
+                }))
+              }
+            />
+            <span>
+              <span className="font-medium text-[var(--ink)] block">
+                Require admin approval for new listings
+              </span>
+              <span className="text-[var(--muted)] text-xs">
+                When enabled, technician posts and relists start as pending until
+                an admin approves them. Leave off for auto-approve.
+              </span>
+            </span>
+          </label>
+        </Card>
+
         <Card padding="md" className="space-y-4">
           <h2 className="text-lg font-semibold text-[var(--ink)]">Active SMS provider</h2>
           <div className="flex flex-wrap gap-4">

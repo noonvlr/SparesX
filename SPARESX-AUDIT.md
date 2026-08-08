@@ -35,7 +35,7 @@ Browser
 ## Product status state machine
 
 ```text
-create → approved          (current schema default; intentional for fast publish)
+create → approved          (default; SiteSettings.requireListingApproval can force pending)
 pending → approved|rejected (admin)
 approved → sold|rejected    (owner mark sold; admin reject)
 sold → approved             (owner relist; clears soldVia/soldAt)
@@ -339,18 +339,8 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Catalog ObjectId rewrite
 - Atlas Search
 - Redis socket adapter / shared rate-limit store
-- Full notification system
-- Flip create → `pending` (policy)
-
----
-
-## Recommended next 5 (after Phase 2)
-
-1. ~~Session version for logout & block~~ **Done in Phase 3** (`sessionVersion` + `/api/auth/logout`)
-2. ~~Request–seller matching MVP~~ **Done in Phase 3** (`/api/requests/[id]/matches`)
-3. ~~Richer `/parts` internal linking~~ **Done in Phase 3**
-4. ~~Trust score explainability on `/u/[id]`~~ **Done in Phase 3**
-5. Shared rate-limit store if Socket scales horizontally *(still open)*
+- Full email/push notification channels
+- Ratings eligibility tightening
 
 ### Phase 3 additions
 
@@ -366,6 +356,14 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Events: WhatsApp request/approve/decline, offline chat messages
 - Admin device-types / device-categories GETs require admin
 - Presence snapshot + online/offline scoped to conversation peers only
+
+### Phase 5 additions
+
+- Part request create notifies matching sellers (`part_request`) + requester match count (`request_match`)
+- Saved searches MVP (`SavedSearch`, `/api/saved-searches`, Save this search on `/products`, Saved tab)
+- New listing alerts for matching saved searches (`saved_search`)
+- Site setting `requireListingApproval` (admin toggle; create/relist respect it)
+- Site-settings PATCH no longer blocks non-secret updates when encryption key missing
 
 ---
 

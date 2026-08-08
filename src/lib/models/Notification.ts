@@ -6,6 +6,8 @@ export type NotificationType =
   | "whatsapp_declined"
   | "chat_message"
   | "request_match"
+  | "part_request"
+  | "saved_search"
   | "system";
 
 export interface INotification extends Document {
@@ -36,6 +38,8 @@ const NotificationSchema = new Schema<INotification>(
         "whatsapp_declined",
         "chat_message",
         "request_match",
+        "part_request",
+        "saved_search",
         "system",
       ],
       required: true,

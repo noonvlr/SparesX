@@ -178,6 +178,19 @@ export async function POST(req: NextRequest) {
       userId: payload.id,
     });
 
+    const { notifyOnPartRequestCreated } = await import(
+      "@/lib/requests/notifySellers"
+    );
+    void notifyOnPartRequestCreated({
+      requestId: String(request._id),
+      requesterId: String(payload.id),
+      category,
+      brand,
+      deviceModel: deviceModel || model || "",
+      deviceCategory: deviceCategory || "",
+      description,
+    });
+
     return NextResponse.json({ request }, { status: 201 });
   } catch (error) {
     return NextResponse.json(

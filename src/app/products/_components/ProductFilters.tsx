@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Card";
+import { showToast } from "@/components/ToastHost";
 
 interface Brand {
   _id: string;
@@ -356,6 +357,7 @@ export default function ProductFilters() {
     searchParams.get("negotiable") === "1" ||
       searchParams.get("negotiable") === "true",
   );
+  const [savingSearch, setSavingSearch] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
 
   // Keep sort in sync when changed from the results toolbar
@@ -567,6 +569,62 @@ export default function ProductFilters() {
     setSelectedSort("featured");
     setNegotiableOnly(false);
     setModels([]);
+  };
+
+  const saveCurrentSearch = async () => {
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      showToast("Log in to save this search", "error");
+      router.push(
+        `/login?next=${encodeURIComponent(
+          `/products?${searchParams.toString()}`,
+        )}`,
+      );
+      return;
+    }
+
+    const filters = {
+      search: searchParams.get("search") || undefined,
+      deviceCategory: selectedDeviceCategory || undefined,
+      brand: selectedBrand || undefined,
+      deviceModel: selectedModel || undefined,
+      partType: selectedPartType || undefined,
+      condition: selectedCondition || undefined,
+      minPrice: priceRange.min || undefined,
+      maxPrice: priceRange.max || undefined,
+      city: selectedCity || undefined,
+      sellerType: selectedSellerType || undefined,
+      negotiable: negotiableOnly ? "1" : undefined,
+    };
+
+    const hasCriteria = Object.values(filters).some(Boolean);
+    if (!hasCriteria) {
+      showToast("Add at least one filter first", "error");
+      return;
+    }
+
+    setSavingSearch(true);
+    try {
+      const res = await fetch("/api/saved-searches", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ filters }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showToast(data.message || "Could not save search", "error");
+        return;
+      }
+      showToast(data.message || "Search saved");
+    } catch {
+      showToast("Could not save search", "error");
+    } finally {
+      setSavingSearch(false);
+    }
   };
 
   const handleDeviceCategoryChange = (value: string) => {
@@ -800,16 +858,27 @@ export default function ProductFilters() {
         </Select>
       </div>
 
-      {activeFilterCount > 0 && (
-        <div className="pt-4 border-t border-[var(--border)]">
+      {(activeFilterCount > 0 || searchParams.get("search")) && (
+        <div className="pt-4 border-t border-[var(--border)] space-y-2">
           <Button
             type="button"
-            variant="ghost"
-            className="w-full text-[var(--brand)] hover:text-[var(--brand-hover)]"
-            onClick={clearAllFilters}
+            variant="secondary"
+            className="w-full"
+            loading={savingSearch}
+            onClick={() => void saveCurrentSearch()}
           >
-            Clear all filters
+            Save this search
           </Button>
+          {activeFilterCount > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full text-[var(--brand)] hover:text-[var(--brand-hover)]"
+              onClick={clearAllFilters}
+            >
+              Clear all filters
+            </Button>
+          )}
         </div>
       )}
     </div>

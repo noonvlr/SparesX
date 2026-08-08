@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 export default function BuyerSavedPage() {
   return (
     <DashboardPage
-      title="Saved Items"
-      description="Listings you saved for later. Remove anytime or open a product to contact the seller."
+      title="Saved"
+      description="Listings and search alerts you saved. Remove anytime, or open a product to contact the seller."
     >
       <SavedItemsClient />
     </DashboardPage>

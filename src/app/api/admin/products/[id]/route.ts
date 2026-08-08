@@ -65,6 +65,8 @@ export async function PATCH(
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
 
+    const previousStatus = product.status;
+
     for (const key of EDITABLE) {
       if (body[key] === undefined) continue;
       if (key === "price") {
@@ -102,6 +104,13 @@ export async function PATCH(
 
     await product.save();
     await product.populate("technician", "name email mobile");
+
+    if (previousStatus !== "approved" && product.status === "approved") {
+      const { notifySavedSearchesForProduct } = await import(
+        "@/lib/saved-searches/match"
+      );
+      void notifySavedSearchesForProduct(product.toObject());
+    }
 
     return NextResponse.json(
       { message: "Product updated", product },

@@ -19,6 +19,11 @@ export interface ISiteSettings extends Document {
   smtpUser?: string;
   smtpPassEnc?: string;
   smtpFrom?: string;
+  /**
+   * When true, new technician listings start as `pending` until an admin approves.
+   * Default false keeps the current auto-approve marketplace flow.
+   */
+  requireListingApproval?: boolean;
   updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +50,7 @@ const SiteSettingsSchema: Schema<ISiteSettings> = new Schema(
     smtpUser: { type: String, default: "" },
     smtpPassEnc: { type: String, default: "" },
     smtpFrom: { type: String, default: "" },
+    requireListingApproval: { type: Boolean, default: false },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },

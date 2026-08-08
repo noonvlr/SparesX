@@ -31,6 +31,7 @@ function publicSettings(doc: Awaited<ReturnType<typeof getOrCreateSiteSettings>>
     smtpPassMasked: maskSecret(doc.smtpPassEnc),
     smtpFrom: doc.smtpFrom || "",
     smtpConfigured: !!(doc.smtpHost && doc.smtpUser && doc.smtpPassEnc),
+    requireListingApproval: !!doc.requireListingApproval,
     encryptionReady: canEncryptSecrets(),
     updatedAt: doc.updatedAt,
   };
@@ -49,7 +50,13 @@ export async function PATCH(req: NextRequest) {
   const auth = await requireAdmin(req);
   if (isAdminError(auth)) return auth;
 
-  if (!canEncryptSecrets()) {
+  const body = await req.json();
+  const touchingSecrets =
+    (typeof body.twilioAuthToken === "string" && body.twilioAuthToken.trim()) ||
+    (typeof body.msg91AuthKey === "string" && body.msg91AuthKey.trim()) ||
+    (typeof body.smtpPass === "string" && body.smtpPass.trim());
+
+  if (touchingSecrets && !canEncryptSecrets()) {
     return NextResponse.json(
       {
         message:
@@ -59,7 +66,6 @@ export async function PATCH(req: NextRequest) {
     );
   }
 
-  const body = await req.json();
   await connectDB();
   const doc = await getOrCreateSiteSettings();
 
@@ -97,6 +103,10 @@ export async function PATCH(req: NextRequest) {
   if (typeof body.smtpFrom === "string") doc.smtpFrom = body.smtpFrom.trim();
   if (typeof body.smtpPass === "string" && body.smtpPass.trim()) {
     doc.smtpPassEnc = encryptSecret(body.smtpPass.trim());
+  }
+
+  if (typeof body.requireListingApproval === "boolean") {
+    doc.requireListingApproval = body.requireListingApproval;
   }
 
   doc.updatedBy = auth.id as any;

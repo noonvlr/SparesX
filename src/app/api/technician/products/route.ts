@@ -72,7 +72,12 @@ export async function POST(req: NextRequest) {
     condition,
   });
 
-  
+  const { getOrCreateSiteSettings } = await import(
+    '@/lib/models/SiteSettings'
+  );
+  const settings = await getOrCreateSiteSettings();
+  const status = settings.requireListingApproval ? 'pending' : 'approved';
+
   const product = await Product.create({
     name: listingName,
     description,
@@ -87,7 +92,15 @@ export async function POST(req: NextRequest) {
     images: images || [],
     technician: payload.id,
     slug,
+    status,
   });
+
+  if (status === 'approved') {
+    const { notifySavedSearchesForProduct } = await import(
+      '@/lib/saved-searches/match'
+    );
+    void notifySavedSearchesForProduct(product.toObject());
+  }
   
   return NextResponse.json({ product }, { status: 201 });
 }
