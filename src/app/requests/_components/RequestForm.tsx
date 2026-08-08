@@ -111,7 +111,7 @@ export default function RequestForm({
       .finally(() => setDataLoading(false));
   }, [isAuthenticated]);
 
-  // Prefill from zero-result / demand deep links (?brand=&deviceModel=&partType=&q=)
+  // Prefill from zero-result / demand deep links (?brand=&deviceModel=&partType=&q=&city=)
   useEffect(() => {
     if (dataLoading || prefillSeeded.current || deviceCategories.length === 0) {
       return;
@@ -121,8 +121,11 @@ export default function RequestForm({
     const partType = searchParams.get("partType")?.trim() || "";
     const deviceCategory = searchParams.get("deviceCategory")?.trim() || "";
     const q = searchParams.get("q")?.trim() || searchParams.get("search")?.trim() || "";
+    const city = searchParams.get("city")?.trim() || "";
     prefillSeeded.current = true;
-    if (!brand && !deviceModel && !partType && !deviceCategory && !q) return;
+    if (!brand && !deviceModel && !partType && !deviceCategory && !q && !city) {
+      return;
+    }
 
     const matchedDevice = deviceCategories.find(
       (c) =>
@@ -145,11 +148,21 @@ export default function RequestForm({
       }));
     }
     if (deviceModel) pendingModel.current = deviceModel;
-    if (q && !brand && !partType) {
-      setForm((f) => ({
-        ...f,
-        description: f.description || `Looking for: ${q}`,
-      }));
+    if ((q && !brand && !partType) || city) {
+      setForm((f) => {
+        let description = f.description;
+        if (q && !brand && !partType && !description) {
+          description = `Looking for: ${q}`;
+        }
+        if (
+          city &&
+          !(description || "").toLowerCase().includes(city.toLowerCase())
+        ) {
+          const line = `Preferred city: ${city}`;
+          description = description ? `${description}\n${line}` : line;
+        }
+        return description !== f.description ? { ...f, description } : f;
+      });
     }
   }, [dataLoading, deviceCategories, searchParams]);
 

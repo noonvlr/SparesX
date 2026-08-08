@@ -26,11 +26,23 @@ export type TrustProfile = {
   badges: PublicBadge[];
 };
 
+/** Match public UI: response rate only counts with sample size ≥ 3. */
+const RESPONSE_RATE_MIN_SAMPLE = 3;
+
 function daysSince(date?: Date | string | null) {
   if (!date) return 0;
   const t = new Date(date).getTime();
   if (Number.isNaN(t)) return 0;
   return Math.floor((Date.now() - t) / (1000 * 60 * 60 * 24));
+}
+
+function scoredResponseRate(user: {
+  responseRate?: number;
+  chatInboundOpportunities?: number;
+}): number {
+  const sample = user.chatInboundOpportunities ?? 0;
+  if (sample < RESPONSE_RATE_MIN_SAMPLE) return 0;
+  return user.responseRate ?? 0;
 }
 
 export function computeTrustScore(user: IUser): number {
@@ -59,7 +71,7 @@ export function computeTrustScore(user: IUser): number {
   else if (rating >= 4.0) score += 8;
   else if (rating >= 3.0) score += 3;
 
-  const responseRate = user.responseRate ?? 0;
+  const responseRate = scoredResponseRate(user);
   if (responseRate >= 90) score += 5;
   else if (responseRate >= 70) score += 3;
 
@@ -92,6 +104,7 @@ export function explainTrustScore(user: {
   completedSales?: number;
   averageRating?: number;
   responseRate?: number;
+  chatInboundOpportunities?: number;
   complaintRate?: number;
   specialBadgeKeys?: string[];
 }): { score: number; factors: TrustScoreFactor[]; summary: string } {
@@ -130,7 +143,7 @@ export function explainTrustScore(user: {
   else if (rating >= 3.0) ratingPts = 3;
   push("Buyer ratings", ratingPts, ratingPts > 0);
 
-  const responseRate = user.responseRate ?? 0;
+  const responseRate = scoredResponseRate(user);
   let respPts = 0;
   if (responseRate >= 90) respPts = 5;
   else if (responseRate >= 70) respPts = 3;
@@ -178,7 +191,7 @@ function qualifiesTrustedAuto(user: IUser) {
   const ageDays = daysSince(user.createdAt);
   const sales = user.completedSales || 0;
   const rating = user.averageRating || 0;
-  const responseRate = user.responseRate ?? 0;
+  const responseRate = scoredResponseRate(user);
   const complaintRate = user.complaintRate ?? 100;
   const lastActiveDays = daysSince(user.lastSeen || user.updatedAt);
 

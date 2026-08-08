@@ -130,6 +130,22 @@ export default async function ProductSlugPage({
 
   const { product, similarProducts = [] } = data;
 
+  // One view per PDP render (page body only — not generateMetadata / client refetch).
+  if (product.status === "approved" || product.status === "sold") {
+    const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+    const tech = product.technician;
+    void trackMarketplaceEvent({
+      type: "product_view",
+      productId: String(product._id),
+      brand: product.brand || undefined,
+      partType: product.partType || product.category || undefined,
+      deviceModel: product.deviceModel || undefined,
+      city:
+        tech && typeof tech === "object" ? tech.city || undefined : undefined,
+      meta: { source: "product_ssr" },
+    });
+  }
+
   // Consolidate /product/<ObjectId> onto the readable slug so Google never
   // indexes two URLs for the same listing. Query-string visits keep working.
   const looksLikeObjectId =

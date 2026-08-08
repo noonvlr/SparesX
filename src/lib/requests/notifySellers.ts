@@ -3,10 +3,15 @@ import { matchListingsForRequest } from "@/lib/requests/matchListings";
 import { createNotification } from "@/lib/notifications/create";
 import { User } from "@/lib/models/User";
 import { Product } from "@/lib/models/Product";
+import { UserBlock } from "@/lib/models/UserBlock";
 import { requestBoardHref } from "@/lib/requests/demandLinks";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function toOid(id: string) {
+  return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
 }
 
 /**
@@ -26,9 +31,7 @@ async function findCatalogOpportunitySellers(params: {
     { status: "approved" },
     {
       technician: {
-        $ne: Types.ObjectId.isValid(params.excludeUserId)
-          ? new Types.ObjectId(params.excludeUserId)
-          : params.excludeUserId,
+        $ne: toOid(params.excludeUserId),
       },
     },
   ];
@@ -64,9 +67,52 @@ async function findCatalogOpportunitySellers(params: {
     .limit(80)
     .lean();
 
-  return [
+  const candidateIds = [
     ...new Set(rows.map((r) => String(r.technician)).filter(Boolean)),
-  ].slice(0, params.limit);
+  ];
+  if (candidateIds.length === 0) return [];
+
+  const eligible = await User.find({
+    _id: { $in: candidateIds },
+    isBlocked: { $ne: true },
+  })
+    .select("_id")
+    .lean();
+
+  return eligible.map((u) => String(u._id)).slice(0, params.limit);
+}
+
+/** Drop sellers in a mutual block relationship with the requester. */
+async function filterPeerBlockedSellers(
+  requesterId: string,
+  sellerIds: string[],
+): Promise<string[]> {
+  if (sellerIds.length === 0) return [];
+  const requesterOid = toOid(requesterId);
+  const sellerOids = sellerIds
+    .filter((id) => Types.ObjectId.isValid(id))
+    .map((id) => new Types.ObjectId(id));
+  if (sellerOids.length === 0) return [];
+
+  const blocks = await UserBlock.find({
+    $or: [
+      { blocker: requesterOid, blocked: { $in: sellerOids } },
+      { blocked: requesterOid, blocker: { $in: sellerOids } },
+    ],
+  })
+    .select("blocker blocked")
+    .lean();
+
+  if (blocks.length === 0) return sellerIds;
+
+  const blocked = new Set<string>();
+  for (const row of blocks) {
+    const a = String(row.blocker);
+    const b = String(row.blocked);
+    if (a === String(requesterId)) blocked.add(b);
+    if (b === String(requesterId)) blocked.add(a);
+  }
+  return sellerIds.filter((id) => !blocked.has(id));
 }
 
 /**
@@ -121,26 +167,6 @@ export async function notifyOnPartRequestCreated(params: {
       requestId: params.requestId,
     });
 
-    if (matches.length > 0) {
-      await createNotification({
-        userId: params.requesterId,
-        type: "request_match",
-        title: `${matches.length} listing${matches.length === 1 ? "" : "s"} may match`,
-        body: summary,
-        href: `/requests?tab=mine`,
-        meta: { requestId: params.requestId, matchCount: matches.length },
-      });
-    } else {
-      await createNotification({
-        userId: params.requesterId,
-        type: "request_match",
-        title: "Request posted — sellers notified",
-        body: "No live listings matched yet. Relevant sellers were alerted.",
-        href: `/requests?tab=mine`,
-        meta: { requestId: params.requestId, matchCount: 0 },
-      });
-    }
-
     let sellerIds =
       matches.length > 0
         ? [...new Set(matches.map((m) => m.seller._id).filter(Boolean))].slice(
@@ -159,12 +185,63 @@ export async function notifyOnPartRequestCreated(params: {
             limit: 10,
           });
 
+    sellerIds = await filterPeerBlockedSellers(params.requesterId, sellerIds);
+
+    // Requester notice only after fanout set is known — never claim sellers
+    // were alerted when nobody will be notified.
+    if (matches.length > 0) {
+      await createNotification({
+        userId: params.requesterId,
+        type: "request_match",
+        title: `${matches.length} listing${matches.length === 1 ? "" : "s"} may match`,
+        body: summary,
+        href: `/requests?tab=mine`,
+        meta: {
+          requestId: params.requestId,
+          matchCount: matches.length,
+          sellersNotified: sellerIds.length,
+        },
+      });
+    } else if (sellerIds.length > 0) {
+      await createNotification({
+        userId: params.requesterId,
+        type: "request_match",
+        title: "Request posted — sellers notified",
+        body: "No live listings matched yet. Relevant sellers were alerted.",
+        href: `/requests?tab=mine`,
+        meta: {
+          requestId: params.requestId,
+          matchCount: 0,
+          sellersNotified: sellerIds.length,
+        },
+      });
+    } else {
+      await createNotification({
+        userId: params.requesterId,
+        type: "request_match",
+        title: "Request posted",
+        body: "No matching sellers yet. Your request is on the board for others to find.",
+        href: `/requests?tab=mine`,
+        meta: {
+          requestId: params.requestId,
+          matchCount: 0,
+          sellersNotified: 0,
+        },
+      });
+    }
+
     if (sellerIds.length === 0) return;
 
-    const sellers = await User.find({ _id: { $in: sellerIds } })
+    const sellers = await User.find({
+      _id: { $in: sellerIds },
+      isBlocked: { $ne: true },
+    })
       .select("name email")
       .lean();
     const sellerMap = new Map(sellers.map((s) => [String(s._id), s]));
+    // Drop any IDs that became ineligible between selection and load.
+    sellerIds = sellerIds.filter((id) => sellerMap.has(String(id)));
+    if (sellerIds.length === 0) return;
 
     const { sendPartRequestAlertEmail } = await import(
       "@/lib/services/emailService"
