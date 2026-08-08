@@ -45,6 +45,11 @@ const CONTROLS = [
     desc: "Read user chats for dispute and policy review",
   },
   {
+    href: "/admin/disputes",
+    title: "Dispute SOP",
+    desc: "Internal checklist: tickets, evidence, warn/block",
+  },
+  {
     href: "/admin/reports",
     title: "Reports",
     desc: "Counts across users, products, chats, and support",
@@ -82,7 +87,11 @@ export default function AdminSettingsPage() {
       <Alert tone="warning" title="Chat access policy">
         Chat dispute tools are for conflict review and safety only. Prefer
         support tickets for normal user issues, and only open private chats
-        when a dispute requires evidence.
+        when a dispute requires evidence. See the{" "}
+        <a href="/admin/disputes" className="underline font-semibold">
+          Dispute SOP
+        </a>
+        .
       </Alert>
     </AdminPage>
   );

@@ -64,7 +64,7 @@ export function isLoggedInClient(): boolean {
   if (readCookie(AUTH_FLAG_COOKIE) === "1") return true;
   // Fallback for sessions created before auth-flag cookie existed
   if (readCookie(CSRF_COOKIE)) return true;
-  return Boolean(getAccessToken());
+  return false;
 }
 
 export function getCachedUserId(): string | null {

@@ -65,6 +65,15 @@ export async function POST(req: NextRequest) {
     user.sessionVersion = (user.sessionVersion || 0) + 1;
     await user.save();
 
+    try {
+      const { revokeAllRefreshTokensForUser } = await import(
+        "@/lib/auth/refreshTokens"
+      );
+      await revokeAllRefreshTokensForUser(String(user._id));
+    } catch (err) {
+      console.warn("[auth] refresh revoke after password reset failed:", err);
+    }
+
     sendPasswordResetSuccessEmail({
       recipientEmail: user.email,
       recipientName: user.name || user.email.split("@")[0],

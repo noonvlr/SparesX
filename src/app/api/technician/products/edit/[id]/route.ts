@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
+import { getOrCreateSiteSettings } from "@/lib/models/SiteSettings";
 
 export async function PUT(
   req: NextRequest,
@@ -35,17 +36,24 @@ export async function PUT(
   product.category = category || product.category;
   product.condition = condition || product.condition;
   product.images = images || product.images;
-  await product.save();
 
   const majorChanged =
-    product.status === "approved" &&
-    (prev.name !== product.name ||
-      prev.description !== product.description ||
-      prev.price !== product.price ||
-      prev.category !== product.category ||
-      prev.condition !== product.condition);
+    prev.name !== product.name ||
+    prev.description !== product.description ||
+    prev.price !== product.price ||
+    prev.category !== product.category ||
+    prev.condition !== product.condition;
 
-  if (majorChanged) {
+  if (majorChanged && product.status === "approved") {
+    const settings = await getOrCreateSiteSettings();
+    if (settings.requireListingApproval) {
+      product.status = "pending";
+    }
+  }
+
+  await product.save();
+
+  if (majorChanged && product.status === "approved") {
     const { notifySavedSearchesForProduct } = await import(
       "@/lib/saved-searches/match"
     );

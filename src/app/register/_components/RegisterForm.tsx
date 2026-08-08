@@ -294,7 +294,7 @@ export default function RegisterForm() {
           Create Your Account
         </h2>
         <p className="text-[var(--ink-inverse)]/85">
-          Join SparesX and start connecting with verified sellers
+          Join SparesX and start connecting with technicians across India
         </p>
       </div>
 

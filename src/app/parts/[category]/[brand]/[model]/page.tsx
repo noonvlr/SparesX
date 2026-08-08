@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { category, brand, model, path } = decodeSegments(raw);
 
   const title = `${brand} ${model} ${category} Parts`;
-  const description = `Buy ${brand} ${model} ${category.toLowerCase()} spare parts from verified technicians across India. Compare prices and condition, then contact the seller directly on ${SITE_NAME}.`;
+  const description = `Buy ${brand} ${model} ${category.toLowerCase()} spare parts from technicians across India. Compare prices and condition, then contact the seller directly on ${SITE_NAME}.`;
 
   const { total } = await fetchProductList({
     category: raw.category,
@@ -145,7 +145,7 @@ export default async function PartsPage({ params }: Params) {
         <PageHeader
           className="mb-6"
           title={`${brand} ${model} ${category} parts`}
-          description={`${total} verified listing${total === 1 ? "" : "s"} for the ${brand} ${model}. Every seller is identity-checked, and you contact them directly — SparesX does not process payments or hold stock.`}
+          description={`${total} listing${total === 1 ? "" : "s"} for the ${brand} ${model}. Check seller badges and Trust Score, then contact them directly — SparesX does not process payments or hold stock.`}
         />
 
         <div className="mb-8 max-w-3xl space-y-3 text-sm leading-relaxed text-[var(--ink-secondary)]">
@@ -203,7 +203,7 @@ export default async function PartsPage({ params }: Params) {
           <EmptyState
             className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
             title="No listings for this model yet"
-            description="Post a request and verified sellers will contact you when they have the part."
+            description="Post a request and matching sellers can contact you when they have the part."
             action={
               <Link
                 href="/requests?tab=submit"

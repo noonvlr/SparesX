@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "Browse technicians on SparesX. Phone-verified and trusted sellers for mobile spare parts across India.",
   keywords: [
-    "verified sellers",
+    "phone-verified sellers",
     "technician network",
     "trusted sellers",
     "spare parts sellers",
@@ -61,7 +61,7 @@ export default async function SellersPage() {
             <EmptyState
               className="col-span-full rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
               title="No sellers found yet"
-              description="Check back soon as verified technicians join SparesX."
+              description="Check back soon as technicians join SparesX."
             />
           ) : (
             sellers.map(

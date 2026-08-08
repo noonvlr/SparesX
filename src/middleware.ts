@@ -13,7 +13,9 @@ import {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const gated =
-    pathname.startsWith("/admin") || pathname.startsWith("/technician");
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/technician") ||
+    pathname.startsWith("/dashboard");
   if (!gated) {
     return NextResponse.next();
   }
@@ -33,5 +35,5 @@ export function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/technician/:path*"],
+  matcher: ["/admin/:path*", "/technician/:path*", "/dashboard/:path*"],
 };

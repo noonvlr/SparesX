@@ -179,6 +179,37 @@ function FloatingWindow({
             Report
           </Link>
         ) : null}
+        {peer?._id ? (
+          <button
+            type="button"
+            className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1"
+            title="Block this user"
+            onClick={() => {
+              void (async () => {
+                try {
+                  const { authFetch } = await import("@/lib/auth/clientAuth");
+                  const { showToast } = await import("@/components/ToastHost");
+                  const res = await authFetch("/api/chat/block", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ userId: peer._id }),
+                  });
+                  const data = await res.json().catch(() => ({}));
+                  if (!res.ok) {
+                    showToast(data.message || "Could not block", "error");
+                    return;
+                  }
+                  showToast("User blocked");
+                  chat.closeFloating(conversationId);
+                } catch {
+                  // ignore
+                }
+              })();
+            }}
+          >
+            Block
+          </button>
+        ) : null}
         <IconButton
           type="button"
           size="sm"

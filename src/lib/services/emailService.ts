@@ -420,6 +420,39 @@ function simpleNoticeTemplate(params: {
   `;
 }
 
+export async function sendChatMessageEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  preview: string;
+  href: string;
+}): Promise<boolean> {
+  try {
+    const transporter = getTransporter();
+    if (!transporter || !params.recipientEmail) return false;
+
+    const auth = getAuthConfig();
+    const preview = escapeHtml(String(params.preview || "").slice(0, 160));
+    const info = await transporter.sendMail({
+      from: `SparesX <${auth.user}>`,
+      to: params.recipientEmail,
+      subject: "New message on SparesX",
+      html: simpleNoticeTemplate({
+        headline: "New chat message",
+        greetingName: params.recipientName,
+        bodyHtml: `<p style="color:#555;margin:0 0 10px;">You have a new message:</p><p style="color:#333;margin:0;padding:12px;background:#f8fafc;border-radius:8px;">${preview || "Open SparesX to read it."}</p>`,
+        ctaLabel: "Open messages",
+        ctaUrl: params.href,
+        accent: "#2563eb",
+      }),
+    });
+    console.log("Chat message email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending chat message email:", error);
+    return false;
+  }
+}
+
 export async function sendListingModerationEmail(params: {
   recipientEmail: string;
   recipientName: string;

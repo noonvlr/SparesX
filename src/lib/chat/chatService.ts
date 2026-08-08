@@ -9,6 +9,7 @@ import {
   allowConversationCreate,
   allowMessageSend,
 } from "@/lib/chat/rateLimit";
+import { isPeerBlocked } from "@/lib/chat/peerBlock";
 import { pickTrustFields } from "@/lib/trust";
 
 void User;
@@ -66,6 +67,12 @@ export async function getOrCreateConversation(params: {
   if (!(await allowConversationCreate(userId))) {
     throw Object.assign(new Error("Too many conversation requests"), {
       status: 429,
+    });
+  }
+
+  if (await isPeerBlocked(userId, peerId)) {
+    throw Object.assign(new Error("You cannot message this user"), {
+      status: 403,
     });
   }
 
@@ -310,6 +317,8 @@ export async function sendMessage(params: {
   text?: string;
   mediaUrl?: string;
   receiverOnline?: boolean;
+  /** When true, skip in-app/email notify (receiver has the thread open). */
+  receiverViewing?: boolean;
 }) {
   const {
     conversationId,
@@ -318,6 +327,7 @@ export async function sendMessage(params: {
     text,
     mediaUrl,
     receiverOnline = false,
+    receiverViewing = false,
   } = params;
 
   if (!(await allowMessageSend(senderId))) {
@@ -337,6 +347,12 @@ export async function sendMessage(params: {
     throw Object.assign(new Error("Invalid conversation"), { status: 400 });
   }
 
+  if (await isPeerBlocked(senderId, receiverId)) {
+    throw Object.assign(new Error("You cannot message this user"), {
+      status: 403,
+    });
+  }
+
   let cleanText: string | undefined;
   if (type === "text") {
     cleanText = sanitizeChatText(text || "");
@@ -350,6 +366,8 @@ export async function sendMessage(params: {
   } else {
     throw Object.assign(new Error("Unsupported message type"), { status: 400 });
   }
+
+  const previousUnread = conversation.unreadCounts.get(receiverId) || 0;
 
   const message = await Message.create({
     conversationId: conversation._id,
@@ -369,13 +387,67 @@ export async function sendMessage(params: {
   conversation.lastMessageTime = message.createdAt;
   conversation.lastMessageSenderId = toOid(senderId);
 
-  const currentUnread =
-    conversation.unreadCounts.get(receiverId) || 0;
-  conversation.unreadCounts.set(receiverId, currentUnread + 1);
+  conversation.unreadCounts.set(receiverId, previousUnread + 1);
   conversation.unreadCounts.set(senderId, 0);
   await conversation.save();
 
+  if (!receiverViewing) {
+    void notifyOfflineChatMessage({
+      receiverId,
+      senderId,
+      conversationId: String(conversation._id),
+      preview,
+      sendEmail: previousUnread === 0,
+    });
+  }
+
   return { message, conversation, receiverId };
+}
+
+async function notifyOfflineChatMessage(params: {
+  receiverId: string;
+  senderId: string;
+  conversationId: string;
+  preview: string;
+  sendEmail: boolean;
+}) {
+  try {
+    const { createNotification } = await import("@/lib/notifications/create");
+    await createNotification({
+      userId: params.receiverId,
+      type: "chat_message",
+      title: "New chat message",
+      body: String(params.preview || "You have a new message").slice(0, 200),
+      href: "/messages",
+      meta: {
+        conversationId: params.conversationId,
+        fromUserId: params.senderId,
+      },
+    });
+
+    if (!params.sendEmail) return;
+
+    const receiver = await User.findById(params.receiverId)
+      .select("email name")
+      .lean();
+    if (receiver?.email) {
+      const { sendChatMessageEmail } = await import(
+        "@/lib/services/emailService"
+      );
+      const base =
+        process.env.NEXT_PUBLIC_BASE_URL ||
+        process.env.SITE_URL ||
+        "https://www.sparesx.com";
+      void sendChatMessageEmail({
+        recipientEmail: receiver.email,
+        recipientName: receiver.name || receiver.email.split("@")[0],
+        preview: params.preview,
+        href: `${base.replace(/\/$/, "")}/messages`,
+      });
+    }
+  } catch (err) {
+    console.warn("[chat] offline notify failed:", err);
+  }
 }
 
 export async function markConversationRead(params: {

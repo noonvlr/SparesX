@@ -158,19 +158,30 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         return;
       }
 
-      // Resolve online after we know the peer — sendMessage looks up receiver
+      const { Conversation } = await import(
+        "../../src/lib/models/Conversation"
+      );
+      const peek = await Conversation.findById(convId)
+        .select("participants")
+        .lean();
+      const peerGuess = peek?.participants
+        ?.map(String)
+        .find((id) => id !== userId);
+      const viewing = peerGuess ? isViewing(peerGuess, convId) : false;
+
       const result = await sendMessage({
         conversationId: convId,
         senderId: userId,
         type: type === "image" ? "image" : "text",
         text,
         mediaUrl,
-        receiverOnline: false,
+        receiverOnline: peerGuess ? isOnline(peerGuess) : false,
+        receiverViewing: viewing,
       });
 
       const receiverId = result.receiverId;
       const online = isOnline(receiverId);
-      if (online) {
+      if (online && !result.message.delivered) {
         result.message.delivered = true;
         result.message.deliveredAt = new Date();
         await result.message.save();
@@ -216,20 +227,6 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
           fromUserId: userId,
           unreadCount: unread,
         });
-        void import("../../src/lib/notifications/create").then(
-          ({ createNotification }) =>
-            createNotification({
-              userId: receiverId,
-              type: "chat_message",
-              title: "New chat message",
-              body: String(result.conversation.lastMessage || "You have a new message").slice(
-                0,
-                200,
-              ),
-              href: "/messages",
-              meta: { conversationId: convId, fromUserId: userId },
-            }),
-        );
       }
 
       io.to(userId).emit("conversation-updated", {

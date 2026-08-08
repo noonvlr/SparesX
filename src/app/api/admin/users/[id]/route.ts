@@ -219,6 +219,14 @@ export async function PATCH(
           role !== undefined && String(role) !== String(current.role);
         if (updateData.isBlocked === true || roleChanging) {
           updateData.sessionVersion = (current.sessionVersion || 0) + 1;
+          try {
+            const { revokeAllRefreshTokensForUser } = await import(
+              "@/lib/auth/refreshTokens"
+            );
+            await revokeAllRefreshTokensForUser(id);
+          } catch (err) {
+            console.warn("[admin] refresh revoke failed:", err);
+          }
         }
       }
     }
@@ -337,7 +345,7 @@ export async function PATCH(
         type: "verification_update",
         title: "Verification update",
         body: changes.slice(0, 4).join(" · "),
-        href: "/dashboard/seller/verification",
+        href: "/technician/profile#verification",
         meta: { changes },
       });
     }

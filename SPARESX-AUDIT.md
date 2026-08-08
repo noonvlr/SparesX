@@ -337,10 +337,47 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- *(none blocking — phases 11–39 closed security + trust-copy remediation)*
-- Optional ops: run `npm run backfill:catalog-refs` on production data; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX`, `OTP_PEPPER` when ready
+- *(none blocking — phases 11–48 closed shippable remediation)*
+- Optional ops: run `npm run backfill:catalog-refs`; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX`, `OTP_PEPPER`
 - Lawyer review of legal pages before payments / KYC claims
 - Authenticity / testing fields (P2-9) — product decision later
+- Full GST/KYC upload product — admin flags only today
+
+### Phase 40 additions
+
+- Revoke refresh tokens on password reset and admin block/role change
+
+### Phase 41 additions
+
+- Peer block model + `/api/chat/block`; enforced in chat send/create; dock Block control
+
+### Phase 42 additions
+
+- Chat in-app notify (+ email on first unread) centralized in `sendMessage` (REST + socket)
+
+### Phase 43 additions
+
+- Buyer dashboard hub redirects to technician dashboard; middleware gates `/dashboard/*`
+
+### Phase 44 additions
+
+- Seller verification status page (honest badges); notify href → profile verification
+
+### Phase 45 additions
+
+- Remaining blanket “verified sellers” copy cleaned (register, parts, sellers)
+
+### Phase 46 additions
+
+- Root `.env.example` matching README ops table
+
+### Phase 47 additions
+
+- Admin `/admin/disputes` SOP + nav/settings links
+
+### Phase 48 additions
+
+- Major listing edits re-pend when `requireListingApproval`; soft-gate no longer trusts localStorage JWT
 
 ### Phase 33 additions
 
