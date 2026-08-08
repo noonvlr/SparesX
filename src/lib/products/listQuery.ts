@@ -74,8 +74,7 @@ function buildModelFilter(deviceModel: string, brand?: string | null) {
 }
 
 /**
- * Free-text search: each keyword must match at least one searchable field.
- * So "samsung s24 ultra" matches brand=Samsung + deviceModel=S24 Ultra.
+ * Free-text search: prefer MongoDB `$text` index; fall back to per-token regex.
  */
 function buildSearchFilter(search: string) {
   const rawTokens = search
@@ -112,6 +111,15 @@ function buildSearchFilter(search: string) {
   }
 
   return fieldMatch(escapeRegex(search.trim()));
+}
+
+function sanitizeTextSearch(search: string) {
+  // Strip operators that change $text semantics; keep words/numbers.
+  return search
+    .replace(/[\$\"\\]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
 }
 
 type SortKey = "featured" | "newest" | "price_asc" | "price_desc";
@@ -298,8 +306,16 @@ export async function fetchProductList(
     query.priceNegotiable = true;
   }
 
-  if (search?.trim()) {
-    andClauses.push(buildSearchFilter(search));
+  let usedTextSearch = false;
+  const trimmedSearch = search?.trim();
+  if (trimmedSearch) {
+    const textQuery = sanitizeTextSearch(trimmedSearch);
+    if (textQuery.length >= 2) {
+      query.$text = { $search: textQuery };
+      usedTextSearch = true;
+    } else {
+      andClauses.push(buildSearchFilter(trimmedSearch));
+    }
   }
 
   const sellerIds = await resolveSellerIds({ city, sellerType });
@@ -311,31 +327,77 @@ export async function fetchProductList(
     query.$and = andClauses;
   }
 
-  const total = await Product.countDocuments(query);
-  const docs = await Product.find(query)
-    .select(
-      "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
-    )
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .sort(resolveSort(sort))
-    .lean();
+  const sortSpec = resolveSort(sort);
+  // Prefer text relevance when searching and sort is default featured
+  const findSort =
+    usedTextSearch && (params.sort || "featured") === "featured"
+      ? { score: { $meta: "textScore" as const }, ...sortSpec }
+      : sortSpec;
 
-  const products: ProductListItem[] = docs.map((doc: Record<string, any>) => ({
-    _id: String(doc._id),
-    slug: doc.slug || undefined,
-    name: doc.name || "",
-    price: typeof doc.price === "number" ? doc.price : 0,
-    images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
-    brand: doc.brand || undefined,
-    partType: doc.partType || undefined,
-    deviceModel: doc.deviceModel || undefined,
-    category: doc.category || undefined,
-    deviceCategory: doc.deviceCategory || undefined,
-    condition: doc.condition || undefined,
-    priceNegotiable: Boolean(doc.priceNegotiable),
-    technician: doc.technician ? String(doc.technician) : undefined,
-  }));
+  try {
+    const total = await Product.countDocuments(query);
+    const docs = await Product.find(query)
+      .select(
+        "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
+      )
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .sort(findSort)
+      .lean();
 
-  return { products, total, page, pages: Math.ceil(total / limit) };
+    const products: ProductListItem[] = docs.map((doc: Record<string, any>) => ({
+      _id: String(doc._id),
+      slug: doc.slug || undefined,
+      name: doc.name || "",
+      price: typeof doc.price === "number" ? doc.price : 0,
+      images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
+      brand: doc.brand || undefined,
+      partType: doc.partType || undefined,
+      deviceModel: doc.deviceModel || undefined,
+      category: doc.category || undefined,
+      deviceCategory: doc.deviceCategory || undefined,
+      condition: doc.condition || undefined,
+      priceNegotiable: Boolean(doc.priceNegotiable),
+      technician: doc.technician ? String(doc.technician) : undefined,
+    }));
+
+    return { products, total, page, pages: Math.ceil(total / limit) };
+  } catch (err) {
+    // Text index may not exist yet — fall back to regex token match
+    if (usedTextSearch) {
+      delete query.$text;
+      andClauses.push(buildSearchFilter(trimmedSearch!));
+      query.$and = andClauses;
+      const total = await Product.countDocuments(query);
+      const docs = await Product.find(query)
+        .select(
+          "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
+        )
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .sort(sortSpec)
+        .lean();
+
+      const products: ProductListItem[] = docs.map(
+        (doc: Record<string, any>) => ({
+          _id: String(doc._id),
+          slug: doc.slug || undefined,
+          name: doc.name || "",
+          price: typeof doc.price === "number" ? doc.price : 0,
+          images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
+          brand: doc.brand || undefined,
+          partType: doc.partType || undefined,
+          deviceModel: doc.deviceModel || undefined,
+          category: doc.category || undefined,
+          deviceCategory: doc.deviceCategory || undefined,
+          condition: doc.condition || undefined,
+          priceNegotiable: Boolean(doc.priceNegotiable),
+          technician: doc.technician ? String(doc.technician) : undefined,
+        }),
+      );
+
+      return { products, total, page, pages: Math.ceil(total / limit) };
+    }
+    throw err;
+  }
 }

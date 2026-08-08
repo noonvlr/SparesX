@@ -164,6 +164,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const { checkRateLimit, clientIpFromRequest } = await import(
+      "@/lib/security/authRateLimit"
+    );
+    const ip = clientIpFromRequest(req);
+    const rate = checkRateLimit({
+      key: `request-post:${payload.id}:${ip}`,
+      limit: 10,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { message: "Too many part requests. Try again later." },
+        { status: 429 },
+      );
+    }
+
     await connectDB();
     const request = await RequestModel.create({
       name,

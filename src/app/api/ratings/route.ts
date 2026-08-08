@@ -6,9 +6,14 @@ import { SellerRating } from "@/lib/models/SellerRating";
 import { User } from "@/lib/models/User";
 import {
   checkRatingEligibility,
+  checkNewRatingDailyCap,
   clampStars,
   recomputeSellerRatingStats,
 } from "@/lib/ratings/engine";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -140,6 +145,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const ip = clientIpFromRequest(req);
+    const rate = checkRateLimit({
+      key: `rating-post:${auth.id}:${ip}`,
+      limit: 20,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { message: "Too many rating attempts. Try again later." },
+        { status: 429 },
+      );
+    }
+
+    if (!eligibility.existingRating) {
+      const cap = await checkNewRatingDailyCap(auth.id);
+      if (!cap.ok) {
+        return NextResponse.json(
+          { message: cap.reason || "Daily rating limit reached" },
+          { status: 429 },
+        );
+      }
+    }
+
     const rating = await SellerRating.findOneAndUpdate(
       { rater: auth.id, seller: sellerId },
       {
@@ -161,6 +189,21 @@ export async function POST(req: NextRequest) {
     );
 
     const stats = await recomputeSellerRatingStats(sellerId);
+
+    if (!eligibility.existingRating) {
+      const { createNotification } = await import(
+        "@/lib/notifications/create"
+      );
+      const rater = await User.findById(auth.id).select("name").lean();
+      await createNotification({
+        userId: sellerId,
+        type: "seller_rating",
+        title: "New seller rating",
+        body: `${rater?.name || "A buyer"} rated you ${stars}/5`,
+        href: `/u/${sellerId}`,
+        meta: { raterId: auth.id, stars },
+      });
+    }
 
     return NextResponse.json(
       {

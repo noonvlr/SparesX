@@ -8,6 +8,7 @@ export type NotificationType =
   | "request_match"
   | "part_request"
   | "saved_search"
+  | "seller_rating"
   | "system";
 
 export interface INotification extends Document {
@@ -40,6 +41,7 @@ const NotificationSchema = new Schema<INotification>(
         "request_match",
         "part_request",
         "saved_search",
+        "seller_rating",
         "system",
       ],
       required: true,

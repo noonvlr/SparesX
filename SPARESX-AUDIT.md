@@ -271,8 +271,8 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 ### P2-5 Regex-only search (no text index)
 
 - **File(s):** `src/lib/products/listQuery.ts`  
-- **Defer:** Atlas Search / `$text` when scale demands  
-- **Complexity:** L
+- **Status:** Phase 6 added MongoDB `product_text_search` + `$text` with regex fallback. Atlas Search still optional at larger scale.  
+- **Complexity:** L (Atlas deferred)
 
 ### P2-6 In-memory chat rate limits / multi-instance
 
@@ -283,11 +283,12 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 ### P2-7 Presence broadcasts all online user IDs
 
 - **File(s):** `server/socket/handlers.ts`  
-- **Complexity:** M
+- **Complexity:** M *(Phase 4: peer-scoped)*
 
 ### P2-8 Ratings gameable via mutual chat
 
-- **File(s):** `src/app/api/ratings/route.ts`  
+- **File(s):** `src/lib/ratings/engine.ts`  
+- **Status:** Phase 6 — phone verified + (WhatsApp approved **or** 2+ msgs each + 1h chat age); daily new-rating cap; seller notified.  
 - **Complexity:** M
 
 ### P2-9 Condition only new/used
@@ -313,9 +314,10 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Pin `algorithms: ['HS256']` on `jwt.verify`
 - Generic errors on forgot-password verify/reset (enumeration)
 - Cap message `limit` / Socket `maxHttpBufferSize`
-- Product backlog: notifications, saved search, request matching, bulk tools, demand analytics
+- Product backlog: bulk tools, demand analytics
 - HttpOnly cookies + refresh tokens
 - ObjectId-normalized catalog
+- Atlas Search when scale demands
 
 ---
 
@@ -337,10 +339,9 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 - HttpOnly cookie migration
 - Catalog ObjectId rewrite
-- Atlas Search
+- Atlas Search (Mongo `$text` covers MVP in Phase 6)
 - Redis socket adapter / shared rate-limit store
 - Full email/push notification channels
-- Ratings eligibility tightening
 
 ### Phase 3 additions
 
@@ -364,6 +365,13 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - New listing alerts for matching saved searches (`saved_search`)
 - Site setting `requireListingApproval` (admin toggle; create/relist respect it)
 - Site-settings PATCH no longer blocks non-secret updates when encryption key missing
+
+### Phase 6 additions
+
+- Ratings eligibility tightened (phone verified + WA unlock or deeper mutual chat)
+- New ratings daily cap (5) + POST rate limit; seller `seller_rating` notification
+- Product MongoDB text index + `$text` search (regex fallback)
+- Part-request POST rate limited (10/hour)
 
 ---
 

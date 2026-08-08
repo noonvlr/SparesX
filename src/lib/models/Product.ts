@@ -85,5 +85,28 @@ ProductSchema.index({ brand: 1, deviceModel: 1, partType: 1 });
 ProductSchema.index({ deviceCategory: 1, brand: 1 });
 ProductSchema.index({ status: 1, featured: -1, createdAt: -1 });
 ProductSchema.index({ status: 1, createdAt: -1 });
+ProductSchema.index(
+  {
+    name: "text",
+    brand: "text",
+    deviceModel: "text",
+    modelNumber: "text",
+    partType: "text",
+    tags: "text",
+    description: "text",
+  },
+  {
+    weights: {
+      name: 10,
+      brand: 8,
+      deviceModel: 8,
+      partType: 6,
+      modelNumber: 5,
+      tags: 3,
+      description: 1,
+    },
+    name: "product_text_search",
+  },
+);
 
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
