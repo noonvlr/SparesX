@@ -1,9 +1,16 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { headers } from "next/headers";
+import { Types } from "mongoose";
 import type { Metadata } from "next";
 import ProductDetail from "./_components/ProductDetail";
-import { formatListingTitle } from "@/lib/products/listingTitle";
-import { SITE_NAME, absoluteUrl, productUrl } from "@/lib/seo/site";
+import {
+  buildProductKeywords,
+  buildProductSeoDescription,
+  buildProductSeoTitle,
+  formatProductHeading,
+} from "@/lib/seo/productMeta";
+import { formatPartTypeLabel } from "@/lib/products/listingTitle";
+import { SITE_NAME, absoluteUrl, productPath, productUrl } from "@/lib/seo/site";
 
 /** Origin for server-side self-fetch (must be this instance, not the public domain). */
 async function requestOrigin() {
@@ -44,52 +51,49 @@ export async function generateMetadata({
     // Canonical always points at the slug form so /product/<id> doesn't compete.
     const canonicalUrl = productUrl(product);
     const productImage = product.images?.[0] || "/og-image.jpg";
-    const listingTitle = formatListingTitle(product);
-    const conditionLabel = product.condition === "used" ? "Used" : "New";
-    const pageTitle = `${listingTitle} (${conditionLabel}) | Buy on ${SITE_NAME}`;
-    const description =
-      product.description ||
-      `${listingTitle} in ${conditionLabel.toLowerCase()} condition, listed by a verified technician on SparesX. Connect directly with the seller — SparesX does not process payments.`;
+    const pageTitle = buildProductSeoTitle(product);
+    const heading = formatProductHeading(product);
+    const description = buildProductSeoDescription(product);
 
     return {
+      // Bare title — root layout appends "| SparesX" via its template.
       title: pageTitle,
-      description: description.slice(0, 300),
-      keywords: [
-        listingTitle,
-        product.partType,
-        product.brand,
-        product.deviceModel,
-        product.modelNumber,
-        "mobile spare parts",
-        "technician listing",
-      ].filter(Boolean),
+      description,
+      keywords: buildProductKeywords(product),
       alternates: {
         canonical: canonicalUrl,
       },
       openGraph: {
-        title: listingTitle,
+        title: heading,
         description,
-        type: "website",
+        // Omit typed `type` so `other["og:type"]=product` is the only value
+        // emitted. Setting both previously left crawlers seeing "website".
         url: canonicalUrl,
+        siteName: SITE_NAME,
+        locale: "en_IN",
         images: [
           {
             url: productImage,
             width: 800,
             height: 800,
-            alt: listingTitle,
+            alt: heading,
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
-        title: listingTitle,
+        title: heading,
         description,
         images: [productImage],
       },
       other: {
         "og:type": "product",
+        "product:brand": product.brand || "",
+        "product:condition":
+          product.condition === "used" ? "used" : "new",
         "product:price:amount": String(product.price ?? ""),
         "product:price:currency": "INR",
+        "product:retailer_item_id": String(product._id),
       },
       robots: {
         index: true,
@@ -122,16 +126,49 @@ export default async function ProductSlugPage({
   if (!data?.product) return notFound();
 
   const { product, similarProducts = [] } = data;
+
+  // Consolidate /product/<ObjectId> onto the readable slug so Google never
+  // indexes two URLs for the same listing. Query-string visits keep working.
+  const looksLikeObjectId =
+    Types.ObjectId.isValid(slug) && String(new Types.ObjectId(slug)) === slug;
+  if (looksLikeObjectId && product.slug && product.slug !== slug) {
+    permanentRedirect(productPath(product));
+  }
+
   const canonicalUrl = productUrl(product);
-  const listingTitle = formatListingTitle(product);
-  const partTypeLabel = product.partType || "Spare Parts";
+  const heading = formatProductHeading(product);
+  const partTypeLabel = formatPartTypeLabel(product.partType) || "Spare Parts";
+  const images = Array.isArray(product.images)
+    ? product.images.filter(Boolean)
+    : [];
+
+  const brandHref = product.brand
+    ? `/products?brand=${encodeURIComponent(product.brand)}`
+    : null;
+  const partHref = product.partType
+    ? `/products?partType=${encodeURIComponent(product.partType)}${
+        product.brand ? `&brand=${encodeURIComponent(product.brand)}` : ""
+      }`
+    : null;
+
+  const breadcrumbs = [
+    { name: "Home", href: "/" },
+    { name: "Products", href: "/products" },
+    ...(product.brand && brandHref
+      ? [{ name: product.brand, href: brandHref }]
+      : []),
+    ...(product.partType && partHref
+      ? [{ name: partTypeLabel, href: partHref }]
+      : []),
+    { name: heading, href: productPath(product) },
+  ];
 
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: listingTitle,
-    description: product.description || listingTitle,
-    image: product.images?.length ? product.images : undefined,
+    name: heading,
+    description: buildProductSeoDescription(product),
+    image: images.length ? images : undefined,
     sku: product.modelNumber || String(product._id),
     mpn: product.modelNumber || undefined,
     brand: product.brand
@@ -154,47 +191,39 @@ export default async function ProductSlugPage({
           : "https://schema.org/NewCondition",
       url: canonicalUrl,
       seller: product.technician?.name
-        ? { "@type": "Organization", name: product.technician.name }
+        ? {
+            "@type": "Person",
+            name: product.technician.name,
+            ...(product.technician.city
+              ? {
+                  address: {
+                    "@type": "PostalAddress",
+                    addressLocality: product.technician.city,
+                    ...(product.technician.state
+                      ? { addressRegion: product.technician.state }
+                      : {}),
+                    addressCountry: "IN",
+                  },
+                }
+              : {}),
+          }
         : undefined,
-      areaServed: "IN",
+      areaServed: {
+        "@type": "Country",
+        name: "IN",
+      },
     },
   };
 
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: absoluteUrl("/"),
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Products",
-        item: absoluteUrl("/products"),
-      },
-      ...(product.partType
-        ? [
-            {
-              "@type": "ListItem",
-              position: 3,
-              name: partTypeLabel,
-              item: absoluteUrl(
-                `/products?partType=${encodeURIComponent(product.partType)}`,
-              ),
-            },
-          ]
-        : []),
-      {
-        "@type": "ListItem",
-        position: product.partType ? 4 : 3,
-        name: listingTitle,
-        item: canonicalUrl,
-      },
-    ],
+    itemListElement: breadcrumbs.map((entry, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: entry.name,
+      item: absoluteUrl(entry.href),
+    })),
   };
 
   return (
@@ -207,7 +236,11 @@ export default async function ProductSlugPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <ProductDetail product={product} similarProducts={similarProducts} />
+      <ProductDetail
+        product={product}
+        similarProducts={similarProducts}
+        breadcrumbs={breadcrumbs}
+      />
     </>
   );
 }

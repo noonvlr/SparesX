@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { openChatUi } from "@/components/chat/openChat";
@@ -18,8 +18,13 @@ import { cn } from "@/lib/ui/cn";
 import { resolveUploadUrl } from "@/lib/ui/imageUrl";
 import {
   formatListingAlt,
-  formatListingTitle,
+  formatPartTypeLabel,
 } from "@/lib/products/listingTitle";
+import {
+  formatConditionLabel,
+  formatDeviceLabel,
+  formatProductHeading,
+} from "@/lib/seo/productMeta";
 
 interface Seller {
   _id?: string;
@@ -64,15 +69,19 @@ interface Product {
 
 interface SimilarProduct {
   _id: string;
+  slug?: string;
   name: string;
   price: number;
   images?: string[];
   brand?: string;
   partType?: string;
+  deviceModel?: string;
   category?: string;
   deviceCategory?: string;
   condition?: string;
 }
+
+type Breadcrumb = { name: string; href: string };
 
 function getUserIdFromToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -98,9 +107,11 @@ type WaConnectStatus = {
 export default function ProductDetail({
   product: initialProduct,
   similarProducts: initialSimilar = [],
+  breadcrumbs = [],
 }: {
   product: Product;
   similarProducts?: SimilarProduct[];
+  breadcrumbs?: Breadcrumb[];
 }) {
   const router = useRouter();
   const [product, setProduct] = useState(initialProduct);
@@ -389,10 +400,107 @@ export default function ProductDetail({
 
   const images = (product.images || []).map(resolveUploadUrl).filter(Boolean);
   const imageAlt = formatListingAlt(product);
+  const heading = formatProductHeading(product);
+  const partLabel = formatPartTypeLabel(product.partType);
+  const conditionLabel = formatConditionLabel(product.condition);
+  const deviceLabel = formatDeviceLabel(product);
+
+  const specRows: Array<{ label: string; value: ReactNode }> = [
+    product.brand
+      ? {
+          label: "Brand",
+          value: (
+            <Link
+              href={`/products?brand=${encodeURIComponent(product.brand)}`}
+              className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            >
+              {product.brand}
+            </Link>
+          ),
+        }
+      : null,
+    product.deviceModel
+      ? {
+          label: "Compatible model",
+          value: product.brand ? (
+            <Link
+              href={`/products?brand=${encodeURIComponent(product.brand)}&deviceModel=${encodeURIComponent(product.deviceModel)}`}
+              className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            >
+              {deviceLabel}
+            </Link>
+          ) : (
+            deviceLabel
+          ),
+        }
+      : null,
+    product.modelNumber
+      ? { label: "Model number", value: product.modelNumber }
+      : null,
+    partLabel
+      ? {
+          label: "Part type",
+          value: product.partType ? (
+            <Link
+              href={`/products?partType=${encodeURIComponent(product.partType)}`}
+              className="font-medium text-[var(--brand)] hover:text-[var(--brand-hover)]"
+            >
+              {partLabel}
+            </Link>
+          ) : (
+            partLabel
+          ),
+        }
+      : null,
+    product.deviceCategory || product.category
+      ? {
+          label: "Device category",
+          value: String(product.deviceCategory || product.category),
+        }
+      : null,
+    conditionLabel ? { label: "Condition", value: conditionLabel } : null,
+    {
+      label: "Price",
+      value: `₹${product.price?.toLocaleString("en-IN")}${
+        product.priceNegotiable ? " (negotiable)" : ""
+      }`,
+    },
+    {
+      label: "Availability",
+      value: "In stock — contact seller to confirm",
+    },
+  ].filter(Boolean) as Array<{ label: string; value: ReactNode }>;
 
   return (
     <main className="min-h-screen bg-[var(--surface-2)] pb-28 lg:pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        {breadcrumbs.length > 0 ? (
+          <nav aria-label="Breadcrumb" className="mb-4 text-sm text-[var(--muted)]">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              {breadcrumbs.map((crumb, index) => {
+                const isLast = index === breadcrumbs.length - 1;
+                return (
+                  <li key={`${crumb.href}-${crumb.name}`} className="flex items-center gap-1.5">
+                    {index > 0 ? <span aria-hidden>/</span> : null}
+                    {isLast ? (
+                      <span className="text-[var(--ink-secondary)] line-clamp-1">
+                        {crumb.name}
+                      </span>
+                    ) : (
+                      <Link
+                        href={crumb.href}
+                        className="hover:text-[var(--brand)] transition-colors"
+                      >
+                        {crumb.name}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
+        ) : null}
+
         <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
           <Link
             href="/products"
@@ -468,7 +576,7 @@ export default function ProductDetail({
           <section className="space-y-5">
             <Card className="p-5 sm:p-7">
               <h1 className="text-2xl sm:text-4xl font-semibold text-[var(--ink)] leading-tight mb-4 tracking-tight">
-                {formatListingTitle(product)}
+                {heading}
               </h1>
 
               <div className="flex flex-wrap gap-2 mb-5">
@@ -476,17 +584,19 @@ export default function ProductDetail({
                 {product.deviceModel && (
                   <Badge tone="brand">{product.deviceModel}</Badge>
                 )}
-                {product.partType && (
-                  <Badge tone="neutral">{product.partType}</Badge>
-                )}
+                {partLabel ? <Badge tone="neutral">{partLabel}</Badge> : null}
                 {(product.deviceCategory || product.category) && (
                   <Badge tone="neutral">
                     {product.deviceCategory || product.category}
                   </Badge>
                 )}
-                <Badge tone={product.condition === "new" ? "success" : "warning"}>
-                  {product.condition}
-                </Badge>
+                {conditionLabel ? (
+                  <Badge
+                    tone={product.condition === "new" ? "success" : "warning"}
+                  >
+                    {conditionLabel}
+                  </Badge>
+                ) : null}
               </div>
 
               <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] p-5 mb-5">
@@ -537,6 +647,33 @@ export default function ProductDetail({
                 </h2>
                 <p className="text-[var(--ink-secondary)] leading-relaxed whitespace-pre-wrap">
                   {product.description}
+                </p>
+              </div>
+
+              <div className="mb-5">
+                <h2 className="text-lg font-semibold text-[var(--ink)] mb-3">
+                  Product details
+                </h2>
+                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                  {specRows.map((row) => (
+                    <div
+                      key={row.label}
+                      className="flex flex-col gap-0.5 border-b border-[var(--border)] pb-2"
+                    >
+                      <dt className="text-[var(--muted)] font-medium">
+                        {row.label}
+                      </dt>
+                      <dd className="text-[var(--ink)]">{row.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-4 text-sm text-[var(--ink-secondary)] leading-relaxed">
+                  This {conditionLabel.toLowerCase() || "listed"}{" "}
+                  {partLabel ? partLabel.toLowerCase() : "spare part"}
+                  {deviceLabel ? ` for the ${deviceLabel}` : ""} is sold directly
+                  by an independent technician on SparesX. Confirm fitment,
+                  condition, and delivery with the seller before paying —
+                  SparesX does not hold stock or process payments.
                 </p>
               </div>
 

@@ -127,7 +127,7 @@ export async function GET(
 
     const similarProducts = await Product.find(similarQuery)
       .select(
-        "name price images brand partType category deviceCategory condition deviceModel",
+        "slug name price images brand partType category deviceCategory condition deviceModel",
       )
       .sort({ createdAt: -1 })
       .limit(8)

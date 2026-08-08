@@ -17,7 +17,8 @@
     "reconcile:categories": "node scripts/reconcile-categories.js",
     "import:catalog": "tsx scripts/import-catalog-merge.ts",
     "import:brand-api": "tsx scripts/import-from-brand-api.ts",
-    "backfill:slugs": "tsx scripts/backfill-product-slugs.ts"
+    "backfill:slugs": "tsx scripts/backfill-product-slugs.ts",
+    "seo:audit": "node scripts/seo-audit.mjs"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.4",
