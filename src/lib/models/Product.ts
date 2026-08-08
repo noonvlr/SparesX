@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
 export type ProductStatus = 'pending' | 'approved' | 'rejected' | 'sold';
-export type ProductCondition = 'new' | 'used';
+export type ProductCondition = 'new' | 'used' | 'refurbished';
 /** Where the seller closed the deal when marking a listing sold. */
 export type SoldVia = 'sparesx' | 'other';
 
@@ -25,6 +25,10 @@ export interface IProduct extends Document {
   /** Pin on homepage featured section when approved */
   featured?: boolean;
   technician: Types.ObjectId;
+  /** Optional ObjectId links into DeviceType / CategoryBrand / Category */
+  deviceTypeId?: Types.ObjectId | null;
+  brandId?: Types.ObjectId | null;
+  partCategoryId?: Types.ObjectId | null;
   /** Set when status becomes sold — SparesX vs elsewhere. */
   soldVia?: SoldVia | null;
   soldAt?: Date | null;
@@ -58,7 +62,7 @@ const ProductSchema: Schema<IProduct> = new Schema({
   },
   // Legacy field (kept for backward compatibility)
   category: { type: String },
-  condition: { type: String, enum: ['new', 'used'], required: true },
+  condition: { type: String, enum: ['new', 'used', 'refurbished'], required: true },
   priceNegotiable: { type: Boolean, default: false },
   images: [{ type: String }],
   status: {
@@ -69,6 +73,9 @@ const ProductSchema: Schema<IProduct> = new Schema({
   },
   featured: { type: Boolean, default: false, index: true },
   technician: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  deviceTypeId: { type: Schema.Types.ObjectId, ref: 'DeviceType', default: null, index: true },
+  brandId: { type: Schema.Types.ObjectId, ref: 'CategoryBrand', default: null, index: true },
+  partCategoryId: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
   soldVia: {
     type: String,
     enum: ['sparesx', 'other'],

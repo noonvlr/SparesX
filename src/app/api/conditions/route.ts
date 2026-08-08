@@ -1,31 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    // Return hardcoded conditions for now
-    // In future, these could be stored in database if needed for more dynamic control
     const conditions = [
-      {
-        value: "new",
-        label: "New",
-      },
-      {
-        value: "used",
-        label: "Used",
-      },
+      { value: "new", label: "New" },
+      { value: "used", label: "Used" },
+      { value: "refurbished", label: "Refurbished" },
     ];
 
-    return NextResponse.json({
-      conditions,
-      success: true,
-    });
-  } catch (error) {
+    return NextResponse.json({ conditions }, { status: 200 });
+  } catch {
     return NextResponse.json(
-      {
-        error: "Failed to fetch conditions",
-        success: false,
-      },
-      { status: 500 }
+      { error: "Failed to fetch conditions" },
+      { status: 500 },
     );
   }
 }

@@ -86,7 +86,7 @@ export async function PATCH(
           product.soldAt = null;
         }
       } else if (key === "condition") {
-        if (!["new", "used"].includes(body.condition)) {
+        if (!["new", "used", "refurbished"].includes(body.condition)) {
           return NextResponse.json(
             { message: "Invalid condition" },
             { status: 400 },

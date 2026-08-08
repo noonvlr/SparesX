@@ -46,7 +46,7 @@ export default function EditProductPage() {
     deviceModel: "",
     modelNumber: "",
     partType: "",
-    condition: "new" as "new" | "used",
+    condition: "new" as "new" | "used" | "refurbished",
   });
 
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -643,12 +643,13 @@ export default function EditProductPage() {
                     onChange={(e) =>
                       setForm((f) => ({
                         ...f,
-                        condition: e.target.value as "new" | "used",
+                        condition: e.target.value as "new" | "used" | "refurbished",
                       }))
                     }
                   >
                     <option value="new">New</option>
                     <option value="used">Used</option>
+                    <option value="refurbished">Refurbished</option>
                   </Select>
                 </Field>
               </div>

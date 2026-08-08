@@ -70,6 +70,13 @@ export async function POST(req: NextRequest) {
   const settings = await getOrCreateSiteSettings();
   const status = settings.requireListingApproval ? 'pending' : 'approved';
 
+  const { resolveCatalogRefs } = await import('@/lib/catalog/resolveRefs');
+  const catalogRefs = await resolveCatalogRefs({
+    deviceCategory,
+    brand,
+    partType,
+  });
+
   const product = await Product.create({
     name: listingName,
     description,
@@ -85,6 +92,9 @@ export async function POST(req: NextRequest) {
     technician: auth.id,
     slug,
     status,
+    deviceTypeId: catalogRefs.deviceTypeId || null,
+    brandId: catalogRefs.brandId || null,
+    partCategoryId: catalogRefs.partCategoryId || null,
   });
 
   if (status === 'approved') {
