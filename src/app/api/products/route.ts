@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
       maxPrice: searchParams.get("maxPrice"),
       search: searchParams.get("search"),
       city: searchParams.get("city"),
+      nearby: searchParams.get("nearby"),
       sellerType: searchParams.get("sellerType"),
       sort: searchParams.get("sort"),
       negotiable: searchParams.get("negotiable"),

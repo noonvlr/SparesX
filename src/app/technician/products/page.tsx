@@ -10,6 +10,7 @@ import MarkSoldModal from "@/components/MarkSoldModal";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
+import BulkInventoryPanel from "./_components/BulkInventoryPanel";
 
 type ProductTab = "active" | "sold";
 
@@ -145,12 +146,22 @@ export default function MyProductsPage() {
       title="My Products"
       description="Manage and track your listed spare parts"
       actions={
-        <Link
-          href="/technician/products/new"
-          className={cn(buttonVariants({ size: "lg" }))}
-        >
-          <span className="text-lg leading-none">+</span> Add Product
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <BulkInventoryPanel
+            onImported={() => {
+              authFetch("/api/technician/products")
+                .then((res) => res.json())
+                .then((data) => setProducts(data.products || []))
+                .catch(() => undefined);
+            }}
+          />
+          <Link
+            href="/technician/products/new"
+            className={cn(buttonVariants({ size: "lg" }))}
+          >
+            <span className="text-lg leading-none">+</span> Add Product
+          </Link>
+        </div>
       }
     >
       {/* Stats */}

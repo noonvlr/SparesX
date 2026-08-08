@@ -37,14 +37,29 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function SellersPage() {
+export default async function SellersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const raw = await searchParams;
+  const city = typeof raw.city === "string" ? raw.city : undefined;
+  const nearby =
+    raw.nearby === "1" || raw.nearby === "true" ? "1" : undefined;
+
   const headerList = await headers();
   const host = headerList.get("host");
   const protocol = host?.includes("localhost") ? "http" : "https";
   const baseUrl =
     process.env.NEXT_PUBLIC_BASE_URL || (host ? `${protocol}://${host}` : "");
 
-  const res = await fetch(`${baseUrl}/api/sellers`, { cache: "no-store" });
+  const qs = new URLSearchParams();
+  if (city) qs.set("city", city);
+  if (nearby) qs.set("nearby", nearby);
+  const res = await fetch(
+    `${baseUrl}/api/sellers${qs.toString() ? `?${qs}` : ""}`,
+    { cache: "no-store" },
+  );
   const data = res.ok ? await res.json() : { sellers: [] };
   const sellers = data.sellers || [];
 
@@ -55,6 +70,15 @@ export default async function SellersPage() {
           title="Sellers"
           description="Look for verification (teal), reputation (gold), and special (purple) badges when choosing a seller."
         />
+        {city ? (
+          <p className="mb-4 text-sm text-[var(--muted)]">
+            Showing sellers in {city}
+            {nearby ? " and nearby cities" : ""}.{" "}
+            <Link href="/sellers" className="text-[var(--brand)] font-medium">
+              Clear city filter
+            </Link>
+          </p>
+        ) : null}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {sellers.length === 0 ? (
@@ -71,6 +95,7 @@ export default async function SellersPage() {
                 createdAt: string;
                 city?: string;
                 state?: string;
+                sameCity?: boolean;
                 phoneVerified?: boolean;
                 emailVerified?: boolean;
                 kycVerified?: boolean;
@@ -93,6 +118,11 @@ export default async function SellersPage() {
                       >
                         {seller.name}
                       </Link>
+                      {seller.sameCity ? (
+                        <p className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)] mt-0.5">
+                          Same city
+                        </p>
+                      ) : null}
                       <div className="mt-1">
                         <StarRatingDisplay
                           value={seller.averageRating || 0}

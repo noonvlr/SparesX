@@ -44,9 +44,26 @@ Do **not** run `--write` against production without a reviewed dry-run report.
 ## Observability notes
 
 - App logs are primarily `console.*` today; use `src/lib/observability/log.ts` for new paths (redacts secrets).
-- Recommended next step: Sentry (or equivalent) for Next.js + Socket server — not required for soft launch if Vercel logs are watched.
+- Optional Sentry: set `SENTRY_DSN` and/or `NEXT_PUBLIC_SENTRY_DSN` (see `.env.example`). Disabled when unset.
 - `RateLimitBucket` documents TTL-expire after `resetAt`.
 - `MarketplaceEvent` raw rows TTL-expire after 180 days.
+
+## Location discovery
+
+- Product filters: `?city=Chennai&nearby=1` expands metro/region cities and prefers same-city listings.
+- Sellers: `/sellers?city=Chennai&nearby=1`.
+- No GPS / precise coordinates.
+
+## Bulk inventory
+
+- Technician UI: **Bulk CSV import** on My Products.
+- API: `POST /api/technician/products/bulk` (csv or rows), `PATCH` for bulk price/sold/delete.
+- Soft duplicate tag `possible_duplicate` when same seller re-lists identical brand/model/part/price within 7 days.
+
+## Natural-language search
+
+- Rule-based parser (no LLM required): e.g. `S24 ultra camera under 1500 near Chennai`.
+- Merges into structured filters inside `fetchProductList`.
 
 ## Funnel events (no PII)
 

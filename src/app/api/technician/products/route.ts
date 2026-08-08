@@ -1,15 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/connect';
-import { Product } from '@/lib/models/Product';
-import { User } from '@/lib/models/User';
-import { isAuthError, requireUser } from '@/lib/auth/requireUser';
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db/connect";
+import { Product } from "@/lib/models/Product";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
+import { createTechnicianListing } from "@/lib/products/createListing";
 
-// List own products (GET), Create product (POST)
 export async function GET(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
-  if (auth.role !== 'technician') {
-    return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+  if (auth.role !== "technician") {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
   await connectDB();
   const products = await Product.find({ technician: auth.id });
@@ -19,90 +18,77 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
-  if (auth.role !== 'technician') {
-    return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
+  if (auth.role !== "technician") {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
-  
-  const { name, description, price, deviceCategory, brand, deviceModel, modelNumber, partType, condition, images, priceNegotiable } = await req.json();
-  
-  // Validate required fields (name can be derived from model + partType)
-  if (!description || !price || !deviceCategory || !brand || !deviceModel || !partType || !condition) {
-    return NextResponse.json({ 
-      message: 'All fields are required (description, price, deviceCategory, brand, deviceModel, partType, condition)' 
-    }, { status: 400 });
-  }
-  
-  await connectDB();
 
-  const technician = await User.findById(auth.id).select('phoneVerified role');
-  if (!technician) {
-    return NextResponse.json({ message: 'User not found' }, { status: 404 });
-  }
-  if (!technician.phoneVerified) {
+  try {
+    const body = await req.json();
+    const {
+      name,
+      description,
+      price,
+      deviceCategory,
+      brand,
+      deviceModel,
+      modelNumber,
+      partType,
+      condition,
+      images,
+      priceNegotiable,
+    } = body;
+
+    const { checkRateLimitAsync, clientIpFromRequest } = await import(
+      "@/lib/security/authRateLimit"
+    );
+    const ip = clientIpFromRequest(req);
+    const rate = await checkRateLimitAsync({
+      key: `listing-create:${auth.id}:${ip}`,
+      limit: 30,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { message: "Too many listings created. Try again later." },
+        { status: 429 },
+      );
+    }
+
+    const result = await createTechnicianListing({
+      technicianId: auth.id,
+      input: {
+        name,
+        description,
+        price: Number(price),
+        deviceCategory,
+        brand,
+        deviceModel,
+        modelNumber,
+        partType,
+        condition,
+        images,
+        priceNegotiable,
+      },
+    });
+
     return NextResponse.json(
       {
-        code: 'PHONE_UNVERIFIED',
-        message: 'Verify your phone number before posting a listing',
+        product: result.product,
+        possibleDuplicate: result.possibleDuplicate,
+        message: result.possibleDuplicate
+          ? "Listing created. Similar listing detected — review for duplicates."
+          : undefined,
       },
-      { status: 403 },
+      { status: 201 },
+    );
+  } catch (err: unknown) {
+    const status = (err as { status?: number })?.status || 500;
+    const code = (err as { code?: string })?.code;
+    const message =
+      err instanceof Error ? err.message : "Failed to create listing";
+    return NextResponse.json(
+      { message, ...(code ? { code } : {}) },
+      { status },
     );
   }
-
-  const { formatListingTitle } = await import('@/lib/products/listingTitle');
-  const listingName =
-    (typeof name === 'string' && name.trim()) ||
-    formatListingTitle({ deviceModel, partType, name });
-  
-  // Readable SEO slug: brand-model-parttype-condition (suffixed only on clash)
-  const { generateUniqueProductSlug } = await import(
-    '@/lib/products/productSlug'
-  );
-  const slug = await generateUniqueProductSlug({
-    brand,
-    deviceModel,
-    partType,
-    condition,
-  });
-
-  const { getOrCreateSiteSettings } = await import(
-    '@/lib/models/SiteSettings'
-  );
-  const settings = await getOrCreateSiteSettings();
-  const status = settings.requireListingApproval ? 'pending' : 'approved';
-
-  const { resolveCatalogRefs } = await import('@/lib/catalog/resolveRefs');
-  const catalogRefs = await resolveCatalogRefs({
-    deviceCategory,
-    brand,
-    partType,
-  });
-
-  const product = await Product.create({
-    name: listingName,
-    description,
-    price,
-    deviceCategory,
-    brand,
-    deviceModel,
-    modelNumber: modelNumber || '',
-    partType,
-    condition,
-    priceNegotiable: !!priceNegotiable,
-    images: images || [],
-    technician: auth.id,
-    slug,
-    status,
-    deviceTypeId: catalogRefs.deviceTypeId || null,
-    brandId: catalogRefs.brandId || null,
-    partCategoryId: catalogRefs.partCategoryId || null,
-  });
-
-  if (status === 'approved') {
-    const { notifySavedSearchesForProduct } = await import(
-      '@/lib/saved-searches/match'
-    );
-    void notifySavedSearchesForProduct(product.toObject());
-  }
-  
-  return NextResponse.json({ product }, { status: 201 });
 }

@@ -49,7 +49,19 @@ export function logWarn(scope: string, message: string, meta?: unknown) {
 export function logError(scope: string, message: string, meta?: unknown) {
   if (meta === undefined) {
     console.error(`[${scope}] ${message}`);
-    return;
+  } else {
+    console.error(`[${scope}] ${message}`, scrubForLog(meta));
   }
-  console.error(`[${scope}] ${message}`, scrubForLog(meta));
+  void import("@/lib/observability/sentry")
+    .then(({ Sentry }) => {
+      if (!process.env.SENTRY_DSN && !process.env.NEXT_PUBLIC_SENTRY_DSN) return;
+      Sentry.captureMessage(`[${scope}] ${message}`, {
+        level: "error",
+        extra:
+          meta === undefined
+            ? undefined
+            : (scrubForLog(meta) as Record<string, unknown>),
+      });
+    })
+    .catch(() => undefined);
 }

@@ -27,6 +27,7 @@ const FILTER_KEYS = [
   "maxPrice",
   "search",
   "city",
+  "nearby",
   "sellerType",
   "negotiable",
 ] as const;
@@ -46,6 +47,7 @@ function toListParams(raw: RawSearchParams): ProductListParams {
     maxPrice: firstParam(raw.maxPrice),
     search: firstParam(raw.search),
     city: firstParam(raw.city),
+    nearby: firstParam(raw.nearby),
     sellerType: firstParam(raw.sellerType),
     sort: firstParam(raw.sort),
     negotiable: firstParam(raw.negotiable),

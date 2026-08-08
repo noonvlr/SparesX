@@ -149,8 +149,13 @@ function resolveSort(sortParam?: string | null): Record<string, 1 | -1> {
 async function resolveSellerIds(opts: {
   city?: string | null;
   sellerType?: string | null;
-}): Promise<Types.ObjectId[] | null> {
-  const { city, sellerType } = opts;
+  nearby?: boolean;
+}): Promise<{
+  ids: Types.ObjectId[] | null;
+  cityBySellerId: Map<string, string>;
+  preferredCity: string | null;
+} | null> {
+  const { city, sellerType, nearby } = opts;
   if (!city && !sellerType) return null;
 
   const sellerQuery: Record<string, unknown> = {
@@ -158,10 +163,19 @@ async function resolveSellerIds(opts: {
     isBlocked: false,
   };
 
+  let preferredCity: string | null = null;
   if (city) {
+    const { expandNearbyCities, canonicalizeCity } = await import(
+      "@/lib/geo/nearbyCities"
+    );
+    preferredCity = canonicalizeCity(city);
+    const cities = nearby
+      ? expandNearbyCities(city)
+      : preferredCity
+        ? [preferredCity]
+        : [city.trim()];
     sellerQuery.city = {
-      $regex: `^${escapeRegex(city.trim())}$`,
-      $options: "i",
+      $in: cities.map((c) => new RegExp(`^${escapeRegex(c)}$`, "i")),
     };
   }
 
@@ -185,8 +199,16 @@ async function resolveSellerIds(opts: {
       break;
   }
 
-  const sellers = await User.find(sellerQuery).select("_id").lean();
-  return sellers.map((s) => s._id as Types.ObjectId);
+  const sellers = await User.find(sellerQuery).select("_id city").lean();
+  const cityBySellerId = new Map<string, string>();
+  for (const s of sellers) {
+    if (s.city) cityBySellerId.set(String(s._id), String(s.city));
+  }
+  return {
+    ids: sellers.map((s) => s._id as Types.ObjectId),
+    cityBySellerId,
+    preferredCity,
+  };
 }
 
 /**
@@ -208,6 +230,8 @@ export type ProductListParams = {
   maxPrice?: string | null;
   search?: string | null;
   city?: string | null;
+  /** When "1"/true with city — include metro/region nearby cities */
+  nearby?: string | null;
   sellerType?: string | null;
   sort?: string | null;
   negotiable?: string | null;
@@ -229,6 +253,10 @@ export type ProductListItem = {
   priceNegotiable?: boolean;
   /** Owner user id — used client-side to swap Contact for owner actions. */
   technician?: string;
+  /** Seller city when available (location discovery). */
+  sellerCity?: string;
+  /** Same preferred city (not merely nearby). */
+  sameCity?: boolean;
 };
 
 export type ProductListResult = {
@@ -257,6 +285,11 @@ export async function fetchProductList(
   await connectDB();
   await ensureCategoriesReconciled();
 
+  const { applyNaturalQueryToParams } = await import(
+    "@/lib/products/parseNaturalQuery"
+  );
+  params = applyNaturalQueryToParams(params);
+
   const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
   const limit = Math.min(
     60,
@@ -268,6 +301,10 @@ export async function fetchProductList(
   const minPrice = parseFloat(params.minPrice || "0");
   const maxPrice = parseFloat(params.maxPrice || "0");
   const { search, city, sellerType, sort, negotiable } = params;
+  const nearby =
+    params.nearby === "1" ||
+    params.nearby === "true" ||
+    String(params.nearby || "").toLowerCase() === "yes";
 
   const query: Record<string, unknown> = { status: "approved" };
   const andClauses: Record<string, unknown>[] = [];
@@ -371,9 +408,9 @@ export async function fetchProductList(
     }
   }
 
-  const sellerIds = await resolveSellerIds({ city, sellerType });
-  if (sellerIds) {
-    query.technician = { $in: sellerIds };
+  const sellerResolution = await resolveSellerIds({ city, sellerType, nearby });
+  if (sellerResolution) {
+    query.technician = { $in: sellerResolution.ids || [] };
   }
 
   if (andClauses.length > 0) {
@@ -381,6 +418,44 @@ export async function fetchProductList(
   }
 
   const sortSpec = resolveSort(sort);
+  const preferredCity = sellerResolution?.preferredCity || null;
+  const cityBySellerId = sellerResolution?.cityBySellerId || new Map();
+  const { isSameCity } = await import("@/lib/geo/nearbyCities");
+
+  const decorate = (doc: Record<string, any>): ProductListItem => {
+    const techId = doc.technician ? String(doc.technician) : undefined;
+    const sellerCity = techId ? cityBySellerId.get(techId) : undefined;
+    return {
+      _id: String(doc._id),
+      slug: doc.slug || undefined,
+      name: doc.name || "",
+      price: typeof doc.price === "number" ? doc.price : 0,
+      images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
+      brand: doc.brand || undefined,
+      partType: doc.partType || undefined,
+      deviceModel: doc.deviceModel || undefined,
+      category: doc.category || undefined,
+      deviceCategory: doc.deviceCategory || undefined,
+      condition: doc.condition || undefined,
+      priceNegotiable: Boolean(doc.priceNegotiable),
+      technician: techId,
+      sellerCity,
+      sameCity: preferredCity
+        ? isSameCity(preferredCity, sellerCity)
+        : undefined,
+    };
+  };
+
+  const preferSameCity =
+    Boolean(preferredCity) && (params.sort || "featured") === "featured";
+
+  const orderBySameCity = (items: ProductListItem[]) => {
+    if (!preferSameCity) return items;
+    return [...items].sort(
+      (a, b) => Number(Boolean(b.sameCity)) - Number(Boolean(a.sameCity)),
+    );
+  };
+
   // Prefer text relevance when searching and sort is default featured
   let findSort: Record<string, 1 | -1 | { $meta: "textScore" }> =
     usedTextSearch && (params.sort || "featured") === "featured"
@@ -396,6 +471,7 @@ export async function fetchProductList(
       const matchQuery = { ...query };
       delete matchQuery.$text;
       const preferRelevance = (params.sort || "featured") === "featured";
+      const overFetch = preferSameCity ? Math.min(60, limit * 3) : limit;
       const docsPipeline: Record<string, unknown>[] = preferRelevance
         ? [
             { $addFields: { searchScore: { $meta: "searchScore" } } },
@@ -406,8 +482,8 @@ export async function fetchProductList(
                 createdAt: -1,
               },
             },
-            { $skip: (page - 1) * limit },
-            { $limit: limit },
+            { $skip: preferSameCity ? 0 : (page - 1) * limit },
+            { $limit: overFetch },
           ]
         : [
             { $sort: sortSpec },
@@ -446,23 +522,10 @@ export async function fetchProductList(
       const [facet] = await Product.aggregate(pipeline as any[]);
       const total = facet?.total?.[0]?.count || 0;
       const docs = facet?.docs || [];
-      const products: ProductListItem[] = docs.map(
-        (doc: Record<string, any>) => ({
-          _id: String(doc._id),
-          slug: doc.slug || undefined,
-          name: doc.name || "",
-          price: typeof doc.price === "number" ? doc.price : 0,
-          images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
-          brand: doc.brand || undefined,
-          partType: doc.partType || undefined,
-          deviceModel: doc.deviceModel || undefined,
-          category: doc.category || undefined,
-          deviceCategory: doc.deviceCategory || undefined,
-          condition: doc.condition || undefined,
-          priceNegotiable: Boolean(doc.priceNegotiable),
-          technician: doc.technician ? String(doc.technician) : undefined,
-        }),
-      );
+      let products = orderBySameCity(docs.map(decorate));
+      if (preferSameCity) {
+        products = products.slice((page - 1) * limit, page * limit);
+      }
       return { products, total, page, pages: Math.ceil(total / limit) || 1 };
     } catch (err) {
       console.warn("[products] Atlas Search failed; falling back to $text", err);
@@ -477,30 +540,20 @@ export async function fetchProductList(
 
   try {
     const total = await Product.countDocuments(query);
+    const overFetch = preferSameCity ? Math.min(60, limit * 3) : limit;
     const docs = await Product.find(query)
       .select(
         "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
       )
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .skip(preferSameCity ? 0 : (page - 1) * limit)
+      .limit(overFetch)
       .sort(findSort)
       .lean();
 
-    const products: ProductListItem[] = docs.map((doc: Record<string, any>) => ({
-      _id: String(doc._id),
-      slug: doc.slug || undefined,
-      name: doc.name || "",
-      price: typeof doc.price === "number" ? doc.price : 0,
-      images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
-      brand: doc.brand || undefined,
-      partType: doc.partType || undefined,
-      deviceModel: doc.deviceModel || undefined,
-      category: doc.category || undefined,
-      deviceCategory: doc.deviceCategory || undefined,
-      condition: doc.condition || undefined,
-      priceNegotiable: Boolean(doc.priceNegotiable),
-      technician: doc.technician ? String(doc.technician) : undefined,
-    }));
+    let products = orderBySameCity(docs.map(decorate));
+    if (preferSameCity) {
+      products = products.slice((page - 1) * limit, page * limit);
+    }
 
     return { products, total, page, pages: Math.ceil(total / limit) };
   } catch (err) {
@@ -519,23 +572,7 @@ export async function fetchProductList(
         .sort(sortSpec)
         .lean();
 
-      const products: ProductListItem[] = docs.map(
-        (doc: Record<string, any>) => ({
-          _id: String(doc._id),
-          slug: doc.slug || undefined,
-          name: doc.name || "",
-          price: typeof doc.price === "number" ? doc.price : 0,
-          images: Array.isArray(doc.images) ? doc.images.filter(Boolean) : [],
-          brand: doc.brand || undefined,
-          partType: doc.partType || undefined,
-          deviceModel: doc.deviceModel || undefined,
-          category: doc.category || undefined,
-          deviceCategory: doc.deviceCategory || undefined,
-          condition: doc.condition || undefined,
-          priceNegotiable: Boolean(doc.priceNegotiable),
-          technician: doc.technician ? String(doc.technician) : undefined,
-        }),
-      );
+      const products = orderBySameCity(docs.map(decorate));
 
       return { products, total, page, pages: Math.ceil(total / limit) };
     }

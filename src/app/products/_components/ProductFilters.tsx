@@ -348,6 +348,9 @@ export default function ProductFilters() {
   const [selectedCity, setSelectedCity] = useState(
     searchParams.get("city") || "",
   );
+  const [includeNearby, setIncludeNearby] = useState(
+    searchParams.get("nearby") === "1" || searchParams.get("nearby") === "true",
+  );
   const [selectedSellerType, setSelectedSellerType] = useState(
     searchParams.get("sellerType") || "",
   );
@@ -519,6 +522,7 @@ export default function ProductFilters() {
     if (priceRange.min) params.set("minPrice", priceRange.min);
     if (priceRange.max) params.set("maxPrice", priceRange.max);
     if (selectedCity) params.set("city", selectedCity);
+    if (selectedCity && includeNearby) params.set("nearby", "1");
     if (selectedSellerType) params.set("sellerType", selectedSellerType);
     if (selectedSort && selectedSort !== "featured")
       params.set("sort", selectedSort);
@@ -538,6 +542,7 @@ export default function ProductFilters() {
     selectedCondition,
     priceRange,
     selectedCity,
+    includeNearby,
     selectedSellerType,
     selectedSort,
     negotiableOnly,
@@ -566,6 +571,7 @@ export default function ProductFilters() {
     setSelectedCondition("");
     setPriceRange({ min: "", max: "" });
     setSelectedCity("");
+    setIncludeNearby(false);
     setSelectedSellerType("");
     setSelectedSort("featured");
     setNegotiableOnly(false);
@@ -825,6 +831,19 @@ export default function ProductFilters() {
             </option>
           ))}
         </Select>
+        {selectedCity ? (
+          <label className="mt-2 flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors">
+            <input
+              type="checkbox"
+              checked={includeNearby}
+              onChange={(e) => setIncludeNearby(e.target.checked)}
+              className="h-4 w-4 accent-[var(--brand)]"
+            />
+            <span className="text-sm text-[var(--ink-secondary)]">
+              Include nearby cities
+            </span>
+          </label>
+        ) : null}
       </div>
 
       <div>

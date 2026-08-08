@@ -4,6 +4,7 @@ import "./globals.css";
 import AppShell from "@/components/shell/AppShell";
 import ChatShell from "@/components/chat/ChatShell";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import SentryClientInit from "@/components/SentryClientInit";
 import { SITE_URL } from "@/lib/seo/site";
 
 const siteUrl = SITE_URL;
@@ -74,6 +75,7 @@ export default function RootLayout({
     <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col font-sans bg-[var(--surface-2)] text-[var(--ink)]">
         <ThemeProvider>
+          <SentryClientInit />
           <ChatShell>
             <AppShell>{children}</AppShell>
           </ChatShell>
