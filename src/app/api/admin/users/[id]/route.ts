@@ -231,6 +231,24 @@ export async function PATCH(
       }
     }
 
+    const VERIFY_FLAGS = [
+      "kycVerified",
+      "businessVerified",
+      "addressVerified",
+      "phoneVerified",
+      "emailVerified",
+      "isTrusted",
+      "eliteApproved",
+    ] as const;
+
+    const before = await User.findById(id)
+      .select([...VERIFY_FLAGS, "sessionVersion", "role"].join(" "))
+      .lean();
+
+    if (!before) {
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
+    }
+
     // Verification timestamps
     for (const [flag, at] of [
       ["kycVerified", "kycVerifiedAt"],
@@ -276,6 +294,53 @@ export async function PATCH(
     const { recomputeUserBadges } = await import("@/lib/badges/engine");
     const trust = await recomputeUserBadges(id);
     const fresh = await User.findById(id).select(USER_CLIENT_EXCLUDE);
+
+    const labelFor = (flag: string) => {
+      switch (flag) {
+        case "kycVerified":
+          return "KYC";
+        case "businessVerified":
+          return "Business verification";
+        case "addressVerified":
+          return "Address verification";
+        case "phoneVerified":
+          return "Phone verification";
+        case "emailVerified":
+          return "Email verification";
+        case "isTrusted":
+          return "Trusted seller";
+        case "eliteApproved":
+          return "Elite seller";
+        default:
+          return flag;
+      }
+    };
+
+    const changes: string[] = [];
+    const beforeFlags = before as unknown as Record<string, unknown>;
+    for (const flag of VERIFY_FLAGS) {
+      if (typeof updateData[flag] !== "boolean") continue;
+      const prev = Boolean(beforeFlags[flag]);
+      const next = Boolean(updateData[flag]);
+      if (prev === next) continue;
+      changes.push(
+        next ? `${labelFor(flag)} approved` : `${labelFor(flag)} removed`,
+      );
+    }
+
+    if (changes.length > 0) {
+      const { createNotification } = await import(
+        "@/lib/notifications/create"
+      );
+      void createNotification({
+        userId: id,
+        type: "verification_update",
+        title: "Verification update",
+        body: changes.slice(0, 4).join(" · "),
+        href: "/dashboard/seller/verification",
+        meta: { changes },
+      });
+    }
 
     return NextResponse.json({
       message: "User updated successfully",

@@ -112,6 +112,40 @@ export async function PATCH(
       void notifySavedSearchesForProduct(product.toObject());
     }
 
+    const sellerId = String(product.technician?._id || product.technician || "");
+    if (
+      sellerId &&
+      previousStatus !== product.status &&
+      (product.status === "approved" || product.status === "rejected")
+    ) {
+      const { createNotification } = await import(
+        "@/lib/notifications/create"
+      );
+      const { formatListingTitle } = await import(
+        "@/lib/products/listingTitle"
+      );
+      const title = formatListingTitle(product);
+      if (product.status === "approved") {
+        void createNotification({
+          userId: sellerId,
+          type: "listing_approved",
+          title: "Listing approved",
+          body: title,
+          href: "/technician/products",
+          meta: { productId: String(product._id) },
+        });
+      } else {
+        void createNotification({
+          userId: sellerId,
+          type: "listing_rejected",
+          title: "Listing rejected",
+          body: title,
+          href: "/technician/products",
+          meta: { productId: String(product._id) },
+        });
+      }
+    }
+
     return NextResponse.json(
       { message: "Product updated", product },
       { status: 200 },

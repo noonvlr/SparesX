@@ -9,6 +9,11 @@ export type NotificationType =
   | "part_request"
   | "saved_search"
   | "seller_rating"
+  | "listing_approved"
+  | "listing_rejected"
+  | "listing_sold"
+  | "verification_update"
+  | "support_reply"
   | "system";
 
 export interface INotification extends Document {
@@ -42,6 +47,11 @@ const NotificationSchema = new Schema<INotification>(
         "part_request",
         "saved_search",
         "seller_rating",
+        "listing_approved",
+        "listing_rejected",
+        "listing_sold",
+        "verification_update",
+        "support_reply",
         "system",
       ],
       required: true,

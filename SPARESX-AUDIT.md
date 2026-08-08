@@ -366,12 +366,13 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Site setting `requireListingApproval` (admin toggle; create/relist respect it)
 - Site-settings PATCH no longer blocks non-secret updates when encryption key missing
 
-### Phase 6 additions
+### Phase 7 additions
 
-- Ratings eligibility tightened (phone verified + WA unlock or deeper mutual chat)
-- New ratings daily cap (5) + POST rate limit; seller `seller_rating` notification
-- Product MongoDB text index + `$text` search (regex fallback)
-- Part-request POST rate limited (10/hour)
+- Seller notified on listing approve/reject (`listing_approved` / `listing_rejected`)
+- Buyers in product chats notified when listing marked sold (`listing_sold`)
+- Verification / trust flag changes notify the user (`verification_update`)
+- Admin support reply creates inbox notification (`support_reply`)
+- Register: IP rate limit (8/hour) + softer duplicate-email message
 
 ---
 

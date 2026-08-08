@@ -3,11 +3,31 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { hashPassword } from "@/lib/utils/hash";
 import { parseContactFields } from "@/lib/validation/userContact";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
+
+const GENERIC_TAKEN =
+  "Could not create an account with this email. Try logging in or use a different email.";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { password, profilePicture } = body;
+
+    const ip = clientIpFromRequest(req);
+    const rate = checkRateLimit({
+      key: `register:${ip}`,
+      limit: 8,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { message: "Too many registration attempts. Try again later." },
+        { status: 429 },
+      );
+    }
 
     if (!password) {
       return NextResponse.json(
@@ -44,12 +64,11 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB();
-    const existing = await User.findOne({ email: parsed.data.email });
+    const existing = await User.findOne({ email: parsed.data.email }).select(
+      "_id",
+    );
     if (existing) {
-      return NextResponse.json(
-        { message: "Email already registered" },
-        { status: 409 },
-      );
+      return NextResponse.json({ message: GENERIC_TAKEN }, { status: 409 });
     }
 
     const hashed = await hashPassword(pw);

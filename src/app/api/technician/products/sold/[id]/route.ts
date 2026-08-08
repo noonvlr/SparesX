@@ -77,6 +77,42 @@ export async function POST(
   product.featured = false;
   await product.save();
 
+  try {
+    const { Conversation } = await import("@/lib/models/Conversation");
+    const { createNotification } = await import("@/lib/notifications/create");
+    const { formatListingTitle } = await import("@/lib/products/listingTitle");
+    const { productPath } = await import("@/lib/seo/site");
+
+    const conversations = await Conversation.find({ productId: product._id })
+      .select("participants")
+      .lean();
+    const sellerId = String(payload.id);
+    const buyerIds = new Set<string>();
+    for (const c of conversations) {
+      for (const p of c.participants || []) {
+        const pid = String(p);
+        if (pid && pid !== sellerId) buyerIds.add(pid);
+      }
+    }
+
+    const title = formatListingTitle(product);
+    const href = productPath(product);
+    await Promise.all(
+      [...buyerIds].slice(0, 40).map((buyerId) =>
+        createNotification({
+          userId: buyerId,
+          type: "listing_sold",
+          title: "Listing marked sold",
+          body: `${title} is no longer available.`,
+          href,
+          meta: { productId: String(product._id) },
+        }),
+      ),
+    );
+  } catch (err) {
+    console.warn("[sold] buyer notify failed:", err);
+  }
+
   return NextResponse.json(
     {
       message: "Product marked as sold",

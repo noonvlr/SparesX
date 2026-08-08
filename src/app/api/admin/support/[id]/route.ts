@@ -41,6 +41,17 @@ export async function PATCH(
       // New/changed admin reply becomes unread for the user
       if (replyChanged && trimmed) {
         ticket.userUnread = true;
+        const { createNotification } = await import(
+          "@/lib/notifications/create"
+        );
+        void createNotification({
+          userId: String(ticket.user),
+          type: "support_reply",
+          title: "Support replied to your ticket",
+          body: (ticket.subject || "Your support request").slice(0, 120),
+          href: "/support",
+          meta: { ticketId: String(ticket._id) },
+        });
       }
     }
 
