@@ -14,6 +14,7 @@ import {
   prepareChatSound,
   setChatMuted,
 } from "@/lib/chat/sound";
+import { getAccessToken } from "@/lib/auth/clientAuth";
 import type { ChatConversation } from "@/types/chat";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
@@ -224,7 +225,7 @@ export default function FloatingChatDock() {
   useEffect(() => {
     setMuted(isChatMuted());
     const sync = () => {
-      setHasToken(Boolean(localStorage.getItem("token")));
+      setHasToken(Boolean(getAccessToken()));
       setFabDismissed(localStorage.getItem("sparesx_chat_fab_hidden") === "1");
       setChatVisited(localStorage.getItem("sparesx_chat_visited") === "1");
     };

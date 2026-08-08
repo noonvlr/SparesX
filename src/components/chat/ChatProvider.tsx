@@ -16,19 +16,12 @@ import type { ChatConversation, ChatMessage } from "@/types/chat";
 import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
 import { getSocketUrl } from "@/lib/chat/socketUrl";
 import { announceChatOffline } from "@/lib/chat/announceOffline";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 const MAX_FLOATING = 3;
-
-function authHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-}
 
 function currentUserId(): string | null {
   try {
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     if (!token) return null;
     return String(JSON.parse(atob(token.split(".")[1])).id);
   } catch {
@@ -169,12 +162,8 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshUnread = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     try {
-      const res = await fetch("/api/chat/unread-count", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch("/api/chat/unread-count");
       const data = await res.json();
       if (res.ok) bumpUnread(data.unreadTotal || 0);
     } catch {
@@ -183,13 +172,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   }, [bumpUnread, userId]);
 
   const loadConversations = useCallback(async (opts?: { silent?: boolean }) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     if (!opts?.silent) setLoadingList(true);
     try {
-      const res = await fetch("/api/chat/conversations?limit=50", {
-        headers: authHeaders(),
-      });
+      const res = await authFetch("/api/chat/conversations?limit=50");
       const data = await res.json();
       if (res.ok) {
         const normalized = (data.conversations || []).map(normalizeConversation);
@@ -244,9 +229,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const params = new URLSearchParams({ limit: "40" });
         if (cursor) params.set("cursor", cursor);
-        const res = await fetch(`/api/chat/messages/${id}?${params}`, {
-          headers: authHeaders(),
-        });
+        const res = await authFetch(`/api/chat/messages/${id}?${params}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to load");
         const msgs = (data.messages || []).map(normalizeMessage);
@@ -296,9 +279,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
         socket.emit("join-conversation", { conversationId: id });
         socket.emit("mark-read", { conversationId: id });
       } else {
-        await fetch("/api/chat/messages/read", {
+        await authFetch("/api/chat/messages/read", {
           method: "PATCH",
-          headers: authHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ conversationId: id }),
         });
       }
@@ -312,9 +295,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
 
   const ensureConversationInList = useCallback(async (conversationId: string) => {
     const id = String(conversationId);
-    const res = await fetch(`/api/chat/conversations/${id}`, {
-      headers: authHeaders(),
-    });
+    const res = await authFetch(`/api/chat/conversations/${id}`);
     const data = await res.json();
     if (!res.ok || !data.conversation) {
       await loadConversations();
@@ -421,9 +402,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       setLoadingList(true);
 
       try {
-        const res = await fetch("/api/chat/conversations", {
+        const res = await authFetch("/api/chat/conversations", {
           method: "POST",
-          headers: authHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ peerId, productId }),
         });
         const data = await res.json();
@@ -489,9 +470,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       if (socket?.connected && peer?._id) {
         socket.emit("typing-stop", { conversationId: id, peerId: peer._id });
       } else {
-        void fetch("/api/chat/presence", {
+        void authFetch("/api/chat/presence", {
           method: "POST",
-          headers: authHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ conversationId: id, typing: false }),
         }).catch(() => {});
       }
@@ -542,9 +523,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
               );
           });
         } else {
-          const res = await fetch("/api/chat/messages", {
+          const res = await authFetch("/api/chat/messages", {
             method: "POST",
-            headers: authHeaders(),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ conversationId: id, type: "text", text: clean }),
           });
           const data = await res.json();
@@ -600,9 +581,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
           );
         });
       } else {
-        const res = await fetch("/api/chat/messages", {
+        const res = await authFetch("/api/chat/messages", {
           method: "POST",
-          headers: authHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             conversationId: id,
             type: "image",
@@ -635,16 +616,16 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       }
 
       // Vercel REST fallback
-      void fetch("/api/chat/presence", {
+      void authFetch("/api/chat/presence", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ conversationId: id, typing: true }),
       }).catch(() => {});
       if (typingTimers.current[id]) clearTimeout(typingTimers.current[id]);
       typingTimers.current[id] = setTimeout(() => {
-        void fetch("/api/chat/presence", {
+        void authFetch("/api/chat/presence", {
           method: "POST",
-          headers: authHeaders(),
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ conversationId: id, typing: false }),
         }).catch(() => {});
       }, 1500);
@@ -720,7 +701,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     let socket = socketRef.current;
     if (!socket || !socket.connected) {
       socket = io(socketUrl, {
@@ -908,9 +889,9 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     if (!userId || socketConnected) return;
 
     const heartbeat = () => {
-      void fetch("/api/chat/presence", {
+      void authFetch("/api/chat/presence", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
       }).catch(() => {});
     };

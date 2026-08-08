@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Textarea } from "@/components/ui/Input";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 const QUICK_REPLIES = [
   "Is this available?",
@@ -56,12 +57,8 @@ export default function MessageInput({
     try {
       const formData = new FormData();
       formData.append("files", file);
-      const headers: HeadersInit = {};
-      const token = localStorage.getItem("token");
-      if (token) headers.Authorization = `Bearer ${token}`;
-      const res = await fetch("/api/upload", {
+      const res = await authFetch("/api/upload", {
         method: "POST",
-        headers,
         body: formData,
       });
       const data = await res.json();

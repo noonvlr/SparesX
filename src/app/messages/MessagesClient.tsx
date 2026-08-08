@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { getAccessToken } from "@/lib/auth/clientAuth";
 
 /**
  * Deep-link entry: opens floating dock via event, then returns to browsing.
@@ -16,7 +17,7 @@ export default function MessagesClient() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     setAuthed(Boolean(token));
     if (!token) return;
 
