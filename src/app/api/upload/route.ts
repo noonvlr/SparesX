@@ -3,6 +3,7 @@ import { put } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
 
 const MAX_FILES_AUTH = 10;
 const MAX_BYTES_AUTH = 5 * 1024 * 1024;
@@ -15,9 +16,9 @@ const ALLOWED_MIME = new Set([
 ]);
 
 function optionalUserId(req: NextRequest): string | null {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
-  const payload = verifyJwt(authHeader.split(" ")[1]);
+  const token = getTokenFromRequest(req);
+  if (!token) return null;
+  const payload = verifyJwt(token);
   return payload?.id || null;
 }
 

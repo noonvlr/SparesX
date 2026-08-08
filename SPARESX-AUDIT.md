@@ -341,7 +341,7 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Catalog ObjectId rewrite
 - Atlas Search (Mongo `$text` covers MVP in Phase 6)
 - Redis socket adapter / shared rate-limit store
-- Full email/push notification channels *(Phase 10: listing + support reply email; push still open)*
+- Full email/push notification channels *(Phase 10–12: listing, support reply, saved-search, part-request email; push still open)*
 
 ### Phase 3 additions
 
@@ -373,6 +373,13 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 - Logout clears cookie + bumps session version
 - Client `authFetch` / `clientAuth` helpers; shell + login/Google use credentials:"include"
 - localStorage token still issued (sockets + legacy call sites)
+
+### Phase 12 additions
+
+- Email alerts for saved-search matches + part-request seller alerts (SMTP when configured)
+- Admin chat: Load more pagination + `authFetch`
+- Focused `authFetch` migrate: AdminGate (role via `/api/auth/me`), uploads, notifications, dashboards, demand, saved count
+- Upload + technician products accept cookie-or-Bearer via `getTokenFromRequest` / `requireUser`
 
 ---
 

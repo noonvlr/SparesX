@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, Badge } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 type DemandItem = {
   requestId: string;
@@ -23,15 +24,7 @@ export default function DemandMatches() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
-    fetch("/api/technician/demand?limit=6", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/technician/demand?limit=6")
       .then((res) => res.json())
       .then((data) => {
         setItems(Array.isArray(data.items) ? data.items : []);

@@ -5,20 +5,14 @@ import { AdminPage } from "@/components/layout";
 import { Card, Badge, PageHeader } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Not authenticated");
-      return;
-    }
-    fetch("/api/admin/dashboard", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/admin/dashboard")
       .then((res) => res.json())
       .then((data) => {
         if (data.message && !data.userCount && data.userCount !== 0) {

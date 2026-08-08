@@ -55,17 +55,37 @@ export async function notifyOnPartRequestCreated(params: {
       ...new Set(matches.map((m) => m.seller._id).filter(Boolean)),
     ].slice(0, 10);
 
+    const sellers = await User.find({ _id: { $in: sellerIds } })
+      .select("name email")
+      .lean();
+    const sellerMap = new Map(sellers.map((s) => [String(s._id), s]));
+
+    const { sendPartRequestAlertEmail } = await import(
+      "@/lib/services/emailService"
+    );
+    const { absoluteUrl } = await import("@/lib/seo/site");
+    const requestsHref = absoluteUrl("/requests");
+
     await Promise.all(
-      sellerIds.map((sellerId) =>
-        createNotification({
+      sellerIds.map(async (sellerId) => {
+        await createNotification({
           userId: sellerId,
           type: "part_request",
           title: "Buyer looking for a part you stock",
           body: summary,
           href: "/requests",
           meta: { requestId: params.requestId },
-        }),
-      ),
+        });
+        const seller = sellerMap.get(sellerId);
+        if (seller?.email) {
+          void sendPartRequestAlertEmail({
+            recipientEmail: seller.email,
+            recipientName: seller.name || "Seller",
+            summary,
+            href: requestsHref,
+          });
+        }
+      }),
     );
   } catch (err) {
     console.warn("[request] seller notify failed:", err);

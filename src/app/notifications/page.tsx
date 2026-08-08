@@ -6,6 +6,7 @@ import { DashboardPage } from "@/components/layout";
 import { Card, EmptyState, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { LoadingState, ErrorState } from "@/components/feedback";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 type Notif = {
   _id: string;
@@ -24,16 +25,12 @@ export default function NotificationsPage() {
   const [marking, setMarking] = useState(false);
 
   const load = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Please log in to view notifications");
-      setLoading(false);
-      return;
-    }
     try {
-      const res = await fetch("/api/notifications?limit=40", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch("/api/notifications?limit=40");
+      if (res.status === 401) {
+        setError("Please log in to view notifications");
+        return;
+      }
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load");
@@ -53,16 +50,11 @@ export default function NotificationsPage() {
   }, [load]);
 
   async function markAllRead() {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setMarking(true);
     try {
-      await fetch("/api/notifications", {
+      await authFetch("/api/notifications", {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ all: true }),
       });
       setItems((prev) =>

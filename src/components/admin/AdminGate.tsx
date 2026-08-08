@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 /** Client-side gate for /admin pages (APIs still enforce requireAdmin). */
 export default function AdminGate({ children }: { children: React.ReactNode }) {
@@ -9,21 +10,30 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        router.replace(`/login?next=${encodeURIComponent("/admin/dashboard")}`);
-        return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authFetch("/api/auth/me");
+        if (!res.ok) {
+          router.replace(
+            `/login?next=${encodeURIComponent("/admin/dashboard")}`,
+          );
+          return;
+        }
+        const data = await res.json();
+        if (cancelled) return;
+        if (data?.user?.role !== "admin") {
+          router.replace("/");
+          return;
+        }
+        setReady(true);
+      } catch {
+        router.replace("/login");
       }
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      if (payload?.role !== "admin") {
-        router.replace("/");
-        return;
-      }
-      setReady(true);
-    } catch {
-      router.replace("/login");
-    }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   if (!ready) {

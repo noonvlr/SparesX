@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 export default function DashboardStats() {
   const [stats, setStats] = useState({
@@ -12,15 +13,7 @@ export default function DashboardStats() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setStats((s) => ({ ...s, loading: false }));
-      return;
-    }
-
-    fetch("/api/technician/products", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/technician/products")
       .then((res) => res.json())
       .then((data) => {
         const products = data.products || [];

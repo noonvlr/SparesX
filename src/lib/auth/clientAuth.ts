@@ -40,6 +40,10 @@ export async function authFetch(
   init?: RequestInit,
 ): Promise<Response> {
   const headers = authHeaders(init?.headers);
+  // Let the browser set multipart boundary for FormData
+  if (typeof FormData !== "undefined" && init?.body instanceof FormData) {
+    headers.delete("Content-Type");
+  }
   return fetch(input, {
     ...init,
     headers,

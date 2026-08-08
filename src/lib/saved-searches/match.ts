@@ -162,6 +162,20 @@ export async function notifySavedSearchesForProduct(product: ProductLike) {
         },
       });
 
+      const recipient = await User.findById(userId).select("name email").lean();
+      if (recipient?.email) {
+        const { sendSavedSearchMatchEmail } = await import(
+          "@/lib/services/emailService"
+        );
+        const { absoluteUrl } = await import("@/lib/seo/site");
+        void sendSavedSearchMatchEmail({
+          recipientEmail: recipient.email,
+          recipientName: recipient.name || "there",
+          listingTitle: title,
+          href: absoluteUrl(href),
+        });
+      }
+
       await SavedSearch.updateOne(
         { _id: row._id },
         { $set: { lastNotifiedAt: new Date() } },

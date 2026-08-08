@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 type Participant = {
   _id: string;
@@ -49,13 +50,7 @@ type AdminMessage = {
   read?: boolean;
 };
 
-function authHeaders() {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-    "Content-Type": "application/json",
-  };
-}
+const PAGE_SIZE = 30;
 
 function nameOf(p?: Participant) {
   return p?.name || p?.email || "Unknown user";
@@ -66,7 +61,10 @@ export default function AdminChatPage() {
   const [stats, setStats] = useState({ conversationCount: 0, messageCount: 0 });
   const [q, setQ] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [pages, setPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -74,42 +72,50 @@ export default function AdminChatPage() {
   const [selected, setSelected] = useState<AdminConversation | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const loadList = useCallback(async (query = search) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setError("Not authenticated");
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ limit: "40" });
-      if (query.trim()) params.set("q", query.trim());
-      const res = await fetch(`/api/admin/chat/conversations?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.message || "Failed to load chats");
-        return;
+  const loadList = useCallback(
+    async (opts: { query?: string; pageNum?: number; append?: boolean } = {}) => {
+      const query = opts.query ?? search;
+      const pageNum = opts.pageNum ?? 1;
+      const append = opts.append ?? false;
+
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+
+      try {
+        const params = new URLSearchParams({
+          limit: String(PAGE_SIZE),
+          page: String(pageNum),
+        });
+        if (query.trim()) params.set("q", query.trim());
+        const res = await authFetch(
+          `/api/admin/chat/conversations?${params}`,
+        );
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.message || "Failed to load chats");
+          return;
+        }
+        const next = (data.conversations || []) as AdminConversation[];
+        setConversations((prev) => (append ? [...prev, ...next] : next));
+        setStats(data.stats || { conversationCount: 0, messageCount: 0 });
+        setPage(data.page || pageNum);
+        setPages(data.pages || 1);
+        setError("");
+      } catch {
+        setError("Failed to load chats");
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-      setConversations(data.conversations || []);
-      setStats(data.stats || { conversationCount: 0, messageCount: 0 });
-      setError("");
-    } catch {
-      setError("Failed to load chats");
-    } finally {
-      setLoading(false);
-    }
-  }, [search]);
+    },
+    [search],
+  );
 
   const openConversation = useCallback(async (id: string) => {
     setSelectedId(id);
     setDetailLoading(true);
     try {
-      const res = await fetch(`/api/admin/chat/conversations/${id}`, {
-        headers: authHeaders(),
-      });
+      const res = await authFetch(`/api/admin/chat/conversations/${id}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to open conversation");
@@ -125,8 +131,9 @@ export default function AdminChatPage() {
   }, []);
 
   useEffect(() => {
-    void loadList();
-  }, [loadList]);
+    setPage(1);
+    void loadList({ query: search, pageNum: 1, append: false });
+  }, [search, loadList]);
 
   async function deleteMessage(messageId: string) {
     if (
@@ -138,9 +145,8 @@ export default function AdminChatPage() {
     }
     setDeletingId(messageId);
     try {
-      const res = await fetch(`/api/admin/chat/messages/${messageId}`, {
+      const res = await authFetch(`/api/admin/chat/messages/${messageId}`, {
         method: "DELETE",
-        headers: authHeaders(),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -149,7 +155,7 @@ export default function AdminChatPage() {
       }
       setMessages((prev) => prev.filter((m) => m._id !== messageId));
       if (selectedId) void openConversation(selectedId);
-      void loadList();
+      void loadList({ pageNum: 1, append: false });
     } catch {
       alert("Delete failed");
     } finally {
@@ -227,43 +233,68 @@ export default function AdminChatPage() {
           ) : conversations.length === 0 ? (
             <div className="p-6 text-sm text-[var(--muted)]">No conversations found.</div>
           ) : (
-            <ul className="divide-y divide-[var(--divider)] max-h-[75vh] overflow-y-auto">
-              {conversations.map((c) => {
-                const [a, b] = c.participants || [];
-                const active = selectedId === c._id;
-                return (
-                  <li key={c._id}>
-                    <button
-                      type="button"
-                      onClick={() => void openConversation(c._id)}
-                      className={`w-full text-left p-4 transition ${
-                        active ? "bg-[var(--brand-soft)]" : "hover:bg-[var(--surface-hover)]"
-                      }`}
-                    >
-                      <p className="text-sm font-semibold text-[var(--ink)] truncate">
-                        {nameOf(a)} ↔ {nameOf(b)}
-                      </p>
-                      <p className="text-xs text-[var(--muted)] truncate mt-0.5">
-                        {c.lastMessage || "No messages yet"}
-                      </p>
-                      <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-[var(--muted)]">
-                        <span>
-                          {c.messageCount || 0} msgs
-                          {c.productId && typeof c.productId === "object"
-                            ? ` · ${c.productId.name || "Product"}`
-                            : ""}
-                        </span>
-                        <span>
-                          {c.lastMessageTime
-                            ? new Date(c.lastMessageTime).toLocaleString("en-IN")
-                            : ""}
-                        </span>
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="max-h-[75vh] overflow-y-auto">
+              <ul className="divide-y divide-[var(--divider)]">
+                {conversations.map((c) => {
+                  const [a, b] = c.participants || [];
+                  const active = selectedId === c._id;
+                  return (
+                    <li key={c._id}>
+                      <button
+                        type="button"
+                        onClick={() => void openConversation(c._id)}
+                        className={`w-full text-left p-4 transition ${
+                          active
+                            ? "bg-[var(--brand-soft)]"
+                            : "hover:bg-[var(--surface-hover)]"
+                        }`}
+                      >
+                        <p className="text-sm font-semibold text-[var(--ink)] truncate">
+                          {nameOf(a)} ↔ {nameOf(b)}
+                        </p>
+                        <p className="text-xs text-[var(--muted)] truncate mt-0.5">
+                          {c.lastMessage || "No messages yet"}
+                        </p>
+                        <div className="flex items-center justify-between gap-2 mt-2 text-[11px] text-[var(--muted)]">
+                          <span>
+                            {c.messageCount || 0} msgs
+                            {c.productId && typeof c.productId === "object"
+                              ? ` · ${c.productId.name || "Product"}`
+                              : ""}
+                          </span>
+                          <span>
+                            {c.lastMessageTime
+                              ? new Date(c.lastMessageTime).toLocaleString(
+                                  "en-IN",
+                                )
+                              : ""}
+                          </span>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              {page < pages ? (
+                <div className="p-3 border-t border-[var(--divider)]">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled={loadingMore}
+                    onClick={() =>
+                      void loadList({
+                        pageNum: page + 1,
+                        append: true,
+                      })
+                    }
+                  >
+                    {loadingMore ? "Loading…" : "Load more"}
+                  </Button>
+                </div>
+              ) : null}
+            </div>
           )}
         </Card>
 

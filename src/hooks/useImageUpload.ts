@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 export type UploadImagesResult = {
   urls: string[];
@@ -21,14 +22,8 @@ export function useImageUpload() {
       const formData = new FormData();
       files.forEach((file) => formData.append("files", file));
 
-      const headers: HeadersInit = {};
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const response = await fetch("/api/upload", {
+      const response = await authFetch("/api/upload", {
         method: "POST",
-        headers,
         body: formData,
       });
 

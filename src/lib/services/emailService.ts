@@ -495,6 +495,72 @@ export async function sendSupportReplyEmail(params: {
   }
 }
 
+export async function sendSavedSearchMatchEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  listingTitle: string;
+  href: string;
+}): Promise<boolean> {
+  try {
+    const transporter = getTransporter();
+    if (!transporter || !params.recipientEmail) return false;
+
+    const auth = getAuthConfig();
+    const title = escapeHtml(params.listingTitle);
+    const info = await transporter.sendMail({
+      from: `SparesX <${auth.user}>`,
+      to: params.recipientEmail,
+      subject: "New SparesX listing matches your saved search",
+      html: simpleNoticeTemplate({
+        headline: "Saved search match",
+        greetingName: params.recipientName,
+        bodyHtml: `<p style="color:#555;margin:0 0 10px;">A new listing matches your search: <strong>${title}</strong></p>`,
+        ctaLabel: "View listing",
+        ctaUrl: params.href,
+        accent: "#0f766e",
+      }),
+    });
+    console.log("Saved search email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending saved search email:", error);
+    return false;
+  }
+}
+
+export async function sendPartRequestAlertEmail(params: {
+  recipientEmail: string;
+  recipientName: string;
+  summary: string;
+  href: string;
+}): Promise<boolean> {
+  try {
+    const transporter = getTransporter();
+    if (!transporter || !params.recipientEmail) return false;
+
+    const auth = getAuthConfig();
+    const summary = escapeHtml(params.summary);
+    const info = await transporter.sendMail({
+      from: `SparesX <${auth.user}>`,
+      to: params.recipientEmail,
+      subject: "Buyer looking for a part you stock on SparesX",
+      html: simpleNoticeTemplate({
+        headline: "Part request match",
+        greetingName: params.recipientName,
+        bodyHtml: `<p style="color:#555;margin:0 0 10px;">A buyer requested something that matches your inventory: <strong>${summary}</strong></p>`,
+        ctaLabel: "Browse requests",
+        ctaUrl: params.href,
+        accent: "#7c3aed",
+      }),
+    });
+    console.log("Part request alert email sent:", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error sending part request alert email:", error);
+    return false;
+  }
+}
+
 /**
  * Test email configuration
  */

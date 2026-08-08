@@ -2,32 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/connect';
 import { Product } from '@/lib/models/Product';
 import { User } from '@/lib/models/User';
-import { verifyJwt } from '@/lib/auth/jwt';
+import { isAuthError, requireUser } from '@/lib/auth/requireUser';
 
 // List own products (GET), Create product (POST)
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = verifyJwt(token);
-  if (!payload || payload.role !== 'technician') {
+  const auth = await requireUser(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.role !== 'technician') {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   }
   await connectDB();
-  const products = await Product.find({ technician: payload.id });
+  const products = await Product.find({ technician: auth.id });
   return NextResponse.json({ products }, { status: 200 });
 }
 
 export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-  }
-  const token = authHeader.split(' ')[1];
-  const payload = verifyJwt(token);
-  if (!payload || payload.role !== 'technician') {
+  const auth = await requireUser(req);
+  if (isAuthError(auth)) return auth;
+  if (auth.role !== 'technician') {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
   }
   
@@ -42,7 +34,7 @@ export async function POST(req: NextRequest) {
   
   await connectDB();
 
-  const technician = await User.findById(payload.id).select('phoneVerified role');
+  const technician = await User.findById(auth.id).select('phoneVerified role');
   if (!technician) {
     return NextResponse.json({ message: 'User not found' }, { status: 404 });
   }
@@ -90,7 +82,7 @@ export async function POST(req: NextRequest) {
     condition,
     priceNegotiable: !!priceNegotiable,
     images: images || [],
-    technician: payload.id,
+    technician: auth.id,
     slug,
     status,
   });

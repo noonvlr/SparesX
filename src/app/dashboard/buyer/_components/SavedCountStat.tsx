@@ -2,21 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 export default function SavedCountStat() {
   const [total, setTotal] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setTotal(0);
-        return;
-      }
       try {
-        const res = await fetch("/api/saved?count=1", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/saved?count=1");
         const data = await res.json();
         if (res.ok) setTotal(typeof data.total === "number" ? data.total : 0);
         else setTotal(0);
