@@ -2,24 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { CategoryBrand } from "@/lib/models/CategoryBrand";
 import { mobileBrandsSeedData } from "@/lib/seeds/mobile-brands";
+import { requireAdmin, isAdminError } from "@/lib/auth/requireAdmin";
 
 export async function POST(req: NextRequest) {
   try {
-    // Verify admin token
-    const authHeader = req.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "");
-
-    if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized - No token provided" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireAdmin(req);
+    if (isAdminError(auth)) return auth;
 
     await connectDB();
 
-    // Check if mobile brands already exist
-    const existingCount = await CategoryBrand.countDocuments({ category: "mobile" });
+    const existingCount = await CategoryBrand.countDocuments({
+      category: "mobile",
+    });
 
     if (existingCount > 0) {
       return NextResponse.json(
@@ -28,26 +22,23 @@ export async function POST(req: NextRequest) {
           message: `Mobile brands already exist (${existingCount} brands found). Use DELETE endpoint to clear first if you want to re-seed.`,
           existingCount,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Transform seed data to include category
     const brandsWithCategory = mobileBrandsSeedData.map((brand) => ({
       ...brand,
       category: "mobile" as const,
       isActive: true,
     }));
 
-    // Insert all brands
     const result = await CategoryBrand.insertMany(brandsWithCategory, {
       ordered: false,
     });
 
-    // Calculate total models
     const totalModels = mobileBrandsSeedData.reduce(
       (sum, brand) => sum + brand.models.length,
-      0
+      0,
     );
 
     return NextResponse.json(
@@ -62,47 +53,38 @@ export async function POST(req: NextRequest) {
           modelCount: b.models.length,
         })),
       },
-      { status: 201 }
+      { status: 201 },
     );
-  } catch (error: any) {
-    // Handle duplicate key error
-    if (error.code === 11000) {
+  } catch (error: unknown) {
+    const err = error as { code?: number; message?: string };
+    if (err.code === 11000) {
       return NextResponse.json(
         {
           success: false,
           error: "Duplicate entry - Some brands may already exist",
-          details: error.message,
+          details: err.message,
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to seed mobile brands",
+        error: err.message || "Failed to seed mobile brands",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(req: NextRequest) {
   try {
-    // Verify admin token
-    const authHeader = req.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "");
-
-    if (!token) {
-      return NextResponse.json(
-        { error: "Unauthorized - No token provided" },
-        { status: 401 }
-      );
-    }
+    const auth = await requireAdmin(req);
+    if (isAdminError(auth)) return auth;
 
     await connectDB();
 
-    // Delete all mobile brands
     const result = await CategoryBrand.deleteMany({ category: "mobile" });
 
     return NextResponse.json(
@@ -111,21 +93,25 @@ export async function DELETE(req: NextRequest) {
         message: "Mobile brands deleted successfully",
         deletedCount: result.deletedCount,
       },
-      { status: 200 }
+      { status: 200 },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string };
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to delete mobile brands",
+        error: err.message || "Failed to delete mobile brands",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (isAdminError(auth)) return auth;
+
     await connectDB();
 
     const count = await CategoryBrand.countDocuments({ category: "mobile" });
@@ -134,8 +120,9 @@ export async function GET(req: NextRequest) {
       .lean();
 
     const totalModels = brands.reduce(
-      (sum, brand: any) => sum + (brand.models?.length || 0),
-      0
+      (sum, brand: { models?: unknown[] }) =>
+        sum + (brand.models?.length || 0),
+      0,
     );
 
     return NextResponse.json(
@@ -145,21 +132,22 @@ export async function GET(req: NextRequest) {
         brandsCount: count,
         totalModels,
         isBrandsSeeded: count > 0,
-        brands: brands.map((b: any) => ({
+        brands: brands.map((b: { name: string; models?: unknown[]; isActive?: boolean }) => ({
           name: b.name,
           modelCount: b.models?.length || 0,
           isActive: b.isActive,
         })),
       },
-      { status: 200 }
+      { status: 200 },
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string };
     return NextResponse.json(
       {
         success: false,
-        error: error.message || "Failed to get status",
+        error: err.message || "Failed to get status",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

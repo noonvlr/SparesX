@@ -5,9 +5,7 @@ import path from "path";
 import { verifyJwt } from "@/lib/auth/jwt";
 
 const MAX_FILES_AUTH = 10;
-const MAX_FILES_ANON = 1;
 const MAX_BYTES_AUTH = 5 * 1024 * 1024;
-const MAX_BYTES_ANON = 2 * 1024 * 1024;
 const ALLOWED_MIME = new Set([
   "image/jpeg",
   "image/jpg",
@@ -39,7 +37,12 @@ function optionalUserId(req: NextRequest): string | null {
 export async function POST(req: NextRequest) {
   try {
     const userId = optionalUserId(req);
-    const authenticated = !!userId;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Login required to upload files" },
+        { status: 401 },
+      );
+    }
 
     const formData = await req.formData();
     const files = formData
@@ -53,17 +56,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const maxFiles = authenticated ? MAX_FILES_AUTH : MAX_FILES_ANON;
-    const maxBytes = authenticated ? MAX_BYTES_AUTH : MAX_BYTES_ANON;
+    const maxFiles = MAX_FILES_AUTH;
+    const maxBytes = MAX_BYTES_AUTH;
 
     if (files.length > maxFiles) {
       return NextResponse.json(
-        {
-          error: authenticated
-            ? `Maximum ${maxFiles} files per upload`
-            : "Login required to upload multiple files",
-        },
-        { status: authenticated ? 400 : 401 },
+        { error: `Maximum ${maxFiles} files per upload` },
+        { status: 400 },
       );
     }
 
@@ -77,11 +76,7 @@ export async function POST(req: NextRequest) {
       }
       if (file.size > maxBytes) {
         return NextResponse.json(
-          {
-            error: authenticated
-              ? "Each image must be 5MB or smaller"
-              : "Image must be 2MB or smaller before login",
-          },
+          { error: "Each image must be 5MB or smaller" },
           { status: 400 },
         );
       }

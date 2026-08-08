@@ -7,9 +7,13 @@ import {
   parseContactFields,
   validatePassword,
 } from "@/lib/validation/userContact";
+import {
+  sanitizeUserForClient,
+  USER_CLIENT_EXCLUDE,
+} from "@/lib/auth/publicUser";
 
 export async function GET(request: NextRequest) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {
@@ -40,7 +44,7 @@ export async function GET(request: NextRequest) {
 
     const [users, total] = await Promise.all([
       User.find(query)
-        .select("-password")
+        .select(USER_CLIENT_EXCLUDE)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -49,7 +53,11 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      users,
+      users: users.map((u) =>
+        sanitizeUserForClient(u, {
+          includeHasPassword: false,
+        }),
+      ),
       pagination: {
         page,
         limit,
@@ -67,7 +75,7 @@ export async function GET(request: NextRequest) {
 
 /** Admin create technician or admin account */
 export async function POST(request: NextRequest) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {

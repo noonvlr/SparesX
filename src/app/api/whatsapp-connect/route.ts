@@ -23,7 +23,7 @@ import { productUrl } from "@/lib/seo/site";
  *   → list of requests
  */
 export async function GET(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {
@@ -140,7 +140,7 @@ export async function GET(req: NextRequest) {
 
 /** POST — create or re-open a WhatsApp connect request (per user pair). */
 export async function POST(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {

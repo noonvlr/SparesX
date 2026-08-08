@@ -4,7 +4,7 @@ import { User } from "@/lib/models/User";
 import { requireUser, isAuthError } from "@/lib/auth/requireUser";
 
 export async function GET(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   await connectDB();

@@ -37,7 +37,7 @@ function publicSettings(doc: Awaited<ReturnType<typeof getOrCreateSiteSettings>>
 }
 
 export async function GET(req: NextRequest) {
-  const auth = requireAdmin(req);
+  const auth = await requireAdmin(req);
   if (isAdminError(auth)) return auth;
 
   await connectDB();
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const auth = requireAdmin(req);
+  const auth = await requireAdmin(req);
   if (isAdminError(auth)) return auth;
 
   if (!canEncryptSecrets()) {

@@ -4,6 +4,10 @@ import { User } from "@/lib/models/User";
 import { comparePassword } from "@/lib/utils/hash";
 import { signJwt } from "@/lib/auth/jwt";
 import { isProfileComplete } from "@/lib/auth/profileComplete";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -16,8 +20,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const normalized = String(email).toLowerCase().trim();
+    const ip = clientIpFromRequest(req);
+    const ipLimit = checkRateLimit({
+      key: `login:ip:${ip}`,
+      limit: 30,
+      windowMs: 15 * 60 * 1000,
+    });
+    const emailLimit = checkRateLimit({
+      key: `login:email:${normalized}`,
+      limit: 10,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.ok || !emailLimit.ok) {
+      const retry = Math.max(
+        !ipLimit.ok ? ipLimit.retryAfterSec : 0,
+        !emailLimit.ok ? emailLimit.retryAfterSec : 0,
+      );
+      return NextResponse.json(
+        { message: "Too many login attempts. Try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(retry || 60) },
+        },
+      );
+    }
+
     await connectDB();
-    const user = await User.findOne({ email: String(email).toLowerCase().trim() });
+    const user = await User.findOne({ email: normalized });
 
     if (!user) {
       return NextResponse.json(

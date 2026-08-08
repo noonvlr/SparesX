@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (eligibility) {
-      const auth = requireUser(req);
+      const auth = await requireUser(req);
       if (isAuthError(auth)) return auth;
       const result = await checkRatingEligibility({
         raterId: auth.id,
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {

@@ -7,10 +7,23 @@ export type AuthSuccessPayload = {
   profileComplete?: boolean;
 };
 
+/**
+ * `next` must be a same-origin relative path (no protocol / open redirect).
+ */
+function safeNextPath(raw: string | null): string | null {
+  if (!raw) return null;
+  const next = raw.trim();
+  if (!next.startsWith("/")) return null;
+  if (next.startsWith("//")) return null;
+  if (next.includes("://")) return null;
+  if (/[\r\n\\]/.test(next)) return null;
+  return next;
+}
+
 export function getAuthNextPath(): string | null {
   if (typeof window === "undefined") return null;
   const params = new URLSearchParams(window.location.search);
-  return params.get("next");
+  return safeNextPath(params.get("next"));
 }
 
 /**
@@ -25,9 +38,7 @@ export function resolvePostAuthPath(data: AuthSuccessPayload): string {
   }
 
   if (data.profileComplete === false) {
-    const q = next
-      ? `?next=${encodeURIComponent(next)}`
-      : "";
+    const q = next ? `?next=${encodeURIComponent(next)}` : "";
     return `/complete-profile${q}`;
   }
 

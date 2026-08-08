@@ -76,7 +76,7 @@ export async function GET(
   }
 }
 
-/** Add a user-entered model to the brand catalog (authenticated users). */
+/** Add a model to the brand catalog (admin only). */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
@@ -90,6 +90,16 @@ export async function POST(
     const payload = verifyJwt(token);
     if (!payload?.id) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+    const actor = await (
+      await import("@/lib/models/User")
+    ).User.findById(payload.id)
+      .select("role isBlocked")
+      .lean();
+    if (!actor || actor.isBlocked || actor.role !== "admin") {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     const { slug } = await params;
@@ -111,8 +121,6 @@ export async function POST(
         { status: 400 },
       );
     }
-
-    await connectDB();
 
     const brand = await CategoryBrand.findOne({
       slug: slug.toLowerCase(),

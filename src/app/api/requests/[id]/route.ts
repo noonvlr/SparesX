@@ -11,7 +11,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const user = requireUser(req);
+  const user = await requireUser(req);
   if (isAuthError(user)) return user;
 
   try {
@@ -37,7 +37,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const user = requireUser(req);
+  const user = await requireUser(req);
   if (isAuthError(user)) return user;
 
   try {
@@ -99,7 +99,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const user = requireUser(req);
+  const user = await requireUser(req);
   if (isAuthError(user)) return user;
 
   try {

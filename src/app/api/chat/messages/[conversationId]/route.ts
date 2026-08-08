@@ -6,7 +6,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ conversationId: string }> },
 ) {
-  const user = requireUser(req);
+  const user = await requireUser(req);
   if (isAuthError(user)) return user;
 
   try {

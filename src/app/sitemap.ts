@@ -4,6 +4,7 @@ import { Product } from "@/lib/models/Product";
 import { SITE_URL } from "@/lib/seo/site";
 
 const PRODUCT_LIMIT = 20000;
+const PARTS_HUB_LIMIT = 2000;
 
 const staticRoutes = [
   { path: "", priority: 1.0, changeFrequency: "daily" as const },
@@ -32,6 +33,14 @@ const staticRoutes = [
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" as const },
 ];
 
+function slugifySegment(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
     url: `${SITE_URL}${route.path}`,
@@ -55,7 +64,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     }));
 
-    return [...staticEntries, ...productEntries];
+    // Inventory-backed /parts hubs only (skip empty combinations)
+    const partHubs = await Product.aggregate<{
+      _id: {
+        partType?: string;
+        brand?: string;
+        deviceModel?: string;
+      };
+      updatedAt: Date;
+    }>([
+      { $match: { status: "approved" } },
+      {
+        $group: {
+          _id: {
+            partType: "$partType",
+            brand: "$brand",
+            deviceModel: "$deviceModel",
+          },
+          updatedAt: { $max: "$updatedAt" },
+        },
+      },
+      { $sort: { updatedAt: -1 } },
+      { $limit: PARTS_HUB_LIMIT },
+    ]);
+
+    const partsEntries: MetadataRoute.Sitemap = [];
+    for (const hub of partHubs) {
+      const category = slugifySegment(String(hub._id.partType || ""));
+      const brand = slugifySegment(String(hub._id.brand || ""));
+      const model = slugifySegment(String(hub._id.deviceModel || ""));
+      if (!category || !brand || !model) continue;
+      partsEntries.push({
+        url: `${SITE_URL}/parts/${category}/${brand}/${model}`,
+        lastModified: hub.updatedAt || new Date(),
+        changeFrequency: "weekly",
+        priority: 0.7,
+      });
+    }
+
+    return [...staticEntries, ...productEntries, ...partsEntries];
   } catch (error) {
     console.error("Error generating sitemap:", error);
     return staticEntries;

@@ -11,7 +11,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {
@@ -63,7 +63,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {
@@ -140,7 +140,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {

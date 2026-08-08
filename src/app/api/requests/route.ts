@@ -85,8 +85,21 @@ export async function GET(req: NextRequest) {
       .lean();
 
     const sanitized = requests.map((item) => {
-      if (payload || mine) return item;
-      const { email, phone, ...rest } = item as any;
+      const row = item as {
+        email?: string;
+        phone?: string;
+        userId?: unknown;
+      };
+      const isOwner =
+        !!payload?.id && String(row.userId) === String(payload.id);
+      const isAdmin = payload?.role === "admin";
+      if (isOwner || isAdmin || mine) {
+        return item;
+      }
+      const { email, phone, ...rest } = row as Record<string, unknown> & {
+        email?: string;
+        phone?: string;
+      };
       return {
         ...rest,
         email: undefined,

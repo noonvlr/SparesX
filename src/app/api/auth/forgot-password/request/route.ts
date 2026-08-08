@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { sendOtpEmail } from "@/lib/services/otpMailer";
-import crypto from "crypto";
+import { generateOtp, hashOtp } from "@/lib/security/secrets";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
 
 const OTP_EXPIRY = 10 * 60 * 1000; // 10 minutes
 
@@ -27,19 +31,30 @@ export async function POST(req: NextRequest) {
     }
 
     const normalized = String(email).toLowerCase().trim();
+    const ip = clientIpFromRequest(req);
+    const ipLimit = checkRateLimit({
+      key: `reset-req:ip:${ip}`,
+      limit: 10,
+      windowMs: 15 * 60 * 1000,
+    });
+    const emailLimit = checkRateLimit({
+      key: `reset-req:email:${normalized}`,
+      limit: 5,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.ok || !emailLimit.ok) {
+      return NextResponse.json(GENERIC_OK, { status: 200 });
+    }
+
     const user = await User.findOne({ email: normalized });
 
-    // Always return the same message (anti-enumeration)
     if (!user || !user.password) {
       return NextResponse.json(GENERIC_OK, { status: 200 });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
-    const otpExpiry = new Date(Date.now() + OTP_EXPIRY);
-
-    user.passwordResetOTP = otpHash;
-    user.passwordResetOTPExpiry = otpExpiry;
+    const otp = generateOtp();
+    user.passwordResetOTP = hashOtp(otp);
+    user.passwordResetOTPExpiry = new Date(Date.now() + OTP_EXPIRY);
     await user.save();
 
     const emailResult = await sendOtpEmail({
@@ -53,9 +68,8 @@ export async function POST(req: NextRequest) {
 
     if (!emailResult.ok) {
       console.warn(
-        `[PASSWORD RESET] Email failed for ${normalized}: ${emailResult.message}`,
+        `[PASSWORD RESET] Email failed for user ${String(user._id)}: ${emailResult.message}`,
       );
-      // Still generic — don't leak delivery failures tied to account existence
       return NextResponse.json(GENERIC_OK, { status: 200 });
     }
 

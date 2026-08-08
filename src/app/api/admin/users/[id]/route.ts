@@ -8,25 +8,33 @@ import {
   MAX_ABOUT_LENGTH,
   parseContactFields,
 } from "@/lib/validation/userContact";
+import {
+  sanitizeUserForClient,
+  USER_CLIENT_EXCLUDE,
+} from "@/lib/auth/publicUser";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {
     await connectDB();
     const { id } = await params;
 
-    const user = await User.findById(id).select("-password").lean();
+    const user = await User.findById(id).select(USER_CLIENT_EXCLUDE).lean();
 
     if (!user) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ user });
+    return NextResponse.json({
+      user: sanitizeUserForClient(user, {
+        includeHasPassword: false,
+      }),
+    });
   } catch {
     return NextResponse.json(
       { message: "Failed to fetch user" },
@@ -39,7 +47,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {
@@ -247,7 +255,7 @@ export async function PATCH(
       id,
       { $set: updateData },
       { new: true, runValidators: true },
-    ).select("-password");
+    ).select(USER_CLIENT_EXCLUDE);
 
     if (!updatedUser) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
@@ -255,11 +263,13 @@ export async function PATCH(
 
     const { recomputeUserBadges } = await import("@/lib/badges/engine");
     const trust = await recomputeUserBadges(id);
-    const fresh = await User.findById(id).select("-password");
+    const fresh = await User.findById(id).select(USER_CLIENT_EXCLUDE);
 
     return NextResponse.json({
       message: "User updated successfully",
-      user: fresh || updatedUser,
+      user: sanitizeUserForClient(fresh || updatedUser, {
+        includeHasPassword: false,
+      }),
       trust,
     });
   } catch {
@@ -274,7 +284,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const admin = requireAdmin(request);
+  const admin = await requireAdmin(request);
   if (isAdminError(admin)) return admin;
 
   try {

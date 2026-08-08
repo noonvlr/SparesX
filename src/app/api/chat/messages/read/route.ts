@@ -3,7 +3,7 @@ import { markConversationRead } from "@/lib/chat/chatService";
 import { errorResponse, isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 export async function PATCH(req: NextRequest) {
-  const user = requireUser(req);
+  const user = await requireUser(req);
   if (isAuthError(user)) return user;
 
   try {

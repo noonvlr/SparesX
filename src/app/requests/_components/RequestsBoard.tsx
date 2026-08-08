@@ -134,7 +134,11 @@ export default function RequestsBoard({
         )}`;
         return;
       }
-      alert("No contact details available for this request.");
+      alert(
+        request.hasContact
+          ? "Contact details are private. Use SparesX chat or ask the requester to share WhatsApp after you connect."
+          : "No contact details available for this request.",
+      );
       return;
     }
 

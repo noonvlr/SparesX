@@ -50,7 +50,8 @@ export async function generateMetadata({
     const { product } = data;
     // Canonical always points at the slug form so /product/<id> doesn't compete.
     const canonicalUrl = productUrl(product);
-    const productImage = product.images?.[0] || "/og-image.jpg";
+    const productImageRaw = product.images?.[0] || "/og-image.jpg";
+    const productImage = absoluteUrl(productImageRaw);
     const pageTitle = buildProductSeoTitle(product);
     const heading = formatProductHeading(product);
     const description = buildProductSeoDescription(product);
@@ -139,7 +140,7 @@ export default async function ProductSlugPage({
   const heading = formatProductHeading(product);
   const partTypeLabel = formatPartTypeLabel(product.partType) || "Spare Parts";
   const images = Array.isArray(product.images)
-    ? product.images.filter(Boolean)
+    ? product.images.filter(Boolean).map((src: string) => absoluteUrl(src))
     : [];
   const isSold = product.status === "sold";
 

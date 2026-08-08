@@ -10,7 +10,9 @@ export function signJwt(user: Pick<IUser, '_id' | 'role'>) {
 
 export function verifyJwt(token: string) {
   try {
-    return jwt.verify(token, JWT_SECRET) as { id: string; role: string };
+    return jwt.verify(token, JWT_SECRET, {
+      algorithms: ["HS256"],
+    }) as { id: string; role: string };
   } catch {
     return null;
   }

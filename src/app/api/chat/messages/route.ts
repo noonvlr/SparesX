@@ -4,7 +4,7 @@ import { errorResponse, isAuthError, requireUser } from "@/lib/auth/requireUser"
 
 /** REST fallback for sending when socket is unavailable. */
 export async function POST(req: NextRequest) {
-  const user = requireUser(req);
+  const user = await requireUser(req);
   if (isAuthError(user)) return user;
 
   try {

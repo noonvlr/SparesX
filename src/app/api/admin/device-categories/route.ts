@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = requireAdmin(req);
+    const admin = await requireAdmin(req);
     if (isAdminError(admin)) return admin;
 
     await connectDB();

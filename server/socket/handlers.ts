@@ -9,6 +9,7 @@ import {
   markMessagesDelivered,
   updateLastSeen,
   getTotalUnread,
+  assertParticipant,
 } from "../../src/lib/chat/chatService";
 import {
   addSocket,
@@ -82,10 +83,12 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
         ack?.({ ok: false, message: "conversationId required" });
         return;
       }
+
+      // Membership first — only then join room / mark viewing
+      const result = await markConversationRead({ conversationId, userId });
       setViewing(userId, conversationId);
       socket.join(`conv:${conversationId}`);
 
-      const result = await markConversationRead({ conversationId, userId });
       for (const peerId of result.peerIds) {
         io.to(peerId).emit("message-read", {
           conversationId,
@@ -213,16 +216,40 @@ export function registerSocketHandlers(io: Server, socket: Socket) {
     }
   });
 
-  socket.on("typing-start", (payload) => {
+  socket.on("typing-start", async (payload) => {
     const { conversationId, peerId } = payload || {};
-    if (!peerId) return;
-    io.to(peerId).emit("typing", { conversationId, userId });
+    if (!peerId || !conversationId) return;
+    try {
+      const { Conversation } = await import("../../src/lib/models/Conversation");
+      const { connectDB } = await import("../../src/lib/db/connect");
+      await connectDB();
+      const conv = await Conversation.findById(conversationId)
+        .select("participants")
+        .lean();
+      if (!conv || !assertParticipant(conv as any, userId)) return;
+      if (!assertParticipant(conv as any, peerId)) return;
+      io.to(peerId).emit("typing", { conversationId, userId });
+    } catch {
+      // ignore typing failures
+    }
   });
 
-  socket.on("typing-stop", (payload) => {
+  socket.on("typing-stop", async (payload) => {
     const { conversationId, peerId } = payload || {};
-    if (!peerId) return;
-    io.to(peerId).emit("stop-typing", { conversationId, userId });
+    if (!peerId || !conversationId) return;
+    try {
+      const { Conversation } = await import("../../src/lib/models/Conversation");
+      const { connectDB } = await import("../../src/lib/db/connect");
+      await connectDB();
+      const conv = await Conversation.findById(conversationId)
+        .select("participants")
+        .lean();
+      if (!conv || !assertParticipant(conv as any, userId)) return;
+      if (!assertParticipant(conv as any, peerId)) return;
+      io.to(peerId).emit("stop-typing", { conversationId, userId });
+    } catch {
+      // ignore
+    }
   });
 
   socket.on("mark-read", async (payload, ack) => {

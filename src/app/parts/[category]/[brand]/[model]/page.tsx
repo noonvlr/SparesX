@@ -39,7 +39,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   const { total } = await fetchProductList({
     category: raw.category,
-    search: `${brand} ${model}`,
+    brand,
+    deviceModel: model,
   });
 
   return {
@@ -68,7 +69,8 @@ export default async function PartsPage({ params }: Params) {
 
   const { products, total } = await fetchProductList({
     category: raw.category,
-    search: `${brand} ${model}`,
+    brand,
+    deviceModel: model,
     limit: "24",
   });
 

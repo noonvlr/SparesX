@@ -17,6 +17,7 @@ export default function ForgotPasswordForm() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [resetTicket, setResetTicket] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -85,6 +86,7 @@ export default function ForgotPasswordForm() {
 
       if (res.ok) {
         setSuccess("OTP verified successfully");
+        setResetTicket(data.resetTicket || "");
         setStep("newPassword");
       } else {
         setError(data.message || "Invalid OTP");
@@ -116,7 +118,11 @@ export default function ForgotPasswordForm() {
       const res = await fetch("/api/auth/forgot-password/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, newPassword }),
+        body: JSON.stringify({
+          email,
+          otp: resetTicket || otp,
+          newPassword,
+        }),
       });
 
       const data = await res.json();

@@ -31,7 +31,7 @@ export async function GET(_req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const admin = requireAdmin(req);
+    const admin = await requireAdmin(req);
     if (isAdminError(admin)) return admin;
 
     const body = await req.json();

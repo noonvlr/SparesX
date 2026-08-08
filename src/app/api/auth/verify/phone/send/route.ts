@@ -11,7 +11,7 @@ import {
 } from "@/lib/services/otpRateLimit";
 
 export async function POST(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   await connectDB();

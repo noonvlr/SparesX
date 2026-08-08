@@ -9,7 +9,7 @@ const PRODUCT_SELECT =
   "name price images brand partType category deviceCategory condition priceNegotiable status slug createdAt";
 
 export async function GET(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {

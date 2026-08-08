@@ -8,6 +8,10 @@ import {
   MAX_ABOUT_LENGTH,
   parseContactFields,
 } from "@/lib/validation/userContact";
+import {
+  sanitizeUserForClient,
+  USER_CLIENT_EXCLUDE,
+} from "@/lib/auth/publicUser";
 
 // Get technician profile
 export async function GET(req: NextRequest) {
@@ -21,11 +25,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
   await connectDB();
-  const user = await User.findById(payload.id).select("-password");
-  if (!user) {
+  const user = await User.findById(payload.id).select(USER_CLIENT_EXCLUDE);
+  if (!user || user.isBlocked) {
     return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
-  return NextResponse.json({ user }, { status: 200 });
+  return NextResponse.json(
+    { user: sanitizeUserForClient(user) },
+    { status: 200 },
+  );
 }
 
 // Update technician profile
@@ -141,9 +148,12 @@ export async function PUT(req: NextRequest) {
 
   await user.save();
 
-  const updatedUser = await User.findById(payload.id).select("-password");
+  const updatedUser = await User.findById(payload.id).select(USER_CLIENT_EXCLUDE);
   return NextResponse.json(
-    { message: "Profile updated", user: updatedUser },
+    {
+      message: "Profile updated",
+      user: updatedUser ? sanitizeUserForClient(updatedUser) : null,
+    },
     { status: 200 },
   );
 }

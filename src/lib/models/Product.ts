@@ -83,5 +83,7 @@ const ProductSchema: Schema<IProduct> = new Schema({
 // Create compound index for efficient filtering
 ProductSchema.index({ brand: 1, deviceModel: 1, partType: 1 });
 ProductSchema.index({ deviceCategory: 1, brand: 1 });
+ProductSchema.index({ status: 1, featured: -1, createdAt: -1 });
+ProductSchema.index({ status: 1, createdAt: -1 });
 
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);

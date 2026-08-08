@@ -11,7 +11,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const admin = requireAdmin(req);
+    const admin = await requireAdmin(req);
     if (isAdminError(admin)) return admin;
 
     const { id } = await params;
@@ -86,7 +86,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const admin = requireAdmin(req);
+    const admin = await requireAdmin(req);
     if (isAdminError(admin)) return admin;
 
     const { id } = await params;

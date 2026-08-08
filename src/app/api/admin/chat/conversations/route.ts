@@ -4,7 +4,7 @@ import { errorResponse } from "@/lib/auth/requireUser";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 
 export async function GET(req: NextRequest) {
-  const admin = requireAdmin(req);
+  const admin = await requireAdmin(req);
   if (isAdminError(admin)) return admin;
 
   try {

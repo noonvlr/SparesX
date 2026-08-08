@@ -1,75 +1,64 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/connect';
-import { User } from '@/lib/models/User';
-import { verifyJwt } from '@/lib/auth/jwt';
-import { sendOTPEmail } from '@/lib/services/emailService';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db/connect";
+import { User } from "@/lib/models/User";
+import { requireAdmin, isAdminError } from "@/lib/auth/requireAdmin";
+import { sendOTPEmail } from "@/lib/services/emailService";
+import { generateOtp, hashOtp } from "@/lib/security/secrets";
 
 const OTP_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours for admin reset
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split(' ')[1];
-    const payload = verifyJwt(token);
-
-    if (!payload || payload.role !== 'admin') {
-      return NextResponse.json({ message: 'Forbidden' }, { status: 403 });
-    }
+    const auth = await requireAdmin(request);
+    if (isAdminError(auth)) return auth;
 
     await connectDB();
     const { id } = await params;
 
     const user = await User.findById(id);
     if (!user) {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 });
+      return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
-    const otpExpiry = new Date(Date.now() + OTP_EXPIRY);
-
-    // Save OTP to user document
-    user.passwordResetOTP = otpHash;
-    user.passwordResetOTPExpiry = otpExpiry;
+    const otp = generateOtp();
+    user.passwordResetOTP = hashOtp(otp);
+    user.passwordResetOTPExpiry = new Date(Date.now() + OTP_EXPIRY);
     await user.save();
 
-    // Send OTP via email
     const emailSent = await sendOTPEmail({
       recipientEmail: user.email,
-      recipientName: user.name || user.email.split('@')[0],
+      recipientName: user.name || user.email.split("@")[0],
       otp,
-      expiryMinutes: 24 * 60, // 24 hours
+      expiryMinutes: 24 * 60,
     });
 
-    // Log the result
     if (!emailSent) {
-      console.warn(`[ADMIN PASSWORD RESET] Email failed for ${user.email}. OTP: ${otp}`);
+      console.warn(
+        `[ADMIN PASSWORD RESET] Email delivery failed for user ${String(user._id)}`,
+      );
     } else {
-      console.log(`[ADMIN PASSWORD RESET] OTP sent to ${user.email}`);
+      console.log(
+        `[ADMIN PASSWORD RESET] OTP email dispatched for user ${String(user._id)}`,
+      );
     }
 
     return NextResponse.json(
-      { 
-        message: 'Password reset OTP sent to user email',
-        // For development only - remove in production
-        _dev_otp: process.env.NODE_ENV === 'development' ? otp : undefined
+      {
+        message: emailSent
+          ? "Password reset OTP sent to user email"
+          : "OTP generated but email delivery failed. Ask the user to use forgot-password or retry.",
+        emailSent: !!emailSent,
       },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
-    console.error('Error resetting password:', error);
+    console.error("Error resetting password:", error);
     return NextResponse.json(
-      { message: 'Failed to reset password' },
-      { status: 500 }
+      { message: "Failed to reset password" },
+      { status: 500 },
     );
   }
 }

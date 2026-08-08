@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/connect';
-import { User } from '@/lib/models/User';
-import { hashPassword } from '@/lib/utils/hash';
-import { sendPasswordResetSuccessEmail } from '@/lib/services/emailService';
-import crypto from 'crypto';
+import { NextRequest, NextResponse } from "next/server";
+import { connectDB } from "@/lib/db/connect";
+import { User } from "@/lib/models/User";
+import { hashPassword } from "@/lib/utils/hash";
+import { sendPasswordResetSuccessEmail } from "@/lib/services/emailService";
+import { hashOtp } from "@/lib/security/secrets";
+import {
+  checkRateLimit,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
+
+const GENERIC_FAIL = { message: "Invalid or expired verification code" };
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,72 +19,68 @@ export async function POST(req: NextRequest) {
 
     if (!email || !otp || !newPassword) {
       return NextResponse.json(
-        { message: 'Email, OTP, and new password are required' },
-        { status: 400 }
+        { message: "Email, OTP, and new password are required" },
+        { status: 400 },
       );
     }
 
-    if (newPassword.length < 6) {
+    if (String(newPassword).length < 6) {
       return NextResponse.json(
-        { message: 'Password must be at least 6 characters' },
-        { status: 400 }
+        { message: "Password must be at least 6 characters" },
+        { status: 400 },
       );
     }
 
-    const user = await User.findOne({ email });
-    if (!user) {
+    const normalized = String(email).toLowerCase().trim();
+    const ip = clientIpFromRequest(req);
+    const attemptLimit = checkRateLimit({
+      key: `reset-done:${ip}:${normalized}`,
+      limit: 8,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!attemptLimit.ok) {
       return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
+        { message: "Too many attempts. Try again later." },
+        { status: 429 },
       );
     }
 
-    // Verify OTP one more time
-    if (!user.passwordResetOTP || !user.passwordResetOTPExpiry) {
-      return NextResponse.json(
-        { message: 'No OTP requested for this email' },
-        { status: 400 }
-      );
+    const user = await User.findOne({ email: normalized });
+    if (
+      !user ||
+      !user.passwordResetOTP ||
+      !user.passwordResetOTPExpiry ||
+      new Date() > new Date(user.passwordResetOTPExpiry)
+    ) {
+      return NextResponse.json(GENERIC_FAIL, { status: 400 });
     }
 
-    if (new Date() > new Date(user.passwordResetOTPExpiry)) {
-      return NextResponse.json(
-        { message: 'OTP has expired' },
-        { status: 400 }
-      );
-    }
-
-    const otpHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const otpHash = hashOtp(String(otp));
     if (otpHash !== user.passwordResetOTP) {
-      return NextResponse.json(
-        { message: 'Invalid OTP' },
-        { status: 400 }
-      );
+      return NextResponse.json(GENERIC_FAIL, { status: 400 });
     }
 
-    // Reset password
-    user.password = await hashPassword(newPassword);
+    user.password = await hashPassword(String(newPassword));
     user.passwordResetOTP = undefined;
     user.passwordResetOTPExpiry = undefined;
     await user.save();
 
-    // Send success notification email (non-blocking)
     sendPasswordResetSuccessEmail({
       recipientEmail: user.email,
-      recipientName: user.name || user.email.split('@')[0],
+      recipientName: user.name || user.email.split("@")[0],
     }).catch((error) => {
-      console.error('Failed to send password reset success email:', error);
+      console.error("Failed to send password reset success email:", error);
     });
 
     return NextResponse.json(
-      { message: 'Password reset successfully' },
-      { status: 200 }
+      { message: "Password reset successfully" },
+      { status: 200 },
     );
   } catch (error) {
-    console.error('Error resetting password:', error);
+    console.error("Error resetting password:", error);
     return NextResponse.json(
-      { message: 'Failed to reset password' },
-      { status: 500 }
+      { message: "Failed to reset password" },
+      { status: 500 },
     );
   }
 }

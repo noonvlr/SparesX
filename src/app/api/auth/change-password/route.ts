@@ -7,7 +7,7 @@ import { validatePassword } from "@/lib/validation/userContact";
 
 /** POST /api/auth/change-password — set or change own password */
 export async function POST(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {

@@ -7,7 +7,7 @@ import { loadSmsRuntimeConfig } from "@/lib/services/sms";
 import { startTwilioVerify } from "@/lib/services/sms/providers/twilio";
 
 export async function POST(req: NextRequest) {
-  const auth = requireAdmin(req);
+  const auth = await requireAdmin(req);
   if (isAdminError(auth)) return auth;
 
   const { mobile, countryCode } = await req.json();

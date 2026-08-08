@@ -5,7 +5,7 @@ import { requireUser, isAuthError } from "@/lib/auth/requireUser";
 import { hashOtp } from "@/lib/security/secrets";
 
 export async function POST(req: NextRequest) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   const { otp } = await req.json();

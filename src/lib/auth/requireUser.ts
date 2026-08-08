@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
+import { connectDB } from "@/lib/db/connect";
+import { User } from "@/lib/models/User";
 
 export type AuthUser = { id: string; role: string };
 
-export function requireUser(
+/**
+ * Authenticate Bearer JWT and re-validate against DB (blocked + current role).
+ */
+export async function requireUser(
   req: NextRequest,
-): AuthUser | NextResponse {
+): Promise<AuthUser | NextResponse> {
   const authHeader = req.headers.get("authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -14,7 +19,14 @@ export function requireUser(
   if (!payload?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
-  return payload;
+
+  await connectDB();
+  const user = await User.findById(payload.id).select("isBlocked role").lean();
+  if (!user || user.isBlocked) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  return { id: String(user._id), role: String(user.role) };
 }
 
 export function isAuthError(

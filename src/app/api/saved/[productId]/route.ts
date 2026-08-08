@@ -8,7 +8,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ productId: string }> },
 ) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {
@@ -42,7 +42,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ productId: string }> },
 ) {
-  const auth = requireUser(req);
+  const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
   try {
