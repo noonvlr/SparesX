@@ -337,8 +337,40 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- *(none blocking — phases 11–24 closed the audit remediation track)*
-- Optional ops: run `npm run backfill:catalog-refs` on production data; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX` when infrastructure is ready
+- *(none blocking — phases 11–32 closed the audit remediation track)*
+- Optional ops: run `npm run backfill:catalog-refs` on production data; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX`, `OTP_PEPPER` when ready
+
+### Phase 25 additions
+
+- Stop plaintext OTP logging in `emailService`; admin password reset uses `otpMailer`
+
+### Phase 26 additions
+
+- Export `safeNextPath`; complete-profile honors allowlisted `?next=` only
+
+### Phase 27 additions
+
+- Next.js middleware gates `/admin/*` on session/refresh/auth-flag cookies (APIs still `requireAdmin`)
+
+### Phase 28 additions
+
+- Chat send/create limits use Mongo `checkRateLimitAsync` (shared across instances)
+
+### Phase 29 additions
+
+- Peppered HMAC OTP hashes + `verifyOtp` with timing-safe compare (legacy unsalted hashes still accepted)
+
+### Phase 30 additions
+
+- Auth JSON no longer returns `token` (cookie-only session)
+
+### Phase 31 additions
+
+- Short-lived access JWT (1h) + rotating HttpOnly `sparesx_refresh` (7d); `/api/auth/refresh`; `authFetch` silent refresh on 401
+
+### Phase 32 additions
+
+- Google refuses auto-link onto any password account; authenticated `/api/auth/google/link` + profile Link Google UI
 
 ### Phase 21 additions
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
-import { hashOtp } from "@/lib/security/secrets";
+import { hashOtp, verifyOtp } from "@/lib/security/secrets";
 import {
   checkRateLimitAsync,
   clientIpFromRequest,
@@ -46,8 +46,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(GENERIC_FAIL, { status: 400 });
     }
 
-    const otpHash = hashOtp(String(otp));
-    if (otpHash !== user.passwordResetOTP) {
+    if (!verifyOtp(String(otp), user.passwordResetOTP)) {
       return NextResponse.json(GENERIC_FAIL, { status: 400 });
     }
 

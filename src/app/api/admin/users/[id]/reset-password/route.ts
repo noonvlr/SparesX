@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { requireAdmin, isAdminError } from "@/lib/auth/requireAdmin";
-import { sendOTPEmail } from "@/lib/services/emailService";
+import { sendOtpEmail } from "@/lib/services/otpMailer";
 import { generateOtp, hashOtp } from "@/lib/security/secrets";
 
 const OTP_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours for admin reset
@@ -28,16 +28,18 @@ export async function POST(
     user.passwordResetOTPExpiry = new Date(Date.now() + OTP_EXPIRY);
     await user.save();
 
-    const emailSent = await sendOTPEmail({
+    const emailResult = await sendOtpEmail({
       recipientEmail: user.email,
       recipientName: user.name || user.email.split("@")[0],
       otp,
+      subject: "Password Reset Verification Code - SparesX",
       expiryMinutes: 24 * 60,
+      purpose: "password-reset",
     });
 
-    if (!emailSent) {
+    if (!emailResult.ok) {
       console.warn(
-        `[ADMIN PASSWORD RESET] Email delivery failed for user ${String(user._id)}`,
+        `[ADMIN PASSWORD RESET] Email delivery failed for user ${String(user._id)}: ${emailResult.message}`,
       );
     } else {
       console.log(
@@ -47,10 +49,10 @@ export async function POST(
 
     return NextResponse.json(
       {
-        message: emailSent
+        message: emailResult.ok
           ? "Password reset OTP sent to user email"
           : "OTP generated but email delivery failed. Ask the user to use forgot-password or retry.",
-        emailSent: !!emailSent,
+        emailSent: emailResult.ok,
       },
       { status: 200 },
     );

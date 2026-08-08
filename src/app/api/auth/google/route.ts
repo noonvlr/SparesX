@@ -13,7 +13,7 @@ function getGoogleClientId() {
   );
 }
 
-/** POST /api/auth/google — exchange Google ID token for SparesX JWT */
+/** POST /api/auth/google — exchange Google ID token for SparesX session */
 export async function POST(req: NextRequest) {
   try {
     const clientId = getGoogleClientId();
@@ -60,19 +60,19 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    let user =
-      (await User.findOne({ googleId })) || null;
+    let user = (await User.findOne({ googleId })) || null;
 
     if (!user) {
       const byEmail = await User.findOne({ email });
       if (byEmail) {
-        // Prevent pre-account takeover: do not auto-link Google onto an
-        // unverified local password account created by someone else.
-        if (byEmail.password && !byEmail.emailVerified && !byEmail.googleId) {
+        // Never auto-link Google onto a password account — require explicit
+        // link while signed in (POST /api/auth/google/link).
+        if (byEmail.password && !byEmail.googleId) {
           return NextResponse.json(
             {
               message:
-                "An account with this email already exists. Sign in with your password and verify your email before linking Google.",
+                "An account with this email already exists. Sign in with your password, then link Google from your profile.",
+              code: "PASSWORD_ACCOUNT_EXISTS",
             },
             { status: 409 },
           );
@@ -116,7 +116,6 @@ export async function POST(req: NextRequest) {
         user.authProvider = "google";
         dirty = true;
       }
-      // Keep local password accounts as local but allow Google link
       if (!user.emailVerified) {
         user.emailVerified = true;
         user.emailVerifiedAt = new Date();
@@ -129,7 +128,7 @@ export async function POST(req: NextRequest) {
       if (dirty) await user.save();
     }
 
-    const token = signJwt({
+    const accessToken = signJwt({
       _id: user._id,
       role: user.role,
       sessionVersion: user.sessionVersion || 0,
@@ -137,7 +136,6 @@ export async function POST(req: NextRequest) {
     const { applyAuthCookies } = await import("@/lib/auth/cookies");
     const res = NextResponse.json(
       {
-        token,
         role: user.role,
         name: user.name,
         emailVerified: !!user.emailVerified,
@@ -147,7 +145,10 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
-    applyAuthCookies(res, token);
+    await applyAuthCookies(res, accessToken, {
+      userId: String(user._id),
+      userAgent: req.headers.get("user-agent"),
+    });
     return res;
   } catch (error) {
     console.error("Google auth error:", error);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { requireUser, isAuthError } from "@/lib/auth/requireUser";
-import { hashOtp } from "@/lib/security/secrets";
+import { verifyOtp } from "@/lib/security/secrets";
 import {
   confirmTwilioVerifyOtp,
   TWILIO_VERIFY_SENTINEL,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-  } else if (user.phoneVerifyOTP !== hashOtp(code)) {
+  } else if (!verifyOtp(code, user.phoneVerifyOTP)) {
     return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
   }
 

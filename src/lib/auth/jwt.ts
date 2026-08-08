@@ -4,6 +4,9 @@ import type { IUser } from "../models/User";
 const JWT_SECRET = process.env.JWT_SECRET as string;
 if (!JWT_SECRET) throw new Error("JWT_SECRET not set");
 
+/** Access token TTL — refresh cookie covers longer sessions. */
+export const ACCESS_TOKEN_EXPIRES_IN = "1h";
+
 export type JwtPayload = {
   id: string;
   role: string;
@@ -13,6 +16,7 @@ export type JwtPayload = {
 
 export function signJwt(
   user: Pick<IUser, "_id" | "role"> & { sessionVersion?: number },
+  expiresIn: string | number = ACCESS_TOKEN_EXPIRES_IN,
 ) {
   const payload: JwtPayload = {
     id: String(user._id),
@@ -20,7 +24,7 @@ export function signJwt(
     sv: typeof user.sessionVersion === "number" ? user.sessionVersion : 0,
   };
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: "7d",
+    expiresIn: expiresIn as jwt.SignOptions["expiresIn"],
     algorithm: "HS256",
   });
 }

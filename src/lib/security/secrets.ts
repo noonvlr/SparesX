@@ -62,8 +62,45 @@ export function maskSecret(value: string | undefined | null): string {
   return `••••${plain.slice(-4)}`;
 }
 
+function otpPepper(): string {
+  return (
+    process.env.OTP_PEPPER ||
+    process.env.JWT_SECRET ||
+    "sparesx-otp-pepper-fallback"
+  );
+}
+
+function digestEqual(aHex: string, bHex: string): boolean {
+  try {
+    const a = Buffer.from(aHex, "hex");
+    const b = Buffer.from(bHex, "hex");
+    if (a.length !== b.length || a.length === 0) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
+}
+
+/** HMAC-SHA256 OTP digest (pepper from OTP_PEPPER or JWT_SECRET). */
 export function hashOtp(otp: string): string {
-  return crypto.createHash("sha256").update(otp).digest("hex");
+  return crypto
+    .createHmac("sha256", otpPepper())
+    .update(String(otp))
+    .digest("hex");
+}
+
+function legacyHashOtp(otp: string): string {
+  return crypto.createHash("sha256").update(String(otp)).digest("hex");
+}
+
+/** Constant-time compare; accepts peppered or legacy unsalted hashes. */
+export function verifyOtp(
+  otp: string,
+  storedHash: string | undefined | null,
+): boolean {
+  if (!storedHash) return false;
+  if (digestEqual(hashOtp(otp), String(storedHash))) return true;
+  return digestEqual(legacyHashOtp(otp), String(storedHash));
 }
 
 export function generateOtp(): string {

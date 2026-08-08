@@ -226,8 +226,10 @@ export async function sendOTPEmail({
 
     // If transporter is not available, log and return false
     if (!transporter) {
-      console.warn('Email service not configured. OTP:', otp);
-      console.warn('Email would be sent to:', recipientEmail);
+      console.warn(
+        "Email service not configured. OTP email not sent to:",
+        recipientEmail,
+      );
       return false;
     }
 
@@ -243,9 +245,7 @@ export async function sendOTPEmail({
     console.log('Email sent successfully:', info.messageId);
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
-    // Log OTP for development fallback
-    console.warn('OTP (fallback logging):', otp);
+    console.error("Error sending email:", error);
     return false;
   }
 }

@@ -10,7 +10,7 @@ export type AuthSuccessPayload = {
 /**
  * `next` must be a same-origin relative path (no protocol / open redirect).
  */
-function safeNextPath(raw: string | null): string | null {
+export function safeNextPath(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const next = raw.trim();
   if (!next.startsWith("/")) return null;

@@ -30,6 +30,7 @@ export function sanitizeUserForClient(
       : { ...(user as Record<string, unknown>) };
 
   const hasPassword = Boolean(raw.password);
+  const googleLinked = Boolean(raw.googleId);
   for (const key of SECRET_KEYS) {
     delete raw[key];
   }
@@ -38,6 +39,7 @@ export function sanitizeUserForClient(
   if (options?.includeHasPassword !== false) {
     out.hasPassword = hasPassword;
   }
+  out.googleLinked = googleLinked;
   try {
     out.profileComplete = isProfileComplete(user as IUser);
   } catch {

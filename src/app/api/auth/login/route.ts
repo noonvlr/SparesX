@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token = signJwt({
+    const accessToken = signJwt({
       _id: user._id,
       role: user.role,
       sessionVersion: user.sessionVersion || 0,
@@ -90,7 +90,6 @@ export async function POST(req: NextRequest) {
     const { applyAuthCookies } = await import("@/lib/auth/cookies");
     const res = NextResponse.json(
       {
-        token,
         role: user.role,
         name: user.name,
         emailVerified: !!user.emailVerified,
@@ -99,7 +98,10 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
-    applyAuthCookies(res, token);
+    await applyAuthCookies(res, accessToken, {
+      userId: String(user._id),
+      userAgent: req.headers.get("user-agent"),
+    });
     return res;
   } catch {
     return NextResponse.json({ message: "Server error" }, { status: 500 });

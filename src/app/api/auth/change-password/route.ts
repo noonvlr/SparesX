@@ -33,27 +33,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
+    const { signJwt } = await import("@/lib/auth/jwt");
+    const { applyAuthCookies } = await import("@/lib/auth/cookies");
+    const { revokeAllRefreshTokensForUser } = await import(
+      "@/lib/auth/refreshTokens"
+    );
+
     // Google / passwordless accounts: first-time set (no current password)
     if (!user.password) {
       user.password = await hashPassword(newPassword);
       user.sessionVersion = (user.sessionVersion || 0) + 1;
       await user.save();
-      const { signJwt } = await import("@/lib/auth/jwt");
-      const { applyAuthCookies } = await import("@/lib/auth/cookies");
-      const token = signJwt({
+      await revokeAllRefreshTokensForUser(String(user._id));
+      const accessToken = signJwt({
         _id: user._id,
         role: user.role,
         sessionVersion: user.sessionVersion,
       });
       const res = NextResponse.json(
         {
-          message: "Password set successfully. You can now also sign in with email.",
+          message:
+            "Password set successfully. You can now also sign in with email.",
           hasPassword: true,
-          token,
         },
         { status: 200 },
       );
-      applyAuthCookies(res, token);
+      await applyAuthCookies(res, accessToken, {
+        userId: String(user._id),
+        userAgent: req.headers.get("user-agent"),
+      });
       return res;
     }
 
@@ -82,10 +90,9 @@ export async function POST(req: NextRequest) {
     user.password = await hashPassword(newPassword);
     user.sessionVersion = (user.sessionVersion || 0) + 1;
     await user.save();
+    await revokeAllRefreshTokensForUser(String(user._id));
 
-    const { signJwt } = await import("@/lib/auth/jwt");
-    const { applyAuthCookies } = await import("@/lib/auth/cookies");
-    const token = signJwt({
+    const accessToken = signJwt({
       _id: user._id,
       role: user.role,
       sessionVersion: user.sessionVersion,
@@ -95,11 +102,13 @@ export async function POST(req: NextRequest) {
       {
         message: "Password updated successfully",
         hasPassword: true,
-        token,
       },
       { status: 200 },
     );
-    applyAuthCookies(res, token);
+    await applyAuthCookies(res, accessToken, {
+      userId: String(user._id),
+      userAgent: req.headers.get("user-agent"),
+    });
     return res;
   } catch (error) {
     return errorResponse(error);

@@ -41,7 +41,7 @@ export default function GoogleSignInButton({
           return;
         }
 
-        if (data.token) setAccessToken(data.token);
+        setAccessToken();
         showToast("Signed in with Google");
 
         if (data.profileComplete === false) {

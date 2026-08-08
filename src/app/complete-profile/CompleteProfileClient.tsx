@@ -17,6 +17,7 @@ import {
   Textarea,
 } from "@/components/ui";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { safeNextPath } from "@/lib/auth/postAuthRedirect";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -27,7 +28,7 @@ const COUNTRY_CODES = [
 export default function CompleteProfileClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get("next");
+  const next = safeNextPath(searchParams.get("next"));
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

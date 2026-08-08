@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { hashPassword } from "@/lib/utils/hash";
 import { sendPasswordResetSuccessEmail } from "@/lib/services/emailService";
-import { hashOtp } from "@/lib/security/secrets";
+import { verifyOtp } from "@/lib/security/secrets";
 import {
   checkRateLimitAsync,
   clientIpFromRequest,
@@ -55,8 +55,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(GENERIC_FAIL, { status: 400 });
     }
 
-    const otpHash = hashOtp(String(otp));
-    if (otpHash !== user.passwordResetOTP) {
+    if (!verifyOtp(String(otp), user.passwordResetOTP)) {
       return NextResponse.json(GENERIC_FAIL, { status: 400 });
     }
 

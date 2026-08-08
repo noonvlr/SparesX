@@ -20,6 +20,7 @@ import { LoadingState } from "@/components/feedback";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { authFetch, setAccessToken, isLoggedInClient } from "@/lib/auth/clientAuth";
+import GoogleLinkButton from "@/components/GoogleLinkButton";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -402,9 +403,7 @@ export default function TechnicianProfilePage() {
         showToast(data.message || "Could not update password", "error");
         return;
       }
-      if (data.token) {
-        setAccessToken(data.token);
-      }
+      setAccessToken();
       setPwCurrent("");
       setPwNew("");
       setPwConfirm("");
@@ -784,6 +783,25 @@ export default function TechnicianProfilePage() {
                 : "Add a password so you can also sign in with email (Google Sign-In still works). Minimum 6 characters."
             }
           >
+            {profile?.googleLinked ? (
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Google Sign-In is linked to this account.
+              </p>
+            ) : (
+              <div className="mb-6 space-y-2">
+                <p className="text-sm text-[var(--muted)]">
+                  Link Google using the same email as this account. Password
+                  accounts are never auto-linked on the login page.
+                </p>
+                <GoogleLinkButton
+                  onLinked={() =>
+                    setProfile((p: Record<string, unknown> | null) =>
+                      p ? { ...p, googleLinked: true } : p,
+                    )
+                  }
+                />
+              </div>
+            )}
             <form onSubmit={handlePasswordChange} className="space-y-4 max-w-xl">
               {profile?.hasPassword ? (
                 <Field label="Current password">

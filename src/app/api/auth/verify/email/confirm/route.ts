@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { requireUser, isAuthError } from "@/lib/auth/requireUser";
-import { hashOtp } from "@/lib/security/secrets";
+import { verifyOtp } from "@/lib/security/secrets";
 
 export async function POST(req: NextRequest) {
   const auth = await requireUser(req);
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (user.emailVerifyOTP !== hashOtp(String(otp).trim())) {
+  if (!verifyOtp(String(otp).trim(), user.emailVerifyOTP)) {
     return NextResponse.json({ message: "Invalid OTP" }, { status: 400 });
   }
 

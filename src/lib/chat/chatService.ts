@@ -6,8 +6,8 @@ import { User } from "@/lib/models/User";
 import { Product } from "@/lib/models/Product";
 import { previewFromMessage, sanitizeChatText } from "@/lib/chat/sanitize";
 import {
-  conversationCreateLimiter,
-  messageRateLimiter,
+  allowConversationCreate,
+  allowMessageSend,
 } from "@/lib/chat/rateLimit";
 import { pickTrustFields } from "@/lib/trust";
 
@@ -63,7 +63,7 @@ export async function getOrCreateConversation(params: {
   if (userId === peerId) {
     throw Object.assign(new Error("Cannot chat with yourself"), { status: 400 });
   }
-  if (!conversationCreateLimiter.check(userId)) {
+  if (!(await allowConversationCreate(userId))) {
     throw Object.assign(new Error("Too many conversation requests"), {
       status: 429,
     });
@@ -320,7 +320,7 @@ export async function sendMessage(params: {
     receiverOnline = false,
   } = params;
 
-  if (!messageRateLimiter.check(senderId)) {
+  if (!(await allowMessageSend(senderId))) {
     throw Object.assign(new Error("Too many messages"), { status: 429 });
   }
 

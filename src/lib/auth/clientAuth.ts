@@ -1,15 +1,16 @@
 /**
- * Client auth — Phase 20 cookie-only:
- * - REST: HttpOnly session + CSRF (no Bearer)
+ * Client auth — cookie session + CSRF + silent refresh:
+ * - REST: HttpOnly access cookie + CSRF
+ * - On 401: one refresh attempt via /api/auth/refresh, then retry
  * - UI soft-gates: readable `sparesx_auth` flag cookie
- * - Socket: withCredentials only (session cookie)
- * - localStorage JWT no longer written; cleared on auth change
+ * - Socket: withCredentials only
  */
 
 import { AUTH_FLAG_COOKIE, CSRF_COOKIE } from "@/lib/auth/cookieNames";
 
 let cachedUserId: string | null = null;
 let cachedRole: string | null = null;
+let refreshInFlight: Promise<boolean> | null = null;
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -88,23 +89,60 @@ function isMutatingMethod(method?: string) {
   return m !== "GET" && m !== "HEAD" && m !== "OPTIONS";
 }
 
+async function tryRefreshSession(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const res = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include",
+      });
+      return res.ok;
+    } catch {
+      return false;
+    } finally {
+      refreshInFlight = null;
+    }
+  })();
+  return refreshInFlight;
+}
+
 export async function authFetch(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
-  const headers = authHeaders(init?.headers);
-  if (typeof FormData !== "undefined" && init?.body instanceof FormData) {
-    headers.delete("Content-Type");
+  const build = () => {
+    const headers = authHeaders(init?.headers);
+    if (typeof FormData !== "undefined" && init?.body instanceof FormData) {
+      headers.delete("Content-Type");
+    }
+    if (isMutatingMethod(init?.method) && !headers.has("X-CSRF-Token")) {
+      const csrf = getCsrfToken();
+      if (csrf) headers.set("X-CSRF-Token", csrf);
+    }
+    return fetch(input, {
+      ...init,
+      headers,
+      credentials: "include",
+    });
+  };
+
+  let res = await build();
+  if (res.status !== 401) return res;
+
+  const url =
+    typeof input === "string"
+      ? input
+      : input instanceof URL
+        ? input.pathname
+        : "";
+  if (url.includes("/api/auth/refresh") || url.includes("/api/auth/login")) {
+    return res;
   }
-  if (isMutatingMethod(init?.method) && !headers.has("X-CSRF-Token")) {
-    const csrf = getCsrfToken();
-    if (csrf) headers.set("X-CSRF-Token", csrf);
-  }
-  return fetch(input, {
-    ...init,
-    headers,
-    credentials: "include",
-  });
+
+  const refreshed = await tryRefreshSession();
+  if (!refreshed) return res;
+  return build();
 }
 
 /** Resolve current user via cookie session; caches id/role for UI. */

@@ -33,7 +33,7 @@ export default function LoginForm() {
       });
       const data = await res.json();
       if (res.ok) {
-        if (data.token) setAccessToken(data.token);
+        setAccessToken();
         showToast("Logged in successfully");
 
         if (data.profileComplete === false && data.role !== "admin") {
