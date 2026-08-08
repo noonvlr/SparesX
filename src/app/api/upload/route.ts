@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { promises as fs } from "fs";
 import path from "path";
-import { verifyJwt } from "@/lib/auth/jwt";
-import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 const MAX_FILES_AUTH = 10;
 const MAX_BYTES_AUTH = 5 * 1024 * 1024;
@@ -15,26 +14,11 @@ const ALLOWED_MIME = new Set([
   "image/gif",
 ]);
 
-function optionalUserId(req: NextRequest): string | null {
-  const token = getTokenFromRequest(req);
-  if (!token) return null;
-  const payload = verifyJwt(token);
-  return payload?.id || null;
-}
-
 export async function POST(req: NextRequest) {
   try {
-    const { assertCsrfForCookieMutation } = await import("@/lib/auth/csrf");
-    const csrfError = assertCsrfForCookieMutation(req);
-    if (csrfError) return csrfError;
-
-    const userId = optionalUserId(req);
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Login required to upload files" },
-        { status: 401 },
-      );
-    }
+    const auth = await requireUser(req);
+    if (isAuthError(auth)) return auth;
+    const userId = auth.id;
 
     const { checkRateLimitAsync, clientIpFromRequest } = await import(
       "@/lib/security/authRateLimit"
@@ -104,11 +88,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const idPart = userId ? userId.slice(-6) : "anon";
+    const idPart = userId.slice(-6);
     const { sniffImageMime } = await import("@/lib/images/sniffImage");
 
     for (const file of files) {
-      // Copy bytes into a plain Buffer — File.arrayBuffer() can be SharedArrayBuffer
       const ab = await file.arrayBuffer();
       const raw = Buffer.from(new Uint8Array(ab));
       const sniffed = sniffImageMime(raw);
@@ -133,7 +116,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // Final copy for Blob/fetch (rejects SharedArrayBuffer-backed views)
       const uploadBody = Buffer.from(optimized.buffer);
 
       const safeName = `${Date.now()}-${idPart}-${Math.random()

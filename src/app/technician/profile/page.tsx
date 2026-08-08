@@ -21,6 +21,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { authFetch, setAccessToken, isLoggedInClient } from "@/lib/auth/clientAuth";
 import GoogleLinkButton from "@/components/GoogleLinkButton";
+import BlockedUsersPanel from "@/components/BlockedUsersPanel";
 
 const COUNTRY_CODES = [{ code: "+91", label: "🇮🇳 +91 (India)" }];
 
@@ -795,6 +796,12 @@ export default function TechnicianProfilePage() {
                 />
               </div>
             )}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-[var(--ink)] mb-2">
+                Blocked users
+              </h3>
+              <BlockedUsersPanel />
+            </div>
             <form onSubmit={handlePasswordChange} className="space-y-4 max-w-xl">
               {profile?.hasPassword ? (
                 <Field label="Current password">

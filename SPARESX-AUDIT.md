@@ -1,21 +1,39 @@
 # SPARESX TECHNICAL AUDIT
 
-**Date:** 2026-08-09  
-**Scope:** Phase 1 read-only audit of SparesX (`https://www.sparesx.com/`)  
-**Stack:** Next.js App Router, MongoDB/Mongoose, JWT Bearer (localStorage), Express Socket.io  
+**Date:** 2026-08-09 (remediation through Phase 52)  
+**Scope:** Original Phase 1 read-only audit of SparesX (`https://www.sparesx.com/`)  
+**Stack (current):** Next.js App Router, MongoDB/Mongoose, HttpOnly session + refresh cookies + CSRF, Express Socket.io (cookie auth)  
+**Stack (at audit time):** JWT Bearer in localStorage (since migrated)  
 **Business model:** B2B technician marketplace — list/find/request parts; deals via chat + WhatsApp Connect. **No cart / payment gateway.**
 
 ---
 
 ## Executive summary
 
-Core marketplace authorization (technician ownership, most admin APIs, chat message membership, WhatsApp pre-approval privacy) is generally sound. Highest risks are: an **admin seed route that never verifies JWT**, **OTP hashes leaked via `/api/auth/me`**, **plaintext OTP logging**, **part-request PII exposed to any logged-in user**, **socket join/typing ACL gaps**, and **auto-approved listings bypassing moderation UI**.
+*(Historical — written at Phase 1.)* Core marketplace authorization was generally sound; critical gaps below were remediated in Phases 2–52. Prefer the **Deferred / Phase additions** sections for current status.
 
-HttpOnly cookie migration is recommended later (large). Do not turn SparesX into consumer ecommerce.
+HttpOnly cookie + refresh + CSRF cutover is **complete**. Do not turn SparesX into consumer ecommerce.
 
 ---
 
-## Architecture (verified)
+## Architecture (current)
+
+```text
+Browser (HttpOnly sparesx_session + sparesx_refresh + CSRF)
+  → Next.js API routes (cookie auth, requireUser/requireAdmin)
+  → MongoDB
+Browser
+  → Socket server (session cookie / withCredentials)
+  → MongoDB / chatService
+```
+
+- Roles: `technician` | `admin` only  
+- Product catalog: string fields + optional ObjectId refs (`deviceTypeId`, `brandId`, …)  
+- WhatsApp Connect: phone not returned until seller approval
+
+---
+
+## Architecture (at audit time — historical)
 
 ```text
 Browser (JWT in localStorage)
@@ -25,10 +43,6 @@ Browser
   → Socket server (handshake.auth.token)
   → MongoDB / chatService
 ```
-
-- Roles: `technician` | `admin` only  
-- Product catalog fields on listings: **strings** (`brand`, `deviceModel`, `partType`, …), not ObjectIds  
-- WhatsApp Connect: phone not returned until seller approval (product path OK)
 
 ---
 
@@ -337,11 +351,27 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- *(none blocking — phases 11–48 closed shippable remediation)*
+- *(none blocking — phases 11–52 closed shippable remediation)*
 - Optional ops: run `npm run backfill:catalog-refs`; set `REDIS_URL`, `VAPID_*`, `ATLAS_SEARCH_INDEX`, `OTP_PEPPER`
 - Lawyer review of legal pages before payments / KYC claims
 - Authenticity / testing fields (P2-9) — product decision later
 - Full GST/KYC upload product — admin flags only today
+
+### Phase 49 additions
+
+- Peer unblock in chat dock + Blocked users panel on technician profile
+
+### Phase 50 additions
+
+- Upload API uses `requireUser` (sessionVersion / blocked checks + CSRF)
+
+### Phase 51 additions
+
+- Rate-limit chat block/unblock writes (10/min)
+
+### Phase 52 additions
+
+- Audit header + PROJECT_STRUCTURE hygiene for cookie auth and legacy dashboard redirects
 
 ### Phase 40 additions
 

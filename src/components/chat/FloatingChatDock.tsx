@@ -114,15 +114,20 @@ function ThreadBody({
 function FloatingWindow({
   conversationId,
   index,
+  blockedIds,
+  onBlockedChange,
 }: {
   conversationId: string;
   index: number;
+  blockedIds: Set<string>;
+  onBlockedChange: (userId: string, blocked: boolean) => void;
 }) {
   const chat = useChatDock();
   const conversation = chat.getConversation(conversationId);
   const peer = peerOf(conversation, chat.userId);
   const minimized = chat.minimizedIds.has(conversationId);
   const right = 24 + index * 340;
+  const peerBlocked = peer?._id ? blockedIds.has(String(peer._id)) : false;
 
   if (minimized) return null;
 
@@ -183,31 +188,36 @@ function FloatingWindow({
           <button
             type="button"
             className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1"
-            title="Block this user"
+            title={peerBlocked ? "Unblock this user" : "Block this user"}
             onClick={() => {
               void (async () => {
                 try {
                   const { authFetch } = await import("@/lib/auth/clientAuth");
                   const { showToast } = await import("@/components/ToastHost");
                   const res = await authFetch("/api/chat/block", {
-                    method: "POST",
+                    method: peerBlocked ? "DELETE" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ userId: peer._id }),
                   });
                   const data = await res.json().catch(() => ({}));
                   if (!res.ok) {
-                    showToast(data.message || "Could not block", "error");
+                    showToast(
+                      data.message ||
+                        (peerBlocked ? "Could not unblock" : "Could not block"),
+                      "error",
+                    );
                     return;
                   }
-                  showToast("User blocked");
-                  chat.closeFloating(conversationId);
+                  onBlockedChange(String(peer._id), !peerBlocked);
+                  showToast(peerBlocked ? "User unblocked" : "User blocked");
+                  if (!peerBlocked) chat.closeFloating(conversationId);
                 } catch {
                   // ignore
                 }
               })();
             }}
           >
-            Block
+            {peerBlocked ? "Unblock" : "Block"}
           </button>
         ) : null}
         <IconButton
@@ -230,7 +240,13 @@ function FloatingWindow({
         </IconButton>
       </div>
       <div className="flex-1 min-h-0">
-        <ThreadBody conversationId={conversationId} compact />
+        {peerBlocked ? (
+          <div className="p-4 text-sm text-[var(--muted)]">
+            You blocked this user. Unblock to send messages again.
+          </div>
+        ) : (
+          <ThreadBody conversationId={conversationId} compact />
+        )}
       </div>
     </div>
   );
@@ -242,6 +258,7 @@ export default function FloatingChatDock() {
   const [hasSession, setHasSession] = useState(false);
   const [fabDismissed, setFabDismissed] = useState(false);
   const [chatVisited, setChatVisited] = useState(false);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
   const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -298,6 +315,31 @@ export default function FloatingChatDock() {
       window.removeEventListener("resize", onResize);
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasSession) {
+      setBlockedIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const { authFetch } = await import("@/lib/auth/clientAuth");
+        const res = await authFetch("/api/chat/block");
+        const data = await res.json().catch(() => ({}));
+        if (cancelled || !res.ok) return;
+        const ids = Array.isArray(data.blockedUserIds)
+          ? data.blockedUserIds.map(String)
+          : [];
+        setBlockedIds(new Set(ids));
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasSession]);
 
   useEffect(() => {
     if (chat.panelOpen || chat.floatingIds.length > 0) {
@@ -449,7 +491,20 @@ export default function FloatingChatDock() {
 
       {/* Desktop floating windows */}
       {chat.floatingIds.map((id, i) => (
-        <FloatingWindow key={id} conversationId={id} index={i} />
+        <FloatingWindow
+          key={id}
+          conversationId={id}
+          index={i}
+          blockedIds={blockedIds}
+          onBlockedChange={(userId, blocked) => {
+            setBlockedIds((prev) => {
+              const next = new Set(prev);
+              if (blocked) next.add(userId);
+              else next.delete(userId);
+              return next;
+            });
+          }}
+        />
       ))}
 
       {/* Inbox / mobile panel */}

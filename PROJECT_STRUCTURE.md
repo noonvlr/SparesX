@@ -24,45 +24,40 @@
 ### Marketplace
 
 - **`/requests`** - View/create spare part requests
-- **`/sellers`** - Browse verified sellers
+- **`/sellers`** - Browse technicians (phone-verified / trusted badges where set)
 
 ---
 
-## 🔧 **TECHNICIAN DASHBOARD**
+## 🔧 **TECHNICIAN DASHBOARD** (primary account hub)
 
 ### Main Dashboard
 
-- **`/technician/dashboard`** - Technician overview & stats
+- **`/technician/dashboard`** - Overview & stats
 
 ### Product Management
 
-- **`/technician/products/new`** - Add new product listing
-- **`/technician/products/edit/[id]`** - Edit existing product
+- **`/technician/products/new`** - Add listing
+- **`/technician/products/edit/[id]`** - Edit listing
 
 ### Profile
 
-- **`/technician/profile`** - View/edit technician profile
+- **`/technician/profile`** - Profile, security, blocked users, verification flags
 
 ---
 
-## 👤 **BUYER/SELLER DASHBOARDS**
+## 👤 **LEGACY DASHBOARD REDIRECTS**
 
-### Buyer Dashboard
+Most `/dashboard/buyer/*` and `/dashboard/seller/*` routes **redirect** into the technician hub or saved parts.
 
-- **`/dashboard/buyer`** - Buyer overview
-- **`/dashboard/buyer/enquiries`** - Product enquiries
-- **`/dashboard/buyer/requests`** - Spare part requests
-- **`/dashboard/buyer/saved`** - Saved products
-- **`/dashboard/buyer/profile`** - Buyer profile
-
-### Seller Dashboard
-
-- **`/dashboard/seller`** - Seller overview
-- **`/dashboard/seller/listings`** - Manage listings
-- **`/dashboard/seller/add`** - Add new listing
-- **`/dashboard/seller/messages`** - Messages
-- **`/dashboard/seller/verification`** - Verification status
-- **`/dashboard/seller/profile`** - Seller profile
+| Legacy path | Current target |
+|---|---|
+| `/dashboard/buyer` | `/technician/dashboard` |
+| `/dashboard/buyer/enquiries` | `/messages` |
+| `/dashboard/buyer/requests` | `/requests?tab=mine` |
+| `/dashboard/buyer/profile` | `/technician/profile` |
+| `/dashboard/buyer/saved` | **Live** saved parts UI |
+| `/dashboard/seller/*` (most) | technician equivalents |
+| `/dashboard/seller/verification` | Honest badge status page |
 
 ---
 
@@ -70,27 +65,22 @@
 
 ### Main Admin
 
-- **`/admin`** - Admin dashboard overview
-- **`/admin/dashboard`** - Admin statistics
+- **`/admin`**, **`/admin/dashboard`** - Overview
 
 ### Management
 
-- **`/admin/device-management`** - Manage categories, brands, device types
-- **`/admin/categories`** - Product categories management
-- **`/admin/device-categories`** - Device brands management
-- **`/admin/products`** - Product moderation
-- **`/admin/listings`** - All listings overview
+- **`/admin/device-management`**, **`/admin/categories`**, **`/admin/products`**, **`/admin/listings`**, **`/admin/requests`**
 
 ### User Management
 
-- **`/admin/users`** - All users
-- **`/admin/technicians`** - Technician verification
-- **`/admin/verification`** - Verification requests
+- **`/admin/users`** - Users + verification flags (primary)
+- **`/admin/technicians`**, **`/admin/verification`** - Redirects into users
 
-### System
+### Safety / ops
 
-- **`/admin/reports`** - Reports & analytics
-- **`/admin/settings`** - Platform settings
+- **`/admin/chat`** - Chat dispute tool
+- **`/admin/disputes`** - Internal dispute SOP
+- **`/admin/support`**, **`/admin/reports`**, **`/admin/site-settings`**, **`/admin/settings`**
 
 ---
 

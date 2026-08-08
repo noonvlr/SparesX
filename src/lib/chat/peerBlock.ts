@@ -42,10 +42,41 @@ export async function unblockPeer(blockerId: string, blockedId: string) {
   });
 }
 
-export async function listBlockedPeerIds(blockerId: string): Promise<string[]> {
+export async function listBlockedPeers(blockerId: string): Promise<
+  { _id: string; name: string }[]
+> {
   await connectDB();
   const rows = await UserBlock.find({ blocker: toOid(blockerId) })
     .select("blocked")
     .lean();
-  return rows.map((r) => String(r.blocked));
+  const ids = rows.map((r) => r.blocked);
+  if (ids.length === 0) return [];
+  const { User } = await import("@/lib/models/User");
+  const users = await User.find({ _id: { $in: ids } })
+    .select("name")
+    .lean();
+  const nameById = new Map(users.map((u) => [String(u._id), u.name || "User"]));
+  return ids.map((id) => ({
+    _id: String(id),
+    name: nameById.get(String(id)) || "User",
+  }));
+}
+
+export async function listBlockedPeerIds(blockerId: string): Promise<string[]> {
+  const peers = await listBlockedPeers(blockerId);
+  return peers.map((p) => p._id);
+}
+
+export async function hasBlockedPeer(
+  blockerId: string,
+  blockedId: string,
+): Promise<boolean> {
+  if (!blockerId || !blockedId) return false;
+  await connectDB();
+  return Boolean(
+    await UserBlock.exists({
+      blocker: toOid(blockerId),
+      blocked: toOid(blockedId),
+    }),
+  );
 }

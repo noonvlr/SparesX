@@ -2,21 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 import {
   blockPeer,
-  listBlockedPeerIds,
+  listBlockedPeers,
   unblockPeer,
 } from "@/lib/chat/peerBlock";
+import { checkRateLimitAsync } from "@/lib/security/authRateLimit";
 
 export async function GET(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
 
-  const ids = await listBlockedPeerIds(auth.id);
-  return NextResponse.json({ blockedUserIds: ids }, { status: 200 });
+  const peers = await listBlockedPeers(auth.id);
+  return NextResponse.json(
+    {
+      blockedUserIds: peers.map((p) => p._id),
+      blockedUsers: peers,
+    },
+    { status: 200 },
+  );
 }
 
 export async function POST(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
+
+  const rate = await checkRateLimitAsync({
+    key: `chat:block:${auth.id}`,
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!rate.ok) {
+    return NextResponse.json(
+      { message: "Too many block actions. Try again later." },
+      { status: 429 },
+    );
+  }
 
   const body = await req.json().catch(() => null);
   const peerId = String(body?.userId || "").trim();
@@ -38,6 +57,18 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
+
+  const rate = await checkRateLimitAsync({
+    key: `chat:block:${auth.id}`,
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (!rate.ok) {
+    return NextResponse.json(
+      { message: "Too many block actions. Try again later." },
+      { status: 429 },
+    );
+  }
 
   const body = await req.json().catch(() => null);
   const peerId = String(body?.userId || "").trim();
