@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { requireUser, isAuthError } from "@/lib/auth/requireUser";
 import { sanitizeUserForClient } from "@/lib/auth/publicUser";
+import { applyCsrfCookie, CSRF_COOKIE } from "@/lib/auth/cookies";
 
 export async function GET(req: NextRequest) {
   const auth = await requireUser(req);
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     const refreshed = await User.findById(auth.id);
     if (refreshed) {
       const { pickTrustFields } = await import("@/lib/trust");
-      return NextResponse.json(
+      const res = NextResponse.json(
         {
           user: {
             ...sanitizeUserForClient(refreshed),
@@ -35,11 +36,15 @@ export async function GET(req: NextRequest) {
         },
         { status: 200 },
       );
+      if (!req.cookies.get(CSRF_COOKIE)?.value) {
+        applyCsrfCookie(res);
+      }
+      return res;
     }
   }
 
   const { pickTrustFields } = await import("@/lib/trust");
-  return NextResponse.json(
+  const res = NextResponse.json(
     {
       user: {
         ...sanitizeUserForClient(user),
@@ -48,4 +53,8 @@ export async function GET(req: NextRequest) {
     },
     { status: 200 },
   );
+  if (!req.cookies.get(CSRF_COOKIE)?.value) {
+    applyCsrfCookie(res);
+  }
+  return res;
 }

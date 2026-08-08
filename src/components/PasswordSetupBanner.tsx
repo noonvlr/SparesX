@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 /** Amber site banner prompting Google / passwordless users to set a password. */
 export default function PasswordSetupBanner() {
@@ -22,15 +23,12 @@ export default function PasswordSetupBanner() {
     }
 
     const load = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!getAccessToken()) {
         setNeedsPassword(false);
         return;
       }
       try {
-        const res = await fetch("/api/auth/verify/status", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/auth/verify/status");
         if (!res.ok) {
           setNeedsPassword(false);
           return;

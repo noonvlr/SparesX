@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 export type NodeType =
   | "device"
@@ -149,9 +150,7 @@ async function fetchDeviceTypes() {
 }
 
 async function fetchBrands() {
-  const token = localStorage.getItem("token");
-  const response = await fetch("/api/admin/device-categories", {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const response = await authFetch("/api/admin/device-categories", {
     cache: "no-store",
   });
   const data = await response.json();
@@ -162,9 +161,7 @@ async function fetchBrands() {
 }
 
 async function fetchPartCategories() {
-  const token = localStorage.getItem("token");
-  const response = await fetch("/api/device-management/part-categories", {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const response = await authFetch("/api/device-management/part-categories", {
     cache: "no-store",
   });
   const data = await response.json();
@@ -178,9 +175,7 @@ async function fetchPartCategories() {
 }
 
 async function fetchGlobalCategories() {
-  const token = localStorage.getItem("token");
-  const response = await fetch("/api/admin/categories", {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  const response = await authFetch("/api/admin/categories", {
     cache: "no-store",
   });
   const data = await response.json();
@@ -195,7 +190,7 @@ async function requestJson<T>(
   options: RequestInit,
   errorMessage: string,
 ): Promise<T> {
-  const response = await fetch(url, options);
+  const response = await authFetch(url, options);
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data.error || errorMessage);
@@ -573,7 +568,7 @@ export function useDeviceHierarchy() {
   }, []);
 
   const ensureAuthHeaders = (): Record<string, string> => {
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 

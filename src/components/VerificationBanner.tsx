@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 type Status = {
   phoneVerified: boolean;
@@ -22,15 +23,12 @@ export default function VerificationBanner() {
     }
 
     const load = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!getAccessToken()) {
         setStatus(null);
         return;
       }
       try {
-        const res = await fetch("/api/auth/verify/status", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/auth/verify/status");
         if (!res.ok) {
           setStatus(null);
           return;

@@ -17,6 +17,7 @@ import {
   buttonVariants,
 } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 type Status = {
   email: string;
@@ -39,22 +40,14 @@ export default function VerifyPage() {
   const phoneResend = useOtpResendCooldown(120);
   const emailResend = useOtpResendCooldown(120);
 
-  const authHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-    "Content-Type": "application/json",
-  });
-
   const load = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.replace(`/login?next=${encodeURIComponent("/verify")}`);
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/verify/status", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch("/api/auth/verify/status");
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load status");
@@ -76,9 +69,9 @@ export default function VerifyPage() {
     setBusy("phone-send");
     setError("");
     try {
-      const res = await fetch("/api/auth/verify/phone/send", {
+      const res = await authFetch("/api/auth/verify/phone/send", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
       if (!res.ok) {
@@ -100,9 +93,9 @@ export default function VerifyPage() {
     setBusy("phone-confirm");
     setError("");
     try {
-      const res = await fetch("/api/auth/verify/phone/confirm", {
+      const res = await authFetch("/api/auth/verify/phone/confirm", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otp: phoneOtp }),
       });
       const data = await res.json();
@@ -125,9 +118,9 @@ export default function VerifyPage() {
     setBusy("email-send");
     setError("");
     try {
-      const res = await fetch("/api/auth/verify/email/send", {
+      const res = await authFetch("/api/auth/verify/email/send", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
       });
       const data = await res.json();
       if (!res.ok) {
@@ -149,9 +142,9 @@ export default function VerifyPage() {
     setBusy("email-confirm");
     setError("");
     try {
-      const res = await fetch("/api/auth/verify/email/confirm", {
+      const res = await authFetch("/api/auth/verify/email/confirm", {
         method: "POST",
-        headers: authHeaders(),
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ otp: emailOtp }),
       });
       const data = await res.json();

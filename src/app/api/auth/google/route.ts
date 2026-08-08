@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       role: user.role,
       sessionVersion: user.sessionVersion || 0,
     });
-    const { applySessionCookie } = await import("@/lib/auth/cookies");
+    const { applyAuthCookies } = await import("@/lib/auth/cookies");
     const res = NextResponse.json(
       {
         token,
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
-    applySessionCookie(res, token);
+    applyAuthCookies(res, token);
     return res;
   } catch (error) {
     console.error("Google auth error:", error);

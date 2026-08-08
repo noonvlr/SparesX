@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
 import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
-import { clearSessionCookie } from "@/lib/auth/cookies";
+import { clearAuthCookies } from "@/lib/auth/cookies";
 import { bumpSessionVersion } from "@/lib/auth/sessionVersion";
 
 /**
@@ -21,6 +21,6 @@ export async function POST(req: NextRequest) {
     }
   }
   const res = NextResponse.json({ ok: true }, { status: 200 });
-  clearSessionCookie(res);
+  clearAuthCookies(res);
   return res;
 }

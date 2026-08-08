@@ -26,6 +26,7 @@ import {
   formatDeviceLabel,
   formatProductHeading,
 } from "@/lib/seo/productMeta";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface Seller {
   _id?: string;
@@ -89,7 +90,7 @@ type Breadcrumb = { name: string; href: string };
 
 function getUserIdFromToken(): string | null {
   if (typeof window === "undefined") return null;
-  const token = localStorage.getItem("token");
+  const token = getAccessToken();
   if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -149,14 +150,11 @@ export default function ProductDetail({
 
   useEffect(() => {
     const userId = getUserIdFromToken();
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     setIsLoggedIn(!!token);
 
     // Refresh product with auth so contact details / ownership are accurate
-    const headers: HeadersInit = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
-
-    fetch(`/api/products/${initialProduct._id}`, { headers })
+    authFetch(`/api/products/${initialProduct._id}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.product) {
@@ -189,9 +187,7 @@ export default function ProductDetail({
       });
 
     if (token) {
-      fetch(`/api/saved/${initialProduct._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      authFetch(`/api/saved/${initialProduct._id}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data) setIsSaved(!!data.saved);
@@ -211,16 +207,14 @@ export default function ProductDetail({
   }, [product.technician]);
 
   const loadWaConnect = async (sellerId: string, productId: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setWaConnect(null);
       return;
     }
     setWaLoading(true);
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `/api/whatsapp-connect?sellerId=${encodeURIComponent(sellerId)}&productId=${encodeURIComponent(productId)}`,
-        { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
@@ -257,15 +251,13 @@ export default function ProductDetail({
 
   const handleToggleSave = async () => {
     if (!requireAuth("save")) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
 
     setSaveLoading(true);
     try {
       if (isSaved) {
-        const res = await fetch(`/api/saved/${product._id}`, {
+        const res = await authFetch(`/api/saved/${product._id}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
@@ -275,10 +267,9 @@ export default function ProductDetail({
         setIsSaved(false);
         showToast("Removed from saved items");
       } else {
-        const res = await fetch("/api/saved", {
+        const res = await authFetch("/api/saved", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ productId: product._id }),
@@ -352,15 +343,13 @@ export default function ProductDetail({
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
 
     setWaActionLoading(true);
     try {
-      const res = await fetch("/api/whatsapp-connect", {
+      const res = await authFetch("/api/whatsapp-connect", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

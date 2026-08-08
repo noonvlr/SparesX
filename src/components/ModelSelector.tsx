@@ -8,6 +8,7 @@ import {
 } from "@/lib/utils/modelSuggest";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface ModelSelectorProps {
   models: SuggestableModel[];
@@ -74,8 +75,7 @@ export default function ModelSelector({
   }, [searchValue, brandSlug, category]);
 
   const createModel = async (name: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Please login to add a new model.");
       return;
     }
@@ -87,11 +87,10 @@ export default function ModelSelector({
     setCreating(true);
     setError(null);
     try {
-      const res = await fetch(`/api/brands/${brandSlug}/models`, {
+      const res = await authFetch(`/api/brands/${brandSlug}/models`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ category, name: name.trim() }),
       });

@@ -16,6 +16,7 @@ import {
   Spinner,
   Textarea,
 } from "@/components/ui";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -45,17 +46,14 @@ export default function CompleteProfileClient() {
   });
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.replace(
         `/login?next=${encodeURIComponent("/complete-profile")}`,
       );
       return;
     }
 
-    fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
         if (!data.user) {
@@ -129,16 +127,14 @@ export default function CompleteProfileClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
 
     setSaving(true);
     try {
-      const res = await fetch("/api/technician/profile", {
+      const res = await authFetch("/api/technician/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(form),
       });

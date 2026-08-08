@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import type { CatalogMergeSummary } from "@/lib/catalog/mergeCatalog";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 interface CatalogImportPanelProps {
   onImported?: () => void;
@@ -41,12 +42,10 @@ export default function CatalogImportPanel({
     setError("");
     setBusy(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/admin/catalog-import", {
+      const res = await authFetch("/api/admin/catalog-import", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
           content,

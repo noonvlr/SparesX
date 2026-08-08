@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 const STATUS_TONE: Record<string, "warning" | "success" | "neutral"> = {
   open: "warning",
@@ -56,8 +57,7 @@ export default function AdminRequestsPage() {
   } | null>(null);
 
   const load = useCallback(async (nextStatus = status, nextQ = q, nextPage = page) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -70,9 +70,7 @@ export default function AdminRequestsPage() {
         limit: "40",
       });
       if (nextQ.trim()) params.set("q", nextQ.trim());
-      const res = await fetch(`/api/admin/requests?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/admin/requests?${params}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load");
@@ -99,15 +97,13 @@ export default function AdminRequestsPage() {
   }, [status]);
 
   async function patchStatus(id: string, next: string) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
     setBusyId(id);
     try {
-      const res = await fetch(`/api/admin/requests/${id}`, {
+      const res = await authFetch(`/api/admin/requests/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: next }),
       });
@@ -122,13 +118,11 @@ export default function AdminRequestsPage() {
 
   async function remove(id: string) {
     if (!confirm("Delete this request permanently?")) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
     setBusyId(id);
     try {
-      const res = await fetch(`/api/admin/requests/${id}`, {
+      const res = await authFetch(`/api/admin/requests/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         if (selected?._id === id) setSelected(null);

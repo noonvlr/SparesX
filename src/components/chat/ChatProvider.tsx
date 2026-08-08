@@ -720,11 +720,12 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const token = localStorage.getItem("token")!;
+    const token = localStorage.getItem("token");
     let socket = socketRef.current;
     if (!socket || !socket.connected) {
       socket = io(socketUrl, {
-        auth: { token },
+        auth: token ? { token } : {},
+        withCredentials: true,
         transports: ["websocket", "polling"],
         reconnection: true,
         reconnectionAttempts: Infinity,

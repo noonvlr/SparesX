@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
 import { getTokenFromRequest } from "@/lib/auth/getTokenFromRequest";
+import { assertCsrfForCookieMutation } from "@/lib/auth/csrf";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 
@@ -10,6 +11,9 @@ export type AdminPayload = { id: string; role: string };
 export async function requireAdmin(
   req: NextRequest,
 ): Promise<AdminPayload | NextResponse> {
+  const csrfError = assertCsrfForCookieMutation(req);
+  if (csrfError) return csrfError;
+
   const token = getTokenFromRequest(req);
   if (!token) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

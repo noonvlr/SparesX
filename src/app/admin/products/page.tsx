@@ -13,6 +13,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Modal } from "@/components/ui/Modal";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 const STATUS_TONE: Record<string, "warning" | "success" | "danger" | "neutral"> = {
   pending: "warning",
@@ -71,11 +72,8 @@ export default function AdminProductsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
 
-  const token = () => localStorage.getItem("token");
-
   const load = useCallback(async (nextStatus = status, nextQ = q) => {
-    const t = token();
-    if (!t) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -84,9 +82,7 @@ export default function AdminProductsPage() {
     try {
       const params = new URLSearchParams({ status: nextStatus, limit: "100" });
       if (nextQ.trim()) params.set("q", nextQ.trim());
-      const res = await fetch(`/api/admin/products?${params}`, {
-        headers: { Authorization: `Bearer ${t}` },
-      });
+      const res = await authFetch(`/api/admin/products?${params}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load");
@@ -109,15 +105,13 @@ export default function AdminProductsPage() {
   }, [status]);
 
   async function patchProduct(id: string, body: Record<string, unknown>) {
-    const t = token();
-    if (!t) return;
+    if (!getAccessToken()) return;
     setBusyId(id);
     try {
-      const res = await fetch(`/api/admin/products/${id}`, {
+      const res = await authFetch(`/api/admin/products/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${t}`,
         },
         body: JSON.stringify(body),
       });
@@ -133,13 +127,11 @@ export default function AdminProductsPage() {
 
   async function deleteProduct(id: string, name: string) {
     if (!confirm(`Delete "${name}" permanently?`)) return;
-    const t = token();
-    if (!t) return;
+    if (!getAccessToken()) return;
     setBusyId(id);
     try {
-      const res = await fetch(`/api/admin/products/${id}`, {
+      const res = await authFetch(`/api/admin/products/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${t}` },
       });
       if (res.ok) {
         if (editId === id) setEditId(null);
@@ -200,8 +192,7 @@ export default function AdminProductsPage() {
   }
 
   async function bulkAction(action: "approve" | "reject") {
-    const t = token();
-    if (!t || selectedIds.length === 0) return;
+    if (!getAccessToken() || selectedIds.length === 0) return;
     if (
       !confirm(
         `${action === "approve" ? "Approve" : "Reject"} ${selectedIds.length} listing${selectedIds.length === 1 ? "" : "s"}?`,
@@ -212,11 +203,10 @@ export default function AdminProductsPage() {
     setBulkBusy(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/products/bulk", {
+      const res = await authFetch("/api/admin/products/bulk", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${t}`,
         },
         body: JSON.stringify({ ids: selectedIds, action }),
       });

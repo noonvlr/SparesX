@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getAccessToken } from "@/lib/auth/clientAuth";
 
 /**
  * "Become a seller" — register if logged out, add-product if logged in.
@@ -17,7 +18,7 @@ export default function BecomeSellerLink({
 
   useEffect(() => {
     const sync = () => {
-      const token = localStorage.getItem("token");
+      const token = getAccessToken();
       setHref(token ? "/technician/products/new" : "/register");
     };
     sync();

@@ -24,6 +24,10 @@ function optionalUserId(req: NextRequest): string | null {
 
 export async function POST(req: NextRequest) {
   try {
+    const { assertCsrfForCookieMutation } = await import("@/lib/auth/csrf");
+    const csrfError = assertCsrfForCookieMutation(req);
+    if (csrfError) return csrfError;
+
     const userId = optionalUserId(req);
     if (!userId) {
       return NextResponse.json(

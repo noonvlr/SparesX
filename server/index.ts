@@ -80,11 +80,21 @@ async function main() {
 
   io.use(async (socket, next) => {
     try {
+      const cookieHeader = socket.handshake.headers?.cookie?.toString() || "";
+      const sessionMatch = cookieHeader.match(
+        /(?:^|;\s*)sparesx_session=([^;]+)/,
+      );
+      const cookieToken = sessionMatch
+        ? decodeURIComponent(sessionMatch[1])
+        : "";
+
       const token =
-        socket.handshake.auth?.token ||
+        (socket.handshake.auth?.token as string | undefined) ||
         socket.handshake.headers?.authorization
           ?.toString()
-          .replace(/^Bearer\s+/i, "");
+          .replace(/^Bearer\s+/i, "") ||
+        cookieToken;
+
       if (!token) {
         console.warn("[socket] missing auth token", socket.handshake.headers.origin);
         return next(new Error("Unauthorized"));

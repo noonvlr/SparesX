@@ -6,6 +6,7 @@ import { Card, PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface IModel {
   name: string;
@@ -58,8 +59,7 @@ export default function AdminDeviceCategoriesPage() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.push("/login");
       return;
     }
@@ -88,10 +88,7 @@ export default function AdminDeviceCategoriesPage() {
 
   async function fetchBrands() {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/admin/device-categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch("/api/admin/device-categories");
       if (!res.ok) throw new Error("Failed to fetch brands");
       const data = await res.json();
       setBrands(data.brands);
@@ -193,17 +190,15 @@ export default function AdminDeviceCategoriesPage() {
     }
 
     try {
-      const token = localStorage.getItem("token");
       const url = editingBrand
         ? `/api/admin/device-categories/${editingBrand._id}`
         : "/api/admin/device-categories";
       const method = editingBrand ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -234,10 +229,8 @@ export default function AdminDeviceCategoriesPage() {
       return;
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/admin/device-categories/${id}`, {
+      const res = await authFetch(`/api/admin/device-categories/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Failed to delete brand");

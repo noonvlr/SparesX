@@ -11,6 +11,7 @@ import { Field } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 export default function UsersManager() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -44,8 +45,7 @@ export default function UsersManager() {
   const fetchUsers = async (query?: string, pageNum: number = 1) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) return;
+      if (!getAccessToken()) return;
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: "20",
@@ -54,9 +54,7 @@ export default function UsersManager() {
         params.append("q", query);
       }
 
-      const response = await fetch(`/api/admin/users?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await authFetch(`/api/admin/users?${params}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -100,16 +98,14 @@ export default function UsersManager() {
 
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
     setCreating(true);
     setCreateError("");
     try {
-      const res = await fetch("/api/admin/users", {
+      const res = await authFetch("/api/admin/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...createForm,

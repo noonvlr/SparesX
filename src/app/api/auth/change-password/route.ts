@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       user.sessionVersion = (user.sessionVersion || 0) + 1;
       await user.save();
       const { signJwt } = await import("@/lib/auth/jwt");
-      const { applySessionCookie } = await import("@/lib/auth/cookies");
+      const { applyAuthCookies } = await import("@/lib/auth/cookies");
       const token = signJwt({
         _id: user._id,
         role: user.role,
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
         },
         { status: 200 },
       );
-      applySessionCookie(res, token);
+      applyAuthCookies(res, token);
       return res;
     }
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     await user.save();
 
     const { signJwt } = await import("@/lib/auth/jwt");
-    const { applySessionCookie } = await import("@/lib/auth/cookies");
+    const { applyAuthCookies } = await import("@/lib/auth/cookies");
     const token = signJwt({
       _id: user._id,
       role: user.role,
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       },
       { status: 200 },
     );
-    applySessionCookie(res, token);
+    applyAuthCookies(res, token);
     return res;
   } catch (error) {
     return errorResponse(error);

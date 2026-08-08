@@ -9,6 +9,7 @@ import { Field } from "@/components/ui/Field";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 type Settings = {
   activeSmsProvider: "twilio" | "msg91";
@@ -66,15 +67,11 @@ export default function SiteSettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  const token = () => localStorage.getItem("token") || "";
-
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/admin/site-settings", {
-        headers: { Authorization: `Bearer ${token()}` },
-      });
+      const res = await authFetch("/api/admin/site-settings");
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load settings");
@@ -98,10 +95,9 @@ export default function SiteSettingsPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch("/api/admin/site-settings", {
+      const res = await authFetch("/api/admin/site-settings", {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -144,10 +140,9 @@ export default function SiteSettingsPage() {
     setMessage("");
     setError("");
     try {
-      const res = await fetch("/api/admin/site-settings/test-sms", {
+      const res = await authFetch("/api/admin/site-settings/test-sms", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token()}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ mobile: testMobile, countryCode: "+91" }),

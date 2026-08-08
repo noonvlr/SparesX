@@ -8,6 +8,7 @@ import TrustBadges from "@/components/TrustBadges";
 import { FOUNDING_MEMBER_UNTIL } from "@/lib/badges/catalog";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 import { Alert } from "@/components/ui/Alert";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface UserDetailsModalProps {
   user: AdminUser;
@@ -73,13 +74,10 @@ export default function UserDetailsModal({
   const [ratingsLoading, setRatingsLoading] = useState(false);
 
   const loadRatings = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
     setRatingsLoading(true);
     try {
-      const res = await fetch(`/api/admin/users/${user._id}/ratings`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/admin/users/${user._id}/ratings`);
       const data = await res.json();
       if (res.ok) setRatings(data.ratings || []);
     } catch {
@@ -159,11 +157,8 @@ export default function UserDetailsModal({
         }),
       );
 
-      const response = await fetch("/api/upload", {
+      const response = await authFetch("/api/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
         body: formData,
       });
 
@@ -195,8 +190,7 @@ export default function UserDetailsModal({
     setSuccess("");
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!getAccessToken()) {
         setError("Not authenticated");
         setLoading(false);
         return;
@@ -225,11 +219,10 @@ export default function UserDetailsModal({
             new Set([...(user.revokedBadgeKeys || []), "founding_member"]),
           );
 
-      const response = await fetch(`/api/admin/users/${user._id}`, {
+      const response = await authFetch(`/api/admin/users/${user._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...rest,
@@ -439,14 +432,12 @@ export default function UserDetailsModal({
                                     String(r.stars),
                                   );
                                   if (!stars) return;
-                                  const token = localStorage.getItem("token");
-                                  if (!token) return;
-                                  await fetch(
+                                  if (!getAccessToken()) return;
+                                  await authFetch(
                                     `/api/admin/users/${user._id}/ratings`,
                                     {
                                       method: "PATCH",
                                       headers: {
-                                        Authorization: `Bearer ${token}`,
                                         "Content-Type": "application/json",
                                       },
                                       body: JSON.stringify({
@@ -464,14 +455,12 @@ export default function UserDetailsModal({
                                 type="button"
                                 className="text-[10px] font-semibold text-[var(--warning)] px-2 py-1 rounded border border-[var(--warning)]/20"
                                 onClick={async () => {
-                                  const token = localStorage.getItem("token");
-                                  if (!token) return;
-                                  await fetch(
+                                  if (!getAccessToken()) return;
+                                  await authFetch(
                                     `/api/admin/users/${user._id}/ratings`,
                                     {
                                       method: "PATCH",
                                       headers: {
-                                        Authorization: `Bearer ${token}`,
                                         "Content-Type": "application/json",
                                       },
                                       body: JSON.stringify({
@@ -490,15 +479,11 @@ export default function UserDetailsModal({
                                 className="text-[10px] font-semibold text-[var(--danger)] px-2 py-1 rounded border border-[var(--danger)]/20"
                                 onClick={async () => {
                                   if (!confirm("Delete this rating?")) return;
-                                  const token = localStorage.getItem("token");
-                                  if (!token) return;
-                                  await fetch(
+                                  if (!getAccessToken()) return;
+                                  await authFetch(
                                     `/api/admin/users/${user._id}/ratings?ratingId=${r._id}`,
                                     {
                                       method: "DELETE",
-                                      headers: {
-                                        Authorization: `Bearer ${token}`,
-                                      },
                                     },
                                   );
                                   await loadRatings();
@@ -596,12 +581,11 @@ export default function UserDetailsModal({
                       setLoading(true);
                       setError("");
                       try {
-                        const token = localStorage.getItem("token");
-                        const res = await fetch(
+                        if (!getAccessToken()) return;
+                        const res = await authFetch(
                           `/api/admin/users/${user._id}/reset-password`,
                           {
                             method: "POST",
-                            headers: { Authorization: `Bearer ${token}` },
                           },
                         );
                         const data = await res.json();
@@ -632,12 +616,11 @@ export default function UserDetailsModal({
                       setLoading(true);
                       setError("");
                       try {
-                        const token = localStorage.getItem("token");
-                        const res = await fetch(
+                        if (!getAccessToken()) return;
+                        const res = await authFetch(
                           `/api/admin/users/${user._id}`,
                           {
                             method: "DELETE",
-                            headers: { Authorization: `Bearer ${token}` },
                           },
                         );
                         const data = await res.json();
