@@ -66,8 +66,9 @@ export async function generateMetadata({
       openGraph: {
         title: heading,
         description,
-        // Omit typed `type` so `other["og:type"]=product` is the only value
-        // emitted. Setting both previously left crawlers seeing "website".
+        // "product" is a valid OG type; Next's typings omit it from the union,
+        // so cast through the metadata object rather than emitting a body meta.
+        ...( { type: "product" } as unknown as { type: "website" }),
         url: canonicalUrl,
         siteName: SITE_NAME,
         locale: "en_IN",
@@ -87,7 +88,6 @@ export async function generateMetadata({
         images: [productImage],
       },
       other: {
-        "og:type": "product",
         "product:brand": product.brand || "",
         "product:condition":
           product.condition === "used" ? "used" : "new",
