@@ -8,7 +8,7 @@ import {
 } from "@/lib/utils/modelSuggest";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface ModelSelectorProps {
   models: SuggestableModel[];
@@ -75,7 +75,7 @@ export default function ModelSelector({
   }, [searchValue, brandSlug, category]);
 
   const createModel = async (name: string) => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Please login to add a new model.");
       return;
     }

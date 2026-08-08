@@ -13,7 +13,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Modal } from "@/components/ui/Modal";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 const STATUS_TONE: Record<string, "warning" | "success" | "danger" | "neutral"> = {
   pending: "warning",
@@ -73,7 +73,7 @@ export default function AdminProductsPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
 
   const load = useCallback(async (nextStatus = status, nextQ = q) => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -105,7 +105,7 @@ export default function AdminProductsPage() {
   }, [status]);
 
   async function patchProduct(id: string, body: Record<string, unknown>) {
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setBusyId(id);
     try {
       const res = await authFetch(`/api/admin/products/${id}`, {
@@ -127,7 +127,7 @@ export default function AdminProductsPage() {
 
   async function deleteProduct(id: string, name: string) {
     if (!confirm(`Delete "${name}" permanently?`)) return;
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setBusyId(id);
     try {
       const res = await authFetch(`/api/admin/products/${id}`, {
@@ -192,7 +192,7 @@ export default function AdminProductsPage() {
   }
 
   async function bulkAction(action: "approve" | "reject") {
-    if (!getAccessToken() || selectedIds.length === 0) return;
+    if (!isLoggedInClient() || selectedIds.length === 0) return;
     if (
       !confirm(
         `${action === "approve" ? "Approve" : "Reject"} ${selectedIds.length} listing${selectedIds.length === 1 ? "" : "s"}?`,

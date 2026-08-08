@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface Category {
   _id: string;
@@ -41,7 +41,7 @@ export default function AdminCategoriesPage() {
   const [reconciling, setReconciling] = useState(false);
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.push("/login");
       return;
     }

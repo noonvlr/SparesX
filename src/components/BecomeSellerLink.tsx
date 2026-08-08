@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth/clientAuth";
+import { isLoggedInClient } from "@/lib/auth/clientAuth";
 
 /**
  * "Become a seller" — register if logged out, add-product if logged in.
@@ -18,8 +18,7 @@ export default function BecomeSellerLink({
 
   useEffect(() => {
     const sync = () => {
-      const token = getAccessToken();
-      setHref(token ? "/technician/products/new" : "/register");
+      setHref(isLoggedInClient() ? "/technician/products/new" : "/register");
     };
     sync();
     window.addEventListener("sparesx-auth-changed", sync);

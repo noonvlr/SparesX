@@ -16,21 +16,11 @@ import type { ChatConversation, ChatMessage } from "@/types/chat";
 import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
 import { getSocketUrl } from "@/lib/chat/socketUrl";
 import { announceChatOffline } from "@/lib/chat/announceOffline";
-import { authFetch, getAccessToken, getCachedUserId, resolveSessionUserId } from "@/lib/auth/clientAuth";
+import { authFetch, getCachedUserId, resolveSessionUserId } from "@/lib/auth/clientAuth";
 const MAX_FLOATING = 3;
 
 function currentUserId(): string | null {
-  return currentUserIdFromToken() || getCachedUserId();
-}
-
-function currentUserIdFromToken(): string | null {
-  try {
-    const token = getAccessToken();
-    if (!token) return null;
-    return String(JSON.parse(atob(token.split(".")[1])).id);
-  } catch {
-    return null;
-  }
+  return getCachedUserId();
 }
 
 function normalizeMessage(raw: any): ChatMessage {
@@ -685,8 +675,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
     let cleanup: (() => void) | undefined;
 
     (async () => {
-      const uid =
-        currentUserIdFromToken() || (await resolveSessionUserId());
+      const uid = await resolveSessionUserId();
       if (cancelled) return;
       setUserId(uid);
       if (!uid) {
@@ -707,11 +696,10 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const token = getAccessToken();
       let socket = socketRef.current;
       if (!socket || !socket.connected) {
         socket = io(socketUrl, {
-          auth: token ? { token } : {},
+          auth: {},
           withCredentials: true,
           transports: ["websocket", "polling"],
           reconnection: true,

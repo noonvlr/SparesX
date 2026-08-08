@@ -10,7 +10,7 @@ import { Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
 import { cn } from "@/lib/ui/cn";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type MatchItem = {
   productId: string;
@@ -62,7 +62,7 @@ export default function MyRequestsPanel() {
   const [loadingMatches, setLoadingMatches] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.replace(
         `/login?next=${encodeURIComponent("/requests?tab=mine")}`,
       );

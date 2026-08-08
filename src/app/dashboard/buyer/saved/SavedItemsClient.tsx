@@ -11,11 +11,9 @@ import { IconButton } from "@/components/ui/IconButton";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState } from "@/components/feedback";
 import { cn } from "@/lib/ui/cn";
-import {
-  authFetch,
+import { authFetch,
   clearAccessToken,
-  getAccessToken,
-} from "@/lib/auth/clientAuth";
+  isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type SavedRow = {
   _id: string;
@@ -44,7 +42,7 @@ export default function SavedItemsClient() {
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.replace(
         `/login?next=${encodeURIComponent("/dashboard/buyer/saved")}`,
       );

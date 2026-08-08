@@ -1,5 +1,5 @@
 import type { NextRequest } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth/cookies";
+import { SESSION_COOKIE } from "@/lib/auth/cookieNames";
 
 /**
  * Prefer Authorization Bearer, fall back to HttpOnly session cookie.

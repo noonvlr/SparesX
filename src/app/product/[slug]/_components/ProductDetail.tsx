@@ -26,7 +26,7 @@ import {
   formatDeviceLabel,
   formatProductHeading,
 } from "@/lib/seo/productMeta";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, getCachedUserId, isLoggedInClient, resolveSessionUserId } from "@/lib/auth/clientAuth";
 
 interface Seller {
   _id?: string;
@@ -88,18 +88,6 @@ interface SimilarProduct {
 
 type Breadcrumb = { name: string; href: string };
 
-function getUserIdFromToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const token = getAccessToken();
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.id || null;
-  } catch {
-    return null;
-  }
-}
-
 type WaConnectStatus = {
   status: string;
   unlocked: boolean;
@@ -149,14 +137,21 @@ export default function ProductDetail({
   });
 
   useEffect(() => {
-    const userId = getUserIdFromToken();
-    const token = getAccessToken();
-    setIsLoggedIn(!!token);
+    let cancelled = false;
+    const loggedInHint = isLoggedInClient();
+    setIsLoggedIn(loggedInHint);
 
-    // Refresh product with auth so contact details / ownership are accurate
-    authFetch(`/api/products/${initialProduct._id}`)
-      .then((res) => res.json())
-      .then((data) => {
+    void (async () => {
+      const userId = loggedInHint
+        ? getCachedUserId() || (await resolveSessionUserId())
+        : null;
+      if (cancelled) return;
+      setIsLoggedIn(Boolean(userId) || loggedInHint);
+
+      try {
+        const res = await authFetch(`/api/products/${initialProduct._id}`);
+        const data = await res.json();
+        if (cancelled) return;
         if (data.product) {
           setProduct(data.product);
           if (data.product.images?.[0]) {
@@ -177,26 +172,32 @@ export default function ProductDetail({
             ? data.product.technician?._id
             : data.product?.technician;
         setIsOwner(!!userId && String(technicianId) === String(userId));
-      })
-      .catch(() => {
+      } catch {
+        if (cancelled) return;
         const technicianId =
           typeof initialProduct.technician === "object"
             ? initialProduct.technician?._id
             : initialProduct.technician;
         setIsOwner(!!userId && String(technicianId) === String(userId));
-      });
+      }
 
-    if (token) {
-      authFetch(`/api/saved/${initialProduct._id}`)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data) setIsSaved(!!data.saved);
-        })
-        .catch(() => {});
-    } else {
-      setIsSaved(false);
-      setWaConnect(null);
-    }
+      if (userId || loggedInHint) {
+        try {
+          const res = await authFetch(`/api/saved/${initialProduct._id}`);
+          const data = res.ok ? await res.json() : null;
+          if (!cancelled && data) setIsSaved(!!data.saved);
+        } catch {
+          // ignore
+        }
+      } else if (!cancelled) {
+        setIsSaved(false);
+        setWaConnect(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [initialProduct._id]);
 
   const seller: Seller | null = useMemo(() => {
@@ -207,7 +208,7 @@ export default function ProductDetail({
   }, [product.technician]);
 
   const loadWaConnect = async (sellerId: string, productId: string) => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setWaConnect(null);
       return;
     }
@@ -251,7 +252,7 @@ export default function ProductDetail({
 
   const handleToggleSave = async () => {
     if (!requireAuth("save")) return;
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
 
     setSaveLoading(true);
     try {
@@ -343,7 +344,7 @@ export default function ProductDetail({
       return;
     }
 
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
 
     setWaActionLoading(true);
     try {

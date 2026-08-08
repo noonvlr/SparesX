@@ -14,7 +14,7 @@ import {
   prepareChatSound,
   setChatMuted,
 } from "@/lib/chat/sound";
-import { getAccessToken } from "@/lib/auth/clientAuth";
+import { isLoggedInClient } from "@/lib/auth/clientAuth";
 import type { ChatConversation } from "@/types/chat";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
@@ -199,7 +199,7 @@ function FloatingWindow({
 export default function FloatingChatDock() {
   const chat = useChatDock();
   const [muted, setMuted] = useState(false);
-  const [hasToken, setHasToken] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
   const [fabDismissed, setFabDismissed] = useState(false);
   const [chatVisited, setChatVisited] = useState(false);
   const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(
@@ -225,7 +225,7 @@ export default function FloatingChatDock() {
   useEffect(() => {
     setMuted(isChatMuted());
     const sync = () => {
-      setHasToken(Boolean(getAccessToken()));
+      setHasSession(isLoggedInClient());
       setFabDismissed(localStorage.getItem("sparesx_chat_fab_hidden") === "1");
       setChatVisited(localStorage.getItem("sparesx_chat_visited") === "1");
     };
@@ -354,7 +354,7 @@ export default function FloatingChatDock() {
   };
 
   // Guests: no dock
-  if (!hasToken && !chat.userId && !chat.panelOpen) return null;
+  if (!hasSession && !chat.userId && !chat.panelOpen) return null;
 
   const chatUiOpen =
     chat.panelOpen ||

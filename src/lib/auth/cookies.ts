@@ -1,11 +1,12 @@
 import type { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import {
+  AUTH_FLAG_COOKIE,
+  CSRF_COOKIE,
+  SESSION_COOKIE,
+} from "@/lib/auth/cookieNames";
 
-/** HttpOnly session cookie — Phase 11 dual-mode (Bearer JSON token still issued). */
-export const SESSION_COOKIE = "sparesx_session";
-
-/** Readable CSRF double-submit cookie (not HttpOnly). */
-export const CSRF_COOKIE = "sparesx_csrf";
+export { AUTH_FLAG_COOKIE, CSRF_COOKIE, SESSION_COOKIE };
 
 /** Match JWT expiry (7 days). */
 export const SESSION_MAX_AGE_SEC = 60 * 60 * 24 * 7;
@@ -20,7 +21,7 @@ export function sessionCookieOptions(maxAge = SESSION_MAX_AGE_SEC) {
   };
 }
 
-function csrfCookieOptions(maxAge = SESSION_MAX_AGE_SEC) {
+function publicCookieOptions(maxAge = SESSION_MAX_AGE_SEC) {
   return {
     httpOnly: false,
     secure: process.env.NODE_ENV === "production",
@@ -45,27 +46,42 @@ export function clearSessionCookie(res: NextResponse) {
 
 export function applyCsrfCookie(res: NextResponse) {
   const token = randomBytes(32).toString("hex");
-  res.cookies.set(CSRF_COOKIE, token, csrfCookieOptions());
+  res.cookies.set(CSRF_COOKIE, token, publicCookieOptions());
   return token;
 }
 
 export function clearCsrfCookie(res: NextResponse) {
   res.cookies.set(CSRF_COOKIE, "", {
-    ...csrfCookieOptions(0),
+    ...publicCookieOptions(0),
     maxAge: 0,
   });
   return res;
 }
 
-/** Session + CSRF cookies together (login / Google / password rotate). */
+export function applyAuthFlagCookie(res: NextResponse) {
+  res.cookies.set(AUTH_FLAG_COOKIE, "1", publicCookieOptions());
+  return res;
+}
+
+export function clearAuthFlagCookie(res: NextResponse) {
+  res.cookies.set(AUTH_FLAG_COOKIE, "", {
+    ...publicCookieOptions(0),
+    maxAge: 0,
+  });
+  return res;
+}
+
+/** Session + CSRF + auth flag (login / Google / password rotate). */
 export function applyAuthCookies(res: NextResponse, token: string) {
   applySessionCookie(res, token);
   applyCsrfCookie(res);
+  applyAuthFlagCookie(res);
   return res;
 }
 
 export function clearAuthCookies(res: NextResponse) {
   clearSessionCookie(res);
   clearCsrfCookie(res);
+  clearAuthFlagCookie(res);
   return res;
 }

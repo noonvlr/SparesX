@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState, ErrorState } from "@/components/feedback";
 import { DashboardPage } from "@/components/layout";
 import MarkSoldModal from "@/components/MarkSoldModal";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
 
@@ -27,7 +27,7 @@ export default function MyProductsPage() {
   const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
       return;

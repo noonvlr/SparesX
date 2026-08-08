@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { getAccessToken } from "@/lib/auth/clientAuth";
+import { isLoggedInClient, resolveSessionUserId } from "@/lib/auth/clientAuth";
 
 /**
  * Deep-link entry: opens floating dock via event, then returns to browsing.
@@ -17,28 +17,39 @@ export default function MessagesClient() {
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const token = getAccessToken();
-    setAuthed(Boolean(token));
-    if (!token) return;
+    let cancelled = false;
+    let redirectTimer: ReturnType<typeof setTimeout> | undefined;
+    void (async () => {
+      const hint = isLoggedInClient();
+      const uid = hint ? await resolveSessionUserId() : null;
+      if (cancelled) return;
+      setAuthed(Boolean(uid));
+      if (!uid) return;
 
-    if (peerId) {
-      window.dispatchEvent(
-        new CustomEvent("sparesx-open-chat", {
-          detail: { peerId, productId },
-        }),
-      );
-    } else if (openId) {
-      window.dispatchEvent(
-        new CustomEvent("sparesx-open-chat", {
-          detail: { conversationId: openId },
-        }),
-      );
-    } else {
-      window.dispatchEvent(new CustomEvent("sparesx-open-chat", { detail: {} }));
-    }
+      if (peerId) {
+        window.dispatchEvent(
+          new CustomEvent("sparesx-open-chat", {
+            detail: { peerId, productId },
+          }),
+        );
+      } else if (openId) {
+        window.dispatchEvent(
+          new CustomEvent("sparesx-open-chat", {
+            detail: { conversationId: openId },
+          }),
+        );
+      } else {
+        window.dispatchEvent(
+          new CustomEvent("sparesx-open-chat", { detail: {} }),
+        );
+      }
 
-    const t = setTimeout(() => router.replace("/"), 80);
-    return () => clearTimeout(t);
+      redirectTimer = setTimeout(() => router.replace("/"), 80);
+    })();
+    return () => {
+      cancelled = true;
+      if (redirectTimer) clearTimeout(redirectTimer);
+    };
   }, [peerId, productId, openId, router]);
 
   if (authed === false) {
@@ -62,7 +73,7 @@ export default function MessagesClient() {
 
   return (
     <main className="min-h-[40vh] flex items-center justify-center text-sm text-[var(--muted)]">
-      Opening chat…
+      Opening messages…
     </main>
   );
 }

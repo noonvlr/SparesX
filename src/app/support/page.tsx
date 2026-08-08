@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 const TYPES = [
   { value: "bug", label: "Bug / Error" },
@@ -75,7 +75,7 @@ function SupportPageInner() {
   };
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setIsAuthenticated(false);
       setAuthChecked(true);
       setLoading(false);
@@ -112,7 +112,7 @@ function SupportPageInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
 
     setSubmitting(true);
     setMessage(null);

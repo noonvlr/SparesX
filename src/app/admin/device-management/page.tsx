@@ -13,7 +13,7 @@ import { PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
-import { getAccessToken } from "@/lib/auth/clientAuth";
+import { isLoggedInClient } from "@/lib/auth/clientAuth";
 
 export default function AdminDeviceManagementPage() {
   const [queryClient] = useState(() => new QueryClient());
@@ -30,7 +30,7 @@ function DeviceManagementContent() {
   const hierarchy = useDeviceHierarchy();
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.push("/login");
     }
   }, [router]);

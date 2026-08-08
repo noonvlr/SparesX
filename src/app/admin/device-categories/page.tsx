@@ -6,7 +6,7 @@ import { Card, PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface IModel {
   name: string;
@@ -59,7 +59,7 @@ export default function AdminDeviceCategoriesPage() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.push("/login");
       return;
     }

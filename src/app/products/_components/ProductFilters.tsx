@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Card";
 import { showToast } from "@/components/ToastHost";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -573,7 +573,7 @@ export default function ProductFilters() {
   };
 
   const saveCurrentSearch = async () => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       showToast("Log in to save this search", "error");
       router.push(
         `/login?next=${encodeURIComponent(

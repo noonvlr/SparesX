@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { LoadingState } from "@/components/feedback";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -67,7 +67,7 @@ export default function RequestForm({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setIsAuthenticated(false);
       setAuthChecking(false);
       return;
@@ -205,7 +205,7 @@ export default function RequestForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Please login to submit a request.");
       return;
     }

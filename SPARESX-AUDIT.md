@@ -337,7 +337,7 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 
 ## Deferred (large)
 
-- Drop localStorage socket JWT entirely (Phase 16: REST is cookie-first; socket still may use optional token)
+- Drop localStorage socket JWT entirely *(Phase 20: JWT no longer written; socket cookie-only; legacy token cleared on auth)*
 - Full catalog ObjectId rewrite / backfill of historical listings (Phase 18 stores refs on new creates)
 - Atlas Search when scale demands (Mongo `$text` covers MVP)
 - Redis socket adapter (rate limits now Mongo-shared; socket adapter still optional)
@@ -416,6 +416,12 @@ sold → approved             (owner relist; clears soldVia/soldAt)
 ### Phase 19 additions
 
 - Audit deferred list updated: Atlas Search + web push remain large follow-ups; HttpOnly cutover and shared rate limits largely closed
+
+### Phase 20 additions
+
+- Drop localStorage JWT writes; readable `sparesx_auth` flag for UI soft-gates
+- Socket cookie-only (`withCredentials`, no auth.token); chat/messages/shell use session resolve
+- Soft gates migrated from `getAccessToken()` to `isLoggedInClient()`
 
 ---
 

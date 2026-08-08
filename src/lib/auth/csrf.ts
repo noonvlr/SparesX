@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
-import { CSRF_COOKIE, SESSION_COOKIE } from "@/lib/auth/cookies";
+import { CSRF_COOKIE, SESSION_COOKIE } from "@/lib/auth/cookieNames";
 import { SITE_URL } from "@/lib/seo/site";
 
 function safeEqual(a: string, b: string): boolean {

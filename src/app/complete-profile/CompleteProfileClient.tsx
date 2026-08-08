@@ -16,7 +16,7 @@ import {
   Spinner,
   Textarea,
 } from "@/components/ui";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -46,7 +46,7 @@ export default function CompleteProfileClient() {
   });
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.replace(
         `/login?next=${encodeURIComponent("/complete-profile")}`,
       );
@@ -127,7 +127,7 @@ export default function CompleteProfileClient() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
 
     setSaving(true);
     try {

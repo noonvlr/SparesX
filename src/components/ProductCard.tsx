@@ -20,7 +20,7 @@ import {
   formatPartTypeLabel,
 } from "@/lib/products/listingTitle";
 import { productPath } from "@/lib/seo/site";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, getCachedUserId } from "@/lib/auth/clientAuth";
 
 export interface ProductCardData {
   _id: string;
@@ -37,18 +37,6 @@ export interface ProductCardData {
   slug?: string;
   /** Owner user id — when it matches the signed-in seller, show owner actions. */
   technician?: string;
-}
-
-function getUserIdFromToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const token = getAccessToken();
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    return payload.id ? String(payload.id) : null;
-  } catch {
-    return null;
-  }
 }
 
 export default function ProductCard({
@@ -77,7 +65,7 @@ export default function ProductCard({
   const detailPath = productPath(product);
 
   useEffect(() => {
-    const userId = getUserIdFromToken();
+    const userId = getCachedUserId();
     setIsOwner(
       Boolean(userId && product.technician && userId === String(product.technician)),
     );

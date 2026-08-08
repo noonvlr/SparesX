@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 /** Amber site banner prompting Google / passwordless users to set a password. */
 export default function PasswordSetupBanner() {
@@ -23,7 +23,7 @@ export default function PasswordSetupBanner() {
     }
 
     const load = async () => {
-      if (!getAccessToken()) {
+      if (!isLoggedInClient()) {
         setNeedsPassword(false);
         return;
       }

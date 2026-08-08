@@ -6,7 +6,7 @@ import { showToast } from "@/components/ToastHost";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Input";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type Props = {
   open: boolean;
@@ -37,7 +37,7 @@ export default function RateSellerModal({
 
   useEffect(() => {
     if (!open) return;
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setEligible(false);
       setReason("Login required to rate this seller.");
       setLoading(false);
@@ -80,7 +80,7 @@ export default function RateSellerModal({
   if (!open) return null;
 
   const submit = async () => {
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setSubmitting(true);
     try {
       const res = await authFetch("/api/ratings", {

@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type Status = {
   phoneVerified: boolean;
@@ -23,7 +23,7 @@ export default function VerificationBanner() {
     }
 
     const load = async () => {
-      if (!getAccessToken()) {
+      if (!isLoggedInClient()) {
         setStatus(null);
         return;
       }

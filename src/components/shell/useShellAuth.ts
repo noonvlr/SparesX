@@ -9,7 +9,8 @@ import { showToast } from "@/components/ToastHost";
 import {
   authFetch,
   clearAccessToken,
-  getAccessToken,
+  isLoggedInClient,
+  setCachedSessionUser,
 } from "@/lib/auth/clientAuth";
 
 export function useShellAuth() {
@@ -26,27 +27,19 @@ export function useShellAuth() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (token) {
+    if (isLoggedInClient()) {
       setIsAuthenticated(true);
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1]));
-        setUserRole(payload.role);
-      } catch {
-        setUserRole(null);
-      }
     }
 
-    // Cookie-or-Bearer: works even if localStorage was cleared but cookie remains
+    // Cookie session — works without localStorage JWT
     authFetch("/api/auth/me")
       .then(async (r) => {
         if (!r.ok) {
-          if (!token) {
-            setIsAuthenticated(false);
-            setUserRole(null);
-            setUserName(null);
-            setProfilePicture(null);
-          }
+          setIsAuthenticated(false);
+          setUserRole(null);
+          setUserName(null);
+          setProfilePicture(null);
+          setCachedSessionUser(null);
           return null;
         }
         return r.json();
@@ -54,6 +47,7 @@ export function useShellAuth() {
       .then((data) => {
         if (!data?.user) return;
         setIsAuthenticated(true);
+        setCachedSessionUser(data.user);
         if (data.user.role) setUserRole(data.user.role);
         if (data.user.name) setUserName(data.user.name);
         setProfilePicture(data.user.profilePicture || null);

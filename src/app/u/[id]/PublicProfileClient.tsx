@@ -13,7 +13,7 @@ import { Card, EmptyState } from "@/components/ui/Card";
 import UploadedImage from "@/components/ui/UploadedImage";
 import { Button, buttonVariants } from "@/components/ui/Button";
 import type { PublicBadge } from "@/lib/badges/catalog";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type PublicProfile = {
   _id: string;
@@ -74,7 +74,7 @@ export default function PublicProfileClient({
   // The server render is anonymous, so re-fetch with the viewer's token purely
   // to learn whether this is their own profile (which unlocks the edit banner).
   useEffect(() => {
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
 
     authFetch(`/api/users/${userId}/public`)
       .then(async (res) => {
@@ -88,7 +88,7 @@ export default function PublicProfileClient({
   }, [userId]);
 
   const requireAuth = () => {
-    if (getAccessToken()) return true;
+    if (isLoggedInClient()) return true;
     setShowAuth(true);
     return false;
   };

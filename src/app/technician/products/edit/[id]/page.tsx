@@ -9,7 +9,7 @@ import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -90,7 +90,7 @@ export default function EditProductPage() {
 
     console.log("[Edit] Product ID from URL:", productId);
 
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -256,7 +256,7 @@ export default function EditProductPage() {
 
     setError("");
     setSuccess("");
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       return;
     }

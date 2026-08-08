@@ -6,7 +6,7 @@ import { AdminPage } from "@/components/layout";
 import { Card, PageHeader } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type DayPoint = {
   date: string;
@@ -66,7 +66,7 @@ export default function AdminReportsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       return;
     }

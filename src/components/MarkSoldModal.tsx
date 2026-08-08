@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import type { SoldVia } from "@/lib/models/Product";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { cn } from "@/lib/ui/cn";
 
 type MarkSoldModalProps = {
@@ -56,7 +56,7 @@ export default function MarkSoldModal({
       return;
     }
 
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Please log in again to mark this listing sold.");
       return;
     }

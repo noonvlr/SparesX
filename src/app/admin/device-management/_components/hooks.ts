@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch } from "@/lib/auth/clientAuth";
 
 export type NodeType =
   | "device"
@@ -568,8 +568,8 @@ export function useDeviceHierarchy() {
   }, []);
 
   const ensureAuthHeaders = (): Record<string, string> => {
-    const token = getAccessToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    // Cookie session via authFetch; no Bearer
+    return {};
   };
 
   const refreshData = useCallback(async () => {

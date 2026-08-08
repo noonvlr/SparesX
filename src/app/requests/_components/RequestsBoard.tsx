@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, Badge, EmptyState, Skeleton, Avatar } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface PartRequest {
   _id: string;
@@ -91,8 +91,7 @@ export default function RequestsBoard({
 
   const loadRequests = async (query = search, silent = false) => {
     if (!silent) setLoading(true);
-    const token = getAccessToken();
-    setIsAuthenticated(!!token);
+    setIsAuthenticated(isLoggedInClient());
     const params = new URLSearchParams({ status: "open", limit: "50" });
     if (query) params.set("search", query);
 
@@ -101,7 +100,7 @@ export default function RequestsBoard({
       const data = await res.json();
       setRequests(data.requests || []);
       setTotal(data.total || 0);
-      setIsAuthenticated(!!data.isAuthenticated || !!token);
+      setIsAuthenticated(!!data.isAuthenticated || isLoggedInClient());
     } catch {
       setRequests([]);
       setTotal(0);

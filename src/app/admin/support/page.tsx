@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -46,7 +46,7 @@ export default function AdminSupportPage() {
   const selected = tickets.find((t) => t._id === selectedId) || null;
 
   const load = async (filter = status, nextPage = page) => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
       return;

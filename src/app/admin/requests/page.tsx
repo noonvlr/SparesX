@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 const STATUS_TONE: Record<string, "warning" | "success" | "neutral"> = {
   open: "warning",
@@ -57,7 +57,7 @@ export default function AdminRequestsPage() {
   } | null>(null);
 
   const load = useCallback(async (nextStatus = status, nextQ = q, nextPage = page) => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -97,7 +97,7 @@ export default function AdminRequestsPage() {
   }, [status]);
 
   async function patchStatus(id: string, next: string) {
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setBusyId(id);
     try {
       const res = await authFetch(`/api/admin/requests/${id}`, {
@@ -118,7 +118,7 @@ export default function AdminRequestsPage() {
 
   async function remove(id: string) {
     if (!confirm("Delete this request permanently?")) return;
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setBusyId(id);
     try {
       const res = await authFetch(`/api/admin/requests/${id}`, {

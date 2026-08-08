@@ -3,7 +3,21 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { requireUser, isAuthError } from "@/lib/auth/requireUser";
 import { sanitizeUserForClient } from "@/lib/auth/publicUser";
-import { applyCsrfCookie, CSRF_COOKIE } from "@/lib/auth/cookies";
+import {
+  applyAuthFlagCookie,
+  applyCsrfCookie,
+  AUTH_FLAG_COOKIE,
+  CSRF_COOKIE,
+} from "@/lib/auth/cookies";
+
+function ensurePublicAuthCookies(req: NextRequest, res: NextResponse) {
+  if (!req.cookies.get(CSRF_COOKIE)?.value) {
+    applyCsrfCookie(res);
+  }
+  if (req.cookies.get(AUTH_FLAG_COOKIE)?.value !== "1") {
+    applyAuthFlagCookie(res);
+  }
+}
 
 export async function GET(req: NextRequest) {
   const auth = await requireUser(req);
@@ -36,9 +50,7 @@ export async function GET(req: NextRequest) {
         },
         { status: 200 },
       );
-      if (!req.cookies.get(CSRF_COOKIE)?.value) {
-        applyCsrfCookie(res);
-      }
+      ensurePublicAuthCookies(req, res);
       return res;
     }
   }
@@ -53,8 +65,6 @@ export async function GET(req: NextRequest) {
     },
     { status: 200 },
   );
-  if (!req.cookies.get(CSRF_COOKIE)?.value) {
-    applyCsrfCookie(res);
-  }
+  ensurePublicAuthCookies(req, res);
   return res;
 }

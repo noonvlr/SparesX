@@ -8,7 +8,7 @@ import TrustBadges from "@/components/TrustBadges";
 import { FOUNDING_MEMBER_UNTIL } from "@/lib/badges/catalog";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 import { Alert } from "@/components/ui/Alert";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 interface UserDetailsModalProps {
   user: AdminUser;
@@ -74,7 +74,7 @@ export default function UserDetailsModal({
   const [ratingsLoading, setRatingsLoading] = useState(false);
 
   const loadRatings = async () => {
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setRatingsLoading(true);
     try {
       const res = await authFetch(`/api/admin/users/${user._id}/ratings`);
@@ -190,7 +190,7 @@ export default function UserDetailsModal({
     setSuccess("");
 
     try {
-      if (!getAccessToken()) {
+      if (!isLoggedInClient()) {
         setError("Not authenticated");
         setLoading(false);
         return;
@@ -432,7 +432,7 @@ export default function UserDetailsModal({
                                     String(r.stars),
                                   );
                                   if (!stars) return;
-                                  if (!getAccessToken()) return;
+                                  if (!isLoggedInClient()) return;
                                   await authFetch(
                                     `/api/admin/users/${user._id}/ratings`,
                                     {
@@ -455,7 +455,7 @@ export default function UserDetailsModal({
                                 type="button"
                                 className="text-[10px] font-semibold text-[var(--warning)] px-2 py-1 rounded border border-[var(--warning)]/20"
                                 onClick={async () => {
-                                  if (!getAccessToken()) return;
+                                  if (!isLoggedInClient()) return;
                                   await authFetch(
                                     `/api/admin/users/${user._id}/ratings`,
                                     {
@@ -479,7 +479,7 @@ export default function UserDetailsModal({
                                 className="text-[10px] font-semibold text-[var(--danger)] px-2 py-1 rounded border border-[var(--danger)]/20"
                                 onClick={async () => {
                                   if (!confirm("Delete this rating?")) return;
-                                  if (!getAccessToken()) return;
+                                  if (!isLoggedInClient()) return;
                                   await authFetch(
                                     `/api/admin/users/${user._id}/ratings?ratingId=${r._id}`,
                                     {
@@ -581,7 +581,7 @@ export default function UserDetailsModal({
                       setLoading(true);
                       setError("");
                       try {
-                        if (!getAccessToken()) return;
+                        if (!isLoggedInClient()) return;
                         const res = await authFetch(
                           `/api/admin/users/${user._id}/reset-password`,
                           {
@@ -616,7 +616,7 @@ export default function UserDetailsModal({
                       setLoading(true);
                       setError("");
                       try {
-                        if (!getAccessToken()) return;
+                        if (!isLoggedInClient()) return;
                         const res = await authFetch(
                           `/api/admin/users/${user._id}`,
                           {

@@ -7,7 +7,7 @@ import { showToast } from "@/components/ToastHost";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 export type WaState = {
   status: string;
@@ -154,8 +154,7 @@ export async function runWhatsAppAction(opts: {
   setLoading: (v: boolean) => void;
 }) {
   const { sellerId, productId, waState, setWaState, setLoading } = opts;
-  const token = getAccessToken();
-  if (!token) return;
+  if (!isLoggedInClient()) return;
 
   if (waState?.unlocked && waState.whatsappUrl) {
     window.open(waState.whatsappUrl, "_blank", "noopener,noreferrer");
@@ -229,7 +228,7 @@ export function useContactFlow(productId: string) {
   const [contactError, setContactError] = useState<string | null>(null);
 
   const openContact = async () => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setAuthPrompt(true);
       return;
     }

@@ -7,7 +7,7 @@ import { showToast } from "@/components/ToastHost";
 import { openChatUi } from "@/components/chat/openChat";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type ConnectItem = {
   _id: string;
@@ -63,7 +63,7 @@ export default function WhatsAppConnectClient() {
   const [actionId, setActionId] = useState<string | null>(null);
 
   const load = useCallback(async (box: "incoming" | "outgoing") => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.push(`/login?next=${encodeURIComponent("/whatsapp-connect")}`);
       return;
     }

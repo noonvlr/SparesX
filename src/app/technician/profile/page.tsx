@@ -19,11 +19,7 @@ import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
-import {
-  authFetch,
-  getAccessToken,
-  setAccessToken,
-} from "@/lib/auth/clientAuth";
+import { authFetch, setAccessToken, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -139,7 +135,7 @@ export default function TechnicianProfilePage() {
     form.countryCode !== initialForm.countryCode;
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       setLoading(false);
       router.push("/login?next=/technician/profile");
@@ -322,7 +318,7 @@ export default function TechnicianProfilePage() {
   async function handleUpdate(e?: React.FormEvent) {
     e?.preventDefault();
     setError("");
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       setError("Not authenticated");
       return;
     }
@@ -383,7 +379,7 @@ export default function TechnicianProfilePage() {
       showToast("New passwords do not match", "error");
       return;
     }
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     const needsCurrent = Boolean(profile?.hasPassword);
     if (needsCurrent && !pwCurrent) {
       showToast("Enter your current password", "error");

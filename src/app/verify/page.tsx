@@ -17,7 +17,7 @@ import {
   buttonVariants,
 } from "@/components/ui";
 import { cn } from "@/lib/ui/cn";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 type Status = {
   email: string;
@@ -41,7 +41,7 @@ export default function VerifyPage() {
   const emailResend = useOtpResendCooldown(120);
 
   const load = useCallback(async () => {
-    if (!getAccessToken()) {
+    if (!isLoggedInClient()) {
       router.replace(`/login?next=${encodeURIComponent("/verify")}`);
       return;
     }

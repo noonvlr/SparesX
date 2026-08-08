@@ -11,7 +11,7 @@ import { Field } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
-import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
+import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 export default function UsersManager() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -45,7 +45,7 @@ export default function UsersManager() {
   const fetchUsers = async (query?: string, pageNum: number = 1) => {
     try {
       setLoading(true);
-      if (!getAccessToken()) return;
+      if (!isLoggedInClient()) return;
       const params = new URLSearchParams({
         page: pageNum.toString(),
         limit: "20",
@@ -98,7 +98,7 @@ export default function UsersManager() {
 
   async function handleCreateUser(e: React.FormEvent) {
     e.preventDefault();
-    if (!getAccessToken()) return;
+    if (!isLoggedInClient()) return;
     setCreating(true);
     setCreateError("");
     try {
