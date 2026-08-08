@@ -13,13 +13,11 @@
  *   npm run backfill:catalog-refs -- --write --requests
  */
 
-import dotenv from "dotenv";
+import "dotenv/config";
 import mongoose from "mongoose";
 import { Product } from "../src/lib/models/Product";
 import { RequestModel } from "../src/lib/models/Request";
 import { resolveCatalogRefs } from "../src/lib/catalog/resolveRefs";
-
-dotenv.config();
 
 function hasFlag(name: string) {
   return process.argv.includes(`--${name}`);
