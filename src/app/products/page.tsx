@@ -12,6 +12,9 @@ import {
 } from "@/lib/products/listQuery";
 import { formatPartTypeLabel } from "@/lib/products/listingTitle";
 import { SITE_NAME, absoluteUrl, productPath } from "@/lib/seo/site";
+import { requestSubmitHref } from "@/lib/requests/demandLinks";
+import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/ui/cn";
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
 
@@ -176,6 +179,21 @@ export default async function BrowseProductsPage({
   const params = await withPreferCity(toListParams(raw));
   const { products, total, page, pages } = await fetchProductList(params);
 
+  // Evidence layer: SSR browse path must emit search events (API list is unused here).
+  const searchQ = params.search?.trim();
+  if (searchQ && searchQ.length >= 2) {
+    const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
+    void trackMarketplaceEvent({
+      type: "search",
+      query: searchQ,
+      brand: params.brand || undefined,
+      partType: params.partType || undefined,
+      deviceModel: params.deviceModel || params.model || undefined,
+      city: params.city || params.preferCity || undefined,
+      meta: { resultCount: total, source: "products_ssr" },
+    });
+  }
+
   const summary = describeFilters(params);
   const productNames = Array.from(
     new Set(products.map((p) => p.name).filter(Boolean)),
@@ -233,7 +251,22 @@ export default async function BrowseProductsPage({
               <EmptyState
                 className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
                 title="No products match your filters"
-                description="Try adjusting your search criteria or clearing some filters."
+                description="Try adjusting filters — or post a part request so sellers can come to you."
+                action={
+                  <Link
+                    href={requestSubmitHref({
+                      q: params.search,
+                      brand: params.brand,
+                      deviceModel: params.deviceModel || params.model,
+                      partType: params.partType,
+                      deviceCategory: params.deviceCategory || params.category,
+                      city: params.city,
+                    })}
+                    className={cn(buttonVariants())}
+                  >
+                    Post a part request
+                  </Link>
+                }
               />
             ) : (
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-5">

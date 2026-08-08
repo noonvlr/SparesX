@@ -26,10 +26,31 @@ Use this after deploys and when diagnosing SEO / auth / scale issues.
 
 1. `GET /robots.txt` → 200, Sitemap points at `https://www.sparesx.com/sitemap.xml`
 2. `GET /sitemap.xml` → 200, includes product + `/parts/...` + `/u/...` URLs
-3. Spot-check one approved product: SSR title, canonical, JSON-LD Product (+ AggregateRating when seller has ratings)
+3. Spot-check one approved product: SSR title, canonical, JSON-LD Product (+ seller Person rating when present)
 4. Login → refresh → logout; password reset invalidates sessions
 5. WhatsApp request before approval never returns full number
-6. Google Search Console: submit sitemap; inspect a top product URL
+6. Google Search Console workflow (below)
+
+## Google Search Console runbook
+
+Property should be the canonical host: `https://www.sparesx.com` (Domain or URL-prefix).
+
+After each production deploy that touches SEO:
+
+1. **Sitemaps** → submit / confirm `https://www.sparesx.com/sitemap.xml` (expect 200; products + parts hubs with ≥2 listings + seller profiles).
+2. **URL Inspection** on 1–2 top products → “Request indexing” only if newly published or metadata changed materially.
+3. **Page indexing** → triage “Crawled – currently not indexed”, soft 404, duplicate without user-selected canonical, excluded by `noindex`.
+4. **Performance** → note queries/impressions/clicks/position for brand+model+part intents (e.g. “S24 Ultra camera spare”).
+5. Expect filtered `/products?…` and thin `/parts/…` (`total < 2`) to stay **noindex**; do not force-index them.
+6. Soft-tagged `possible_duplicate` listings are excluded from sitemap / noindex — clear tag in admin only after review.
+
+Local helper: `npm run seo:audit` (static checks; not a substitute for GSC).
+
+## Sitemap health
+
+- `GET /sitemap.xml` must return **200** with XML `<urlset>`.
+- If 5xx: check Mongo connectivity + Vercel function logs; route should fall back to static URLs when DB segments fail.
+- Alert if product URL count drops to 0 while `/products` still shows live listings.
 
 ## Auth / CSRF notes
 

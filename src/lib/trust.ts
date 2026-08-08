@@ -22,12 +22,18 @@ export type PublicTrustInfo = {
   trustLabel?: string;
   averageRating?: number;
   ratingCount?: number;
+  /**
+   * Closed-loop chat reply rate (0–100). Only meaningful when
+   * responseSampleSize >= 3 — clients should hide otherwise.
+   */
+  responseRate?: number;
+  responseSampleSize?: number;
   badges?: PublicBadge[];
   activeBadgeKeys?: string[];
 };
 
 export const USER_PUBLIC_TRUST_SELECT =
-  "phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount";
+  "phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount responseRate chatInboundOpportunities";
 
 function orderBadgeKeys(keys: BadgeKey[]): BadgeKey[] {
   const set = new Set(keys);
@@ -130,6 +136,13 @@ export function pickTrustFields(user: any): PublicTrustInfo {
   const band =
     typeof trustScore === "number" ? trustBandFromScore(trustScore) : null;
 
+  const responseSampleSize =
+    typeof user.chatInboundOpportunities === "number"
+      ? user.chatInboundOpportunities
+      : typeof user.responseSampleSize === "number"
+        ? user.responseSampleSize
+        : 0;
+
   return {
     phoneVerified: !!user.phoneVerified,
     emailVerified: !!user.emailVerified,
@@ -143,6 +156,9 @@ export function pickTrustFields(user: any): PublicTrustInfo {
       typeof user.averageRating === "number" ? user.averageRating : undefined,
     ratingCount:
       typeof user.ratingCount === "number" ? user.ratingCount : undefined,
+    responseRate:
+      typeof user.responseRate === "number" ? user.responseRate : undefined,
+    responseSampleSize,
     badges,
     activeBadgeKeys: user.activeBadgeKeys,
   };

@@ -48,6 +48,12 @@ npm run dev            # Next.js + Socket.io (concurrent)
 - Bearer `Authorization` skips CSRF (not a classic cookie CSRF vector); prefer cookie + `authFetch`
 - Clients use `authFetch` (`credentials: "include"`); silent refresh on 401
 
+## SEO / Search Console
+
+- Canonical host: `NEXT_PUBLIC_SITE_URL` (production: `https://www.sparesx.com`)
+- After deploy: follow the Google Search Console runbook in `docs/SPARESX-OPS-CHECKLIST.md`
+- Thin `/parts/...` hubs (`< 2` listings) and soft-duplicate products are `noindex` / sitemap-excluded
+
 ## Useful scripts
 
 ```bash

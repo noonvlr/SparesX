@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
   const sellers = await User.find(filter)
     .select(
-      "name createdAt phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role city state averageRating ratingCount",
+      "name createdAt phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role city state averageRating ratingCount responseRate chatInboundOpportunities",
     )
     .sort({ createdAt: -1 })
     .limit(limit * (preferred ? 2 : 1));

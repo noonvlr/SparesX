@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import ModelSelector from "@/components/ModelSelector";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +34,9 @@ export default function RequestForm({
   onSubmitted?: () => void;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const prefillSeeded = useRef(false);
+  const pendingModel = useRef<string | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
@@ -107,6 +110,93 @@ export default function RequestForm({
       .catch(() => setError("Failed to load form options"))
       .finally(() => setDataLoading(false));
   }, [isAuthenticated]);
+
+  // Prefill from zero-result / demand deep links (?brand=&deviceModel=&partType=&q=)
+  useEffect(() => {
+    if (dataLoading || prefillSeeded.current || deviceCategories.length === 0) {
+      return;
+    }
+    const brand = searchParams.get("brand")?.trim() || "";
+    const deviceModel = searchParams.get("deviceModel")?.trim() || "";
+    const partType = searchParams.get("partType")?.trim() || "";
+    const deviceCategory = searchParams.get("deviceCategory")?.trim() || "";
+    const q = searchParams.get("q")?.trim() || searchParams.get("search")?.trim() || "";
+    prefillSeeded.current = true;
+    if (!brand && !deviceModel && !partType && !deviceCategory && !q) return;
+
+    const matchedDevice = deviceCategories.find(
+      (c) =>
+        c.value.toLowerCase() === deviceCategory.toLowerCase() ||
+        c.label.toLowerCase() === deviceCategory.toLowerCase(),
+    );
+    if (matchedDevice) {
+      setForm((f) => ({ ...f, deviceCategory: matchedDevice.value }));
+    }
+    if (brand) {
+      setBrandSearch(brand);
+      setForm((f) => ({ ...f, brand }));
+    }
+    if (partType) {
+      setPartTypeSearch(partType);
+      setForm((f) => ({
+        ...f,
+        partType,
+        partTypeLabel: partType,
+      }));
+    }
+    if (deviceModel) pendingModel.current = deviceModel;
+    if (q && !brand && !partType) {
+      setForm((f) => ({
+        ...f,
+        description: f.description || `Looking for: ${q}`,
+      }));
+    }
+  }, [dataLoading, deviceCategories, searchParams]);
+
+  useEffect(() => {
+    if (!brandSearch || brands.length === 0 || form.brandSlug) return;
+    const match = brands.find(
+      (b) => b.name.toLowerCase() === brandSearch.toLowerCase(),
+    );
+    if (match) {
+      setForm((f) => ({
+        ...f,
+        brand: match.name,
+        brandSlug: match.slug,
+      }));
+    }
+  }, [brands, brandSearch, form.brandSlug]);
+
+  useEffect(() => {
+    if (!form.brandSlug || !pendingModel.current || models.length === 0) return;
+    const wanted = pendingModel.current;
+    const match = models.find(
+      (m) => m.name.toLowerCase() === wanted.toLowerCase(),
+    );
+    setForm((f) => ({
+      ...f,
+      deviceModel: match?.name || wanted,
+    }));
+    setModelSearch(match?.name || wanted);
+    pendingModel.current = null;
+  }, [models, form.brandSlug]);
+
+  useEffect(() => {
+    if (!form.partType || partTypes.length === 0) return;
+    const match = partTypes.find(
+      (p) =>
+        p.value.toLowerCase() === form.partType.toLowerCase() ||
+        (p.label || "").toLowerCase() === form.partType.toLowerCase(),
+    );
+    if (match) {
+      setForm((f) => ({
+        ...f,
+        partType: match.value,
+        partTypeLabel: match.label || match.value,
+      }));
+      setPartTypeSearch(match.label || match.value);
+    }
+  }, [partTypes, form.partType]);
 
   useEffect(() => {
     if (!form.deviceCategory) {

@@ -48,6 +48,8 @@ interface Seller {
   trustLabel?: string;
   averageRating?: number;
   ratingCount?: number;
+  responseRate?: number;
+  responseSampleSize?: number;
   badges?: import("@/lib/badges/catalog").PublicBadge[];
   activeBadgeKeys?: string[];
 }
@@ -798,6 +800,12 @@ export default function ProductDetail({
                         showScore
                       />
                     </div>
+                    {typeof seller.responseRate === "number" &&
+                    (seller.responseSampleSize || 0) >= 3 ? (
+                      <p className="text-xs text-[var(--muted)] mt-1.5">
+                        Usually replies within 24h ({seller.responseRate}%)
+                      </p>
+                    ) : null}
                     {(seller.city || seller.state) && (
                       <p className="text-sm text-[var(--muted)] mt-1">
                         {[seller.city, seller.state].filter(Boolean).join(", ")}

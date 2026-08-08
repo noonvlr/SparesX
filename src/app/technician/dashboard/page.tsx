@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import DashboardStats from "./_components/DashboardStats";
 import DemandMatches from "./_components/DemandMatches";
+import SellerAnalytics from "./_components/SellerAnalytics";
 import { Card } from "@/components/ui/Card";
 import { DashboardPage } from "@/components/layout";
 
@@ -125,6 +126,8 @@ export default function TechnicianDashboard() {
       </div>
 
       <DashboardStats />
+
+      <SellerAnalytics />
 
       <DemandMatches />
 

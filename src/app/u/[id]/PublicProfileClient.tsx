@@ -34,6 +34,8 @@ type PublicProfile = {
   trustLabel?: string;
   averageRating?: number;
   ratingCount?: number;
+  responseRate?: number;
+  responseSampleSize?: number;
   badges?: PublicBadge[];
   activeBadgeKeys?: string[];
   trustSummary?: string;
@@ -198,6 +200,14 @@ export default function PublicProfileClient({
                 showScore
                 size="md"
               />
+
+              {typeof profile.responseRate === "number" &&
+              (profile.responseSampleSize || 0) >= 3 ? (
+                <p className="text-sm text-[var(--ink-secondary)]">
+                  Usually replies within 24h ({profile.responseRate}% of recent
+                  chats)
+                </p>
+              ) : null}
 
               {profile.trustSummary ? (
                 <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2.5 space-y-2">

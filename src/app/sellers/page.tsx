@@ -4,48 +4,73 @@ import Link from "next/link";
 import TrustBadges from "@/components/TrustBadges";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
+import { SITE_NAME } from "@/lib/seo/site";
 
-export const metadata: Metadata = {
-  title: "Sellers",
-  description:
-    "Browse technicians on SparesX. Phone-verified and trusted sellers for mobile spare parts across India.",
-  keywords: [
-    "phone-verified sellers",
-    "technician network",
-    "trusted sellers",
-    "spare parts sellers",
-    "mobile repair technicians",
-  ],
-  alternates: {
-    canonical: "/sellers",
-  },
-  openGraph: {
-    title: "Sellers | SparesX",
-    description:
-      "Browse technicians on SparesX. Connect with phone-verified and trusted sellers.",
-    type: "website",
-    url: "/sellers",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Sellers | SparesX",
-    description: "Connect with phone-verified mobile spare parts sellers.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+type RawSearchParams = Record<string, string | string[] | undefined>;
+
+function firstParam(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0];
+  return value;
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<RawSearchParams>;
+}): Promise<Metadata> {
+  const raw = await searchParams;
+  const city = firstParam(raw.city);
+  const filtered = Boolean(city || firstParam(raw.nearby));
+
+  return {
+    title: city ? `Sellers in ${city}` : "Sellers",
+    description: city
+      ? `Technicians in ${city} on ${SITE_NAME}. Phone-verified and trusted sellers for mobile spare parts.`
+      : "Browse technicians on SparesX. Phone-verified and trusted sellers for mobile spare parts across India.",
+    keywords: [
+      "phone-verified sellers",
+      "technician network",
+      "trusted sellers",
+      "spare parts sellers",
+      "mobile repair technicians",
+    ],
+    alternates: {
+      canonical: "/sellers",
+    },
+    openGraph: {
+      title: city
+        ? `Sellers in ${city} | ${SITE_NAME}`
+        : `Sellers | ${SITE_NAME}`,
+      description:
+        "Browse technicians on SparesX. Connect with phone-verified and trusted sellers.",
+      type: "website",
+      url: "/sellers",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: city
+        ? `Sellers in ${city} | ${SITE_NAME}`
+        : `Sellers | ${SITE_NAME}`,
+      description: "Connect with phone-verified mobile spare parts sellers.",
+    },
+    robots: {
+      index: !filtered,
+      follow: true,
+    },
+  };
+}
 
 export default async function SellersPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<RawSearchParams>;
 }) {
   const raw = await searchParams;
-  const city = typeof raw.city === "string" ? raw.city : undefined;
+  const city = firstParam(raw.city);
   const nearby =
-    raw.nearby === "1" || raw.nearby === "true" ? "1" : undefined;
+    firstParam(raw.nearby) === "1" || firstParam(raw.nearby) === "true"
+      ? "1"
+      : undefined;
 
   const headerList = await headers();
   const host = headerList.get("host");
@@ -106,6 +131,8 @@ export default async function SellersPage({
                 trustLabel?: string;
                 averageRating?: number;
                 ratingCount?: number;
+                responseRate?: number;
+                responseSampleSize?: number;
                 badges?: import("@/lib/badges/catalog").PublicBadge[];
                 activeBadgeKeys?: string[];
               }) => (
@@ -129,6 +156,12 @@ export default async function SellersPage({
                           count={seller.ratingCount || 0}
                         />
                       </div>
+                      {typeof seller.responseRate === "number" &&
+                      (seller.responseSampleSize || 0) >= 3 ? (
+                        <p className="text-xs text-[var(--muted)] mt-1">
+                          Usually replies within 24h ({seller.responseRate}%)
+                        </p>
+                      ) : null}
                     </div>
                     <TrustBadges
                       phoneVerified={seller.phoneVerified}

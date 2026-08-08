@@ -11,7 +11,8 @@ export type MarketplaceEventType =
   | "whatsapp_request"
   | "whatsapp_approved"
   | "request_created"
-  | "listing_sold";
+  | "listing_sold"
+  | "rating_created";
 
 export type MarketplaceEventDoc = {
   type: MarketplaceEventType;
@@ -41,6 +42,7 @@ const MarketplaceEventSchema = new Schema<MarketplaceEventDoc>(
         "whatsapp_approved",
         "request_created",
         "listing_sold",
+        "rating_created",
       ],
       index: true,
     },

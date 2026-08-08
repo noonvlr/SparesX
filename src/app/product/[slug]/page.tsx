@@ -56,6 +56,9 @@ export async function generateMetadata({
     const heading = formatProductHeading(product);
     const description = buildProductSeoDescription(product);
     const isSold = product.status === "sold";
+    const isDuplicate =
+      Array.isArray(product.tags) &&
+      product.tags.includes("possible_duplicate");
 
     return {
       // Bare title — root layout appends "| SparesX" via its template.
@@ -94,10 +97,9 @@ export async function generateMetadata({
         "product:price:currency": "INR",
         "product:retailer_item_id": String(product._id),
       },
-      // Sold listings stay reachable for buyers who bookmarked them, but
-      // shouldn't keep ranking in Google.
+      // Sold + soft-duplicate listings stay reachable but should not rank.
       robots: {
-        index: !isSold,
+        index: !isSold && !isDuplicate,
         follow: true,
       },
     };
@@ -204,17 +206,28 @@ export default async function ProductSlugPage({
         : product.condition === "refurbished"
           ? "https://schema.org/RefurbishedCondition"
           : "https://schema.org/NewCondition",
-    ...(typeof product.technician?.averageRating === "number" &&
-    product.technician.averageRating > 0 &&
-    typeof product.technician?.ratingCount === "number" &&
-    product.technician.ratingCount > 0
+    // Seller ratings belong on the Person/seller node — not AggregateRating on Product
+    // (avoids Google rich-result mismatch for marketplace listings).
+    ...(product.technician?._id || product.technician?.id
       ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: product.technician.averageRating,
-            reviewCount: product.technician.ratingCount,
-            bestRating: 5,
-            worstRating: 1,
+          seller: {
+            "@type": "Person",
+            name: product.technician?.name || "Seller",
+            url: absoluteUrl(`/u/${product.technician._id || product.technician.id}`),
+            ...(typeof product.technician?.averageRating === "number" &&
+            product.technician.averageRating > 0 &&
+            typeof product.technician?.ratingCount === "number" &&
+            product.technician.ratingCount > 0
+              ? {
+                  aggregateRating: {
+                    "@type": "AggregateRating",
+                    ratingValue: product.technician.averageRating,
+                    reviewCount: product.technician.ratingCount,
+                    bestRating: 5,
+                    worstRating: 1,
+                  },
+                }
+              : {}),
           },
         }
       : {}),

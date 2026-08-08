@@ -32,6 +32,8 @@ export type PublicProfileData = {
   trustLabel?: string;
   averageRating?: number;
   ratingCount?: number;
+  responseRate?: number;
+  responseSampleSize?: number;
   badges?: PublicBadge[];
   activeBadgeKeys?: string[];
   trustSummary?: string;
@@ -87,22 +89,25 @@ export async function fetchPublicProfile(
 
   const user = await User.findById(id)
     .select(
-      "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount completedSales responseRate complaintRate",
+      "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount completedSales responseRate complaintRate chatInboundOpportunities",
     )
     .lean();
 
   if (!user || user.isBlocked) return null;
 
-  const listingDocs = await Product.find({
-    technician: id,
-    status: "approved",
-  })
-    .select(
-      "slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable createdAt",
-    )
-    .sort({ createdAt: -1 })
-    .limit(24)
-    .lean();
+  const [listingDocs, listingCount] = await Promise.all([
+    Product.find({
+      technician: id,
+      status: "approved",
+    })
+      .select(
+        "slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable createdAt",
+      )
+      .sort({ createdAt: -1 })
+      .limit(24)
+      .lean(),
+    Product.countDocuments({ technician: id, status: "approved" }),
+  ]);
 
   const listings: PublicProfileListing[] = listingDocs.map(
     (p: Record<string, any>) => ({
@@ -164,6 +169,6 @@ export async function fetchPublicProfile(
     },
     listings,
     ratings,
-    listingCount: listings.length,
+    listingCount,
   };
 }

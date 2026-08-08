@@ -191,6 +191,15 @@ export async function POST(req: NextRequest) {
     const stats = await recomputeSellerRatingStats(sellerId);
 
     if (!eligibility.existingRating) {
+      const { trackMarketplaceEvent } = await import(
+        "@/lib/analytics/events"
+      );
+      void trackMarketplaceEvent({
+        type: "rating_created",
+        productId: productId || undefined,
+        meta: { stars },
+      });
+
       const { createNotification } = await import(
         "@/lib/notifications/create"
       );

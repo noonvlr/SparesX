@@ -74,7 +74,10 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 async function loadProductEntries(): Promise<MetadataRoute.Sitemap> {
-  const products = await Product.find({ status: "approved" })
+  const products = await Product.find({
+    status: "approved",
+    tags: { $nin: ["possible_duplicate"] },
+  })
     .select("_id slug updatedAt")
     .sort({ updatedAt: -1 })
     .limit(PRODUCT_LIMIT)
@@ -96,8 +99,14 @@ async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
       deviceModel?: string;
     };
     updatedAt: Date;
+    count: number;
   }>([
-    { $match: { status: "approved" } },
+    {
+      $match: {
+        status: "approved",
+        tags: { $nin: ["possible_duplicate"] },
+      },
+    },
     {
       $group: {
         _id: {
@@ -106,8 +115,11 @@ async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
           deviceModel: "$deviceModel",
         },
         updatedAt: { $max: "$updatedAt" },
+        count: { $sum: 1 },
       },
     },
+    // Align with hub page robots: thin single-listing hubs stay out of the sitemap.
+    { $match: { count: { $gte: 2 } } },
     { $sort: { updatedAt: -1 } },
     { $limit: PARTS_HUB_LIMIT },
   ]);

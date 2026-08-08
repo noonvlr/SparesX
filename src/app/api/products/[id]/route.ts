@@ -27,7 +27,7 @@ export async function GET(
     const isAuthenticated = !!userId;
 
     const TECHNICIAN_FIELDS =
-      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount";
+      "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount responseRate chatInboundOpportunities";
 
     // `id` may be a Mongo _id or an SEO slug, so both URL forms resolve.
     const product = Types.ObjectId.isValid(id)
