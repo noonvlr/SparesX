@@ -129,7 +129,7 @@ export default function GoogleSignInButton({
   return (
     <div className={`relative ${className}`}>
       {busy && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[var(--radius)] bg-[var(--surface)]/70">
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[var(--radius)] bg-[var(--surface)]">
           <span className="w-5 h-5 border-2 border-[var(--border-strong)] border-t-[var(--brand)] rounded-full animate-spin" />
         </div>
       )}

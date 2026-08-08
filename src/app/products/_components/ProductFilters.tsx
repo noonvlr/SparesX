@@ -239,7 +239,7 @@ export function ProductSearchBar({
               if (e.key === "Enter") commitSearch(searchInput);
               if (e.key === "Escape") setShowSuggestions(false);
             }}
-            className="h-auto rounded-[var(--radius-lg)] border-[var(--border)] bg-[var(--surface)]/80 py-3 pl-12 pr-10 shadow-[var(--shadow-md)] backdrop-blur-md"
+            className="h-auto rounded-[var(--radius-lg)] border-[var(--border)] bg-[var(--surface)] py-3 pl-12 pr-10 shadow-[var(--shadow-md)]"
           />
           {searchInput ? (
             <button

@@ -14,7 +14,7 @@ export default function RequestsTabs({
   ];
 
   return (
-    <div className="inline-flex rounded-[var(--radius-lg)] bg-[var(--surface)]/90 backdrop-blur border border-[var(--border)] p-1.5 shadow-[var(--shadow-sm)] overflow-x-auto max-w-full">
+    <div className="inline-flex rounded-[var(--radius-lg)] bg-[var(--surface)] border border-[var(--border)] p-1.5 shadow-[var(--shadow-sm)] overflow-x-auto max-w-full">
       {items.map((item) => (
         <Link
           key={item.key}

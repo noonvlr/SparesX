@@ -524,7 +524,7 @@ export default function FloatingChatDock() {
             aria-modal="true"
             aria-label="Messages"
           >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--divider)] bg-[var(--surface)]/70 rounded-t-[var(--radius-xl)] md:rounded-t-[var(--radius-lg)]">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--divider)] bg-[var(--surface)] rounded-t-[var(--radius-xl)] md:rounded-t-[var(--radius-lg)]">
               {chat.panelView === "thread" ? (
                 <IconButton
                   type="button"

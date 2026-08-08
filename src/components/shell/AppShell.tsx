@@ -747,7 +747,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile bottom nav */}
       {!hideShell && (
         <nav
-          className="md:hidden fixed bottom-0 inset-x-0 z-40 glass-nav border-t border-[var(--border)] flex items-stretch justify-around px-1 pb-[env(safe-area-inset-bottom,0px)] h-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom,0px))]"
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 glass-nav border-t border-[var(--border)] flex items-stretch overflow-x-auto overscroll-x-contain scrollbar-hide px-1 pb-[env(safe-area-inset-bottom,0px)] h-[calc(var(--bottom-nav-h)+env(safe-area-inset-bottom,0px))]"
           aria-label="Primary"
         >
           {mobileItems.map((item) => {
@@ -759,7 +759,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   type="button"
                   onClick={item.onClick}
                   className={cn(
-                    "relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-12 min-w-[48px] text-[10px] font-medium transition-colors",
+                    "relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-12 min-w-[4.75rem] shrink-0 px-2 text-[10px] font-medium transition-colors whitespace-nowrap",
                     active
                       ? "text-[var(--brand)]"
                       : "text-[var(--muted)] hover:text-[var(--brand)]",
@@ -780,7 +780,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 key={`${item.label}-${item.href}`}
                 href={item.href}
                 className={cn(
-                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-12 min-w-[48px] text-[10px] font-medium transition-colors",
+                  "relative flex flex-1 flex-col items-center justify-center gap-0.5 min-h-12 min-w-[4.75rem] shrink-0 px-2 text-[10px] font-medium transition-colors whitespace-nowrap",
                   active
                     ? "text-[var(--brand)]"
                     : "text-[var(--muted)] hover:text-[var(--brand)]",

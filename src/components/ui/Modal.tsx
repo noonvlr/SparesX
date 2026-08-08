@@ -14,8 +14,8 @@ type ModalProps = {
   sheet?: boolean;
   footer?: React.ReactNode;
   /**
-   * `glass` (default) keeps frosted chrome. `solid` uses an opaque elevated
-   * surface — prefer for forms/confirmations where transparency is distracting.
+   * Panel surface. Both variants are opaque; `solid` is the default.
+   * `glass` remains for call-site compatibility (now solid chrome).
    */
   surface?: "glass" | "solid";
 };
@@ -36,7 +36,7 @@ export function Modal({
   className,
   sheet = true,
   footer,
-  surface = "glass",
+  surface = "solid",
 }: ModalProps) {
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -106,9 +106,7 @@ export function Modal({
         tabIndex={-1}
         className={cn(
           "relative w-full sm:max-w-lg shadow-[var(--shadow-modal)] outline-none",
-          surface === "solid"
-            ? "bg-[var(--surface-elevated)] border border-[var(--border)]"
-            : "bg-[var(--modal-bg)] border border-[var(--glass-border)] glass",
+          "bg-[var(--surface-elevated)] border border-[var(--border)]",
           sheet
             ? "rounded-t-[var(--radius-xl)] sm:rounded-[var(--radius-lg)] max-h-[90dvh] overflow-y-auto"
             : "rounded-[var(--radius-lg)] max-h-[90dvh] overflow-y-auto m-4",

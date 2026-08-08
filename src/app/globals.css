@@ -54,16 +54,16 @@
   --verified: #2563eb;
   --verified-soft: #eff6ff;
 
-  /* Overlay / glass */
+  /* Overlay / chrome (solid panels — no frosted transparency) */
   --overlay: rgba(15, 23, 42, 0.4);
-  --glass-bg: rgba(255, 255, 255, 0.82);
-  --glass-border: rgba(226, 232, 240, 0.95);
-  --glass-blur: 18px;
-  --glass-saturate: 1.4;
+  --glass-bg: var(--surface-elevated);
+  --glass-border: var(--border);
+  --glass-blur: 0px;
+  --glass-saturate: 1;
 
   /* Chrome */
-  --nav-bg: var(--glass-bg);
-  --sidebar-bg: var(--glass-bg);
+  --nav-bg: var(--surface-elevated);
+  --sidebar-bg: var(--surface-elevated);
   --footer-bg: #0b0f14;
   --footer-fg: rgba(255, 255, 255, 0.72);
   --footer-heading: rgba(255, 255, 255, 0.96);
@@ -247,13 +247,13 @@
   --verified-soft: rgba(59, 130, 246, 0.16);
 
   --overlay: rgba(0, 0, 0, 0.55);
-  --glass-bg: rgba(20, 20, 20, 0.6);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-blur: 18px;
-  --glass-saturate: 1.2;
+  --glass-bg: var(--surface-elevated);
+  --glass-border: var(--border);
+  --glass-blur: 0px;
+  --glass-saturate: 1;
 
-  --nav-bg: var(--glass-bg);
-  --sidebar-bg: var(--glass-bg);
+  --nav-bg: var(--surface-elevated);
+  --sidebar-bg: var(--surface-elevated);
   --footer-bg: #0b0f14;
   --footer-fg: rgba(255, 255, 255, 0.72);
   --footer-heading: rgba(255, 255, 255, 0.96);
@@ -449,29 +449,19 @@
   opacity: var(--icon-opacity-disabled);
 }
 
-/* Glass — frosty nav/chrome only */
+/* Solid chrome panels (legacy class names kept for call sites) */
 .glass {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .glass {
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  }
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .glass-nav {
   background: var(--nav-bg);
   border-bottom: 1px solid var(--glass-border);
-}
-
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  .glass-nav {
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  }
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .card-hover {
