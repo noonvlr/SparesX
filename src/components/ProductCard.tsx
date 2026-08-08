@@ -20,6 +20,7 @@ import {
   formatPartTypeLabel,
 } from "@/lib/products/listingTitle";
 import { productPath } from "@/lib/seo/site";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 export interface ProductCardData {
   _id: string;
@@ -40,7 +41,7 @@ export interface ProductCardData {
 
 function getUserIdFromToken(): string | null {
   if (typeof window === "undefined") return null;
-  const token = localStorage.getItem("token");
+  const token = getAccessToken();
   if (!token) return null;
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -107,14 +108,10 @@ export default function ProductCard({
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     setDeleting(true);
     try {
-      const res = await fetch(`/api/technician/products/delete/${product._id}`, {
+      const res = await authFetch(`/api/technician/products/delete/${product._id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         setHidden(true);

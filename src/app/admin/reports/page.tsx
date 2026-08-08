@@ -6,6 +6,7 @@ import { AdminPage } from "@/components/layout";
 import { Card, PageHeader } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 type DayPoint = {
   date: string;
@@ -65,14 +66,11 @@ export default function AdminReportsPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       return;
     }
-    fetch("/api/admin/dashboard", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/admin/dashboard")
       .then((res) => res.json())
       .then((data) => {
         if (data.message && data.userCount == null) {

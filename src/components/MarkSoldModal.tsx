@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import type { SoldVia } from "@/lib/models/Product";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 import { cn } from "@/lib/ui/cn";
 
 type MarkSoldModalProps = {
@@ -55,8 +56,7 @@ export default function MarkSoldModal({
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Please log in again to mark this listing sold.");
       return;
     }
@@ -64,10 +64,9 @@ export default function MarkSoldModal({
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/technician/products/sold/${productId}`, {
+      const res = await authFetch(`/api/technician/products/sold/${productId}`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ soldVia }),

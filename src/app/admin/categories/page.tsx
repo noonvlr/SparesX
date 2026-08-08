@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface Category {
   _id: string;
@@ -40,8 +41,7 @@ export default function AdminCategoriesPage() {
   const [reconciling, setReconciling] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.push("/login");
       return;
     }
@@ -50,10 +50,7 @@ export default function AdminCategoriesPage() {
 
   async function fetchCategories() {
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/admin/categories", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch("/api/admin/categories");
       if (!res.ok) throw new Error("Failed to fetch categories");
       const data = await res.json();
       setCategories(data.categories);
@@ -69,11 +66,9 @@ export default function AdminCategoriesPage() {
     setError("");
     setSuccess("");
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("/api/admin/categories/reconcile", {
+      const res = await authFetch("/api/admin/categories/reconcile", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ deleteInactiveDuplicates: true }),
@@ -135,17 +130,15 @@ export default function AdminCategoriesPage() {
     setSuccess("");
 
     try {
-      const token = localStorage.getItem("token");
       const url = editingCategory
         ? `/api/admin/categories/${editingCategory._id}`
         : "/api/admin/categories";
       const method = editingCategory ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
@@ -171,10 +164,8 @@ export default function AdminCategoriesPage() {
     if (!confirm("Are you sure you want to delete this category?")) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/admin/categories/${id}`, {
+      const res = await authFetch(`/api/admin/categories/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Failed to delete category");

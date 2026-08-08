@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState, ErrorState } from "@/components/feedback";
 import { DashboardPage } from "@/components/layout";
 import MarkSoldModal from "@/components/MarkSoldModal";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
 
@@ -26,15 +27,12 @@ export default function MyProductsPage() {
   const [hoveredProductId, setHoveredProductId] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       setLoading(false);
       return;
     }
-    fetch("/api/technician/products", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/technician/products")
       .then((res) => res.json())
       .then((data) => {
         setProducts(data.products || []);
@@ -90,11 +88,8 @@ export default function MyProductsPage() {
   async function handleDelete(productId: string) {
     if (!confirm("Are you sure you want to delete this product?")) return;
     setDeleting(productId);
-    const token = localStorage.getItem("token");
-    if (!token) return;
-    const res = await fetch(`/api/technician/products/delete/${productId}`, {
+    const res = await authFetch(`/api/technician/products/delete/${productId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
       setProducts(products.filter((p) => p._id !== productId));
@@ -105,13 +100,10 @@ export default function MyProductsPage() {
   }
 
   async function handleRelist(productId: string) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setRelisting(productId);
     try {
-      const res = await fetch(`/api/technician/products/relist/${productId}`, {
+      const res = await authFetch(`/api/technician/products/relist/${productId}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

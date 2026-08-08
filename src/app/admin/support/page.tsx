@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
@@ -45,8 +46,7 @@ export default function AdminSupportPage() {
   const selected = tickets.find((t) => t._id === selectedId) || null;
 
   const load = async (filter = status, nextPage = page) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -58,9 +58,7 @@ export default function AdminSupportPage() {
         page: String(nextPage),
         limit: "40",
       });
-      const res = await fetch(`/api/admin/support?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/admin/support?${params}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load");
@@ -95,9 +93,6 @@ export default function AdminSupportPage() {
   }, [selectedId]);
 
   async function markAsRead(ticketId: string) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
     const ticket = tickets.find((t) => t._id === ticketId);
     if (!ticket || !isUnread(ticket)) return;
 
@@ -111,11 +106,10 @@ export default function AdminSupportPage() {
     setUnreadCount((c) => Math.max(0, c - 1));
 
     try {
-      const res = await fetch(`/api/admin/support/${ticketId}`, {
+      const res = await authFetch(`/api/admin/support/${ticketId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ markRead: true }),
       });
@@ -141,15 +135,12 @@ export default function AdminSupportPage() {
 
   async function updateTicket(nextStatus?: string) {
     if (!selected) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/support/${selected._id}`, {
+      const res = await authFetch(`/api/admin/support/${selected._id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           status: nextStatus || selected.status,

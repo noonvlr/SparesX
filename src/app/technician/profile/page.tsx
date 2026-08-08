@@ -19,6 +19,11 @@ import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
+import {
+  authFetch,
+  getAccessToken,
+  setAccessToken,
+} from "@/lib/auth/clientAuth";
 
 const COUNTRY_CODES = [
   { code: "+91", label: "🇮🇳 +91" },
@@ -134,16 +139,13 @@ export default function TechnicianProfilePage() {
     form.countryCode !== initialForm.countryCode;
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       setLoading(false);
       router.push("/login?next=/technician/profile");
       return;
     }
-    fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
         if (data.user) {
@@ -294,11 +296,8 @@ export default function TechnicianProfilePage() {
         }),
       );
       setUploadProgress(60);
-      const response = await fetch("/api/upload", {
+      const response = await authFetch("/api/upload", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-        },
         body: formData,
       });
       setUploadProgress(80);
@@ -323,8 +322,7 @@ export default function TechnicianProfilePage() {
   async function handleUpdate(e?: React.FormEvent) {
     e?.preventDefault();
     setError("");
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       return;
     }
@@ -334,11 +332,10 @@ export default function TechnicianProfilePage() {
     }
     setSaving(true);
     try {
-      const res = await fetch("/api/technician/profile", {
+      const res = await authFetch("/api/technician/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(form),
       });
@@ -386,8 +383,7 @@ export default function TechnicianProfilePage() {
       showToast("New passwords do not match", "error");
       return;
     }
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
     const needsCurrent = Boolean(profile?.hasPassword);
     if (needsCurrent && !pwCurrent) {
       showToast("Enter your current password", "error");
@@ -395,11 +391,10 @@ export default function TechnicianProfilePage() {
     }
     setPwSaving(true);
     try {
-      const res = await fetch("/api/auth/change-password", {
+      const res = await authFetch("/api/auth/change-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...(needsCurrent ? { currentPassword: pwCurrent } : {}),
@@ -412,8 +407,7 @@ export default function TechnicianProfilePage() {
         return;
       }
       if (data.token) {
-        localStorage.setItem("token", data.token);
-        window.dispatchEvent(new Event("sparesx-auth-changed"));
+        setAccessToken(data.token);
       }
       setPwCurrent("");
       setPwNew("");

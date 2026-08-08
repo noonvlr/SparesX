@@ -7,6 +7,7 @@ import { showToast } from "@/components/ToastHost";
 import { openChatUi } from "@/components/chat/openChat";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 type ConnectItem = {
   _id: string;
@@ -62,16 +63,13 @@ export default function WhatsAppConnectClient() {
   const [actionId, setActionId] = useState<string | null>(null);
 
   const load = useCallback(async (box: "incoming" | "outgoing") => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.push(`/login?next=${encodeURIComponent("/whatsapp-connect")}`);
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch(`/api/whatsapp-connect?box=${box}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/whatsapp-connect?box=${box}`);
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         showToast(data.message || "Failed to load requests", "error");
@@ -90,14 +88,11 @@ export default function WhatsAppConnectClient() {
   }, [tab, load]);
 
   const act = async (id: string, action: "approve" | "decline" | "revoke") => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setActionId(id);
     try {
-      const res = await fetch(`/api/whatsapp-connect/${id}`, {
+      const res = await authFetch(`/api/whatsapp-connect/${id}`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ action }),

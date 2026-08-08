@@ -12,6 +12,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -106,15 +107,12 @@ export default function AddProductPage() {
   // Fetch all static data on mount
   useEffect(() => {
     const checkPhone = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!getAccessToken()) {
         router.replace(`/login?next=${encodeURIComponent("/technician/products/new")}`);
         return;
       }
       try {
-        const res = await fetch("/api/auth/verify/status", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await authFetch("/api/auth/verify/status");
         const data = await res.json();
         if (!res.ok || !data.phoneVerified) {
           setPhoneGate("blocked");
@@ -339,8 +337,7 @@ export default function AddProductPage() {
       return;
     }
 
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       return;
     }
@@ -360,11 +357,10 @@ export default function AddProductPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/technician/products", {
+      const res = await authFetch("/api/technician/products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...form,

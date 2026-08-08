@@ -11,6 +11,11 @@ import { IconButton } from "@/components/ui/IconButton";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState } from "@/components/feedback";
 import { cn } from "@/lib/ui/cn";
+import {
+  authFetch,
+  clearAccessToken,
+  getAccessToken,
+} from "@/lib/auth/clientAuth";
 
 type SavedRow = {
   _id: string;
@@ -39,8 +44,7 @@ export default function SavedItemsClient() {
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.replace(
         `/login?next=${encodeURIComponent("/dashboard/buyer/saved")}`,
       );
@@ -50,16 +54,12 @@ export default function SavedItemsClient() {
     setLoading(true);
     try {
       const [itemsRes, searchesRes] = await Promise.all([
-        fetch("/api/saved", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch("/api/saved-searches", {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
+        authFetch("/api/saved"),
+        authFetch("/api/saved-searches"),
       ]);
 
       if (itemsRes.status === 401 || searchesRes.status === 401) {
-        localStorage.removeItem("token");
+        clearAccessToken();
         router.replace(
           `/login?next=${encodeURIComponent("/dashboard/buyer/saved")}`,
         );
@@ -99,13 +99,10 @@ export default function SavedItemsClient() {
   }, [load]);
 
   const removeSaved = async (productId: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setRemovingId(productId);
     try {
-      const res = await fetch(`/api/saved/${productId}`, {
+      const res = await authFetch(`/api/saved/${productId}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -125,13 +122,10 @@ export default function SavedItemsClient() {
   };
 
   const removeSearch = async (id: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setRemovingId(id);
     try {
-      const res = await fetch(`/api/saved-searches/${id}`, {
+      const res = await authFetch(`/api/saved-searches/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

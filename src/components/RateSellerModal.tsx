@@ -6,6 +6,7 @@ import { showToast } from "@/components/ToastHost";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Input";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 type Props = {
   open: boolean;
@@ -36,8 +37,7 @@ export default function RateSellerModal({
 
   useEffect(() => {
     if (!open) return;
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setEligible(false);
       setReason("Login required to rate this seller.");
       setLoading(false);
@@ -51,9 +51,7 @@ export default function RateSellerModal({
     });
     if (productId) params.set("productId", productId);
 
-    fetch(`/api/ratings?${params}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch(`/api/ratings?${params}`)
       .then((r) => r.json())
       .then((data) => {
         setEligible(!!data.eligible);
@@ -82,14 +80,12 @@ export default function RateSellerModal({
   if (!open) return null;
 
   const submit = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
     setSubmitting(true);
     try {
-      const res = await fetch("/api/ratings", {
+      const res = await authFetch("/api/ratings", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({

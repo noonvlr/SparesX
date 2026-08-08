@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { LoadingState } from "@/components/feedback";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -66,16 +67,13 @@ export default function RequestForm({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setIsAuthenticated(false);
       setAuthChecking(false);
       return;
     }
 
-    fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
         if (data.user) {
@@ -207,8 +205,7 @@ export default function RequestForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Please login to submit a request.");
       return;
     }
@@ -222,11 +219,10 @@ export default function RequestForm({
     setMessage(null);
     setError(null);
 
-    const res = await fetch("/api/requests", {
+    const res = await authFetch("/api/requests", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         name: form.name,

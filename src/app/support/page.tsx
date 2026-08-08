@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 const TYPES = [
   { value: "bug", label: "Bug / Error" },
@@ -49,22 +50,19 @@ function SupportPageInner() {
     reportedUserId: "",
   });
 
-  const loadTickets = async (token: string) => {
+  const loadTickets = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/support", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch("/api/support");
       const data = await res.json();
       setTickets(data.tickets || []);
 
       const hasUnread = (data.tickets || []).some((t: any) => t.userUnread);
       if (hasUnread) {
-        await fetch("/api/support", {
+        await authFetch("/api/support", {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({}),
         });
@@ -77,8 +75,7 @@ function SupportPageInner() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setIsAuthenticated(false);
       setAuthChecked(true);
       setLoading(false);
@@ -86,11 +83,9 @@ function SupportPageInner() {
     }
     setIsAuthenticated(true);
     setAuthChecked(true);
-    loadTickets(token);
+    void loadTickets();
 
-    fetch("/api/auth/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    authFetch("/api/auth/me")
       .then((r) => r.json())
       .then((data) => {
         if (data.user) {
@@ -117,19 +112,17 @@ function SupportPageInner() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    if (!getAccessToken()) return;
 
     setSubmitting(true);
     setMessage(null);
     setError(null);
 
     try {
-      const res = await fetch("/api/support", {
+      const res = await authFetch("/api/support", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           type: form.type,
@@ -159,7 +152,7 @@ function SupportPageInner() {
       if (searchParams.get("type") === "abuse") {
         router.replace("/support");
       }
-      loadTickets(token);
+      loadTickets();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

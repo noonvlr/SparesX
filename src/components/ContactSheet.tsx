@@ -7,6 +7,7 @@ import { showToast } from "@/components/ToastHost";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/ui/cn";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 export type WaState = {
   status: string;
@@ -153,7 +154,7 @@ export async function runWhatsAppAction(opts: {
   setLoading: (v: boolean) => void;
 }) {
   const { sellerId, productId, waState, setWaState, setLoading } = opts;
-  const token = localStorage.getItem("token");
+  const token = getAccessToken();
   if (!token) return;
 
   if (waState?.unlocked && waState.whatsappUrl) {
@@ -171,10 +172,9 @@ export async function runWhatsAppAction(opts: {
 
   setLoading(true);
   try {
-    const res = await fetch("/api/whatsapp-connect", {
+    const res = await authFetch("/api/whatsapp-connect", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ sellerId, productId }),
@@ -185,9 +185,8 @@ export async function runWhatsAppAction(opts: {
       return;
     }
     if (data.unlocked || data.status === "approved") {
-      const waRes = await fetch(
+      const waRes = await authFetch(
         `/api/whatsapp-connect?sellerId=${encodeURIComponent(sellerId)}&productId=${encodeURIComponent(productId)}`,
-        { headers: { Authorization: `Bearer ${token}` } },
       );
       const waData = await waRes.json().catch(() => ({}));
       if (waRes.ok) {
@@ -230,8 +229,7 @@ export function useContactFlow(productId: string) {
   const [contactError, setContactError] = useState<string | null>(null);
 
   const openContact = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setAuthPrompt(true);
       return;
     }
@@ -241,9 +239,7 @@ export function useContactFlow(productId: string) {
     setWaState(null);
     setSellerId(null);
     try {
-      const res = await fetch(`/api/products/${productId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/products/${productId}`);
       const data = await res.json();
       if (!res.ok) {
         setContactError(data.error || "Could not load seller contact");
@@ -256,9 +252,8 @@ export function useContactFlow(productId: string) {
       }
       const sid = String(seller._id);
       setSellerId(sid);
-      const waRes = await fetch(
+      const waRes = await authFetch(
         `/api/whatsapp-connect?sellerId=${encodeURIComponent(sid)}&productId=${encodeURIComponent(productId)}`,
-        { headers: { Authorization: `Bearer ${token}` } },
       );
       const waData = await waRes.json().catch(() => ({}));
       if (waRes.ok) {

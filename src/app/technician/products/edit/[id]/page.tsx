@@ -9,6 +9,7 @@ import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -89,8 +90,7 @@ export default function EditProductPage() {
 
     console.log("[Edit] Product ID from URL:", productId);
 
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       setLoading(false);
       return;
@@ -98,11 +98,7 @@ export default function EditProductPage() {
 
     // Fetch from technician's products endpoint
     console.log("[Edit] Fetching from /api/technician/products");
-    fetch("/api/technician/products", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    authFetch("/api/technician/products")
       .then((res) => {
         console.log("[Edit] Got products list, status:", res.status);
         if (!res.ok) throw new Error(`Failed with status ${res.status}`);
@@ -260,8 +256,7 @@ export default function EditProductPage() {
 
     setError("");
     setSuccess("");
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       setError("Not authenticated");
       return;
     }
@@ -278,11 +273,10 @@ export default function EditProductPage() {
         uploadedImageUrls = [...existingImages, ...urls];
       }
 
-      const res = await fetch(`/api/technician/products/edit/${productId}`, {
+      const res = await authFetch(`/api/technician/products/edit/${productId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           ...form,

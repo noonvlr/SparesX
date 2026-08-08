@@ -10,6 +10,7 @@ import { Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { Alert } from "@/components/ui/Alert";
 import { cn } from "@/lib/ui/cn";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 type MatchItem = {
   productId: string;
@@ -61,8 +62,7 @@ export default function MyRequestsPanel() {
   const [loadingMatches, setLoadingMatches] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!getAccessToken()) {
       router.replace(
         `/login?next=${encodeURIComponent("/requests?tab=mine")}`,
       );
@@ -71,9 +71,7 @@ export default function MyRequestsPanel() {
     setLoading(true);
     try {
       const params = new URLSearchParams({ mine: "1", status, limit: "50" });
-      const res = await fetch(`/api/requests?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/requests?${params}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.message || "Failed to load your requests");
@@ -93,13 +91,9 @@ export default function MyRequestsPanel() {
   }, [load]);
 
   async function loadMatches(requestId: string) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setLoadingMatches(requestId);
     try {
-      const res = await fetch(`/api/requests/${requestId}/matches`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/api/requests/${requestId}/matches`);
       const data = await res.json();
       if (res.ok) {
         setMatchesById((prev) => ({
@@ -126,14 +120,11 @@ export default function MyRequestsPanel() {
   }
 
   async function saveEdit(id: string) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/requests/${id}`, {
+      const res = await authFetch(`/api/requests/${id}`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(editDraft),
@@ -153,13 +144,10 @@ export default function MyRequestsPanel() {
   }
 
   async function setRequestStatus(id: string, next: string) {
-    const token = localStorage.getItem("token");
-    if (!token) return;
     try {
-      const res = await fetch(`/api/requests/${id}`, {
+      const res = await authFetch(`/api/requests/${id}`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: next }),
@@ -177,12 +165,9 @@ export default function MyRequestsPanel() {
 
   async function removeRequest(id: string) {
     if (!confirm("Delete this request permanently?")) return;
-    const token = localStorage.getItem("token");
-    if (!token) return;
     try {
-      const res = await fetch(`/api/requests/${id}`, {
+      const res = await authFetch(`/api/requests/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       if (!res.ok) {

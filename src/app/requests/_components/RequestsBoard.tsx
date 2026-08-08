@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, Badge, EmptyState, Skeleton, Avatar } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface PartRequest {
   _id: string;
@@ -90,15 +91,13 @@ export default function RequestsBoard({
 
   const loadRequests = async (query = search, silent = false) => {
     if (!silent) setLoading(true);
-    const token = localStorage.getItem("token");
+    const token = getAccessToken();
     setIsAuthenticated(!!token);
     const params = new URLSearchParams({ status: "open", limit: "50" });
     if (query) params.set("search", query);
 
     try {
-      const res = await fetch(`/api/requests?${params.toString()}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      const res = await authFetch(`/api/requests?${params.toString()}`);
       const data = await res.json();
       setRequests(data.requests || []);
       setTotal(data.total || 0);

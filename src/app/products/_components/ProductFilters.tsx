@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Card";
 import { showToast } from "@/components/ToastHost";
+import { authFetch, getAccessToken } from "@/lib/auth/clientAuth";
 
 interface Brand {
   _id: string;
@@ -572,9 +573,7 @@ export default function ProductFilters() {
   };
 
   const saveCurrentSearch = async () => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (!token) {
+    if (!getAccessToken()) {
       showToast("Log in to save this search", "error");
       router.push(
         `/login?next=${encodeURIComponent(
@@ -606,10 +605,9 @@ export default function ProductFilters() {
 
     setSavingSearch(true);
     try {
-      const res = await fetch("/api/saved-searches", {
+      const res = await authFetch("/api/saved-searches", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ filters }),
