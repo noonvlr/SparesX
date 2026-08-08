@@ -1,7 +1,9 @@
 import mongoose, { Schema, Document, Model, Types } from 'mongoose';
 
-export type ProductStatus = 'pending' | 'approved' | 'rejected';
+export type ProductStatus = 'pending' | 'approved' | 'rejected' | 'sold';
 export type ProductCondition = 'new' | 'used';
+/** Where the seller closed the deal when marking a listing sold. */
+export type SoldVia = 'sparesx' | 'other';
 
 export interface IProduct extends Document {
   name: string;
@@ -23,6 +25,9 @@ export interface IProduct extends Document {
   /** Pin on homepage featured section when approved */
   featured?: boolean;
   technician: Types.ObjectId;
+  /** Set when status becomes sold — SparesX vs elsewhere. */
+  soldVia?: SoldVia | null;
+  soldAt?: Date | null;
   // SEO and searchability
   slug?: string;
   tags?: string[];
@@ -56,9 +61,20 @@ const ProductSchema: Schema<IProduct> = new Schema({
   condition: { type: String, enum: ['new', 'used'], required: true },
   priceNegotiable: { type: Boolean, default: false },
   images: [{ type: String }],
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved', index: true },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'sold'],
+    default: 'approved',
+    index: true,
+  },
   featured: { type: Boolean, default: false, index: true },
   technician: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  soldVia: {
+    type: String,
+    enum: ['sparesx', 'other'],
+    default: null,
+  },
+  soldAt: { type: Date, default: null },
   // Additional fields
   slug: { type: String, unique: true, sparse: true },
   tags: [{ type: String }],

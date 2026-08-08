@@ -212,6 +212,8 @@ export type ProductListItem = {
   deviceCategory?: string;
   condition?: string;
   priceNegotiable?: boolean;
+  /** Owner user id — used client-side to swap Contact for owner actions. */
+  technician?: string;
 };
 
 export type ProductListResult = {
@@ -312,7 +314,7 @@ export async function fetchProductList(
   const total = await Product.countDocuments(query);
   const docs = await Product.find(query)
     .select(
-      "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable",
+      "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
     )
     .skip((page - 1) * limit)
     .limit(limit)
@@ -332,6 +334,7 @@ export async function fetchProductList(
     deviceCategory: doc.deviceCategory || undefined,
     condition: doc.condition || undefined,
     priceNegotiable: Boolean(doc.priceNegotiable),
+    technician: doc.technician ? String(doc.technician) : undefined,
   }));
 
   return { products, total, page, pages: Math.ceil(total / limit) };

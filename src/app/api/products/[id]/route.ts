@@ -59,7 +59,7 @@ export async function GET(
 
     const isOwner = !!userId && ownerId === userId;
 
-    if (product.status !== "approved" && !isOwner) {
+    if (product.status !== "approved" && product.status !== "sold" && !isOwner) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -127,7 +127,7 @@ export async function GET(
 
     const similarProducts = await Product.find(similarQuery)
       .select(
-        "slug name price images brand partType category deviceCategory condition deviceModel",
+        "slug name price images brand partType category deviceCategory condition deviceModel technician",
       )
       .sort({ createdAt: -1 })
       .limit(8)
@@ -136,7 +136,20 @@ export async function GET(
     return NextResponse.json(
       {
         product: productObj,
-        similarProducts,
+        similarProducts: similarProducts.map((p: Record<string, any>) => ({
+          _id: String(p._id),
+          slug: p.slug || undefined,
+          name: p.name,
+          price: p.price,
+          images: p.images || [],
+          brand: p.brand,
+          partType: p.partType,
+          category: p.category,
+          deviceCategory: p.deviceCategory,
+          condition: p.condition,
+          deviceModel: p.deviceModel,
+          technician: p.technician ? String(p.technician) : undefined,
+        })),
         meta: { isOwner, isAuthenticated },
       },
       { status: 200 },

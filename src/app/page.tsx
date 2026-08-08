@@ -72,24 +72,28 @@ export const revalidate = 60;
 export default async function HomePage() {
   await connectDB();
 
-  const [featuredRaw, categoryRows, listingCounts] = await Promise.all([
-    Product.find({ status: "approved" })
-      .sort({ createdAt: -1 })
-      .limit(6)
-      .select(
-        "name price images brand partType condition deviceModel deviceCategory slug status priceNegotiable",
-      )
-      .lean(),
-    findPublicCategories({ dedupeByName: true }),
-    Product.aggregate<{ _id: string; count: number }>([
-      { $match: { status: "approved", partType: { $nin: [null, ""] } } },
-      { $group: { _id: "$partType", count: { $sum: 1 } } },
-    ]),
-  ]);
+  const [featuredRaw, categoryRows, listingCounts, listedCount, soldCount] =
+    await Promise.all([
+      Product.find({ status: "approved" })
+        .sort({ createdAt: -1 })
+        .limit(6)
+        .select(
+          "name price images brand partType condition deviceModel deviceCategory slug status priceNegotiable technician",
+        )
+        .lean(),
+      findPublicCategories({ dedupeByName: true }),
+      Product.aggregate<{ _id: string; count: number }>([
+        { $match: { status: "approved", partType: { $nin: [null, ""] } } },
+        { $group: { _id: "$partType", count: { $sum: 1 } } },
+      ]),
+      Product.countDocuments({ status: "approved" }),
+      Product.countDocuments({ status: "sold" }),
+    ]);
 
   const featuredProducts = featuredRaw.map((p) => ({
     ...p,
     _id: String(p._id),
+    technician: p.technician ? String(p.technician) : undefined,
   }));
 
   const countBySlug = new Map(
@@ -216,6 +220,29 @@ export default async function HomePage() {
                 Request a Part
               </Link>
             </div>
+
+            <dl className="mt-10 sm:mt-12 mx-auto flex max-w-md items-stretch justify-center gap-0 overflow-hidden rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]/80 shadow-[var(--shadow-sm)] backdrop-blur-sm">
+              <div className="flex-1 px-5 py-4 sm:px-8 sm:py-5">
+                <dt className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  Live listings
+                </dt>
+                <dd className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)] tabular-nums">
+                  {listedCount.toLocaleString("en-IN")}
+                </dd>
+              </div>
+              <div
+                aria-hidden
+                className="w-px self-stretch bg-[var(--border)]"
+              />
+              <div className="flex-1 px-5 py-4 sm:px-8 sm:py-5">
+                <dt className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+                  Parts sold
+                </dt>
+                <dd className="mt-1 text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--brand)] tabular-nums">
+                  {soldCount.toLocaleString("en-IN")}
+                </dd>
+              </div>
+            </dl>
           </div>
         </section>
 

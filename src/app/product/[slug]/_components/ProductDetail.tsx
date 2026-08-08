@@ -9,6 +9,7 @@ import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
 import StarRatingDisplay from "@/components/StarRatingDisplay";
 import RateSellerModal from "@/components/RateSellerModal";
+import MarkSoldModal from "@/components/MarkSoldModal";
 import { AuthPromptSheet } from "@/components/ContactSheet";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -64,6 +65,9 @@ interface Product {
   priceNegotiable?: boolean;
   images: string[];
   createdAt: string;
+  status?: string;
+  soldVia?: string | null;
+  soldAt?: string | null;
   technician?: Seller | string;
 }
 
@@ -131,6 +135,7 @@ export default function ProductDetail({
   const [waConnect, setWaConnect] = useState<WaConnectStatus | null>(null);
   const [waLoading, setWaLoading] = useState(false);
   const [waActionLoading, setWaActionLoading] = useState(false);
+  const [soldOpen, setSoldOpen] = useState(false);
   const [sellerRating, setSellerRating] = useState({
     averageRating: initialProduct.technician &&
     typeof initialProduct.technician === "object"
@@ -509,12 +514,26 @@ export default function ProductDetail({
             ← Back to products
           </Link>
           {isOwner && (
-            <Link
-              href={`/technician/products/edit/${product._id}`}
-              className={cn(buttonVariants({ size: "sm" }))}
-            >
-              Edit listing
-            </Link>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/technician/products/edit/${product._id}`}
+                className={cn(buttonVariants({ size: "sm" }))}
+              >
+                Edit listing
+              </Link>
+              {product.status !== "sold" ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="soft"
+                  onClick={() => setSoldOpen(true)}
+                >
+                  Mark as sold
+                </Button>
+              ) : (
+                <Badge tone="success">Sold</Badge>
+              )}
+            </div>
           )}
         </div>
 
@@ -605,6 +624,14 @@ export default function ProductDetail({
                   <p className="text-3xl sm:text-4xl font-semibold tracking-tight">
                     ₹{product.price?.toLocaleString()}
                   </p>
+                  {product.status === "sold" ? (
+                    <Badge
+                      tone="success"
+                      className="bg-[var(--ink-inverse)]/20 text-[var(--ink-inverse)] border-0"
+                    >
+                      Sold
+                    </Badge>
+                  ) : null}
                 </div>
               </div>
 
@@ -756,7 +783,7 @@ export default function ProductDetail({
                       </p>
                     )}
                   </div>
-                  {!isOwner && (
+                  {!isOwner && product.status !== "sold" && (
                     <div className="hidden lg:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       <Button
                         type="button"
@@ -778,6 +805,11 @@ export default function ProductDetail({
                       </Button>
                     </div>
                   )}
+                  {!isOwner && product.status === "sold" ? (
+                    <p className="text-sm font-semibold text-[var(--success)]">
+                      This listing has been marked as sold.
+                    </p>
+                  ) : null}
                 </div>
               ) : (
                 <p className="text-sm text-[var(--muted)]">Seller details unavailable.</p>
@@ -840,7 +872,7 @@ export default function ProductDetail({
       </div>
 
       {/* Mobile sticky CTAs */}
-      {!isOwner && (
+      {!isOwner && product.status !== "sold" && (
         <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 glass px-3 py-3">
           <div className="max-w-7xl mx-auto grid grid-cols-4 gap-1.5">
             <Button
@@ -902,6 +934,25 @@ export default function ProductDetail({
           onSubmitted={(stats) => setSellerRating(stats)}
         />
       )}
+
+      {isOwner ? (
+        <MarkSoldModal
+          open={soldOpen}
+          onClose={() => setSoldOpen(false)}
+          productId={product._id}
+          productName={heading}
+          onSold={(soldVia) => {
+            setProduct((prev) => ({
+              ...prev,
+              status: "sold",
+              soldVia,
+              soldAt: new Date().toISOString(),
+            }));
+            showToast("Listing marked as sold");
+            router.refresh();
+          }}
+        />
+      ) : null}
 
       <AuthPromptSheet
         open={showAuthPrompt}

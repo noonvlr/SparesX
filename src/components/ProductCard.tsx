@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AuthPromptSheet,
   ContactSheet,
   useContactFlow,
 } from "@/components/ContactSheet";
+import MarkSoldModal from "@/components/MarkSoldModal";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Spinner } from "@/components/ui/Spinner";
@@ -32,6 +34,20 @@ export interface ProductCardData {
   condition?: string;
   priceNegotiable?: boolean;
   slug?: string;
+  /** Owner user id — when it matches the signed-in seller, show owner actions. */
+  technician?: string;
+}
+
+function getUserIdFromToken(): string | null {
+  if (typeof window === "undefined") return null;
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return payload.id ? String(payload.id) : null;
+  } catch {
+    return null;
+  }
 }
 
 export default function ProductCard({
@@ -48,11 +64,23 @@ export default function ProductCard({
   /** Set on the first row of a grid so the LCP image isn't lazy-loaded. */
   priority?: boolean;
 }) {
+  const router = useRouter();
   const images = (product.images || []).filter(Boolean);
   const [imageIndex, setImageIndex] = useState(0);
   const [hovered, setHovered] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [soldOpen, setSoldOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const contact = useContactFlow(product._id);
   const detailPath = productPath(product);
+
+  useEffect(() => {
+    const userId = getUserIdFromToken();
+    setIsOwner(
+      Boolean(userId && product.technician && userId === String(product.technician)),
+    );
+  }, [product.technician]);
 
   useEffect(() => {
     if (!rotateOnHover || !hovered || images.length <= 1) return;
@@ -69,6 +97,39 @@ export default function ProductCard({
   const title = formatListingTitle(product);
   const imageAlt = formatListingAlt(product);
   const partLabel = formatPartTypeLabel(product.partType);
+
+  async function handleDelete() {
+    if (
+      !confirm(
+        `Delete "${title}"? This permanently removes the listing and cannot be undone.`,
+      )
+    ) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/technician/products/delete/${product._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setHidden(true);
+        router.refresh();
+      } else {
+        alert("Failed to delete product. Try again.");
+      }
+    } catch {
+      alert("Failed to delete product. Try again.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (hidden) return null;
 
   return (
     <>
@@ -109,9 +170,15 @@ export default function ProductCard({
           </IconButton>
         ) : null}
 
+        {isOwner ? (
+          <span className="absolute top-2 right-2 z-20 rounded-full bg-[var(--brand)] px-2 py-0.5 text-[10px] font-semibold text-[var(--ink-inverse)] shadow-[var(--shadow-sm)]">
+            Yours
+          </span>
+        ) : null}
+
         <Link href={detailPath} className="block">
           <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)] border-b border-[var(--border-strong)] flex items-center justify-center">
-            {product.priceNegotiable ? (
+            {product.priceNegotiable && !isOwner ? (
               <div className="absolute top-0 right-0 z-10 overflow-hidden w-20 h-20 pointer-events-none">
                 <div className="absolute top-2.5 -right-6 w-24 rotate-45 bg-[var(--success)] text-[var(--ink-inverse)] text-[9px] sm:text-[10px] font-bold tracking-wide text-center py-0.5 shadow-[var(--shadow-sm)]">
                   Negotiable
@@ -185,39 +252,97 @@ export default function ProductCard({
             <p className="text-base sm:text-lg font-bold text-[var(--brand)]">
               ₹{product.price?.toLocaleString()}
             </p>
-            <Button
-              type="button"
-              size="sm"
-              className="w-full h-auto min-h-0 py-1.5 text-[11px] sm:text-xs rounded-lg"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                void contact.openContact();
-              }}
-            >
-              Contact now
-            </Button>
+
+            {isOwner ? (
+              <div className="grid grid-cols-3 gap-1.5">
+                <Link
+                  href={`/technician/products/edit/${product._id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn(
+                    "inline-flex items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-1 py-1.5 text-[11px] sm:text-xs font-semibold text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:text-[var(--brand)] transition-colors",
+                  )}
+                >
+                  Edit
+                </Link>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="soft"
+                  className="h-auto min-h-0 rounded-lg px-1 py-1.5 text-[11px] sm:text-xs"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setSoldOpen(true);
+                  }}
+                >
+                  Sold
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="danger"
+                  className="h-auto min-h-0 rounded-lg px-1 py-1.5 text-[11px] sm:text-xs bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--ink-inverse)] shadow-none"
+                  disabled={deleting}
+                  loading={deleting}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    void handleDelete();
+                  }}
+                >
+                  {deleting ? "…" : "Delete"}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                className="w-full h-auto min-h-0 py-1.5 text-[11px] sm:text-xs rounded-lg"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void contact.openContact();
+                }}
+              >
+                Contact now
+              </Button>
+            )}
           </div>
         </div>
       </article>
 
-      <ContactSheet
-        open={contact.contactOpen}
-        onClose={() => contact.setContactOpen(false)}
-        productId={product._id}
-        productName={title}
-        sellerId={contact.sellerId}
-        waState={contact.waState}
-        loading={contact.loadingContact}
-        error={contact.contactError}
-        waActionLoading={contact.waActionLoading}
-        onWhatsApp={contact.onWhatsApp}
-      />
-      <AuthPromptSheet
-        open={contact.authPrompt}
-        onClose={() => contact.setAuthPrompt(false)}
-        nextPath={detailPath}
-      />
+      {!isOwner ? (
+        <>
+          <ContactSheet
+            open={contact.contactOpen}
+            onClose={() => contact.setContactOpen(false)}
+            productId={product._id}
+            productName={title}
+            sellerId={contact.sellerId}
+            waState={contact.waState}
+            loading={contact.loadingContact}
+            error={contact.contactError}
+            waActionLoading={contact.waActionLoading}
+            onWhatsApp={contact.onWhatsApp}
+          />
+          <AuthPromptSheet
+            open={contact.authPrompt}
+            onClose={() => contact.setAuthPrompt(false)}
+            nextPath={detailPath}
+          />
+        </>
+      ) : (
+        <MarkSoldModal
+          open={soldOpen}
+          onClose={() => setSoldOpen(false)}
+          productId={product._id}
+          productName={title}
+          onSold={() => {
+            setHidden(true);
+            router.refresh();
+          }}
+        />
+      )}
     </>
   );
 }

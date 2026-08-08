@@ -6,13 +6,16 @@ import { Button } from "@/components/ui/Button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState, ErrorState } from "@/components/feedback";
 import { DashboardPage } from "@/components/layout";
+import MarkSoldModal from "@/components/MarkSoldModal";
 import { cn } from "@/lib/ui/cn";
+import { formatListingTitle } from "@/lib/products/listingTitle";
 
 export default function MyProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [soldTarget, setSoldTarget] = useState<any | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<{
     [key: string]: number;
   }>({});
@@ -229,12 +232,16 @@ export default function MyProductsPage() {
                         tone={
                           product.status === "approved"
                             ? "success"
-                            : "warning"
+                            : product.status === "sold"
+                              ? "neutral"
+                              : "warning"
                         }
                       >
                         {product.status === "approved"
-                          ? "✓ Live"
-                          : "⏳ Pending"}
+                          ? "Live"
+                          : product.status === "sold"
+                            ? "Sold"
+                            : "Pending"}
                       </Badge>
                     )}
                   </div>
@@ -245,20 +252,36 @@ export default function MyProductsPage() {
                     </span>
                   </div>
 
-                  <div className="flex gap-2 pt-4 border-t border-[var(--border)]">
-                    <Link
-                      href={`/technician/products/edit/${product._id}`}
-                      className={cn(
-                        buttonVariants({ variant: "soft", size: "sm" }),
-                        "flex-1",
-                      )}
-                    >
-                      Edit
-                    </Link>
+                  <div className="flex flex-wrap gap-2 pt-4 border-t border-[var(--border)]">
+                    {product.status !== "sold" ? (
+                      <>
+                        <Link
+                          href={`/technician/products/edit/${product._id}`}
+                          className={cn(
+                            buttonVariants({ variant: "soft", size: "sm" }),
+                            "flex-1",
+                          )}
+                        >
+                          Edit
+                        </Link>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => setSoldTarget(product)}
+                        >
+                          Sold
+                        </Button>
+                      </>
+                    ) : null}
                     <Button
                       variant="danger"
                       size="sm"
-                      className="flex-1 bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--ink-inverse)] shadow-none"
+                      className={cn(
+                        "bg-[var(--danger-soft)] text-[var(--danger)] hover:bg-[var(--danger)] hover:text-[var(--ink-inverse)] shadow-none",
+                        product.status === "sold" ? "flex-1" : "flex-1",
+                      )}
                       onClick={() => handleDelete(product._id)}
                       disabled={deleting === product._id}
                       loading={deleting === product._id}
@@ -272,6 +295,25 @@ export default function MyProductsPage() {
           ))}
         </div>
       )}
+
+      {soldTarget ? (
+        <MarkSoldModal
+          open={!!soldTarget}
+          onClose={() => setSoldTarget(null)}
+          productId={soldTarget._id}
+          productName={formatListingTitle(soldTarget)}
+          onSold={(soldVia) => {
+            setProducts((prev) =>
+              prev.map((p) =>
+                p._id === soldTarget._id
+                  ? { ...p, status: "sold", soldVia }
+                  : p,
+              ),
+            );
+            setSoldTarget(null);
+          }}
+        />
+      ) : null}
     </DashboardPage>
   );
 }

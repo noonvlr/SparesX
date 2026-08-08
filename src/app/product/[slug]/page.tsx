@@ -54,17 +54,18 @@ export async function generateMetadata({
     const pageTitle = buildProductSeoTitle(product);
     const heading = formatProductHeading(product);
     const description = buildProductSeoDescription(product);
+    const isSold = product.status === "sold";
 
     return {
       // Bare title — root layout appends "| SparesX" via its template.
-      title: pageTitle,
+      title: isSold ? `${pageTitle} — Sold` : pageTitle,
       description,
       keywords: buildProductKeywords(product),
       alternates: {
         canonical: canonicalUrl,
       },
       openGraph: {
-        title: heading,
+        title: isSold ? `${heading} (Sold)` : heading,
         description,
         url: canonicalUrl,
         siteName: SITE_NAME,
@@ -80,7 +81,7 @@ export async function generateMetadata({
       },
       twitter: {
         card: "summary_large_image",
-        title: heading,
+        title: isSold ? `${heading} (Sold)` : heading,
         description,
         images: [productImage],
       },
@@ -92,8 +93,10 @@ export async function generateMetadata({
         "product:price:currency": "INR",
         "product:retailer_item_id": String(product._id),
       },
+      // Sold listings stay reachable for buyers who bookmarked them, but
+      // shouldn't keep ranking in Google.
       robots: {
-        index: true,
+        index: !isSold,
         follow: true,
       },
     };
@@ -138,6 +141,7 @@ export default async function ProductSlugPage({
   const images = Array.isArray(product.images)
     ? product.images.filter(Boolean)
     : [];
+  const isSold = product.status === "sold";
 
   const brandHref = product.brand
     ? `/products?brand=${encodeURIComponent(product.brand)}`
@@ -181,7 +185,9 @@ export default async function ProductSlugPage({
       "@type": "Offer",
       price: product.price,
       priceCurrency: "INR",
-      availability: "https://schema.org/InStock",
+      availability: isSold
+        ? "https://schema.org/SoldOut"
+        : "https://schema.org/InStock",
       itemCondition:
         product.condition === "used"
           ? "https://schema.org/UsedCondition"
