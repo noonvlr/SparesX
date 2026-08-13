@@ -4,19 +4,29 @@ export default function OnlineStatus({
   online,
   lastSeen,
   light,
+  /** list rows: online label only; hide noisy last-seen */
+  compact,
 }: {
   online?: boolean;
   lastSeen?: string;
   light?: boolean;
+  compact?: boolean;
 }) {
   if (online) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--success)]">
-        <span className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_0_3px_var(--success-soft)]" />
+      <span
+        className={`inline-flex items-center gap-1 font-medium text-[var(--success)] ${
+          compact ? "text-[10px]" : "text-xs"
+        }`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
         Online
       </span>
     );
   }
+
+  if (compact) return null;
+
   if (lastSeen) {
     const d = new Date(lastSeen);
     return (

@@ -9,6 +9,7 @@ import MessageInput from "@/components/chat/MessageInput";
 import TypingIndicator from "@/components/chat/TypingIndicator";
 import ProductHeader from "@/components/chat/ProductHeader";
 import OnlineStatus from "@/components/chat/OnlineStatus";
+import TrustBadges from "@/components/TrustBadges";
 import {
   isChatMuted,
   prepareChatSound,
@@ -18,7 +19,26 @@ import { isLoggedInClient } from "@/lib/auth/clientAuth";
 import type { ChatConversation } from "@/types/chat";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
-import { Avatar, Badge, Skeleton } from "@/components/ui/Card";
+import { Avatar, Skeleton } from "@/components/ui/Card";
+
+function PeerTrustStrip({ peer }: { peer?: ChatConversation["peer"] }) {
+  if (!peer) return null;
+  return (
+    <TrustBadges
+      density="icons"
+      phoneVerified={peer.phoneVerified}
+      emailVerified={peer.emailVerified}
+      kycVerified={peer.kycVerified}
+      businessVerified={peer.businessVerified}
+      addressVerified={peer.addressVerified}
+      isTrusted={peer.isTrusted}
+      trustScore={peer.trustScore}
+      badges={peer.badges}
+      activeBadgeKeys={peer.activeBadgeKeys}
+      className="mt-0.5"
+    />
+  );
+}
 
 function peerOf(c?: ChatConversation | null, userId?: string | null) {
   if (!c) return undefined;
@@ -173,7 +193,9 @@ function FloatingWindow({
             online={peer?._id ? chat.onlineMap[peer._id] : false}
             lastSeen={peer?.lastSeen}
             light
+            compact
           />
+          <PeerTrustStrip peer={peer} />
         </div>
         {peer?._id ? (
           <Link
@@ -524,7 +546,7 @@ export default function FloatingChatDock() {
             aria-modal="true"
             aria-label="Messages"
           >
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--divider)] bg-[var(--surface)] rounded-t-[var(--radius-xl)] md:rounded-t-[var(--radius-lg)]">
+            <div className="flex items-center gap-1.5 px-3 py-2.5 border-b border-[var(--divider)] bg-[var(--surface)] rounded-t-[var(--radius-xl)] md:rounded-t-[var(--radius-lg)]">
               {chat.panelView === "thread" ? (
                 <IconButton
                   type="button"
@@ -535,11 +557,13 @@ export default function FloatingChatDock() {
                   ←
                 </IconButton>
               ) : (
-                <span className="text-lg font-bold text-[var(--ink)]">Chats</span>
+                <span className="text-base font-bold text-[var(--ink)] pl-1">
+                  Chats
+                </span>
               )}
               {chat.panelView === "thread" && (
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-[var(--ink)] truncate">
+                  <p className="font-semibold text-[var(--ink)] truncate text-sm leading-tight">
                     {activePeer?.name || "Chat"}
                   </p>
                   <OnlineStatus
@@ -549,27 +573,45 @@ export default function FloatingChatDock() {
                         : false
                     }
                     lastSeen={activePeer?.lastSeen}
+                    compact
                   />
+                  <PeerTrustStrip peer={activePeer} />
                 </div>
               )}
               {chat.panelView === "list" && <div className="flex-1" />}
-              <Button
+              <IconButton
                 type="button"
                 size="sm"
-                variant="secondary"
                 onClick={() => {
                   const next = !muted;
                   setChatMuted(next);
                   setMuted(next);
                 }}
-                className="h-auto min-h-0 px-2 py-1 text-xs"
+                aria-label={muted ? "Unmute message sounds" : "Mute message sounds"}
                 title={muted ? "Unmute sounds" : "Mute sounds"}
+                className={
+                  muted ? "text-[var(--muted)]" : "text-[var(--ink-secondary)]"
+                }
               >
-                {muted ? "Muted" : "Sound"}
-              </Button>
-              <Badge tone={chat.connected ? "brand" : "warning"}>
+                {muted ? "🔇" : "🔊"}
+              </IconButton>
+              <span
+                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-[var(--muted)] px-1"
+                title={
+                  chat.connected
+                    ? "Connected — messages update live"
+                    : "Reconnecting…"
+                }
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    chat.connected
+                      ? "bg-[var(--success)]"
+                      : "bg-[var(--warning)]"
+                  }`}
+                />
                 {chat.connected ? "Live" : "Offline"}
-              </Badge>
+              </span>
               <IconButton
                 type="button"
                 size="sm"
