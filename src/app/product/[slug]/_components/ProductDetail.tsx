@@ -617,7 +617,7 @@ export default function ProductDetail({
           {/* Details */}
           <section className="space-y-5">
             <Card className="p-5 sm:p-7">
-              <h1 className="text-2xl sm:text-4xl font-semibold text-[var(--ink)] leading-tight mb-4 tracking-tight">
+              <h1 className="text-2xl sm:text-4xl font-bold text-[var(--ink)] leading-tight mb-4 tracking-tight">
                 {heading}
               </h1>
 
@@ -644,7 +644,7 @@ export default function ProductDetail({
               <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] p-5 mb-5">
                 <p className="text-sm text-[var(--ink-inverse)]/80 mb-1">Price</p>
                 <div className="flex items-baseline gap-3 flex-wrap">
-                  <p className="text-3xl sm:text-4xl font-semibold tracking-tight">
+                  <p className="text-price text-3xl sm:text-4xl text-[var(--ink-inverse)]">
                     ₹{product.price?.toLocaleString()}
                   </p>
                   {product.status === "sold" ? (

@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import AppShell from "@/components/shell/AppShell";
 import ChatShell from "@/components/chat/ChatShell";
@@ -71,7 +70,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={GeistSans.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col font-sans bg-[var(--surface-2)] text-[var(--ink)]">
         <ThemeProvider>
           <SentryClientInit />

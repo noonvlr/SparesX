@@ -190,11 +190,11 @@ export default async function HomePage() {
               </span>
             </div>
 
-            <h1 className="text-balance text-3xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-[var(--ink)] mb-5 sm:mb-6">
+            <h1 className="text-display text-balance text-[var(--ink)] mb-5 sm:mb-6">
               The spare parts marketplace, built for technicians.
             </h1>
 
-            <p className="mx-auto max-w-2xl text-base sm:text-lg text-[var(--muted)] mb-8 sm:mb-9 px-2">
+            <p className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-[var(--muted)] mb-8 sm:mb-9 px-2">
               SparesX is the dedicated marketplace where mobile repair
               technicians list, find, and request spare parts — searchable,
               organized, and built just for the trade.
@@ -235,7 +235,7 @@ export default async function HomePage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-hover)] mb-2">
                 Categories
               </p>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)]">
+              <h2 className="text-title sm:text-[1.75rem] font-semibold tracking-tight text-[var(--ink)]">
                 Browse by category
               </h2>
               <p className="mt-2 text-sm text-[var(--muted)]">

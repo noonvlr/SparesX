@@ -18,7 +18,7 @@ export default function FeaturedProducts({
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-hover)] mb-2">
             Fresh listings
           </p>
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)]">
+          <h2 className="text-title sm:text-[1.75rem] font-semibold tracking-tight text-[var(--ink)]">
             Featured products
           </h2>
         </div>

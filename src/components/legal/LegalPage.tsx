@@ -15,7 +15,7 @@ export default function LegalPage({
         <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)] mb-2">
           SparesX Legal
         </p>
-        <h1 className="text-3xl sm:text-4xl font-bold text-[var(--ink)] mb-2">
+        <h1 className="text-heading text-[var(--ink)] mb-2">
           {title}
         </h1>
         {updated && (
@@ -24,9 +24,10 @@ export default function LegalPage({
           </p>
         )}
         <div
-          className="max-w-none space-y-6 text-[var(--ink-secondary)] text-[15px] leading-relaxed
-            [&_h2]:text-[var(--ink)] [&_h3]:text-[var(--ink)]
-            [&_strong]:text-[var(--ink)]
+          className="prose-long max-w-none space-y-6 text-[var(--ink-secondary)] text-[15px] sm:text-base
+            [&_h2]:text-[var(--ink)] [&_h2]:text-title [&_h2]:tracking-tight
+            [&_h3]:text-[var(--ink)] [&_h3]:text-subtitle
+            [&_strong]:text-[var(--ink)] [&_strong]:font-semibold
             [&_a]:text-[var(--brand)] [&_a]:underline [&_a]:underline-offset-2 [&_a:hover]:text-[var(--brand-hover)]
             [&_section]:bg-[var(--surface)] [&_section]:rounded-[var(--radius-lg)] [&_section]:border [&_section]:border-[var(--border)] [&_section]:p-5 sm:[&_section]:p-6 [&_section]:shadow-[var(--shadow-sm)]"
         >

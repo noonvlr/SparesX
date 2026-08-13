@@ -137,25 +137,49 @@
   --space-20: 80px;
   --space-24: 96px;
 
-  /* Typography */
-  --text-display: 2.25rem;
-  --text-heading: 1.875rem;
-  --text-title: 1.5rem;
+  /* Typography — platform system UI stack (no webfont downloads) */
+  --font-sans:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
+  --font-mono:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+
+  /* Fluid type scale */
+  --text-display: clamp(2rem, 1.25rem + 3.2vw, 3.75rem);
+  --text-heading: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+  --text-title: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
   --text-subtitle: 1.125rem;
   --text-body: 1rem;
   --text-caption: 0.875rem;
   --text-tiny: 0.75rem;
   --text-label: 0.875rem;
-  --text-button: 0.875rem;
+  --text-button: 0.9375rem;
   --font-weight-normal: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
-  --leading-tight: 1.25;
+  --leading-tight: 1.2;
   --leading-snug: 1.375;
-  --leading-normal: 1.5;
+  --leading-normal: 1.55;
+  --leading-relaxed: 1.65;
+  --tracking-tighter: -0.03em;
   --tracking-tight: -0.02em;
   --tracking-normal: 0;
+  --tracking-wide: 0.01em;
 
   /* Layout chrome */
   --nav-h: 56px;
@@ -194,8 +218,6 @@
   --icon-sm: 16px;
   --icon-md: 20px;
   --icon-lg: 24px;
-
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 /* Dark — layered surfaces, no pure black */
@@ -315,6 +337,7 @@
   --color-verified: var(--verified);
   --color-overlay: var(--overlay);
   --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
   --radius-sx: var(--radius-sm);
   --radius-box: var(--radius);
   --radius-card: var(--radius-lg);
@@ -324,8 +347,11 @@
 @layer base {
   html {
     font-family: var(--font-sans);
+    font-size: 100%;
+    line-height: var(--leading-normal);
     color: var(--ink);
     background: var(--surface-2);
+    text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -334,6 +360,57 @@
     min-height: 100dvh;
     background: var(--surface-2);
     color: var(--ink);
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-normal);
+    letter-spacing: var(--tracking-normal);
+    line-height: var(--leading-normal);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--ink);
+    text-wrap: balance;
+    letter-spacing: var(--tracking-tight);
+  }
+
+  h1 {
+    font-size: var(--text-heading);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--leading-tight);
+  }
+
+  h2 {
+    font-size: var(--text-title);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-tight);
+  }
+
+  h3 {
+    font-size: var(--text-subtitle);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  h4 {
+    font-size: var(--text-body);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  strong,
+  b {
+    font-weight: var(--font-weight-semibold);
+  }
+
+  small {
+    font-size: var(--text-caption);
+    line-height: var(--leading-normal);
   }
 
   /* Smooth theme switching (colors only) */
@@ -397,13 +474,13 @@
 .text-display {
   font-size: var(--text-display);
   line-height: var(--leading-tight);
-  font-weight: var(--font-weight-semibold);
-  letter-spacing: var(--tracking-tight);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: var(--tracking-tighter);
 }
 .text-heading {
   font-size: var(--text-heading);
   line-height: var(--leading-tight);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   letter-spacing: var(--tracking-tight);
 }
 .text-title {
@@ -415,12 +492,14 @@
 .text-subtitle {
   font-size: var(--text-subtitle);
   line-height: var(--leading-snug);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
 }
 .text-body {
   font-size: var(--text-body);
   line-height: var(--leading-normal);
   font-weight: var(--font-weight-normal);
+  letter-spacing: var(--tracking-normal);
 }
 .text-caption {
   font-size: var(--text-caption);
@@ -431,11 +510,23 @@
   font-size: var(--text-tiny);
   line-height: var(--leading-normal);
   font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-wide);
 }
 .text-label {
   font-size: var(--text-label);
   line-height: var(--leading-snug);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: var(--tracking-normal);
+}
+.text-price {
+  font-variant-numeric: tabular-nums;
   font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+.prose-long {
+  line-height: var(--leading-relaxed);
+  max-width: 65ch;
 }
 
 /* Icon opacity helpers */
@@ -635,18 +726,18 @@
 
 .chat-ui {
   font-family: var(--font-sans);
-  letter-spacing: -0.01em;
+  letter-spacing: var(--tracking-normal);
 }
 
 .chat-ui .chat-input,
 .chat-ui textarea,
 .chat-ui input[type="text"] {
   font-size: 16px !important;
-  line-height: 1.35;
+  line-height: 1.4;
 }
 
 .chat-bubble-text {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   line-height: 1.45;
 }
 

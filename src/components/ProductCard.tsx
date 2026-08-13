@@ -203,7 +203,7 @@ export default function ProductCard({
 
         <div className="flex flex-1 flex-col p-2.5 sm:p-3">
           <Link href={detailPath}>
-            <h3 className="mb-1.5 line-clamp-2 text-xs sm:text-sm font-semibold leading-snug text-[var(--ink)] transition-colors group-hover:text-[var(--brand)]">
+            <h3 className="mb-1.5 line-clamp-2 text-sm font-semibold leading-snug tracking-tight text-[var(--ink)] transition-colors group-hover:text-[var(--brand)]">
               {title}
             </h3>
           </Link>
@@ -234,7 +234,7 @@ export default function ProductCard({
           </div>
 
           <div className="mt-auto space-y-2">
-            <p className="text-base sm:text-lg font-bold text-[var(--brand)]">
+            <p className="text-price text-base sm:text-lg text-[var(--brand)]">
               ₹{product.price?.toLocaleString()}
             </p>
 
