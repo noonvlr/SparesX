@@ -7,6 +7,8 @@ import { cn } from "@/lib/ui/cn";
 export const metadata: Metadata = {
   title: "Report Abuse Policy",
   description: "How to report scams, fraud, or inappropriate content on SparesX.",
+  alternates: { canonical: "/report-abuse" },
+  robots: { index: true, follow: true },
 };
 
 export default function ReportAbusePage() {

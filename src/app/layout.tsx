@@ -35,9 +35,8 @@ export const metadata: Metadata = {
     "spare parts seller",
   ],
   authors: [{ name: "SparesX Team" }],
-  alternates: {
-    canonical: "/",
-  },
+  // Do NOT set alternates.canonical here — Next merges it onto every child
+  // page that omits its own, which made /terms, /privacy, etc. point at "/".
   openGraph: {
     title: "SparesX – Mobile Spare Parts Marketplace",
     description:

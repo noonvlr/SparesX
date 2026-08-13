@@ -92,8 +92,50 @@ line("  length", description ? `${description.length} chars` : "-");
 const canonical = firstMatch(
   html,
   /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i,
+) ?? firstMatch(
+  html,
+  /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i,
 );
-line("Canonical", canonical, canonical === url);
+
+function normalizeUrl(value) {
+  try {
+    const u = new URL(value);
+    u.hash = "";
+    // Drop trailing slash except for origin root.
+    if (u.pathname.length > 1 && u.pathname.endsWith("/")) {
+      u.pathname = u.pathname.replace(/\/+$/, "");
+    }
+    return u.toString();
+  } catch {
+    return value;
+  }
+}
+
+const requested = normalizeUrl(url);
+const canonicalNorm = canonical ? normalizeUrl(canonical) : null;
+const selfCanonical = Boolean(canonicalNorm && canonicalNorm === requested);
+const pointsAtHome =
+  Boolean(canonicalNorm) &&
+  !requested.endsWith("://www.sparesx.com") &&
+  !requested.endsWith("://www.sparesx.com/") &&
+  (canonicalNorm === "https://www.sparesx.com" ||
+    canonicalNorm === "https://www.sparesx.com/");
+
+line("Canonical", canonical, selfCanonical && !pointsAtHome);
+if (canonical && !selfCanonical) {
+  line(
+    "  self-canonical?",
+    "NO — page declares a different preferred URL (OK for filters/ID→slug)",
+    false,
+  );
+}
+if (pointsAtHome) {
+  line(
+    "  homepage leak?",
+    "YES — non-home URL canonicalizes to / (fix)",
+    false,
+  );
+}
 
 const robots = metaByName(html, "robots");
 line("Robots meta", robots ?? "(none, defaults to index)", !robots?.includes("noindex"));

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Refund & Cancellation Policy",
   description:
     "SparesX does not process payments; refunds and cancellations are between buyers and sellers.",
+  alternates: { canonical: "/refund" },
   robots: { index: true, follow: true },
 };
 

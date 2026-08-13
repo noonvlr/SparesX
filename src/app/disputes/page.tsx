@@ -4,6 +4,8 @@ import LegalPage from "@/components/legal/LegalPage";
 export const metadata: Metadata = {
   title: "Dispute Resolution Policy",
   description: "How SparesX handles complaints and disputes between users.",
+  alternates: { canonical: "/disputes" },
+  robots: { index: true, follow: true },
 };
 
 export default function DisputeResolutionPage() {

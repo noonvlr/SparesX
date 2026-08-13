@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
     "How SparesX collects, uses, and protects personal information on the India marketplace platform.",
+  alternates: { canonical: "/privacy" },
   robots: { index: true, follow: true },
 };
 

@@ -44,7 +44,29 @@ After each production deploy that touches SEO:
 5. Expect filtered `/products?…` and thin `/parts/…` (`total < 2`) to stay **noindex**; do not force-index them.
 6. Soft-tagged `possible_duplicate` listings are excluded from sitemap / noindex — clear tag in admin only after review.
 
-Local helper: `npm run seo:audit` (static checks; not a substitute for GSC).
+### “Alternate page with proper canonical tag”
+
+This is usually **not a bug**. Google found URL A, which correctly declares `rel=canonical` → URL B, so Google indexes B and excludes A.
+
+**Expected / leave alone**
+
+| Affected URL pattern | Canonical target | Why |
+|---|---|---|
+| `/products?brand=…` (any filter) | `/products` | Infinite filter permutations |
+| `/sellers?city=…` | `/sellers` | Near-duplicate directories |
+| `/product/<ObjectId>` | `/product/<slug>` | ID URL consolidates onto slug (also 308 redirects) |
+| `http://` or bare `sparesx.com/…` | `https://www.sparesx.com/…` | Host redirects |
+
+**Fix if you see these**
+
+| Affected URL | Bad symptom | Fix |
+|---|---|---|
+| `/terms`, `/privacy`, `/guidelines`, etc. | Canonical was `/` (homepage) | Each public page must set its **own** self-canonical. Never put `alternates.canonical` on the root layout. |
+| A money page you want indexed | Canonical points at a different path | Correct that page’s `generateMetadata` / `metadata.alternates.canonical` |
+
+After deploying a canonical fix: URL Inspection → **Request indexing** on a few affected self-canonical URLs; expect the “Alternate…” count for those URLs to drop over days/weeks as Google recrawls.
+
+Local helper: `npm run seo:audit -- https://www.sparesx.com/terms` (static checks; not a substitute for GSC).
 
 ## Sitemap health
 

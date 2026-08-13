@@ -4,6 +4,8 @@ import LegalPage from "@/components/legal/LegalPage";
 export const metadata: Metadata = {
   title: "Community Guidelines",
   description: "Rules for respectful and lawful behavior on SparesX.",
+  alternates: { canonical: "/guidelines" },
+  robots: { index: true, follow: true },
 };
 
 export default function CommunityGuidelinesPage() {

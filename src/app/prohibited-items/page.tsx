@@ -4,6 +4,8 @@ import LegalPage from "@/components/legal/LegalPage";
 export const metadata: Metadata = {
   title: "Prohibited Items Policy",
   description: "Items and listings that are not allowed on SparesX.",
+  alternates: { canonical: "/prohibited-items" },
+  robots: { index: true, follow: true },
 };
 
 export default function ProhibitedItemsPage() {

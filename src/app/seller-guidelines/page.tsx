@@ -4,6 +4,8 @@ import LegalPage from "@/components/legal/LegalPage";
 export const metadata: Metadata = {
   title: "Seller Guidelines",
   description: "Listing standards and communication expectations for SparesX sellers.",
+  alternates: { canonical: "/seller-guidelines" },
+  robots: { index: true, follow: true },
 };
 
 export default function SellerGuidelinesPage() {

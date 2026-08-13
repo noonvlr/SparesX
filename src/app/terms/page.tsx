@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Terms of Service",
   description:
     "Terms governing use of the SparesX India marketplace connecting buyers and sellers of spare parts.",
+  alternates: { canonical: "/terms" },
   robots: { index: true, follow: true },
 };
 
