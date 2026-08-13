@@ -55,7 +55,16 @@ export function isAuthError(
 
 export function errorResponse(error: unknown) {
   const status = (error as { status?: number })?.status || 500;
+  // Only surface intentional app messages (status set on thrown errors).
+  // Unexpected 500s must not leak driver/stack details to clients.
+  if (status >= 500) {
+    console.error("[api]", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
+  }
   const message =
-    error instanceof Error ? error.message : "Internal server error";
+    error instanceof Error ? error.message : "Request failed";
   return NextResponse.json({ message }, { status });
 }

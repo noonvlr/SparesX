@@ -39,8 +39,18 @@ export async function GET(req: NextRequest) {
     } else {
       if (status !== "all") query.status = status;
     }
-    if (category) query.category = { $regex: category, $options: "i" };
-    if (brand) query.brand = { $regex: brand, $options: "i" };
+    if (category?.trim()) {
+      query.category = {
+        $regex: escapeRegex(category.trim().slice(0, 80)),
+        $options: "i",
+      };
+    }
+    if (brand?.trim()) {
+      query.brand = {
+        $regex: escapeRegex(brand.trim().slice(0, 80)),
+        $options: "i",
+      };
+    }
     if (deviceCategory) query.deviceCategory = deviceCategory.toLowerCase();
 
     if (search?.trim()) {

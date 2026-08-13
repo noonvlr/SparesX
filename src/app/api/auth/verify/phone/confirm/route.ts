@@ -7,10 +7,23 @@ import {
   confirmTwilioVerifyOtp,
   TWILIO_VERIFY_SENTINEL,
 } from "@/lib/services/sms";
+import { checkRateLimitAsync } from "@/lib/security/authRateLimit";
 
 export async function POST(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
+
+  const attemptLimit = await checkRateLimitAsync({
+    key: `phone-otp-confirm:${auth.id}`,
+    limit: 8,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!attemptLimit.ok) {
+    return NextResponse.json(
+      { message: "Too many attempts. Try again later." },
+      { status: 429 },
+    );
+  }
 
   const { otp } = await req.json();
   if (!otp || String(otp).trim().length < 4) {

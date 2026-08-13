@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/ui/cn";
+import { buttonVariants } from "@/components/ui/button-variants";
 
 type HomeMarketplaceStatsProps = {
   listedCount: number;
@@ -16,17 +18,19 @@ function useCountUp(target: number, durationMs = 1100) {
     if (started.current) return;
     started.current = true;
 
+    if (target <= 0) return;
+
     const reduceMotion =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion || target <= 0) {
-      setValue(target);
-      return;
+
+    let frame = 0;
+    if (reduceMotion) {
+      frame = requestAnimationFrame(() => setValue(target));
+      return () => cancelAnimationFrame(frame);
     }
 
     const start = performance.now();
-    let frame = 0;
-
     const tick = (now: number) => {
       const t = Math.min(1, (now - start) / durationMs);
       const eased = 1 - Math.pow(1 - t, 3);
@@ -42,7 +46,8 @@ function useCountUp(target: number, durationMs = 1100) {
 }
 
 /**
- * Hero marketplace counters — solid cards, count-up + soft highlight pulse.
+ * Hero marketplace counters — only shown when there is real activity.
+ * Zero inventory uses a soft-launch CTA instead of "0 / 0" vanity stats.
  */
 export default function HomeMarketplaceStats({
   listedCount,
@@ -50,6 +55,37 @@ export default function HomeMarketplaceStats({
 }: HomeMarketplaceStatsProps) {
   const listed = useCountUp(listedCount);
   const sold = useCountUp(soldCount, 1300);
+
+  if (listedCount <= 0 && soldCount <= 0) {
+    return (
+      <div className="mt-10 sm:mt-12 mx-auto max-w-lg rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-6 sm:py-6 text-center shadow-[var(--shadow-sm)]">
+        <p className="text-sm font-semibold text-[var(--ink)]">
+          Be one of the first sellers on SparesX
+        </p>
+        <p className="mt-1.5 text-sm text-[var(--muted)] leading-relaxed">
+          List a spare part or request what you need — help build the technician
+          marketplace.
+        </p>
+        <div className="mt-4 flex flex-col sm:flex-row gap-2 justify-center">
+          <Link
+            href="/technician/products/new"
+            className={cn(buttonVariants({ size: "sm" }), "w-full sm:w-auto")}
+          >
+            List a part
+          </Link>
+          <Link
+            href="/requests?tab=submit"
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "sm" }),
+              "w-full sm:w-auto",
+            )}
+          >
+            Request a part
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <dl
