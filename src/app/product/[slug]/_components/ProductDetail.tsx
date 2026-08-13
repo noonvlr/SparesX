@@ -11,6 +11,7 @@ import StarRatingDisplay from "@/components/StarRatingDisplay";
 import RateSellerModal from "@/components/RateSellerModal";
 import MarkSoldModal from "@/components/MarkSoldModal";
 import { AuthPromptSheet } from "@/components/ContactSheet";
+import { ShareListingButton } from "@/components/ShareListing";
 import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -536,28 +537,36 @@ export default function ProductDetail({
           >
             ← Back to products
           </Link>
-          {isOwner && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/technician/products/edit/${product._id}`}
-                className={cn(buttonVariants({ size: "sm" }))}
-              >
-                Edit listing
-              </Link>
-              {product.status !== "sold" ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="soft"
-                  onClick={() => setSoldOpen(true)}
+          <div className="flex flex-wrap items-center gap-2">
+            <ShareListingButton
+              product={product}
+              intent={isOwner ? "listed" : "found"}
+              variant="button"
+              label="Share"
+            />
+            {isOwner && (
+              <>
+                <Link
+                  href={`/technician/products/edit/${product._id}`}
+                  className={cn(buttonVariants({ size: "sm" }))}
                 >
-                  Mark as sold
-                </Button>
-              ) : (
-                <Badge tone="success">Sold</Badge>
-              )}
-            </div>
-          )}
+                  Edit listing
+                </Link>
+                {product.status !== "sold" ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="soft"
+                    onClick={() => setSoldOpen(true)}
+                  >
+                    Mark as sold
+                  </Button>
+                ) : (
+                  <Badge tone="success">Sold</Badge>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">

@@ -21,6 +21,7 @@ import {
 } from "@/lib/products/listingTitle";
 import { productPath } from "@/lib/seo/site";
 import { authFetch, getCachedUserId } from "@/lib/auth/clientAuth";
+import { ShareListingButton } from "@/components/ShareListing";
 
 export interface ProductCardData {
   _id: string;
@@ -160,6 +161,19 @@ export default function ProductCard({
             Yours
           </span>
         ) : null}
+
+        <div
+          className={cn(
+            "absolute z-20",
+            onRemove ? "top-2 right-2" : "top-2 left-2",
+            isOwner && !onRemove ? "top-2 left-2" : null,
+          )}
+        >
+          <ShareListingButton
+            product={product}
+            intent={isOwner ? "listed" : "found"}
+          />
+        </div>
 
         <Link href={detailPath} className="block">
           <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)] border-b border-[var(--border-strong)] flex items-center justify-center">

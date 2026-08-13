@@ -7,6 +7,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { LoadingState, ErrorState } from "@/components/feedback";
 import { DashboardPage } from "@/components/layout";
 import MarkSoldModal from "@/components/MarkSoldModal";
+import { ShareListingButton } from "@/components/ShareListing";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { cn } from "@/lib/ui/cn";
 import { formatListingTitle } from "@/lib/products/listingTitle";
@@ -482,6 +483,15 @@ export default function MyProductsPage() {
                         >
                           {product.status === "rejected" ? "Edit & resubmit" : "Edit"}
                         </Link>
+                        {product.status === "approved" ? (
+                          <ShareListingButton
+                            product={product}
+                            intent="listed"
+                            variant="button"
+                            label="Share"
+                            className="flex-1"
+                          />
+                        ) : null}
                         {product.status === "approved" ? (
                           <Button
                             type="button"

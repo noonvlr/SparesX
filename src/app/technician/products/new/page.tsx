@@ -13,6 +13,9 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { ShareListingPanel } from "@/components/ShareListing";
+import { productPath } from "@/lib/seo/site";
+import type { ShareableListing } from "@/lib/share/listingShare";
 
 interface Brand {
   _id: string;
@@ -103,6 +106,10 @@ function AddProductForm() {
   const [images, setImages] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [listedProduct, setListedProduct] = useState<ShareableListing | null>(
+    null,
+  );
+  const [listedPending, setListedPending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
@@ -472,8 +479,22 @@ function AddProductForm() {
       const data = await res.json();
 
       if (res.ok) {
-        setSuccess("Product added successfully!");
-        setTimeout(() => router.push("/technician/products"), 1200);
+        const created = data.product || {};
+        setListedProduct({
+          _id: created._id,
+          slug: created.slug,
+          name: created.name || form.name,
+          brand: created.brand || form.brand,
+          deviceModel: created.deviceModel || form.deviceModel,
+          partType: created.partType || form.partType,
+          price: Number(created.price ?? form.price),
+        });
+        setListedPending(created.status === "pending");
+        setSuccess(
+          created.status === "pending"
+            ? "Listing submitted for review. Share it once it goes live, or send the link to buyers now."
+            : "Product listed successfully. Share it with other technicians.",
+        );
       } else if (data.code === "PHONE_UNVERIFIED") {
         setError(data.message || "Verify your phone before posting");
         setTimeout(() => router.push("/verify"), 800);
@@ -485,6 +506,62 @@ function AddProductForm() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (listedProduct) {
+    const href = productPath(listedProduct);
+    return (
+      <div className="max-w-xl mx-auto py-8 px-3 sm:px-6">
+        <Card padding="lg" className="space-y-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)] mb-1">
+              Listing created
+            </p>
+            <h1 className="text-2xl font-semibold text-[var(--ink)]">
+              Share your part
+            </h1>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              {success ||
+                "Hey, I have listed this product on SparesX.com — check it out."}
+            </p>
+            {listedPending ? (
+              <p className="mt-2 text-sm text-[var(--warning)]">
+                This listing is waiting for approval. The public page may not
+                appear in search until a moderator approves it.
+              </p>
+            ) : null}
+          </div>
+          <ShareListingPanel product={listedProduct} intent="listed" />
+          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={() => router.push(href)}
+            >
+              View listing
+            </Button>
+            <Button
+              size="lg"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => router.push("/technician/products")}
+            >
+              My listings
+            </Button>
+          </div>
+          <Button
+            type="button"
+            variant="link"
+            className="w-full"
+            onClick={() => {
+              window.location.assign("/technician/products/new");
+            }}
+          >
+            List another part
+          </Button>
+        </Card>
+      </div>
+    );
   }
 
   if (phoneGate === "checking" || dataLoading) {
