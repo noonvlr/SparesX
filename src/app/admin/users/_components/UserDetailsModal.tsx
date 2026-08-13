@@ -354,6 +354,7 @@ export default function UserDetailsModal({
                   </p>
                   <p className="text-xs mt-2">
                     <TrustBadges
+                      density="full"
                       phoneVerified={user.phoneVerified}
                       emailVerified={user.emailVerified}
                       kycVerified={user.kycVerified}

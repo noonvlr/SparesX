@@ -787,6 +787,7 @@ export default function ProductDetail({
                     </div>
                     <div className="mt-2">
                       <TrustBadges
+                        density="compact"
                         phoneVerified={seller.phoneVerified}
                         emailVerified={seller.emailVerified}
                         kycVerified={seller.kycVerified}

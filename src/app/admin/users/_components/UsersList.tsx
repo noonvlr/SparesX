@@ -64,6 +64,7 @@ export default function UsersList({
                 </div>
                 <div className="mt-1">
                   <TrustBadges
+                    density="compact"
                     phoneVerified={user.phoneVerified}
                     emailVerified={user.emailVerified}
                     kycVerified={user.kycVerified}
@@ -133,6 +134,7 @@ export default function UsersList({
                       </div>
                       <div className="mt-1">
                         <TrustBadges
+                          density="compact"
                           phoneVerified={user.phoneVerified}
                           emailVerified={user.emailVerified}
                           kycVerified={user.kycVerified}

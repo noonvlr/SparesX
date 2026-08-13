@@ -32,8 +32,27 @@ export type PublicTrustInfo = {
   activeBadgeKeys?: string[];
 };
 
+/** How densely badges render in UI. */
+export type BadgeDensity = "icons" | "compact" | "full";
+
 export const USER_PUBLIC_TRUST_SELECT =
   "phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount responseRate chatInboundOpportunities";
+
+const VERIFICATION_KEYS: BadgeKey[] = [
+  "mobile_verified",
+  "email_verified",
+  "kyc_verified",
+  "business_verified",
+  "address_verified",
+];
+
+/** Specials worth showing in dense UI (not founding_member). */
+const DENSE_SPECIAL_KEYS: BadgeKey[] = [
+  "official_store",
+  "verified_technician",
+  "moderator",
+  "administrator",
+];
 
 function orderBadgeKeys(keys: BadgeKey[]): BadgeKey[] {
   const set = new Set(keys);
@@ -46,13 +65,7 @@ function orderBadgeKeys(keys: BadgeKey[]): BadgeKey[] {
     }
   }
 
-  for (const key of [
-    "mobile_verified",
-    "email_verified",
-    "kyc_verified",
-    "business_verified",
-    "address_verified",
-  ] as BadgeKey[]) {
+  for (const key of VERIFICATION_KEYS) {
     if (set.has(key)) ordered.push(key);
   }
 
@@ -67,6 +80,127 @@ function orderBadgeKeys(keys: BadgeKey[]): BadgeKey[] {
   }
 
   return ordered;
+}
+
+function toPublicBadge(key: BadgeKey): PublicBadge {
+  const def = BADGE_CATALOG[key];
+  return {
+    key,
+    name: def.name,
+    type: def.type,
+    icon: def.icon,
+    color: def.color,
+    shortDescription: def.shortDescription,
+    criteria: def.criteria,
+  };
+}
+
+/**
+ * Collapse Mobile/Email/KYC/Business/Address into one signal for dense UI.
+ * Strongest wins: Business → ID (KYC) → Verified (phone/email/address).
+ */
+function verificationSummary(
+  byKey: Map<BadgeKey, PublicBadge>,
+): PublicBadge | null {
+  if (byKey.has("business_verified")) {
+    const base = byKey.get("business_verified")!;
+    return { ...base, name: "Business Verified" };
+  }
+  if (byKey.has("kyc_verified")) {
+    const base = byKey.get("kyc_verified")!;
+    return { ...base, name: "ID Verified" };
+  }
+  if (
+    byKey.has("mobile_verified") ||
+    byKey.has("email_verified") ||
+    byKey.has("address_verified")
+  ) {
+    const parts: string[] = [];
+    if (byKey.has("mobile_verified")) parts.push("mobile");
+    if (byKey.has("email_verified")) parts.push("email");
+    if (byKey.has("address_verified")) parts.push("address");
+    return {
+      key: "mobile_verified",
+      name: "Verified",
+      type: "verification",
+      icon: "✓",
+      color: "blue",
+      shortDescription: `Account verified (${parts.join(", ")})`,
+      criteria:
+        "Complete phone and/or email verification. Stronger levels unlock ID and Business Verified badges.",
+    };
+  }
+  return null;
+}
+
+/**
+ * Reduce badge clutter for list/card surfaces.
+ * - full: everything, ordered
+ * - compact / icons: top reputation + one verification summary + rare specials (max 3)
+ */
+export function selectBadgesForDensity(
+  badges: PublicBadge[],
+  density: BadgeDensity,
+): PublicBadge[] {
+  if (!badges.length) return [];
+  if (density === "full") return badges;
+
+  const byKey = new Map<BadgeKey, PublicBadge>();
+  for (const b of badges) byKey.set(b.key, b);
+
+  const selected: PublicBadge[] = [];
+
+  for (const key of REPUTATION_ORDER) {
+    const hit = byKey.get(key);
+    if (hit) {
+      selected.push(hit);
+      break;
+    }
+  }
+
+  const verification = verificationSummary(byKey);
+  if (verification) selected.push(verification);
+
+  for (const key of DENSE_SPECIAL_KEYS) {
+    const hit = byKey.get(key);
+    if (hit) selected.push(hit);
+  }
+
+  return selected.slice(0, 3);
+}
+
+/** Short label for compact pills (icons mode shows icon only). */
+export function badgeShortLabel(badge: PublicBadge): string {
+  switch (badge.key) {
+    case "elite_seller":
+      return "Elite";
+    case "top_seller":
+      return "Top";
+    case "trusted_seller":
+      return "Trusted";
+    case "business_verified":
+      return "Business";
+    case "kyc_verified":
+      return badge.name === "ID Verified" ? "ID" : "KYC";
+    case "mobile_verified":
+      return badge.name === "Verified" ? "Verified" : "Mobile";
+    case "email_verified":
+      return "Email";
+    case "address_verified":
+      return "Address";
+    case "official_store":
+      return "Official";
+    case "verified_technician":
+      return "Technician";
+    case "founding_member":
+      return "Founding";
+    case "moderator":
+      return "Mod";
+    case "administrator":
+      return "Admin";
+    default:
+      return badge.name.split(" ")[0];
+  }
 }
 
 /** Build display badges from user document snapshot (no DB query). */
@@ -110,18 +244,7 @@ export function badgesFromUserDoc(user: any): PublicBadge[] {
     }
   }
 
-  return orderBadgeKeys(keys).map((key) => {
-    const def = BADGE_CATALOG[key];
-    return {
-      key,
-      name: def.name,
-      type: def.type,
-      icon: def.icon,
-      color: def.color,
-      shortDescription: def.shortDescription,
-      criteria: def.criteria,
-    };
-  });
+  return orderBadgeKeys(keys).map(toPublicBadge);
 }
 
 export function pickTrustFields(user: any): PublicTrustInfo {
@@ -130,9 +253,7 @@ export function pickTrustFields(user: any): PublicTrustInfo {
     ? user.badges
     : badgesFromUserDoc(user);
   const trustScore =
-    typeof user.trustScore === "number"
-      ? user.trustScore
-      : undefined;
+    typeof user.trustScore === "number" ? user.trustScore : undefined;
   const band =
     typeof trustScore === "number" ? trustBandFromScore(trustScore) : null;
 

@@ -164,6 +164,7 @@ export default async function SellersPage({
                       ) : null}
                     </div>
                     <TrustBadges
+                      density="compact"
                       phoneVerified={seller.phoneVerified}
                       emailVerified={seller.emailVerified}
                       kycVerified={seller.kycVerified}

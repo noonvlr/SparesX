@@ -187,6 +187,7 @@ export default function PublicProfileClient({
               />
 
               <TrustBadges
+                density="full"
                 phoneVerified={profile.phoneVerified}
                 emailVerified={profile.emailVerified}
                 kycVerified={profile.kycVerified}

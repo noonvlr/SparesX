@@ -744,6 +744,7 @@ export default function TechnicianProfilePage() {
           <SectionCard id="trust" title="Trust & badges">
             {profile ? (
               <TrustBadges
+                density="full"
                 phoneVerified={profile.phoneVerified}
                 emailVerified={profile.emailVerified}
                 kycVerified={profile.kycVerified}

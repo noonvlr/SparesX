@@ -111,28 +111,15 @@ export default function ConversationList({
                 className="min-w-0 flex-1 text-left"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0 flex flex-wrap items-center gap-1.5">
-                    <p
-                      className={`text-sm truncate ${
-                        unread
-                          ? "font-bold text-[var(--ink)]"
-                          : "font-semibold text-[var(--ink-secondary)]"
-                      }`}
-                    >
-                      {peer?.name || "User"}
-                    </p>
-                    <TrustBadges
-                      phoneVerified={peer?.phoneVerified}
-                      emailVerified={peer?.emailVerified}
-                      kycVerified={peer?.kycVerified}
-                      businessVerified={peer?.businessVerified}
-                      addressVerified={peer?.addressVerified}
-                      isTrusted={peer?.isTrusted}
-                      trustScore={peer?.trustScore}
-                      badges={peer?.badges}
-                      activeBadgeKeys={peer?.activeBadgeKeys}
-                    />
-                  </div>
+                  <p
+                    className={`text-sm truncate min-w-0 ${
+                      unread
+                        ? "font-bold text-[var(--ink)]"
+                        : "font-semibold text-[var(--ink-secondary)]"
+                    }`}
+                  >
+                    {peer?.name || "User"}
+                  </p>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {c.lastMessageTime ? (
                       <time
@@ -148,6 +135,20 @@ export default function ConversationList({
                       </span>
                     )}
                   </div>
+                </div>
+                <div className="mt-0.5">
+                  <TrustBadges
+                    density="icons"
+                    phoneVerified={peer?.phoneVerified}
+                    emailVerified={peer?.emailVerified}
+                    kycVerified={peer?.kycVerified}
+                    businessVerified={peer?.businessVerified}
+                    addressVerified={peer?.addressVerified}
+                    isTrusted={peer?.isTrusted}
+                    trustScore={peer?.trustScore}
+                    badges={peer?.badges}
+                    activeBadgeKeys={peer?.activeBadgeKeys}
+                  />
                 </div>
                 <p className="text-xs text-[var(--muted)] truncate mt-0.5">
                   {c.lastMessage || "No messages yet"}
