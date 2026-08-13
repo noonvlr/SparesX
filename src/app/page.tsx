@@ -4,7 +4,6 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 import AdSlot from "@/components/AdSlot";
 import HomeSearch from "@/components/HomeSearch";
 import HomeMarketplaceStats from "@/components/HomeMarketplaceStats";
-import { BrandMark } from "@/components/BrandMark";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
@@ -183,7 +182,15 @@ export default async function HomePage() {
 
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
             <div className="mb-6 flex justify-center">
-              <BrandMark size="lg" asSpan />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/icon-512.png"
+                alt="SparesX"
+                width={160}
+                height={160}
+                className="h-24 w-24 sm:h-28 sm:w-28 rounded-[var(--radius-lg)] object-contain shadow-[var(--shadow-md)]"
+                decoding="async"
+              />
             </div>
 
             <h1 className="text-display text-balance text-[var(--ink)] mb-5 sm:mb-6">

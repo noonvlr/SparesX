@@ -19,7 +19,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
           <div className="sm:col-span-2 lg:col-span-4">
-            <BrandMark size="md" />
+            <BrandMark size="md" tone="onDark" />
             <p className="mt-4 text-sm leading-relaxed text-[var(--footer-muted)] max-w-sm">
               A dedicated marketplace for mobile spare parts in India, built for
               technicians. Every listing is tied to a seller&apos;s Trust Score.
