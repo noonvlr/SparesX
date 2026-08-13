@@ -139,7 +139,7 @@ export default function AdminSupportCasePage() {
         actions={
           <Link href="/admin/support">
             <Button type="button" size="sm" variant="outline">
-              All cases
+              ← Back
             </Button>
           </Link>
         }

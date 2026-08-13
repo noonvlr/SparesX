@@ -4,6 +4,7 @@ import FeaturedProducts from "@/components/FeaturedProducts";
 import AdSlot from "@/components/AdSlot";
 import HomeSearch from "@/components/HomeSearch";
 import HomeMarketplaceStats from "@/components/HomeMarketplaceStats";
+import { BrandMark } from "@/components/BrandMark";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
@@ -181,13 +182,8 @@ export default async function HomePage() {
           />
 
           <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
-            <div className="mb-6 flex items-center justify-center gap-2.5">
-              <span className="inline-flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-[var(--radius)] bg-[var(--brand)] text-[var(--primary-foreground)] text-lg sm:text-xl font-bold shadow-[var(--shadow-sm)]">
-                S
-              </span>
-              <span className="text-xl sm:text-2xl font-semibold tracking-tight text-[var(--ink)]">
-                Spares<span className="text-[var(--brand)]">X</span>
-              </span>
+            <div className="mb-6 flex justify-center">
+              <BrandMark size="lg" asSpan />
             </div>
 
             <h1 className="text-display text-balance text-[var(--ink)] mb-5 sm:mb-6">

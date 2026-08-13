@@ -12,8 +12,8 @@ export default function LegalPage({
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand)] mb-2">
-          SparesX Legal
+        <p className="text-xs font-semibold uppercase tracking-wider text-[var(--muted)] mb-2">
+          Spares<span className="text-[var(--brand)]">X</span> Legal
         </p>
         <h1 className="text-heading text-[var(--ink)] mb-2">
           {title}

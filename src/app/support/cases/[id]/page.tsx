@@ -73,6 +73,12 @@ export default function SupportCaseDetailPage() {
   return (
     <main className="min-h-screen bg-[var(--surface-2)] py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
+        <Link
+          href="/support/cases"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors"
+        >
+          ← Back to your cases
+        </Link>
         <PageHeader
           title={ticket.caseNumber ? `Case #${ticket.caseNumber}` : ticket.subject}
           description={`${ticket.kindLabel || "Support"} · ${ticket.statusLabel || ticket.status}`}
@@ -112,12 +118,6 @@ export default function SupportCaseDetailPage() {
             </Alert>
           ) : null}
         </Card>
-        <Link
-          href="/support/cases"
-          className="text-sm font-semibold text-[var(--brand)] hover:underline"
-        >
-          ← All your cases
-        </Link>
       </div>
     </main>
   );

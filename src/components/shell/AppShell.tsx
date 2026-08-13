@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Footer from "@/components/Footer";
+import { BrandMark } from "@/components/BrandMark";
 import ToastHost from "@/components/ToastHost";
 import VerificationBanner from "@/components/VerificationBanner";
 import PasswordSetupBanner from "@/components/PasswordSetupBanner";
@@ -447,12 +448,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1 flex-col min-h-0">
       {hideShell && (
         <header className="sticky top-0 z-40 glass h-[var(--nav-h)] relative flex items-center justify-center px-4">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight text-[var(--brand)]"
-          >
-            SparesX
-          </Link>
+          <BrandMark size="sm" />
           <div className="absolute right-4 top-1/2 -translate-y-1/2">
             <ThemeToggle size="sm" />
           </div>
@@ -464,12 +460,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <header className="hidden md:block sticky top-0 z-40 glass-nav">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[var(--nav-h)] flex items-center justify-between gap-4">
             <div className="flex items-center gap-6 min-w-0">
-              <Link
-                href="/"
-                className="text-xl font-semibold tracking-tight text-[var(--brand)] shrink-0"
-              >
-                SparesX
-              </Link>
+              <BrandMark size="sm" />
               <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
                 {topLinks.map((item) => {
                   const active = isActivePath(pathname, item.href);
@@ -617,12 +608,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile top bar */}
       {!hideShell && (
         <header className="md:hidden sticky top-0 z-40 glass-nav relative flex items-center justify-between gap-3 px-4 h-[var(--nav-h)]">
-          <Link
-            href="/"
-            className="text-lg font-semibold tracking-tight text-[var(--brand)]"
-          >
-            SparesX
-          </Link>
+          <BrandMark size="sm" />
           <div className="flex items-center gap-1">
             <ThemeCycleButton />
             <Link
