@@ -31,7 +31,9 @@ This document lists variables found in the repository. Values must be verified i
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` | Error monitoring | Optional | Sentry init |
 | `SENTRY_ENVIRONMENT` | Sentry env label | Optional | Sentry |
 | `SENTRY_TRACES_SAMPLE_RATE` | Trace sample rate | Optional | Sentry |
-| `NEXT_PUBLIC_ADS_ENABLED` | Ads toggle | Optional | ads UI |
+| `NEXT_PUBLIC_ADS_ENABLED` | Ads slot placeholders | Optional | `AdSlot.tsx` |
+
+AdSense site script (`ca-pub-8411517519858379`) is hardcoded in `src/components/AdSenseScript.tsx` plus `public/ads.txt`. Not a secret.
 | `NODE_ENV` | `production` / `development` | Set by host | cookies, CSP, uploads |
 
 ## Not primary env (admin Site Settings)

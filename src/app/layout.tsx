@@ -4,6 +4,7 @@ import AppShell from "@/components/shell/AppShell";
 import ChatShell from "@/components/chat/ChatShell";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import SentryClientInit from "@/components/SentryClientInit";
+import AdSenseScript from "@/components/AdSenseScript";
 import { SITE_URL } from "@/lib/seo/site";
 
 const siteUrl = SITE_URL;
@@ -72,6 +73,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col font-sans bg-[var(--surface-2)] text-[var(--ink)]">
+        <AdSenseScript />
         <ThemeProvider>
           <SentryClientInit />
           <ChatShell>
