@@ -314,7 +314,7 @@ export default function RequestsBoard({
             <Button
               type="button"
               variant="link"
-              onClick={() => setTab("submit")}
+              onClick={() => router.replace("/requests?tab=submit")}
               className="text-sm font-semibold"
             >
               + Post a request
@@ -332,7 +332,10 @@ export default function RequestsBoard({
               <EmptyState
                 title={emptyMessage}
                 action={
-                  <Button type="button" onClick={() => setTab("submit")}>
+                  <Button
+                    type="button"
+                    onClick={() => router.replace("/requests?tab=submit")}
+                  >
                     Submit a request
                   </Button>
                 }

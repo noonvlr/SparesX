@@ -409,8 +409,8 @@ export default function RequestForm({
   }
 
   return (
-    <Card padding="lg" className="animate-in fade-in duration-300">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Card padding="lg" className="overflow-visible animate-in fade-in duration-300">
+      <form onSubmit={handleSubmit} className="space-y-6 overflow-visible">
         {error && (
           <Alert tone="danger">{error}</Alert>
         )}
@@ -488,9 +488,13 @@ export default function RequestForm({
                       brandSlug: "",
                       deviceModel: "",
                       partType: "",
+                      partTypeLabel: "",
                     }));
+                    setBrandSearch("");
+                    setModelSearch("");
+                    setShowBrandDropdown(false);
                   }}
-                  className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
+                  className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-[7.5rem] active:scale-95 ${
                     form.deviceCategory === cat.value
                       ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--ink-inverse)] shadow-[var(--shadow-sm)]"
                       : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
@@ -506,7 +510,7 @@ export default function RequestForm({
 
         {/* Step 2: Brand & Model */}
         {form.deviceCategory && (
-          <div className="p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="relative z-20 overflow-visible p-6 bg-[var(--brand-soft)] rounded-[var(--radius)] border-2 border-[var(--brand-muted)] space-y-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-[var(--brand)] text-[var(--ink-inverse)] flex items-center justify-center text-xs font-bold">
                 2
@@ -514,45 +518,70 @@ export default function RequestForm({
               <h3 className="text-sm font-semibold text-[var(--brand-hover)]">Choose Brand & Model</h3>
             </div>
 
-            <Field label="Brand *" className="relative">
-              <Input
-                type="text"
-                placeholder="Search brand..."
-                value={brandSearch}
-                onChange={(e) => {
-                  setBrandSearch(e.target.value);
-                  setShowBrandDropdown(true);
-                }}
-                onFocus={() => setShowBrandDropdown(true)}
-                onBlur={() => setTimeout(() => setShowBrandDropdown(false), 300)}
-                required
-              />
-              {form.brand && (
-                <div className="mt-2 inline-block bg-[var(--brand)] text-[var(--ink-inverse)] px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                  ✓ {form.brand}
-                </div>
-              )}
+            <div
+              className={`relative min-w-0 ${showBrandDropdown ? "z-30" : "z-0"}`}
+            >
+              <Field label="Brand *" htmlFor="req-brand">
+                <Input
+                  id="req-brand"
+                  type="text"
+                  placeholder="Search brand..."
+                  value={brandSearch}
+                  onChange={(e) => {
+                    setBrandSearch(e.target.value);
+                    setShowBrandDropdown(true);
+                    if (form.brand) {
+                      setForm((f) => ({
+                        ...f,
+                        brand: "",
+                        brandSlug: "",
+                        deviceModel: "",
+                      }));
+                      setModelSearch("");
+                    }
+                  }}
+                  onFocus={() => setShowBrandDropdown(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowBrandDropdown(false), 300)
+                  }
+                  required
+                  autoComplete="off"
+                />
+                {form.brand && (
+                  <div className="mt-2 inline-block bg-[var(--brand)] text-[var(--ink-inverse)] px-3 py-1 rounded-full text-sm font-semibold">
+                    ✓ {form.brand}
+                  </div>
+                )}
+              </Field>
               {showBrandDropdown && (
-                <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-dropdown)] animate-in fade-in duration-200">
-                  {filteredBrands.map((brand) => (
-                    <button
-                      key={brand._id}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handleBrandSelect(brand);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
-                    >
-                      {brand.name}
-                    </button>
-                  ))}
+                <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+                  {filteredBrands.length > 0 ? (
+                    filteredBrands.map((brand) => (
+                      <button
+                        key={brand._id}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleBrandSelect(brand);
+                        }}
+                        className="w-full min-h-11 px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0"
+                      >
+                        {brand.name}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-[var(--muted)] text-center">
+                      {brands.length === 0
+                        ? "Loading brands…"
+                        : "No brands match that search"}
+                    </div>
+                  )}
                 </div>
               )}
-            </Field>
+            </div>
 
             {form.brand && (
-              <div className="animate-in fade-in duration-200">
+              <div className="relative z-20 min-w-0">
                 <ModelSelector
                   models={models}
                   value={form.deviceModel}
@@ -571,7 +600,7 @@ export default function RequestForm({
 
         {/* Step 3: Part + description */}
         {form.deviceCategory && form.brand && form.deviceModel && (
-          <div className="border-t-2 border-[var(--border)] pt-6 space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="relative z-10 overflow-visible border-t-2 border-[var(--border)] pt-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 rounded-full bg-[var(--ink-secondary)] text-[var(--ink-inverse)] flex items-center justify-center text-xs font-bold">
                 3
@@ -579,43 +608,59 @@ export default function RequestForm({
               <h3 className="text-sm font-semibold text-[var(--ink)]">Part details</h3>
             </div>
 
-            <Field label="Part Type *" className="relative">
-              <Input
-                type="text"
-                placeholder="Search part type (e.g., Screen, Battery)..."
-                value={partTypeSearch}
-                onChange={(e) => {
-                  setPartTypeSearch(e.target.value);
-                  setShowPartTypeDropdown(true);
-                }}
-                onFocus={() => setShowPartTypeDropdown(true)}
-                onBlur={() => setTimeout(() => setShowPartTypeDropdown(false), 300)}
-                required
-              />
-              {form.partType && (
-                <div className="mt-2 inline-block bg-[var(--brand-hover)] text-[var(--ink-inverse)] px-3 py-1 rounded-full text-sm font-semibold animate-in fade-in zoom-in">
-                  ✓ {form.partTypeLabel || form.partType}
-                </div>
-              )}
+            <div
+              className={`relative min-w-0 ${showPartTypeDropdown ? "z-30" : "z-0"}`}
+            >
+              <Field label="Part Type *" htmlFor="req-part-type">
+                <Input
+                  id="req-part-type"
+                  type="text"
+                  placeholder="Search part type (e.g., Screen, Battery)..."
+                  value={partTypeSearch}
+                  onChange={(e) => {
+                    setPartTypeSearch(e.target.value);
+                    setShowPartTypeDropdown(true);
+                  }}
+                  onFocus={() => setShowPartTypeDropdown(true)}
+                  onBlur={() =>
+                    setTimeout(() => setShowPartTypeDropdown(false), 300)
+                  }
+                  required
+                  autoComplete="off"
+                />
+                {form.partType && (
+                  <div className="mt-2 inline-block bg-[var(--brand-hover)] text-[var(--ink-inverse)] px-3 py-1 rounded-full text-sm font-semibold">
+                    ✓ {form.partTypeLabel || form.partType}
+                  </div>
+                )}
+              </Field>
               {showPartTypeDropdown && (
-                <div className="absolute z-10 mt-2 w-full max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-dropdown)]">
-                  {filteredPartTypes.map((part) => (
-                    <button
-                      key={part.value}
-                      type="button"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        handlePartTypeSelect(part);
-                      }}
-                      className="w-full px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0 flex items-center gap-2"
-                    >
-                      <span>{part.icon}</span>
-                      <span>{part.label}</span>
-                    </button>
-                  ))}
+                <div className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-64 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]">
+                  {filteredPartTypes.length > 0 ? (
+                    filteredPartTypes.map((part) => (
+                      <button
+                        key={part.value}
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handlePartTypeSelect(part);
+                        }}
+                        className="w-full min-h-11 px-4 py-3 text-left hover:bg-[var(--brand-soft)] font-medium text-[var(--ink-secondary)] border-b border-[var(--border)] last:border-b-0 flex items-center gap-2"
+                      >
+                        <span>{part.icon}</span>
+                        <span>{part.label}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-[var(--muted)] text-center">
+                      {partTypes.length === 0
+                        ? "Loading part types…"
+                        : "No part types match that search"}
+                    </div>
+                  )}
                 </div>
               )}
-            </Field>
+            </div>
 
             <Field label="Request Details *" htmlFor="req-desc" required>
               <Textarea

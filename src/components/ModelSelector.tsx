@@ -129,7 +129,7 @@ export default function ModelSelector({
   };
 
   return (
-    <div className="relative">
+    <div className={`relative ${open ? "z-40" : "z-0"}`}>
       <label className="block text-sm font-semibold text-[var(--ink-secondary)] mb-2">
         Model {required ? "*" : ""}
       </label>
@@ -145,7 +145,6 @@ export default function ModelSelector({
           onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 220)}
           className="pr-10"
-          size="sm"
           required={required}
           autoComplete="off"
         />
