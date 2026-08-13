@@ -28,9 +28,11 @@ function Receipt({ message, mine }: { message: ChatMessage; mine: boolean }) {
 export default function MessageBubble({
   message,
   mine,
+  onReport,
 }: {
   message: ChatMessage;
   mine: boolean;
+  onReport?: (message: ChatMessage) => void;
 }) {
   const time = new Date(message.createdAt).toLocaleTimeString("en-IN", {
     hour: "2-digit",
@@ -69,6 +71,16 @@ export default function MessageBubble({
         >
           <span className="text-[10px]">{time}</span>
           <Receipt message={message} mine={mine} />
+          {!mine && onReport ? (
+            <button
+              type="button"
+              onClick={() => onReport(message)}
+              className="text-[10px] font-semibold underline-offset-2 hover:underline ml-1 opacity-80"
+              aria-label="Report this message"
+            >
+              Report
+            </button>
+          ) : null}
         </div>
       </div>
     </div>

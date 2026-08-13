@@ -302,14 +302,7 @@ export default function ProductDetail({
 
   const handleReportClick = () => {
     if (!requireAuth("contact")) return;
-    const sellerId = seller?._id || "";
-    const params = new URLSearchParams({
-      type: "abuse",
-      productId: product._id,
-      reportedUserId: sellerId,
-      subject: `Report: ${product.name}`.slice(0, 140),
-    });
-    router.push(`/support?${params.toString()}`);
+    router.push(`/support/report?type=product&id=${encodeURIComponent(product._id)}`);
   };
 
   const handleChatClick = () => {
@@ -802,8 +795,8 @@ export default function ProductDetail({
                   <button
                     type="button"
                     onClick={handleReportClick}
-                    title="Report misbehaviour"
-                    aria-label="Report seller"
+                    title="Report this listing"
+                    aria-label="Report this listing"
                     className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--danger)] hover:opacity-80 px-2 py-1 rounded-[var(--radius)] hover:bg-[var(--danger-soft)] transition-colors"
                   >
                     <svg
@@ -819,7 +812,7 @@ export default function ProductDetail({
                         d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
                       />
                     </svg>
-                    Report
+                    Report listing
                   </button>
                 )}
               </div>
@@ -927,8 +920,8 @@ export default function ProductDetail({
                   )}
                   <p className="text-xs text-[var(--muted)]">
                     After chatting with the seller, you can rate their behaviour
-                    and response. Spot misuse? Use Report — it opens Support with
-                    your details prefilled for admin review.
+                    and response. Spot misuse? Use Report listing — we attach
+                    the product and seller automatically for admin review.
                   </p>
                 </div>
               )}

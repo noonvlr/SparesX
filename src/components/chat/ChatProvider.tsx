@@ -13,7 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { io, type Socket } from "socket.io-client";
 import type { ChatConversation, ChatMessage } from "@/types/chat";
-import { playMessageSound, prepareChatSound } from "@/lib/chat/sound";
+import { playMessageSound, prepareChatSound, installChatSoundUnlock } from "@/lib/chat/sound";
 import { getSocketUrl } from "@/lib/chat/socketUrl";
 import { announceChatOffline } from "@/lib/chat/announceOffline";
 import { authFetch, getCachedUserId, resolveSessionUserId } from "@/lib/auth/clientAuth";
@@ -643,6 +643,7 @@ export default function ChatProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
+    installChatSoundUnlock();
     const syncAuth = () => {
       void resolveSessionUserId().then((id) => setUserId(id));
     };

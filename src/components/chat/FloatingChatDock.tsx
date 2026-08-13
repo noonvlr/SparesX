@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useChatDock } from "@/components/chat/ChatProvider";
 import ConversationList from "@/components/chat/ConversationList";
 import MessageBubble from "@/components/chat/MessageBubble";
@@ -14,6 +15,7 @@ import {
   isChatMuted,
   prepareChatSound,
   setChatMuted,
+  unlockChatSound,
 } from "@/lib/chat/sound";
 import { isLoggedInClient } from "@/lib/auth/clientAuth";
 import type { ChatConversation } from "@/types/chat";
@@ -65,6 +67,7 @@ function ThreadBody({
   compact?: boolean;
 }) {
   const chat = useChatDock();
+  const router = useRouter();
   const bottomRef = useRef<HTMLDivElement>(null);
   const messages = chat.messagesById[conversationId] || [];
   const conversation = chat.getConversation(conversationId);
@@ -114,6 +117,15 @@ function ThreadBody({
               key={m._id}
               message={m}
               mine={String(m.senderId) === String(chat.userId)}
+              onReport={
+                String(m.senderId) === String(chat.userId)
+                  ? undefined
+                  : (msg) => {
+                      router.push(
+                        `/support/report?type=message&id=${encodeURIComponent(msg._id)}&conversationId=${encodeURIComponent(conversationId)}`,
+                      );
+                    }
+              }
             />
           ))
         )}
@@ -199,7 +211,7 @@ function FloatingWindow({
         </div>
         {peer?._id ? (
           <Link
-            href={`/support?type=abuse&reportedUserId=${encodeURIComponent(peer._id)}&subject=${encodeURIComponent(`Chat abuse report: ${peer.name || peer._id}`)}`}
+            href={`/support/report?type=user&id=${encodeURIComponent(peer._id)}&conversationId=${encodeURIComponent(conversationId)}`}
             className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1"
             title="Report this user"
           >
@@ -322,8 +334,11 @@ export default function FloatingChatDock() {
     }
     window.addEventListener("storage", sync);
     window.addEventListener("focus", sync);
-    const unlockAudio = () => prepareChatSound();
+    const unlockAudio = () => {
+      void unlockChatSound();
+    };
     window.addEventListener("pointerdown", unlockAudio, { passive: true });
+    window.addEventListener("touchstart", unlockAudio, { passive: true });
     window.addEventListener("keydown", unlockAudio);
     const onResize = () => {
       setFabPosition((prev) => (prev ? clampFabPosition(prev.x, prev.y) : prev));
@@ -333,6 +348,7 @@ export default function FloatingChatDock() {
       window.removeEventListener("storage", sync);
       window.removeEventListener("focus", sync);
       window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("touchstart", unlockAudio);
       window.removeEventListener("keydown", unlockAudio);
       window.removeEventListener("resize", onResize);
     };

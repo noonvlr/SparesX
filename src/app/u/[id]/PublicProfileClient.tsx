@@ -107,12 +107,7 @@ export default function PublicProfileClient({
 
   const handleReport = () => {
     if (!requireAuth() || !profile) return;
-    const params = new URLSearchParams({
-      type: "abuse",
-      reportedUserId: profile._id,
-      subject: `Report user: ${profile.name}`.slice(0, 140),
-    });
-    router.push(`/support?${params.toString()}`);
+    router.push(`/support/report?type=user&id=${encodeURIComponent(profile._id)}`);
   };
 
   if (error || !profile) {

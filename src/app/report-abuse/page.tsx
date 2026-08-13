@@ -35,7 +35,7 @@ export default function ReportAbusePage() {
         </p>
         <p className="mt-4">
           <Link
-            href="/support?type=abuse&subject=Abuse%20report"
+            href="/support?type=safety"
             className={cn(buttonVariants({ variant: "primary", size: "md" }))}
           >
             Open Support report form
@@ -52,7 +52,7 @@ export default function ReportAbusePage() {
         <p>
           Prefer the{" "}
           <Link
-            href="/support?type=abuse"
+            href="/support?type=safety"
             className="text-[var(--brand)] font-semibold underline-offset-2 hover:underline"
           >
             Support form
