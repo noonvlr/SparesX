@@ -670,7 +670,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <div className="px-3 py-2.5 border-b border-[var(--divider)] flex items-center gap-3">
                   <Avatar src={profilePicture} name={userName || "U"} size="sm" />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-[var(--ink)] truncate">
                       {userName || "Account"}
                     </p>
@@ -678,6 +678,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       {userRole || "user"}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setMobileProfileOpen(false)}
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--ink)] hover:bg-[var(--surface-3)] text-xl leading-none"
+                    aria-label="Close account menu"
+                  >
+                    ×
+                  </button>
                 </div>
                 <Link
                   href={profileHref}
@@ -807,12 +815,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setMobileMoreOpen(false)}
           />
           <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--surface-elevated)] shadow-[var(--shadow-modal)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
-            <div className="flex justify-center pt-3 pb-1">
-              <span className="h-1 w-10 rounded-full bg-[var(--border-strong)]" />
+            <div className="flex items-center justify-between px-4 pt-3 pb-2">
+              <p className="text-sm font-semibold text-[var(--ink)]">More</p>
+              <button
+                type="button"
+                onClick={() => setMobileMoreOpen(false)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--ink)] hover:bg-[var(--surface-3)] text-2xl leading-none"
+                aria-label="Close menu"
+              >
+                ×
+              </button>
             </div>
-            <p className="px-5 pb-2 text-sm font-semibold text-[var(--ink)]">
-              More
-            </p>
             <div className="px-3 pb-2 border-b border-[var(--divider)] mb-1">
               <p className="px-2 py-1 text-tiny uppercase tracking-wide text-[var(--muted)]">
                 Theme

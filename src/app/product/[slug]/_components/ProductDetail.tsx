@@ -485,7 +485,7 @@ export default function ProductDetail({
   ].filter(Boolean) as Array<{ label: string; value: ReactNode }>;
 
   return (
-    <main className="min-h-screen bg-[var(--surface-2)] pb-28 lg:pb-10">
+    <main className="min-h-screen bg-[var(--surface-2)] pb-[calc(var(--bottom-nav-h)+4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         {breadcrumbs.length > 0 ? (
           <nav aria-label="Breadcrumb" className="mb-4 text-sm text-[var(--muted)]">
@@ -530,43 +530,91 @@ export default function ProductDetail({
           </p>
         ) : null}
 
-        <div className="mb-4 sm:mb-6 flex items-center justify-between gap-3">
-          <Link
-            href="/products"
-            className="inline-flex items-center text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors"
-          >
-            ← Back to products
-          </Link>
-          <div className="flex flex-wrap items-center gap-2">
-            <ShareListingButton
-              product={product}
-              intent={isOwner ? "listed" : "found"}
-              variant="button"
-              label="Share"
-            />
-            {isOwner && (
-              <>
-                <Link
-                  href={`/technician/products/edit/${product._id}`}
-                  className={cn(buttonVariants({ size: "sm" }))}
-                >
-                  Edit listing
-                </Link>
-                {product.status !== "sold" ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="soft"
-                    onClick={() => setSoldOpen(true)}
+        <div className="mb-4 sm:mb-6 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href="/products"
+              className="inline-flex items-center text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)] transition-colors"
+            >
+              ← Back to products
+            </Link>
+            <div className="hidden sm:flex flex-wrap items-center justify-end gap-2">
+              <ShareListingButton
+                product={product}
+                intent={isOwner ? "listed" : "found"}
+                variant="button"
+                label="Share"
+              />
+              {isOwner && (
+                <>
+                  <Link
+                    href={`/technician/products/edit/${product._id}`}
+                    className={cn(buttonVariants({ size: "sm", variant: "secondary" }))}
                   >
-                    Mark as sold
-                  </Button>
-                ) : (
-                  <Badge tone="success">Sold</Badge>
-                )}
-              </>
-            )}
+                    Edit listing
+                  </Link>
+                  {product.status !== "sold" ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="success"
+                      onClick={() => setSoldOpen(true)}
+                    >
+                      Mark as sold
+                    </Button>
+                  ) : (
+                    <Badge tone="success">Sold</Badge>
+                  )}
+                </>
+              )}
+            </div>
+            {!isOwner ? (
+              <div className="sm:hidden">
+                <ShareListingButton
+                  product={product}
+                  intent="found"
+                  variant="button"
+                  label="Share"
+                />
+              </div>
+            ) : null}
           </div>
+
+          {isOwner ? (
+            <div className="grid grid-cols-3 gap-2 sm:hidden">
+              <ShareListingButton
+                product={product}
+                intent="listed"
+                variant="button"
+                label="Share"
+                className="w-full px-2 text-xs"
+              />
+              <Link
+                href={`/technician/products/edit/${product._id}`}
+                className={cn(
+                  buttonVariants({ size: "sm", variant: "secondary" }),
+                  "w-full px-2 text-xs",
+                )}
+              >
+                Edit
+              </Link>
+              {product.status !== "sold" ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="success"
+                  className="w-full px-2 text-xs font-semibold"
+                  onClick={() => setSoldOpen(true)}
+                >
+                  Mark sold
+                </Button>
+              ) : (
+                <Badge tone="success" className="justify-center">
+                  Sold
+                </Badge>
+              )}
+            </div>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
@@ -674,7 +722,7 @@ export default function ProductDetail({
                   disabled={saveLoading}
                   variant={isSaved ? "soft" : "secondary"}
                   className={cn(
-                    "mb-5 w-full sm:w-auto",
+                    "mb-5 hidden sm:inline-flex w-auto",
                     isSaved &&
                       "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]",
                   )}
@@ -910,55 +958,113 @@ export default function ProductDetail({
         )}
       </div>
 
-      {/* Mobile sticky CTAs */}
+      {/* Mobile sticky CTAs — sits above the bottom nav */}
       {!isOwner && product.status !== "sold" && (
-        <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 glass px-3 py-3">
-          <div className="max-w-7xl mx-auto grid grid-cols-4 gap-1.5">
-            <Button
+        <div
+          className="lg:hidden fixed inset-x-0 z-[45] border-t border-[var(--border)] bg-[var(--surface-elevated)]"
+          style={{
+            bottom:
+              "calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))",
+          }}
+        >
+          <div className="max-w-7xl mx-auto grid grid-cols-4 px-1">
+            <button
               type="button"
               onClick={handleToggleSave}
               disabled={saveLoading}
-              size="sm"
-              variant={isSaved ? "soft" : "secondary"}
               className={cn(
-                "h-auto min-h-0 py-3 text-xs rounded-[var(--radius)]",
-                isSaved &&
-                  "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]",
+                "flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight",
+                isSaved
+                  ? "text-[var(--brand)]"
+                  : "text-[var(--ink-secondary)]",
               )}
             >
+              <span
+                className={cn(
+                  "inline-flex h-8 w-8 items-center justify-center rounded-full",
+                  isSaved
+                    ? "bg-[var(--brand-soft)] text-[var(--brand)]"
+                    : "bg-[var(--surface-3)] text-[var(--ink-secondary)]",
+                )}
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill={isSaved ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </span>
               {isSaved ? "Saved" : "Save"}
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
               onClick={handleWhatsAppClick}
               disabled={waLoading || waActionLoading}
-              size="sm"
-              className={cn(
-                "h-auto min-h-0 py-3 text-xs rounded-[var(--radius)] shadow-none",
-                waConnect?.status === "pending" && !waConnect.unlocked
-                  ? "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]"
-                  : "bg-[#25D366] text-[var(--ink-inverse)] hover:bg-[#1ebe57]",
-              )}
+              className="flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight text-[#128C7E] disabled:opacity-60"
             >
-              {waButtonLabel}
-            </Button>
-            <Button
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/15 text-[#128C7E]">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+                  <path d="M12.04 2C6.5 2 2 6.39 2 11.78c0 1.73.46 3.41 1.33 4.9L2 22l5.46-1.43A10.2 10.2 0 0012.04 21.6C17.58 21.6 22 17.21 22 11.82 22 6.39 17.58 2 12.04 2zm0 17.85c-1.57 0-3.1-.42-4.44-1.21l-.32-.19-3.24.85.87-3.16-.2-.33A7.7 7.7 0 014.3 11.8c0-4.18 3.47-7.58 7.74-7.58 4.27 0 7.74 3.4 7.74 7.58 0 4.18-3.47 7.85-7.74 7.85z" />
+                </svg>
+              </span>
+              {waConnect?.unlocked
+                ? "WhatsApp"
+                : waConnect?.status === "pending"
+                  ? "Pending"
+                  : "WhatsApp"}
+            </button>
+            <button
               type="button"
               onClick={handleChatClick}
-              size="sm"
-              className="h-auto min-h-0 py-3 text-xs rounded-[var(--radius)]"
+              className="flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight text-[var(--brand)]"
             >
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand-soft)] text-[var(--brand)]">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+              </span>
               Chat
-            </Button>
-            <Button
+            </button>
+            <button
               type="button"
               onClick={handleRateClick}
-              size="sm"
-              variant="soft"
-              className="h-auto min-h-0 py-3 text-xs rounded-[var(--radius)] bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]"
+              className="flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight text-[var(--ink-secondary)]"
             >
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-3)] text-[var(--ink-secondary)]">
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                  />
+                </svg>
+              </span>
               Rate
-            </Button>
+            </button>
           </div>
         </div>
       )}
