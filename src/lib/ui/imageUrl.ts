@@ -17,7 +17,28 @@ export function resolveUploadUrl(url?: string | null): string {
   return `/${value}`;
 }
 
-/** Data and blob URLs can't go through the image optimizer. */
+/** True for Google account photos (lh3 / googleusercontent CDNs). */
+export function isGoogleAvatarUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return (
+      host === "lh3.googleusercontent.com" ||
+      host.endsWith(".googleusercontent.com") ||
+      host === "googleusercontent.com"
+    );
+  } catch {
+    return /googleusercontent\.com/i.test(url);
+  }
+}
+
+/**
+ * Data/blob URLs can't go through the optimizer.
+ * Google avatar CDNs often 403 the Next image proxy and/or require no-referrer.
+ */
 export function isUnoptimizableUrl(url: string): boolean {
-  return url.startsWith("data:") || url.startsWith("blob:");
+  return (
+    url.startsWith("data:") ||
+    url.startsWith("blob:") ||
+    isGoogleAvatarUrl(url)
+  );
 }

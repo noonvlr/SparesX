@@ -492,15 +492,12 @@ export default function FloatingChatDock() {
                 className="relative w-12 h-12 rounded-full shadow-lg border-2 border-[var(--surface)] bg-[var(--brand)] text-[var(--ink-inverse)] font-bold overflow-hidden transition-transform duration-200 hover:scale-105 animate-in zoom-in-75"
                 title={peer?.name || "Chat"}
               >
-                {peer?.profilePicture ? (
-                  <img
-                    src={peer.profilePicture}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  (peer?.name || "?").charAt(0).toUpperCase()
-                )}
+                <Avatar
+                  src={peer?.profilePicture}
+                  name={peer?.name || "?"}
+                  size="md"
+                  className="w-full h-full text-base"
+                />
                 {unread > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-[var(--danger)] text-[10px] flex items-center justify-center shadow-md animate-pulse">
                     {unread}

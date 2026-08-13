@@ -157,6 +157,11 @@ export default function PublicProfileClient({
                 sizes="112px"
                 priority
                 className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] object-cover border border-[var(--border)]"
+                fallback={
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--primary-foreground)] flex items-center justify-center text-3xl font-semibold">
+                    {profile.name.charAt(0).toUpperCase()}
+                  </div>
+                }
               />
             ) : (
               <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--primary-foreground)] flex items-center justify-center text-3xl font-semibold">

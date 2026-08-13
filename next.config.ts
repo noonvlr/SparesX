@@ -30,6 +30,15 @@ const nextConfig: NextConfig = {
         protocol: "https" as const,
         hostname: "*.public.blob.vercel-storage.com",
       },
+      // Google Sign-In profile photos
+      {
+        protocol: "https" as const,
+        hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https" as const,
+        hostname: "*.googleusercontent.com",
+      },
       // Local development support for image uploads
       ...(process.env.NODE_ENV === "development"
         ? [

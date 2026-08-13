@@ -1,30 +1,49 @@
+"use client";
+
 import Image, { type ImageProps } from "next/image";
-import { isUnoptimizableUrl, resolveUploadUrl } from "@/lib/ui/imageUrl";
+import { useState, type ReactNode } from "react";
+import {
+  isGoogleAvatarUrl,
+  isUnoptimizableUrl,
+  resolveUploadUrl,
+} from "@/lib/ui/imageUrl";
 
 type UploadedImageProps = Omit<ImageProps, "src" | "unoptimized"> & {
   src?: string | null;
+  /** When the remote image fails, render this instead of a broken img. */
+  fallback?: ReactNode;
 };
 
 /**
- * `next/image` for user-uploaded images.
+ * `next/image` for user-uploaded images and external avatars (e.g. Google).
  *
  * Normalizes legacy URL shapes and skips the optimizer for inline data/blob
- * previews, which it can't process. Renders nothing when there's no image, so
- * callers keep their own placeholder markup.
+ * previews and Google avatar CDNs (which often block the optimizer / referrer).
  */
 export default function UploadedImage({
   src,
   alt,
+  fallback = null,
+  onError,
   ...rest
 }: UploadedImageProps) {
   const resolved = resolveUploadUrl(src);
-  if (!resolved) return null;
+  const [failed, setFailed] = useState(false);
+
+  if (!resolved || failed) return <>{fallback}</>;
+
+  const googleAvatar = isGoogleAvatarUrl(resolved);
 
   return (
     <Image
       src={resolved}
       alt={alt}
       unoptimized={isUnoptimizableUrl(resolved)}
+      referrerPolicy={googleAvatar ? "no-referrer" : undefined}
+      onError={(e) => {
+        setFailed(true);
+        onError?.(e);
+      }}
       {...rest}
     />
   );

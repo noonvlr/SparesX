@@ -115,6 +115,19 @@ export function Avatar({
     .slice(0, 2)
     .toUpperCase();
 
+  const fallback = (
+    <div
+      className={cn(
+        "rounded-full flex items-center justify-center font-semibold bg-[var(--brand-soft)] text-[var(--brand-hover)]",
+        sizes[size],
+        className,
+      )}
+      aria-hidden
+    >
+      {initials}
+    </div>
+  );
+
   if (src) {
     return (
       <UploadedImage
@@ -128,22 +141,12 @@ export function Avatar({
           sizes[size],
           className,
         )}
+        fallback={fallback}
       />
     );
   }
 
-  return (
-    <div
-      className={cn(
-        "rounded-full flex items-center justify-center font-semibold bg-[var(--brand-soft)] text-[var(--brand-hover)]",
-        sizes[size],
-        className,
-      )}
-      aria-hidden
-    >
-      {initials}
-    </div>
-  );
+  return fallback;
 }
 
 export function EmptyState({

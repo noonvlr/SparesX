@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { signJwt } from "@/lib/auth/jwt";
 import { isProfileComplete } from "@/lib/auth/profileComplete";
+import { isGoogleAvatarUrl } from "@/lib/ui/imageUrl";
 
 function getGoogleClientId() {
   return (
@@ -11,6 +12,16 @@ function getGoogleClientId() {
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
     ""
   );
+}
+
+/** Refresh Google photo when empty or still pointing at Google CDN (never overwrite blob uploads). */
+function shouldSyncGooglePicture(
+  existing: string | undefined | null,
+  next: string,
+) {
+  if (!next) return false;
+  if (!existing) return true;
+  return isGoogleAvatarUrl(existing);
 }
 
 /** POST /api/auth/google — exchange Google ID token for SparesX session */
@@ -121,7 +132,7 @@ export async function POST(req: NextRequest) {
         user.emailVerifiedAt = new Date();
         dirty = true;
       }
-      if (picture && !user.profilePicture) {
+      if (picture && shouldSyncGooglePicture(user.profilePicture, picture)) {
         user.profilePicture = picture;
         dirty = true;
       }

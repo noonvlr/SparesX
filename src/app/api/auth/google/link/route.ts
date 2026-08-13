@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
+import { isGoogleAvatarUrl } from "@/lib/ui/imageUrl";
 
 function getGoogleClientId() {
   return (
@@ -10,6 +11,15 @@ function getGoogleClientId() {
     process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ||
     ""
   );
+}
+
+function shouldSyncGooglePicture(
+  existing: string | undefined | null,
+  next: string,
+) {
+  if (!next) return false;
+  if (!existing) return true;
+  return isGoogleAvatarUrl(existing);
 }
 
 /**
@@ -99,7 +109,7 @@ export async function POST(req: NextRequest) {
       user.emailVerified = true;
       user.emailVerifiedAt = new Date();
     }
-    if (payload.picture && !user.profilePicture) {
+    if (payload.picture && shouldSyncGooglePicture(user.profilePicture, payload.picture)) {
       user.profilePicture = payload.picture;
     }
     await user.save();
