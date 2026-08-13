@@ -4,6 +4,10 @@ import { connectDB } from "@/lib/db/connect";
 import { User } from "@/lib/models/User";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 import { isGoogleAvatarUrl } from "@/lib/ui/imageUrl";
+import {
+  checkRateLimitAsync,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
 
 function getGoogleClientId() {
   return (
@@ -29,6 +33,22 @@ function shouldSyncGooglePicture(
 export async function POST(req: NextRequest) {
   const auth = await requireUser(req);
   if (isAuthError(auth)) return auth;
+
+  const ip = clientIpFromRequest(req);
+  const rate = await checkRateLimitAsync({
+    key: `google-link:${auth.id}:${ip}`,
+    limit: 10,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rate.ok) {
+    return NextResponse.json(
+      { message: "Too many attempts. Try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSec || 60) },
+      },
+    );
+  }
 
   const clientId = getGoogleClientId();
   if (!clientId) {
@@ -110,7 +130,13 @@ export async function POST(req: NextRequest) {
       user.emailVerifiedAt = new Date();
     }
     if (payload.picture && shouldSyncGooglePicture(user.profilePicture, payload.picture)) {
-      user.profilePicture = payload.picture;
+      const { sanitizeStoredImageUrl } = await import(
+        "@/lib/security/allowedImageUrl"
+      );
+      const safe = sanitizeStoredImageUrl(payload.picture, {
+        allowGoogleAvatar: true,
+      });
+      if (safe) user.profilePicture = safe;
     }
     await user.save();
 

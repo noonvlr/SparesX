@@ -5,6 +5,10 @@ import { User } from "@/lib/models/User";
 import { signJwt } from "@/lib/auth/jwt";
 import { isProfileComplete } from "@/lib/auth/profileComplete";
 import { isGoogleAvatarUrl } from "@/lib/ui/imageUrl";
+import {
+  checkRateLimitAsync,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
 
 function getGoogleClientId() {
   return (
@@ -27,6 +31,22 @@ function shouldSyncGooglePicture(
 /** POST /api/auth/google — exchange Google ID token for SparesX session */
 export async function POST(req: NextRequest) {
   try {
+    const ip = clientIpFromRequest(req);
+    const ipLimit = await checkRateLimitAsync({
+      key: `google-auth:ip:${ip}`,
+      limit: 30,
+      windowMs: 15 * 60 * 1000,
+    });
+    if (!ipLimit.ok) {
+      return NextResponse.json(
+        { message: "Too many Google sign-in attempts. Try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(ipLimit.retryAfterSec || 60) },
+        },
+      );
+    }
+
     const clientId = getGoogleClientId();
     if (!clientId) {
       return NextResponse.json(
@@ -67,7 +87,12 @@ export async function POST(req: NextRequest) {
     const googleId = payload.sub;
     const email = payload.email.toLowerCase().trim();
     const name = (payload.name || email.split("@")[0] || "User").trim();
-    const picture = payload.picture || "";
+    const pictureRaw = payload.picture || "";
+    const { sanitizeStoredImageUrl } = await import(
+      "@/lib/security/allowedImageUrl"
+    );
+    const picture =
+      sanitizeStoredImageUrl(pictureRaw, { allowGoogleAvatar: true }) || "";
 
     await connectDB();
 

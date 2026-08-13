@@ -6,6 +6,7 @@ import mongoose, { Schema, Model } from "mongoose";
  */
 export type MarketplaceEventType =
   | "search"
+  | "search_zero_results"
   | "product_view"
   | "chat_start"
   | "whatsapp_request"
@@ -36,6 +37,7 @@ const MarketplaceEventSchema = new Schema<MarketplaceEventDoc>(
       required: true,
       enum: [
         "search",
+        "search_zero_results",
         "product_view",
         "chat_start",
         "whatsapp_request",

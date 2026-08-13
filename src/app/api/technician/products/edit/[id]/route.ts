@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 import { getOrCreateSiteSettings } from "@/lib/models/SiteSettings";
+import { sanitizeListingImageUrls } from "@/lib/security/allowedImageUrl";
 
 export async function PUT(
   req: NextRequest,
@@ -35,7 +36,9 @@ export async function PUT(
   product.price = price || product.price;
   product.category = category || product.category;
   product.condition = condition || product.condition;
-  product.images = images || product.images;
+  if (images !== undefined) {
+    product.images = sanitizeListingImageUrls(images);
+  }
 
   const majorChanged =
     prev.name !== product.name ||

@@ -149,8 +149,9 @@ export async function POST(
       { status: 201 },
     );
   } catch (error) {
+    console.error("[brands/models]", error);
     return NextResponse.json(
-      { message: "Failed to create model", details: String(error) },
+      { message: "Failed to create model" },
       { status: 500 },
     );
   }

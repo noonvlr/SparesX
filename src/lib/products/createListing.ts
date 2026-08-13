@@ -2,6 +2,7 @@ import { Types } from "mongoose";
 import { connectDB } from "@/lib/db/connect";
 import { Product, type ProductCondition } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
+import { sanitizeListingImageUrls } from "@/lib/security/allowedImageUrl";
 
 export type CreateListingInput = {
   name?: string;
@@ -139,7 +140,7 @@ export async function createTechnicianListing(params: {
     partType: input.partType.trim(),
     condition,
     priceNegotiable: !!input.priceNegotiable,
-    images: Array.isArray(input.images) ? input.images.filter(Boolean) : [],
+    images: sanitizeListingImageUrls(input.images),
     technician: params.technicianId,
     slug,
     status,

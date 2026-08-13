@@ -12,6 +12,7 @@ import {
   sanitizeUserForClient,
   USER_CLIENT_EXCLUDE,
 } from "@/lib/auth/publicUser";
+import { sanitizeStoredImageUrl } from "@/lib/security/allowedImageUrl";
 
 // Get technician profile
 export async function GET(req: NextRequest) {
@@ -124,7 +125,19 @@ export async function PUT(req: NextRequest) {
   }
 
   if (body.profilePicture !== undefined) {
-    user.profilePicture = String(body.profilePicture || "");
+    const raw = String(body.profilePicture || "").trim();
+    if (!raw) {
+      user.profilePicture = "";
+    } else {
+      const safe = sanitizeStoredImageUrl(raw, { allowGoogleAvatar: true });
+      if (!safe) {
+        return NextResponse.json(
+          { message: "Invalid profile picture URL" },
+          { status: 400 },
+        );
+      }
+      user.profilePicture = safe;
+    }
   }
 
   if (body.about !== undefined) {

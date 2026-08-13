@@ -1,5 +1,33 @@
 import type { NextConfig } from "next";
 
+/**
+ * CSP is Report-Only for private beta so auth/chat/images/analytics are not
+ * blocked while violations remain visible in browser consoles.
+ * Enforce after manual QA clears Report-Only violations.
+ *
+ * Allowed surface (intentional):
+ * - scripts: self + Next inline/eval + Google GIS + gstatic
+ * - images: self, data, blob, Vercel Blob, Google avatars
+ * - connect: self, https, wss (Socket.io / Sentry / APIs)
+ * - frames: Google accounts (GSI)
+ * - fonts: self + data (system stack; no SF Pro host)
+ */
+const cspReportOnly = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://www.googletagmanager.com",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com https://*.googleusercontent.com https://lh3.googleusercontent.com",
+  "font-src 'self' data:",
+  "connect-src 'self' https: wss: ws:",
+  "frame-src 'self' https://accounts.google.com",
+  "worker-src 'self' blob:",
+  "upgrade-insecure-requests",
+].join("; ");
+
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -12,6 +40,10 @@ const securityHeaders = [
   {
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
+  },
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: cspReportOnly,
   },
 ];
 

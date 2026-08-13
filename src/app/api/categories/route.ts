@@ -36,8 +36,10 @@ export async function GET(req: NextRequest) {
       },
     );
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Failed to fetch categories";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("[categories]", error);
+    return NextResponse.json(
+      { error: "Failed to fetch categories" },
+      { status: 500 },
+    );
   }
 }

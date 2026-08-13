@@ -84,6 +84,13 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     const status = (err as { status?: number })?.status || 500;
     const code = (err as { code?: string })?.code;
+    if (status >= 500) {
+      console.error("[listing-create]", err);
+      return NextResponse.json(
+        { message: "Failed to create listing" },
+        { status: 500 },
+      );
+    }
     const message =
       err instanceof Error ? err.message : "Failed to create listing";
     return NextResponse.json(

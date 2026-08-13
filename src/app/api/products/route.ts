@@ -49,8 +49,7 @@ export async function GET(req: NextRequest) {
     const searchQ = searchParams.get("search")?.trim();
     if (searchQ && searchQ.length >= 2) {
       const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
-      void trackMarketplaceEvent({
-        type: "search",
+      const dims = {
         query: searchQ,
         brand: searchParams.get("brand") || undefined,
         partType: searchParams.get("partType") || undefined,
@@ -59,8 +58,19 @@ export async function GET(req: NextRequest) {
           searchParams.get("model") ||
           undefined,
         city: cityParam || preferCity || undefined,
+      };
+      void trackMarketplaceEvent({
+        type: "search",
+        ...dims,
         meta: { resultCount: result.total },
       });
+      if (result.total === 0) {
+        void trackMarketplaceEvent({
+          type: "search_zero_results",
+          ...dims,
+          meta: { resultCount: 0, source: "products_api" },
+        });
+      }
     }
 
     return NextResponse.json(result, { status: 200 });

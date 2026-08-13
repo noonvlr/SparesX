@@ -183,15 +183,25 @@ export default async function BrowseProductsPage({
   const searchQ = params.search?.trim();
   if (searchQ && searchQ.length >= 2) {
     const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
-    void trackMarketplaceEvent({
-      type: "search",
+    const dims = {
       query: searchQ,
       brand: params.brand || undefined,
       partType: params.partType || undefined,
       deviceModel: params.deviceModel || params.model || undefined,
       city: params.city || params.preferCity || undefined,
+    };
+    void trackMarketplaceEvent({
+      type: "search",
+      ...dims,
       meta: { resultCount: total, source: "products_ssr" },
     });
+    if (total === 0) {
+      void trackMarketplaceEvent({
+        type: "search_zero_results",
+        ...dims,
+        meta: { resultCount: 0, source: "products_ssr" },
+      });
+    }
   }
 
   const summary = describeFilters(params);

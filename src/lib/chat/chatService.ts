@@ -367,15 +367,23 @@ export async function sendMessage(params: {
   }
 
   let cleanText: string | undefined;
+  let safeImageUrl: string | undefined;
   if (type === "text") {
     cleanText = sanitizeChatText(text || "");
     if (!cleanText) {
       throw Object.assign(new Error("Message text required"), { status: 400 });
     }
   } else if (type === "image") {
-    if (!mediaUrl?.trim() || !/^https?:\/\/|^\/uploads\//.test(mediaUrl)) {
+    const { sanitizeStoredImageUrl } = await import(
+      "@/lib/security/allowedImageUrl"
+    );
+    const safeMedia = sanitizeStoredImageUrl(mediaUrl, {
+      allowGoogleAvatar: false,
+    });
+    if (!safeMedia) {
       throw Object.assign(new Error("Valid mediaUrl required"), { status: 400 });
     }
+    safeImageUrl = safeMedia;
   } else {
     throw Object.assign(new Error("Unsupported message type"), { status: 400 });
   }
@@ -388,7 +396,7 @@ export async function sendMessage(params: {
     receiverId: toOid(receiverId),
     type,
     text: cleanText,
-    mediaUrl: type === "image" ? mediaUrl!.trim() : undefined,
+    mediaUrl: type === "image" ? safeImageUrl : undefined,
     delivered: receiverOnline,
     deliveredAt: receiverOnline ? new Date() : undefined,
     read: false,

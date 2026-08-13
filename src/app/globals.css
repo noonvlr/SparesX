@@ -354,6 +354,7 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
   }
 
   body {
@@ -364,6 +365,7 @@
     font-weight: var(--font-weight-normal);
     letter-spacing: var(--tracking-normal);
     line-height: var(--leading-normal);
+    overflow-x: clip;
   }
 
   h1,

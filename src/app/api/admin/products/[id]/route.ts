@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
+import { sanitizeListingImageUrls } from "@/lib/security/allowedImageUrl";
 
 void User;
 
@@ -95,7 +96,9 @@ export async function PATCH(
         product.condition = body.condition;
       } else if (key === "priceNegotiable" || key === "featured") {
         (product as any)[key] = Boolean(body[key]);
-      } else if (key === "images" || key === "tags") {
+      } else if (key === "images") {
+        product.images = sanitizeListingImageUrls(body.images);
+      } else if (key === "tags") {
         (product as any)[key] = Array.isArray(body[key]) ? body[key] : product[key];
       } else {
         (product as any)[key] = body[key];

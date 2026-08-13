@@ -7,6 +7,7 @@ import {
   checkRateLimitAsync,
   clientIpFromRequest,
 } from "@/lib/security/authRateLimit";
+import { sanitizeStoredImageUrl } from "@/lib/security/allowedImageUrl";
 
 const GENERIC_TAKEN =
   "Could not create an account with this email. Try logging in or use a different email.";
@@ -70,6 +71,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: GENERIC_TAKEN }, { status: 409 });
     }
 
+    const safePicture = profilePicture
+      ? sanitizeStoredImageUrl(profilePicture, { allowGoogleAvatar: true })
+      : "";
+    if (profilePicture && !safePicture) {
+      return NextResponse.json(
+        { message: "Invalid profile picture URL" },
+        { status: 400 },
+      );
+    }
+
     const hashed = await hashPassword(pw);
     await User.create({
       name: parsed.data.name,
@@ -82,7 +93,7 @@ export async function POST(req: NextRequest) {
       city: parsed.data.city,
       state: parsed.data.state,
       whatsappNumber: parsed.data.whatsappNumber,
-      profilePicture: profilePicture || "",
+      profilePicture: safePicture || "",
       role: "technician",
       authProvider: "local",
     });
