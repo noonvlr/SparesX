@@ -54,6 +54,33 @@ function asDate(value: unknown): Date {
   return new Date();
 }
 
+function sitemapUrl(path: string): string | null {
+  try {
+    const href = path.startsWith("http")
+      ? path
+      : `${SITE_URL}${path.startsWith("/") || path === "" ? path : `/${path}`}`;
+    const url = new URL(href);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    if (!url.hostname) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+function entry(
+  path: string,
+  extra?: Partial<MetadataRoute.Sitemap[number]>,
+): MetadataRoute.Sitemap[number] | null {
+  const url = sitemapUrl(path);
+  if (!url) return null;
+  return { url, ...extra };
+}
+
+function compact(entries: Array<MetadataRoute.Sitemap[number] | null>): MetadataRoute.Sitemap {
+  return entries.filter((item): item is MetadataRoute.Sitemap[number] => Boolean(item?.url));
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(
@@ -74,21 +101,25 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 async function loadProductEntries(): Promise<MetadataRoute.Sitemap> {
-  const products = await Product.find({
-    status: "approved",
-    tags: { $nin: ["possible_duplicate"] },
-  })
-    .select("_id slug updatedAt")
+  const products = await Product.find({ status: "approved" })
+    .select("_id slug updatedAt tags")
     .sort({ updatedAt: -1 })
     .limit(PRODUCT_LIMIT)
     .lean();
 
-  return products.map((product) => ({
-    url: `${SITE_URL}/product/${product.slug || product._id}`,
-    lastModified: asDate(product.updatedAt),
-    changeFrequency: "weekly" as const,
-    priority: 0.8,
-  }));
+  return compact(
+    products.map((product) => {
+      const tags = Array.isArray(product.tags) ? product.tags : [];
+      if (tags.includes("possible_duplicate")) return null;
+      const ident = String(product.slug || product._id || "").trim();
+      if (!ident) return null;
+      return entry(`/product/${encodeURIComponent(ident)}`, {
+        lastModified: asDate(product.updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.8,
+      });
+    }),
+  );
 }
 
 async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
@@ -104,7 +135,6 @@ async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
     {
       $match: {
         status: "approved",
-        tags: { $nin: ["possible_duplicate"] },
       },
     },
     {
@@ -124,20 +154,19 @@ async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
     { $limit: PARTS_HUB_LIMIT },
   ]);
 
-  const partsEntries: MetadataRoute.Sitemap = [];
-  for (const hub of partHubs) {
-    const category = slugifyPathSegment(String(hub._id.partType || ""));
-    const brand = slugifyPathSegment(String(hub._id.brand || ""));
-    const model = slugifyPathSegment(String(hub._id.deviceModel || ""));
-    if (!category || !brand || !model) continue;
-    partsEntries.push({
-      url: `${SITE_URL}/parts/${category}/${brand}/${model}`,
-      lastModified: asDate(hub.updatedAt),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    });
-  }
-  return partsEntries;
+  return compact(
+    partHubs.map((hub) => {
+      const category = slugifyPathSegment(String(hub._id.partType || ""));
+      const brand = slugifyPathSegment(String(hub._id.brand || ""));
+      const model = slugifyPathSegment(String(hub._id.deviceModel || ""));
+      if (!category || !brand || !model) return null;
+      return entry(`/parts/${category}/${brand}/${model}`, {
+        lastModified: asDate(hub.updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.7,
+      });
+    }),
+  );
 }
 
 async function loadSellerEntries(): Promise<MetadataRoute.Sitemap> {
@@ -154,43 +183,53 @@ async function loadSellerEntries(): Promise<MetadataRoute.Sitemap> {
     .limit(SELLER_LIMIT)
     .lean();
 
-  return sellers.map((seller) => ({
-    url: `${SITE_URL}/u/${seller._id}`,
-    lastModified: asDate(seller.updatedAt),
-    changeFrequency: "weekly" as const,
-    priority: 0.6,
-  }));
+  return compact(
+    sellers.map((seller) =>
+      entry(`/u/${encodeURIComponent(String(seller._id))}`, {
+        lastModified: asDate(seller.updatedAt),
+        changeFrequency: "weekly",
+        priority: 0.6,
+      }),
+    ),
+  );
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
-    url: `${SITE_URL}${route.path}`,
-    lastModified: now,
-    changeFrequency: route.changeFrequency,
-    priority: route.priority,
-  }));
+  const staticEntries = compact(
+    staticRoutes.map((route) =>
+      entry(route.path, {
+        lastModified: now,
+        changeFrequency: route.changeFrequency,
+        priority: route.priority,
+      }),
+    ),
+  );
 
   try {
+    const started = Date.now();
     await withTimeout(connectDB(), Math.min(8_000, DB_BUDGET_MS), "connect");
 
-    const [products, parts, sellers] = await Promise.all([
-      withTimeout(loadProductEntries(), DB_BUDGET_MS, "products").catch(
-        (error) => {
-          console.error("sitemap products failed:", error);
-          return [] as MetadataRoute.Sitemap;
-        },
-      ),
-      withTimeout(loadPartsEntries(), DB_BUDGET_MS, "parts").catch((error) => {
+    // Products first so a slow hub aggregation cannot starve listing URLs.
+    const products = await withTimeout(
+      loadProductEntries(),
+      12_000,
+      "products",
+    ).catch((error) => {
+      console.error("sitemap products failed:", error);
+      return [] as MetadataRoute.Sitemap;
+    });
+
+    const remaining = Math.max(4_000, DB_BUDGET_MS - (Date.now() - started));
+    const [parts, sellers] = await Promise.all([
+      withTimeout(loadPartsEntries(), remaining, "parts").catch((error) => {
         console.error("sitemap parts failed:", error);
         return [] as MetadataRoute.Sitemap;
       }),
-      withTimeout(loadSellerEntries(), DB_BUDGET_MS, "sellers").catch(
-        (error) => {
-          console.error("sitemap sellers failed:", error);
-          return [] as MetadataRoute.Sitemap;
-        },
-      ),
+      withTimeout(loadSellerEntries(), remaining, "sellers").catch((error) => {
+        console.error("sitemap sellers failed:", error);
+        return [] as MetadataRoute.Sitemap;
+      }),
     ]);
 
     return [...staticEntries, ...products, ...parts, ...sellers];

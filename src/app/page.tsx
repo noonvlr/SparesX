@@ -17,7 +17,9 @@ import {
 } from "@/lib/seo/site";
 
 export const metadata: Metadata = {
-  title: "Buy & Sell Mobile Spare Parts Online",
+  title: {
+    absolute: "SparesX – Buy & Sell Mobile Spare Parts Online",
+  },
   description:
     "SparesX is a B2B marketplace for mobile repair technicians to list, find, and request spare parts. Browse listings, check trust scores and badges, and connect directly with sellers — SparesX does not process payments.",
   keywords: [
@@ -29,7 +31,7 @@ export const metadata: Metadata = {
     "mobile battery screen camera",
   ],
   openGraph: {
-    title: "Buy & Sell Mobile Spare Parts Online | SparesX",
+    title: "SparesX – Buy & Sell Mobile Spare Parts Online",
     description:
       "List, find, and request spare parts with technicians across India. Trust scores and badges help you connect directly — SparesX does not process payments.",
     url: "/",
@@ -47,7 +49,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Buy & Sell Mobile Spare Parts Online | SparesX",
+    title: "SparesX – Buy & Sell Mobile Spare Parts Online",
     description:
       "Marketplace for technicians: listings, trust scores, and direct seller connections.",
     images: ["/og-image.jpg"],
