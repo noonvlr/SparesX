@@ -119,11 +119,14 @@ export default async function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
+    "@id": `${baseUrl}/#website`,
     name: SITE_NAME,
+    alternateName: ["SparesX.com", "sparesx.com", "Spares X"],
     description:
       "India's B2B marketplace for mobile spare parts connecting technicians with quality parts",
     url: baseUrl,
     inLanguage: "en-IN",
+    publisher: { "@id": `${baseUrl}/#organization` },
     potentialAction: {
       "@type": "SearchAction",
       target: {
@@ -137,10 +140,12 @@ export default async function HomePage() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${baseUrl}/#organization`,
     name: SITE_NAME,
+    alternateName: ["SparesX.com", "sparesx.com"],
     legalName: SITE_OPERATOR,
     url: baseUrl,
-    logo: `${baseUrl}/og-image.jpg`,
+    logo: `${baseUrl}/icon-512.png`,
     description:
       "Marketplace connecting buyers and sellers of mobile, laptop, and desktop spare parts across India. SparesX does not sell parts or process payments.",
     areaServed: {
@@ -196,7 +201,7 @@ export default async function HomePage() {
             </div>
 
             <h1 className="text-display text-balance text-[var(--ink)] mb-5 sm:mb-6">
-              The spare parts marketplace, built for technicians.
+              SparesX — the spare parts marketplace, built for technicians.
             </h1>
 
             <p className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-[var(--muted)] mb-8 sm:mb-9 px-2">
