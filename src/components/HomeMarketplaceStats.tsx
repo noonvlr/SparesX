@@ -1,6 +1,3 @@
-"use client";
-
-import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/ui/cn";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -10,52 +7,14 @@ type HomeMarketplaceStatsProps = {
   soldCount: number;
 };
 
-function useCountUp(target: number, durationMs = 1100) {
-  const [value, setValue] = useState(0);
-  const started = useRef(false);
-
-  useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-
-    if (target <= 0) return;
-
-    const reduceMotion =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    let frame = 0;
-    if (reduceMotion) {
-      frame = requestAnimationFrame(() => setValue(target));
-      return () => cancelAnimationFrame(frame);
-    }
-
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / durationMs);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(Math.round(target * eased));
-      if (t < 1) frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [target, durationMs]);
-
-  return value;
-}
-
 /**
  * Hero marketplace counters — only shown when there is real activity.
- * Zero inventory uses a soft-launch CTA instead of "0 / 0" vanity stats.
+ * Counts are rendered on the server so Googlebot never sees a "0 / 0" flash.
  */
 export default function HomeMarketplaceStats({
   listedCount,
   soldCount,
 }: HomeMarketplaceStatsProps) {
-  const listed = useCountUp(listedCount);
-  const sold = useCountUp(soldCount, 1300);
-
   if (listedCount <= 0 && soldCount <= 0) {
     return (
       <div className="mt-10 sm:mt-12 mx-auto max-w-lg rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-6 sm:py-6 text-center shadow-[var(--shadow-sm)]">
@@ -104,7 +63,7 @@ export default function HomeMarketplaceStats({
         </dt>
         <dd className="mt-1.5 flex items-baseline gap-1.5">
           <span className="home-stat-number text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--ink)] tabular-nums">
-            {listed.toLocaleString("en-IN")}
+            {listedCount.toLocaleString("en-IN")}
           </span>
         </dd>
       </div>
@@ -119,7 +78,7 @@ export default function HomeMarketplaceStats({
         </dt>
         <dd className="mt-1.5 flex items-baseline gap-1.5">
           <span className="home-stat-number home-stat-number--brand text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--brand)] tabular-nums">
-            {sold.toLocaleString("en-IN")}
+            {soldCount.toLocaleString("en-IN")}
           </span>
         </dd>
       </div>

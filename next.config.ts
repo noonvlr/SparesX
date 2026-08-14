@@ -95,12 +95,13 @@ const nextConfig: NextConfig = {
     return [
       { source: "/browse", destination: "/products", permanent: true },
       { source: "/products/:id", destination: "/product/:id", permanent: true },
-      // www is canonical, so the bare apex must not serve the site too.
+      // www is canonical. Explicit 308 so Google treats this as permanent
+      // (Vercel’s Domains UI redirect is a 307 and does not pass ranking).
       {
         source: "/:path*",
         has: [{ type: "host", value: "sparesx.com" }],
         destination: "https://www.sparesx.com/:path*",
-        permanent: true,
+        statusCode: 308,
       },
     ];
   },
