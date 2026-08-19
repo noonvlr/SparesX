@@ -11,6 +11,10 @@ import {
   checkTwilioVerify,
 } from "@/lib/services/sms/providers/twilio";
 import { sendMsg91Sms } from "@/lib/services/sms/providers/msg91";
+import {
+  sendRenflairOtp,
+  toRenflairPhone,
+} from "@/lib/services/sms/providers/renflair";
 
 export type { SmsSendResult };
 
@@ -34,37 +38,36 @@ export async function loadSmsRuntimeConfig(): Promise<{
     verifyServiceSid: string;
   };
   msg91?: { authKey: string; senderId: string; templateId: string };
+  renflair?: { apiKey: string };
 }> {
   const settings = await getOrCreateSiteSettings();
-  const provider = settings.activeSmsProvider || "twilio";
+  const provider = settings.activeSmsProvider || "renflair";
 
-  if (provider === "twilio") {
-    const authToken = settings.twilioAuthTokenEnc
-      ? decryptSecret(settings.twilioAuthTokenEnc)
-      : "";
-    return {
-      provider,
-      settings,
-      twilio: {
-        accountSid: settings.twilioAccountSid || "",
-        authToken,
-        from: settings.twilioFromNumber || "",
-        verifyServiceSid: settings.twilioVerifyServiceSid || "",
-      },
-    };
-  }
-
-  const authKey = settings.msg91AuthKeyEnc
+  const twilioAuthToken = settings.twilioAuthTokenEnc
+    ? decryptSecret(settings.twilioAuthTokenEnc)
+    : "";
+  const msg91AuthKey = settings.msg91AuthKeyEnc
     ? decryptSecret(settings.msg91AuthKeyEnc)
     : "";
+  const renflairApiKey = settings.renflairApiKeyEnc
+    ? decryptSecret(settings.renflairApiKeyEnc)
+    : "";
+
   return {
     provider,
     settings,
+    twilio: {
+      accountSid: settings.twilioAccountSid || "",
+      authToken: twilioAuthToken,
+      from: settings.twilioFromNumber || "",
+      verifyServiceSid: settings.twilioVerifyServiceSid || "",
+    },
     msg91: {
-      authKey,
+      authKey: msg91AuthKey,
       senderId: settings.msg91SenderId || "",
       templateId: settings.msg91TemplateId || "",
     },
+    renflair: { apiKey: renflairApiKey },
   };
 }
 
@@ -119,6 +122,29 @@ export async function sendSmsOtp(params: {
       body: `Your SparesX verification code is ${params.otp}. Valid for 10 minutes.`,
     });
     return msgResult;
+  }
+
+  if (cfg.provider === "renflair") {
+    const apiKey = cfg.renflair?.apiKey || "";
+    if (!apiKey) {
+      return {
+        ok: false,
+        message:
+          "SMS not configured. Ask admin to set the Renflair API key in Site Settings.",
+      };
+    }
+    const phone = toRenflairPhone(params.countryCode, params.mobile);
+    if (!phone) {
+      return {
+        ok: false,
+        message: "Enter a valid 10-digit Indian mobile number for SMS OTP",
+      };
+    }
+    return sendRenflairOtp({
+      apiKey,
+      phone,
+      otp: params.otp,
+    });
   }
 
   const m = cfg.msg91!;

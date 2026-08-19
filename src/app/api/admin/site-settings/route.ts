@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
-import { getOrCreateSiteSettings } from "@/lib/models/SiteSettings";
+import { getOrCreateSiteSettings, isSmsProvider } from "@/lib/models/SiteSettings";
 import { requireAdmin, isAdminError } from "@/lib/auth/requireAdmin";
 import {
   canEncryptSecrets,
@@ -20,6 +20,8 @@ function publicSettings(doc: Awaited<ReturnType<typeof getOrCreateSiteSettings>>
       doc.twilioAuthTokenEnc &&
       (doc.twilioVerifyServiceSid || doc.twilioFromNumber)
     ),
+    renflairApiKeyMasked: maskSecret(doc.renflairApiKeyEnc),
+    renflairConfigured: !!doc.renflairApiKeyEnc,
     msg91AuthKeyMasked: maskSecret(doc.msg91AuthKeyEnc),
     msg91SenderId: doc.msg91SenderId || "",
     msg91TemplateId: doc.msg91TemplateId || "",
@@ -53,6 +55,7 @@ export async function PATCH(req: NextRequest) {
   const body = await req.json();
   const touchingSecrets =
     (typeof body.twilioAuthToken === "string" && body.twilioAuthToken.trim()) ||
+    (typeof body.renflairApiKey === "string" && body.renflairApiKey.trim()) ||
     (typeof body.msg91AuthKey === "string" && body.msg91AuthKey.trim()) ||
     (typeof body.smtpPass === "string" && body.smtpPass.trim());
 
@@ -69,7 +72,7 @@ export async function PATCH(req: NextRequest) {
   await connectDB();
   const doc = await getOrCreateSiteSettings();
 
-  if (body.activeSmsProvider === "twilio" || body.activeSmsProvider === "msg91") {
+  if (isSmsProvider(body.activeSmsProvider)) {
     doc.activeSmsProvider = body.activeSmsProvider;
   }
 
@@ -84,6 +87,10 @@ export async function PATCH(req: NextRequest) {
   }
   if (typeof body.twilioAuthToken === "string" && body.twilioAuthToken.trim()) {
     doc.twilioAuthTokenEnc = encryptSecret(body.twilioAuthToken.trim());
+  }
+
+  if (typeof body.renflairApiKey === "string" && body.renflairApiKey.trim()) {
+    doc.renflairApiKeyEnc = encryptSecret(body.renflairApiKey.trim());
   }
 
   if (typeof body.msg91SenderId === "string") {

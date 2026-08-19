@@ -12,12 +12,14 @@ import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
 
 type Settings = {
-  activeSmsProvider: "twilio" | "msg91";
+  activeSmsProvider: "renflair" | "twilio" | "msg91";
   twilioAccountSid: string;
   twilioAuthTokenMasked: string;
   twilioFromNumber: string;
   twilioVerifyServiceSid: string;
   twilioConfigured: boolean;
+  renflairApiKeyMasked: string;
+  renflairConfigured: boolean;
   msg91AuthKeyMasked: string;
   msg91SenderId: string;
   msg91TemplateId: string;
@@ -34,12 +36,14 @@ type Settings = {
 };
 
 const empty: Settings = {
-  activeSmsProvider: "twilio",
+  activeSmsProvider: "renflair",
   twilioAccountSid: "",
   twilioAuthTokenMasked: "",
   twilioFromNumber: "",
   twilioVerifyServiceSid: "",
   twilioConfigured: false,
+  renflairApiKeyMasked: "",
+  renflairConfigured: false,
   msg91AuthKeyMasked: "",
   msg91SenderId: "",
   msg91TemplateId: "",
@@ -58,6 +62,7 @@ const empty: Settings = {
 export default function SiteSettingsPage() {
   const [settings, setSettings] = useState<Settings>(empty);
   const [twilioAuthToken, setTwilioAuthToken] = useState("");
+  const [renflairApiKey, setRenflairApiKey] = useState("");
   const [msg91AuthKey, setMsg91AuthKey] = useState("");
   const [smtpPass, setSmtpPass] = useState("");
   const [testMobile, setTestMobile] = useState("");
@@ -106,6 +111,7 @@ export default function SiteSettingsPage() {
           twilioFromNumber: settings.twilioFromNumber,
           twilioVerifyServiceSid: settings.twilioVerifyServiceSid,
           twilioAuthToken: twilioAuthToken || undefined,
+          renflairApiKey: renflairApiKey || undefined,
           msg91SenderId: settings.msg91SenderId,
           msg91TemplateId: settings.msg91TemplateId,
           msg91AuthKey: msg91AuthKey || undefined,
@@ -125,6 +131,7 @@ export default function SiteSettingsPage() {
       }
       setSettings(data.settings);
       setTwilioAuthToken("");
+      setRenflairApiKey("");
       setMsg91AuthKey("");
       setSmtpPass("");
       setMessage("Settings saved");
@@ -225,26 +232,63 @@ export default function SiteSettingsPage() {
         <Card padding="md" className="space-y-4">
           <h2 className="text-lg font-semibold text-[var(--ink)]">Active SMS provider</h2>
           <div className="flex flex-wrap gap-4">
-            {(["twilio", "msg91"] as const).map((p) => (
-              <label key={p} className="flex items-center gap-2 text-sm cursor-pointer">
+            {(
+              [
+                { id: "renflair", label: "Renflair" },
+                { id: "twilio", label: "Twilio" },
+                { id: "msg91", label: "MSG91" },
+              ] as const
+            ).map((p) => (
+              <label key={p.id} className="flex items-center gap-2 text-sm cursor-pointer">
                 <input
                   type="radio"
                   name="provider"
-                  checked={settings.activeSmsProvider === p}
+                  checked={settings.activeSmsProvider === p.id}
                   onChange={() =>
-                    setSettings((s) => ({ ...s, activeSmsProvider: p }))
+                    setSettings((s) => ({ ...s, activeSmsProvider: p.id }))
                   }
                 />
-                <span className="font-medium uppercase">{p}</span>
-                {p === "twilio" && settings.twilioConfigured && (
+                <span className="font-medium">{p.label}</span>
+                {p.id === "renflair" && settings.renflairConfigured && (
                   <span className="text-xs text-[var(--success)]">configured</span>
                 )}
-                {p === "msg91" && settings.msg91Configured && (
+                {p.id === "twilio" && settings.twilioConfigured && (
+                  <span className="text-xs text-[var(--success)]">configured</span>
+                )}
+                {p.id === "msg91" && settings.msg91Configured && (
                   <span className="text-xs text-[var(--success)]">configured</span>
                 )}
               </label>
             ))}
           </div>
+        </Card>
+
+        <Card padding="md" className="space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--ink)]">Renflair OTP SMS</h2>
+          <p className="text-xs text-[var(--muted)]">
+            Sends a 6-digit phone verification OTP through{" "}
+            <code className="font-mono">sms.renflair.in</code>. Paste the API key
+            from your Renflair dashboard. Phone numbers are sent as 10-digit
+            Indian mobiles (no +91 prefix).
+          </p>
+          <Field
+            label="API key"
+            htmlFor="renflair-key"
+            hint={
+              settings.renflairApiKeyMasked
+                ? `Saved: ${settings.renflairApiKeyMasked}`
+                : undefined
+            }
+          >
+            <Input
+              id="renflair-key"
+              type="password"
+              autoComplete="new-password"
+              placeholder="Leave blank to keep existing"
+              value={renflairApiKey}
+              onChange={(e) => setRenflairApiKey(e.target.value)}
+            />
+          </Field>
         </Card>
 
         <Card padding="md" className="space-y-3">
@@ -436,7 +480,8 @@ export default function SiteSettingsPage() {
       <Card padding="md" className="mt-10 space-y-3">
         <h2 className="text-lg font-semibold text-[var(--ink)]">Test SMS</h2>
         <p className="text-xs text-[var(--muted)]">
-          Sends a test OTP via the active provider to a mobile number you enter.
+          Sends a test OTP via the active saved provider. Save settings first if
+          you just changed the provider or API key.
         </p>
         <div className="flex flex-col sm:flex-row gap-2">
           <Input

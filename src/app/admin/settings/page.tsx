@@ -57,7 +57,7 @@ const CONTROLS = [
   {
     href: "/admin/site-settings",
     title: "Site settings",
-    desc: "SMS provider (Twilio/MSG91), credentials, and email OTP SMTP",
+    desc: "SMS provider (Renflair/Twilio/MSG91), credentials, and email OTP SMTP",
   },
 ];
 
