@@ -30,13 +30,15 @@ export async function GET(request: NextRequest) {
 
     const query: Record<string, unknown> = {};
     if (q) {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       query.$or = [
-        { name: { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
-        { mobile: { $regex: q, $options: "i" } },
+        { name: { $regex: escaped, $options: "i" } },
+        { email: { $regex: escaped, $options: "i" } },
+        { mobile: { $regex: escaped, $options: "i" } },
       ];
     } else if (mobile) {
-      query.mobile = { $regex: mobile, $options: "i" };
+      const escapedMobile = mobile.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.mobile = { $regex: escapedMobile, $options: "i" };
     }
     if (role && role !== "all") query.role = role;
     if (blocked === "true") query.isBlocked = true;

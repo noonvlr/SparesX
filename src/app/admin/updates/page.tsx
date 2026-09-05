@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminPage } from "@/components/layout";
 import { Card, PageHeader, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -26,8 +26,18 @@ type UserOption = {
   _id: string;
   name?: string;
   email?: string;
+  mobile?: string;
   role?: string;
 };
+
+function userLabel(u: UserOption): string {
+  return u.name?.trim() || u.email || u.mobile || "User";
+}
+
+function userSecondary(u: UserOption): string {
+  const parts = [u.email, u.mobile, u.role].filter(Boolean);
+  return parts.join(" · ");
+}
 
 const KIND_OPTIONS = [
   { value: "notice", label: "Notice" },
@@ -57,19 +67,18 @@ export default function AdminUpdatesPage() {
   const [updates, setUpdates] = useState<UpdateRow[]>([]);
   const [users, setUsers] = useState<UserOption[]>([]);
   const [userSearch, setUserSearch] = useState("");
+  const [userOpen, setUserOpen] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserOption | null>(null);
+  const [highlightIdx, setHighlightIdx] = useState(0);
+  const userBoxRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [kind, setKind] = useState("notice");
   const [body, setBody] = useState("");
   const [publishedAt, setPublishedAt] = useState("");
-  const [mentionedUserId, setMentionedUserId] = useState("");
   const [flash, setFlash] = useState("");
-
-  const selectedUser = useMemo(
-    () => users.find((u) => u._id === mentionedUserId),
-    [users, mentionedUserId],
-  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -90,26 +99,50 @@ export default function AdminUpdatesPage() {
   }, []);
 
   const loadUsers = useCallback(async (q: string) => {
+    const query = q.trim();
+    if (!query) {
+      setUsers([]);
+      setUsersLoading(false);
+      return;
+    }
+    setUsersLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "40" });
-      if (q.trim()) params.set("q", q.trim());
+      const params = new URLSearchParams({ limit: "12", q: query });
       const res = await authFetch(`/api/admin/users?${params}`);
       const data = await res.json();
-      if (res.ok) setUsers(data.users || []);
+      if (res.ok) {
+        setUsers(data.users || []);
+        setHighlightIdx(0);
+      }
     } catch {
       // keep previous list
+    } finally {
+      setUsersLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void load();
-    void loadUsers("");
-  }, [load, loadUsers]);
+  }, [load]);
 
   useEffect(() => {
-    const timer = setTimeout(() => void loadUsers(userSearch), 250);
+    if (selectedUser && userSearch === userLabel(selectedUser)) {
+      setUsers([]);
+      return;
+    }
+    const timer = setTimeout(() => void loadUsers(userSearch), 220);
     return () => clearTimeout(timer);
-  }, [userSearch, loadUsers]);
+  }, [userSearch, selectedUser, loadUsers]);
+
+  useEffect(() => {
+    const onClickOutside = (e: MouseEvent) => {
+      if (!userBoxRef.current?.contains(e.target as Node)) {
+        setUserOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
 
   function applyBugThanksTemplate(name?: string) {
     setBody(buildBugThanksMessage(name || "a community member"));
@@ -118,7 +151,7 @@ export default function AdminUpdatesPage() {
   function onKindChange(next: string) {
     setKind(next);
     if (next === "bug_thanks") {
-      applyBugThanksTemplate(selectedUser?.name);
+      applyBugThanksTemplate(selectedUser?.name || selectedUser?.email);
       return;
     }
     if (isDefaultBugThanks(body)) {
@@ -126,11 +159,28 @@ export default function AdminUpdatesPage() {
     }
   }
 
-  function onUserChange(userId: string) {
-    setMentionedUserId(userId);
-    const user = users.find((u) => u._id === userId);
+  function selectUser(user: UserOption) {
+    setSelectedUser(user);
+    setUserSearch(userLabel(user));
+    setUserOpen(false);
+    setUsers([]);
     if (kind === "bug_thanks" && (isDefaultBugThanks(body) || !body.trim())) {
-      applyBugThanksTemplate(user?.name);
+      applyBugThanksTemplate(user.name || user.email);
+    }
+  }
+
+  function clearSelectedUser() {
+    setSelectedUser(null);
+    setUserSearch("");
+    setUsers([]);
+    setUserOpen(false);
+  }
+
+  function onUserSearchChange(value: string) {
+    setUserSearch(value);
+    setUserOpen(true);
+    if (selectedUser && value !== userLabel(selectedUser)) {
+      setSelectedUser(null);
     }
   }
 
@@ -147,7 +197,7 @@ export default function AdminUpdatesPage() {
           kind,
           message: body,
           publishedAt: publishedAt || undefined,
-          mentionedUserId: mentionedUserId || undefined,
+          mentionedUserId: selectedUser?._id || undefined,
           mentionedName: selectedUser?.name || undefined,
           isPublished: true,
         }),
@@ -160,8 +210,7 @@ export default function AdminUpdatesPage() {
       setBody("");
       setPublishedAt("");
       setKind("notice");
-      setMentionedUserId("");
-      setUserSearch("");
+      clearSelectedUser();
       setFlash("Update published — it will show on user dashboards.");
       await load();
     } catch {
@@ -274,31 +323,159 @@ export default function AdminUpdatesPage() {
             htmlFor="update-user-search"
             hint={
               kind === "bug_thanks"
-                ? "Pick the reporter — they get a private notification when published."
-                : "Optional credit in the update; used for bug thanks."
+                ? "Type a name to find the reporter — they get a private notification when published."
+                : "Type a name, email, or mobile to credit someone."
             }
           >
-            <Input
-              id="update-user-search"
-              value={userSearch}
-              onChange={(e) => setUserSearch(e.target.value)}
-              placeholder="Search by name, email, or mobile"
-              className="mb-2"
-            />
-            <Select
-              id="update-user"
-              value={mentionedUserId}
-              onChange={(e) => onUserChange(e.target.value)}
+            <div
+              ref={userBoxRef}
+              className={`relative ${userOpen ? "z-40" : "z-0"}`}
             >
-              <option value="">No user selected</option>
-              {users.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.name || "User"}
-                  {u.email ? ` · ${u.email}` : ""}
-                  {u.role ? ` (${u.role})` : ""}
-                </option>
-              ))}
-            </Select>
+              <div className="relative">
+                <Input
+                  id="update-user-search"
+                  value={userSearch}
+                  onChange={(e) => onUserSearchChange(e.target.value)}
+                  onFocus={() => setUserOpen(true)}
+                  onKeyDown={(e) => {
+                    if (!userOpen && (e.key === "ArrowDown" || e.key === "Enter")) {
+                      setUserOpen(true);
+                    }
+                    if (e.key === "Escape") {
+                      setUserOpen(false);
+                      return;
+                    }
+                    if (!userOpen || users.length === 0) return;
+                    if (e.key === "ArrowDown") {
+                      e.preventDefault();
+                      setHighlightIdx((i) =>
+                        Math.min(i + 1, users.length - 1),
+                      );
+                    } else if (e.key === "ArrowUp") {
+                      e.preventDefault();
+                      setHighlightIdx((i) => Math.max(i - 1, 0));
+                    } else if (e.key === "Enter") {
+                      e.preventDefault();
+                      const pick = users[highlightIdx];
+                      if (pick) selectUser(pick);
+                    }
+                  }}
+                  placeholder="Start typing a name…"
+                  autoComplete="off"
+                  role="combobox"
+                  aria-expanded={userOpen}
+                  aria-controls="update-user-listbox"
+                  aria-autocomplete="list"
+                  className={selectedUser ? "pr-20" : "pr-10"}
+                />
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center gap-1 pr-2">
+                  {usersLoading && <Spinner size="sm" />}
+                  {selectedUser ? (
+                    <button
+                      type="button"
+                      className="pointer-events-auto rounded p-1 text-[var(--muted)] hover:text-[var(--ink)] hover:bg-[var(--surface-2)]"
+                      aria-label="Clear selected user"
+                      onClick={clearSelectedUser}
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="flex w-8 items-center justify-center text-[var(--muted)]"
+                    >
+                      <svg
+                        className={`h-4 w-4 transition-transform ${userOpen ? "rotate-180" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {selectedUser && (
+                <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] px-3 py-1 text-sm font-semibold border border-[var(--brand)]/20">
+                  <span>✓ {userLabel(selectedUser)}</span>
+                  {selectedUser.email ? (
+                    <span className="font-normal text-[var(--muted)] truncate max-w-[14rem]">
+                      {selectedUser.email}
+                    </span>
+                  ) : null}
+                </div>
+              )}
+
+              {userOpen &&
+                (userSearch.trim().length > 0 || usersLoading) &&
+                !selectedUser && (
+                  <div
+                    id="update-user-listbox"
+                    role="listbox"
+                    className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-y-auto border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] shadow-[var(--shadow-lg)]"
+                  >
+                    {usersLoading && users.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-[var(--muted)] flex items-center gap-2">
+                        <Spinner size="sm" /> Searching…
+                      </div>
+                    ) : users.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-[var(--muted)] text-center">
+                        No users match “{userSearch.trim()}”
+                      </div>
+                    ) : (
+                      users.map((u, idx) => {
+                        const secondary = userSecondary(u);
+                        return (
+                          <button
+                            key={u._id}
+                            type="button"
+                            role="option"
+                            aria-selected={idx === highlightIdx}
+                            onMouseEnter={() => setHighlightIdx(idx)}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              selectUser(u);
+                            }}
+                            className={`w-full px-4 py-3 text-left border-b border-[var(--border)] last:border-b-0 transition ${
+                              idx === highlightIdx
+                                ? "bg-[var(--brand-soft)]"
+                                : "hover:bg-[var(--brand-soft)]"
+                            }`}
+                          >
+                            <span className="block font-medium text-[var(--ink-secondary)]">
+                              {userLabel(u)}
+                            </span>
+                            {secondary ? (
+                              <span className="block text-xs text-[var(--muted)] mt-0.5 truncate">
+                                {secondary}
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
+            </div>
           </Field>
 
           <Field
