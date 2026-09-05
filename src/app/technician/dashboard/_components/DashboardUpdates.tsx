@@ -1,15 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { formatUpdateDate, kindLabel } from "@/lib/updates/format";
 import { cn } from "@/lib/ui/cn";
 
 type UpdateRow = {
   _id: string;
   line: string;
   kind: string;
+  message: string;
+  publishedAt: string;
+  mentionedName?: string;
+  mentionedUserId?: string;
 };
 
 function kindTone(kind: string): string {
@@ -25,7 +31,7 @@ function kindTone(kind: string): string {
   }
 }
 
-function kindLabel(kind: string): string {
+function kindChip(kind: string): string {
   switch (kind) {
     case "bug_thanks":
       return "Thanks";
@@ -36,6 +42,43 @@ function kindLabel(kind: string): string {
     default:
       return "Notice";
   }
+}
+
+function MessageWithMention({
+  message,
+  mentionedName,
+  mentionedUserId,
+}: {
+  message: string;
+  mentionedName?: string;
+  mentionedUserId?: string;
+}) {
+  const name = mentionedName?.trim();
+  if (!name) return <>{message}</>;
+
+  const idx = message.indexOf(name);
+  if (idx < 0) return <>{message}</>;
+
+  const before = message.slice(0, idx);
+  const after = message.slice(idx + name.length);
+  const nameNode = mentionedUserId ? (
+    <Link
+      href={`/u/${mentionedUserId}`}
+      className="font-semibold text-[var(--brand)] underline-offset-2 hover:underline focus-visible:underline"
+    >
+      {name}
+    </Link>
+  ) : (
+    <span className="font-semibold text-[var(--brand)]">{name}</span>
+  );
+
+  return (
+    <>
+      {before}
+      {nameNode}
+      {after}
+    </>
+  );
 }
 
 /**
@@ -104,33 +147,47 @@ export default function DashboardUpdates() {
       </div>
 
       <ul className="space-y-2">
-        {updates.map((u, index) => (
-          <li
-            key={u._id}
-            className={cn(
-              "dash-updates__row rounded-[var(--radius)] border border-transparent px-3 py-2.5",
-              "text-sm text-[var(--ink-secondary)] leading-relaxed",
-            )}
-            style={{ animationDelay: `${Math.min(index, 7) * 55}ms` }}
-          >
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span
-                className={cn(
-                  "text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded",
-                  kindTone(u.kind),
-                )}
-              >
-                {kindLabel(u.kind)}
-              </span>
-              {index === 0 ? (
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)]">
-                  Latest
+        {updates.map((u, index) => {
+          const date = formatUpdateDate(u.publishedAt);
+          const label = kindLabel(u.kind);
+          return (
+            <li
+              key={u._id}
+              className={cn(
+                "dash-updates__row rounded-[var(--radius)] border border-transparent px-3 py-2.5",
+                "text-sm text-[var(--ink-secondary)] leading-relaxed",
+              )}
+              style={{ animationDelay: `${Math.min(index, 7) * 55}ms` }}
+            >
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <span
+                  className={cn(
+                    "text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded",
+                    kindTone(u.kind),
+                  )}
+                >
+                  {kindChip(u.kind)}
                 </span>
-              ) : null}
-            </div>
-            <p>{u.line}</p>
-          </li>
-        ))}
+                {index === 0 ? (
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)]">
+                    Latest
+                  </span>
+                ) : null}
+              </div>
+              <p>
+                {date ? (
+                  <span className="text-[var(--muted)]">{date} · </span>
+                ) : null}
+                <span className="text-[var(--muted)]">{label} — </span>
+                <MessageWithMention
+                  message={u.message || u.line}
+                  mentionedName={u.mentionedName}
+                  mentionedUserId={u.mentionedUserId}
+                />
+              </p>
+            </li>
+          );
+        })}
       </ul>
     </Card>
   );

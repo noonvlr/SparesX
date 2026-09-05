@@ -35,12 +35,14 @@ export function formatUpdateLine(update: {
   return `${date} · ${label} — ${update.message.trim()}`;
 }
 
+export const BUG_THANKS_POINTS = 5;
+
 export function buildBugThanksMessage(name: string, subject?: string): string {
   const who = name.trim() || "a community member";
   const topic = subject?.trim()
     ? ` for reporting “${subject.trim().slice(0, 80)}”`
     : " for reporting a bug";
-  return `Thanks ${who}${topic}. Now fixed.`;
+  return `Thanks ${who}${topic}. Now fixed — +${BUG_THANKS_POINTS} trust score awarded.`;
 }
 
 export function serializeSiteUpdate(doc: {

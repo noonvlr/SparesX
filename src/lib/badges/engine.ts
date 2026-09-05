@@ -83,6 +83,9 @@ export function computeTrustScore(user: IUser): number {
   if ((user.specialBadgeKeys || []).includes("verified_technician")) score += 3;
   if ((user.specialBadgeKeys || []).includes("official_store")) score += 2;
 
+  const thanksPts = Math.max(0, Math.round(user.bugThanksPoints || 0));
+  if (thanksPts > 0) score += thanksPts;
+
   return Math.max(0, Math.min(100, Math.round(score)));
 }
 
@@ -107,6 +110,7 @@ export function explainTrustScore(user: {
   chatInboundOpportunities?: number;
   complaintRate?: number;
   specialBadgeKeys?: string[];
+  bugThanksPoints?: number;
 }): { score: number; factors: TrustScoreFactor[]; summary: string } {
   const factors: TrustScoreFactor[] = [];
   const push = (label: string, points: number, active: boolean) => {
@@ -166,6 +170,9 @@ export function explainTrustScore(user: {
     2,
     (user.specialBadgeKeys || []).includes("official_store"),
   );
+
+  const thanksPts = Math.max(0, Math.round(user.bugThanksPoints || 0));
+  push("Bug report thanks", thanksPts, thanksPts > 0);
 
   const score = Math.max(
     0,

@@ -8,11 +8,13 @@ import {
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   buildBugThanksMessage,
+  BUG_THANKS_POINTS,
   serializeSiteUpdate,
 } from "@/lib/updates/format";
 import { SupportRequest } from "@/lib/models/SupportRequest";
 import { User } from "@/lib/models/User";
 import { createNotification } from "@/lib/notifications/create";
+import { awardBugThanksPoints } from "@/lib/updates/awardBugThanks";
 
 export async function GET(req: NextRequest) {
   const admin = await requireAdmin(req);
@@ -113,9 +115,13 @@ export async function POST(req: NextRequest) {
           userId: String(ticket.user),
           type: "system",
           title: "Thank you for your bug report",
-          body: message.slice(0, 400),
+          body: `${message.slice(0, 360)} (+${BUG_THANKS_POINTS} trust score)`,
           href: "/technician/dashboard",
           meta: { siteUpdateId: String(doc._id), caseId },
+        });
+        void awardBugThanksPoints({
+          siteUpdateId: String(doc._id),
+          userId: String(ticket.user),
         });
       }
 
@@ -187,9 +193,13 @@ export async function POST(req: NextRequest) {
         userId: mentionedUserId,
         type: "system",
         title: "Thank you for your bug report",
-        body: message.slice(0, 400),
+        body: `${message.slice(0, 360)} (+${BUG_THANKS_POINTS} trust score)`,
         href: "/technician/dashboard",
         meta: { siteUpdateId: String(doc._id) },
+      });
+      void awardBugThanksPoints({
+        siteUpdateId: String(doc._id),
+        userId: mentionedUserId,
       });
     }
 

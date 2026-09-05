@@ -47,6 +47,8 @@ export interface IUser extends Document {
   /** Upheld abuse reports counted into complaintRate */
   complaintCount: number;
   trustScore: number;
+  /** Cumulative trust points from published bug-thanks updates (+5 each) */
+  bugThanksPoints: number;
   /** Snapshot of active badge keys for fast public reads */
   activeBadgeKeys: string[];
   /** Manually awarded special badges (official_store, verified_technician, moderator, founding_member) */
@@ -132,6 +134,7 @@ const UserSchema: Schema<IUser> = new Schema(
     complaintRate: { type: Number, default: 0 },
     complaintCount: { type: Number, default: 0 },
     trustScore: { type: Number, default: 0 },
+    bugThanksPoints: { type: Number, default: 0 },
     activeBadgeKeys: { type: [String], default: [] },
     specialBadgeKeys: { type: [String], default: [] },
     revokedBadgeKeys: { type: [String], default: [] },

@@ -96,15 +96,42 @@ export default function MyProductsPage() {
   }, [visibleProducts, hoveredProductId]);
 
   async function handleDelete(productId: string) {
-    if (!confirm("Are you sure you want to delete this product?")) return;
+    const target = products.find((p) => p._id === productId);
+    const asSold = target?.status === "approved";
+    if (
+      !confirm(
+        asSold
+          ? "Remove this listing? It will be marked sold/fulfilled and leave the marketplace."
+          : "Are you sure you want to delete this product?",
+      )
+    ) {
+      return;
+    }
     setDeleting(productId);
     const res = await authFetch(`/api/technician/products/delete/${productId}`, {
       method: "DELETE",
     });
+    const data = await res.json().catch(() => ({}));
     if (res.ok) {
-      setProducts(products.filter((p) => p._id !== productId));
+      if (data.treatedAsSold && data.product) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p._id === productId
+              ? {
+                  ...p,
+                  status: "sold",
+                  soldVia: data.product.soldVia || "other",
+                  soldAt: data.product.soldAt,
+                }
+              : p,
+          ),
+        );
+        setTab("sold");
+      } else {
+        setProducts(products.filter((p) => p._id !== productId));
+      }
     } else {
-      alert("Failed to delete product");
+      alert(data.message || "Failed to delete product");
     }
     setDeleting(null);
   }

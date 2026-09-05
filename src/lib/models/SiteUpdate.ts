@@ -24,6 +24,8 @@ export interface ISiteUpdate extends Document {
   mentionedUser?: Types.ObjectId;
   relatedCase?: Types.ObjectId;
   isPublished: boolean;
+  /** True after +5 trust points were granted to mentionedUser */
+  pointsAwarded: boolean;
   createdBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +50,7 @@ const SiteUpdateSchema: Schema<ISiteUpdate> = new Schema(
       index: true,
     },
     isPublished: { type: Boolean, default: true, index: true },
+    pointsAwarded: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },

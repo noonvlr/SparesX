@@ -7,6 +7,7 @@ import {
 } from "@/lib/models/SiteUpdate";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import { serializeSiteUpdate } from "@/lib/updates/format";
+import { awardBugThanksPoints } from "@/lib/updates/awardBugThanks";
 
 export async function PATCH(
   req: NextRequest,
@@ -52,6 +53,19 @@ export async function PATCH(
     }
 
     await doc.save();
+
+    if (
+      doc.isPublished &&
+      doc.kind === "bug_thanks" &&
+      doc.mentionedUser &&
+      !doc.pointsAwarded
+    ) {
+      void awardBugThanksPoints({
+        siteUpdateId: String(doc._id),
+        userId: String(doc.mentionedUser),
+      });
+    }
+
     return NextResponse.json({
       message: "Update saved",
       update: serializeSiteUpdate(doc.toObject()),

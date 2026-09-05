@@ -35,6 +35,7 @@ const POINTS = [
   { label: "Low complaint rate", points: "up to +5" },
   { label: "Trusted seller (admin)", points: "+5" },
   { label: "Special recognition badges", points: "up to +5" },
+  { label: "Bug report thanks (each)", points: "+5" },
 ];
 
 export default function TrustScorePage() {

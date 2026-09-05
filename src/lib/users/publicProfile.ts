@@ -89,7 +89,7 @@ export async function fetchPublicProfile(
 
   const user = await User.findById(id)
     .select(
-      "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys averageRating ratingCount completedSales responseRate complaintRate chatInboundOpportunities",
+      "name profilePicture city state role isBlocked createdAt about phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore bugThanksPoints activeBadgeKeys specialBadgeKeys averageRating ratingCount completedSales responseRate complaintRate chatInboundOpportunities",
     )
     .lean();
 

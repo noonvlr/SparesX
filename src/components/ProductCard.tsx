@@ -91,7 +91,7 @@ export default function ProductCard({
   async function handleDelete() {
     if (
       !confirm(
-        `Delete "${title}"? This permanently removes the listing and cannot be undone.`,
+        `Remove "${title}"? It will be marked sold/fulfilled and leave the marketplace.`,
       )
     ) {
       return;

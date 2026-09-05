@@ -50,7 +50,7 @@ const DEFAULT_PLACEHOLDERS: Record<string, string> = {
   notice: "Scheduled maintenance this Sunday 2–4 AM IST.",
   feature: "Request browse filters now follow live demand categories.",
   fix: "Fixed model add Forbidden error for sellers.",
-  bug_thanks: "Thanks {name} for reporting a bug. Now fixed.",
+  bug_thanks: "Thanks {name} for reporting a bug. Now fixed — +5 trust score awarded.",
 };
 
 function isDefaultBugThanks(text: string): boolean {
