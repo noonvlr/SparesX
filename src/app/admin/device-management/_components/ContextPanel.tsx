@@ -42,6 +42,7 @@ interface ContextPanelProps {
   onAddPartCategory: () => void;
   onAddPartCategoryFromTemplate: (category: GlobalCategory) => void;
   onRequestDisablePartCategory: (category: PartCategory) => void;
+  onEnablePartCategory: (category: PartCategory) => void;
   onSave: () => void;
   onRequestDisable: () => void;
   inlineError: string;
@@ -79,6 +80,7 @@ export default function ContextPanel({
   onAddPartCategory,
   onAddPartCategoryFromTemplate,
   onRequestDisablePartCategory,
+  onEnablePartCategory,
   onSave,
   onRequestDisable,
   inlineError,
@@ -285,11 +287,21 @@ export default function ContextPanel({
                         <button
                           type="button"
                           onClick={() => onRequestDisablePartCategory(category)}
-                          className="rounded-full border border-[var(--danger)]/20 px-2 py-1 text-xs font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                          disabled={isDisabling}
+                          className="rounded-full border border-[var(--danger)]/20 px-2 py-1 text-xs font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] disabled:opacity-60"
                         >
                           Disable
                         </button>
-                      ) : null}
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onEnablePartCategory(category)}
+                          disabled={isDisabling}
+                          className="rounded-full border border-[var(--success)]/30 px-2 py-1 text-xs font-semibold text-[var(--success)] hover:bg-[var(--success-soft)] disabled:opacity-60"
+                        >
+                          Enable
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}
@@ -450,14 +462,26 @@ export default function ContextPanel({
           >
             Save
           </Button>
-          <Button
-            type="button"
-            variant="danger"
-            onClick={onRequestDisable}
-            loading={isDisabling}
-          >
-            Disable
-          </Button>
+          {selected.type === "part-category" &&
+          selectedPartCategory?.isActive === false ? (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onEnablePartCategory(selectedPartCategory)}
+              loading={isDisabling}
+            >
+              Enable
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="danger"
+              onClick={onRequestDisable}
+              loading={isDisabling}
+            >
+              Disable
+            </Button>
+          )}
         </div>
       ) : null}
     </Card>

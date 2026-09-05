@@ -97,6 +97,7 @@ function DeviceManagementContent() {
           onRequestDisablePartCategory={
             hierarchy.requestDisablePartCategory
           }
+          onEnablePartCategory={hierarchy.enablePartCategory}
           onSave={hierarchy.saveSelected}
           onRequestDisable={hierarchy.requestDisable}
           inlineError={hierarchy.inlineError}

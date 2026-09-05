@@ -1236,6 +1236,35 @@ export function useDeviceHierarchy() {
     [],
   );
 
+  const enablePartCategory = useCallback(
+    async (category: PartCategory) => {
+      if (!category?._id) return;
+      setInlineError("");
+      setIsDisabling(true);
+      try {
+        await requestJson(
+          `/api/device-management/part-categories/${category._id}/enable`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              ...ensureAuthHeaders(),
+            },
+          },
+          "Failed to enable parts category",
+        );
+        addToast("Parts category enabled.", "success");
+        await refreshData();
+      } catch (error: any) {
+        setInlineError(error.message || "Failed to enable parts category.");
+        addToast("Failed to enable parts category.", "error");
+      } finally {
+        setIsDisabling(false);
+      }
+    },
+    [refreshData, addToast],
+  );
+
   const cancelDisable = useCallback(() => {
     setDisableTarget(null);
     if (selectedDevice) {
@@ -1465,6 +1494,7 @@ export function useDeviceHierarchy() {
     saveSelected,
     requestDisable,
     requestDisablePartCategory,
+    enablePartCategory,
     cancelDisable,
     confirmDisable,
     disableTarget,
