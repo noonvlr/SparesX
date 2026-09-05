@@ -156,5 +156,8 @@ const UserSchema: Schema<IUser> = new Schema(
   { timestamps: true },
 );
 
+/** Hot path: resolveSellerIds filters technicians by role + city (+ badges). */
+UserSchema.index({ role: 1, isBlocked: 1, city: 1 });
+
 export const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>("User", UserSchema);

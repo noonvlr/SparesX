@@ -510,6 +510,7 @@ export default function ProductFilters() {
     }
 
     const searchValue = searchParams.get("search");
+    const limitValue = searchParams.get("limit");
     const params = new URLSearchParams();
     if (searchValue) params.set("search", searchValue);
 
@@ -527,6 +528,8 @@ export default function ProductFilters() {
     if (selectedSort && selectedSort !== "featured")
       params.set("sort", selectedSort);
     if (negotiableOnly) params.set("negotiable", "1");
+    // Preserve supported limit; page intentionally resets when filters change.
+    if (limitValue) params.set("limit", limitValue);
 
     const next = params.toString();
     const current = searchParams.toString();

@@ -5,8 +5,10 @@ import { User } from "@/lib/models/User";
 import { buildPartTypeMatch } from "@/lib/categories/partTypeMatch";
 import { ensureCategoriesReconciled } from "@/lib/categories/ensureReconciled";
 import { buildStructuredModelFilter } from "@/lib/products/structuredModelFilter";
+import { resolveSort, totalPages } from "@/lib/products/listSort";
 
 export { buildStructuredModelFilter } from "@/lib/products/structuredModelFilter";
+export { resolveSort, totalPages } from "@/lib/products/listSort";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -169,23 +171,6 @@ async function prepareSearchQuery(raw: string): Promise<string> {
     "@/lib/products/searchSynonyms"
   );
   return expandSearchSynonyms(sanitizeTextSearch(raw));
-}
-
-type SortKey = "featured" | "newest" | "price_asc" | "price_desc";
-
-function resolveSort(sortParam?: string | null): Record<string, 1 | -1> {
-  const sort = (sortParam || "featured") as SortKey;
-  switch (sort) {
-    case "newest":
-      return { createdAt: -1 };
-    case "price_asc":
-      return { price: 1 };
-    case "price_desc":
-      return { price: -1 };
-    case "featured":
-    default:
-      return { featured: -1, createdAt: -1 };
-  }
 }
 
 async function resolveSellerIds(opts: {
@@ -523,11 +508,20 @@ export async function fetchProductList(
   const preferSameCity =
     Boolean(preferredCity) && (params.sort || "featured") === "featured";
 
+  /**
+   * Soft same-city preference reorders *within* the current page only.
+   * Prior overfetch (skip=0, limit×3) could empty deep pages while `total`
+   * still advertised more pages — that was incorrect. Within-page boost keeps
+   * preferCity as a soft preference without unbounded loads or unreachable pages.
+   */
   const orderBySameCity = (items: ProductListItem[]) => {
     if (!preferSameCity) return items;
-    return [...items].sort(
-      (a, b) => Number(Boolean(b.sameCity)) - Number(Boolean(a.sameCity)),
-    );
+    return [...items].sort((a, b) => {
+      const cityDelta =
+        Number(Boolean(b.sameCity)) - Number(Boolean(a.sameCity));
+      if (cityDelta !== 0) return cityDelta;
+      return String(a._id).localeCompare(String(b._id));
+    });
   };
 
   // Prefer text relevance when searching and sort is default featured
@@ -545,7 +539,6 @@ export async function fetchProductList(
       const matchQuery = { ...query };
       delete matchQuery.$text;
       const preferRelevance = (params.sort || "featured") === "featured";
-      const overFetch = preferSameCity ? Math.min(60, limit * 3) : limit;
       const docsPipeline: Record<string, unknown>[] = preferRelevance
         ? [
             { $addFields: { searchScore: { $meta: "searchScore" } } },
@@ -554,10 +547,11 @@ export async function fetchProductList(
                 searchScore: -1,
                 featured: -1,
                 createdAt: -1,
+                _id: 1,
               },
             },
-            { $skip: preferSameCity ? 0 : (page - 1) * limit },
-            { $limit: overFetch },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
           ]
         : [
             { $sort: sortSpec },
@@ -597,11 +591,8 @@ export async function fetchProductList(
       const total = facet?.total?.[0]?.count || 0;
       const docs = facet?.docs || [];
       await ensureSellerCities(docs);
-      let products = orderBySameCity(docs.map(decorate));
-      if (preferSameCity) {
-        products = products.slice((page - 1) * limit, page * limit);
-      }
-      return { products, total, page, pages: Math.ceil(total / limit) || 1 };
+      const products = orderBySameCity(docs.map(decorate));
+      return { products, total, page, pages: totalPages(total, limit) };
     } catch (err) {
       console.warn("[products] Atlas Search failed; falling back to $text", err);
       query.$text = { $search: preparedSearch };
@@ -615,23 +606,19 @@ export async function fetchProductList(
 
   try {
     const total = await Product.countDocuments(query);
-    const overFetch = preferSameCity ? Math.min(60, limit * 3) : limit;
     const docs = await Product.find(query)
       .select(
         "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
       )
-      .skip(preferSameCity ? 0 : (page - 1) * limit)
-      .limit(overFetch)
+      .skip((page - 1) * limit)
+      .limit(limit)
       .sort(findSort)
       .lean();
 
     await ensureSellerCities(docs);
-    let products = orderBySameCity(docs.map(decorate));
-    if (preferSameCity) {
-      products = products.slice((page - 1) * limit, page * limit);
-    }
+    const products = orderBySameCity(docs.map(decorate));
 
-    return { products, total, page, pages: Math.ceil(total / limit) };
+    return { products, total, page, pages: totalPages(total, limit) };
   } catch (err) {
     // Text index may not exist yet — fall back to regex token match
     if (usedTextSearch) {
@@ -651,7 +638,7 @@ export async function fetchProductList(
       await ensureSellerCities(docs);
       const products = orderBySameCity(docs.map(decorate));
 
-      return { products, total, page, pages: Math.ceil(total / limit) };
+      return { products, total, page, pages: totalPages(total, limit) };
     }
     throw err;
   }

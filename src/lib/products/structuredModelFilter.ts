@@ -2,6 +2,10 @@
  * Structured `deviceModel` / `model` matching.
  * Kept free of DB imports so list queries and saved-search matching share
  * the same semantics without Mongo coupling.
+ *
+ * Intentional vs Parts SEO hubs: `/parts/.../[model]` uses exact
+ * partType×brand×deviceModel membership. Interactive `/products` browse uses
+ * this bounded-token matcher on Product.deviceModel only (not name/modelNumber).
  */
 
 function escapeRegex(value: string) {

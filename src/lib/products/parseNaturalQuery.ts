@@ -236,9 +236,12 @@ export function applyNaturalQueryToParams(
 
   if (parsed.residualSearch) {
     next.search = parsed.residualSearch;
-  } else if (parsed.filters.brand || parsed.filters.partType) {
-    // Structured enough — drop free-text to avoid over-filtering $text AND
-    next.search = parsed.filters.deviceModel || undefined;
+  } else {
+    // Structured filters fully consumed the query — do not reattach
+    // deviceModel as free-text (that AND'd $text and over-filtered results).
+    // Browser URL may still show the original `search=` for shareability;
+    // server-side interpretation remains authoritative for results.
+    next.search = undefined;
   }
 
   return next;

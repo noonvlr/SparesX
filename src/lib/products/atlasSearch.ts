@@ -1,6 +1,11 @@
 /**
  * Optional Atlas Search path when ATLAS_SEARCH_INDEX is set.
  * Falls back to callers using Mongo $text / regex when unavailable.
+ *
+ * Intentional vs `$text`: Atlas uses fuzzy (maxEdits:1) and a flatter boost
+ * layout; Mongo text index uses weighted fields without fuzzy. Field coverage
+ * is aligned (name, brand, deviceModel, partType, modelNumber, tags, description).
+ * Exact recall/ranking parity is not required across engines.
  */
 export function atlasSearchEnabled() {
   return Boolean(process.env.ATLAS_SEARCH_INDEX?.trim());
