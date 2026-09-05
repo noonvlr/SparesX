@@ -74,7 +74,7 @@ export default function HomeMarketplaceStats({
           className="pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-[var(--brand)] home-stat-bar home-stat-bar--delayed"
         />
         <dt className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[var(--brand-hover)]">
-          Parts sold
+          Parts sold / fulfilled
         </dt>
         <dd className="mt-1.5 flex items-baseline gap-1.5">
           <span className="home-stat-number home-stat-number--brand text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--brand)] tabular-nums">

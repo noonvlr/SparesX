@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
+import { deleteStoredProductImages } from "@/lib/images/deleteProductImages";
 
 export async function DELETE(
   req: NextRequest,
@@ -21,5 +22,6 @@ export async function DELETE(
   if (!product) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
   }
+  void deleteStoredProductImages(product.images);
   return NextResponse.json({ message: "Product deleted" }, { status: 200 });
 }

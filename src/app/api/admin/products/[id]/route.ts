@@ -192,6 +192,10 @@ export async function DELETE(
     if (!product) {
       return NextResponse.json({ message: "Product not found" }, { status: 404 });
     }
+    const { deleteStoredProductImages } = await import(
+      "@/lib/images/deleteProductImages"
+    );
+    void deleteStoredProductImages(product.images);
     return NextResponse.json(
       { message: "Product deleted" },
       { status: 200 },

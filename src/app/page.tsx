@@ -9,6 +9,7 @@ import { cn } from "@/lib/ui/cn";
 import { connectDB } from "@/lib/db/connect";
 import { findPublicCategories } from "@/lib/categories/publicQuery";
 import { Product } from "@/lib/models/Product";
+import { RequestModel } from "@/lib/models/Request";
 import {
   SITE_CONTACT_EMAIL,
   SITE_NAME,
@@ -75,8 +76,14 @@ export const revalidate = 60;
 export default async function HomePage() {
   await connectDB();
 
-  const [featuredRaw, categoryRows, listingCounts, listedCount, soldCount] =
-    await Promise.all([
+  const [
+    featuredRaw,
+    categoryRows,
+    listingCounts,
+    listedCount,
+    soldListings,
+    fulfilledRequests,
+  ] = await Promise.all([
       Product.find({ status: "approved" })
         .sort({ createdAt: -1 })
         .limit(6)
@@ -91,7 +98,11 @@ export default async function HomePage() {
       ]),
       Product.countDocuments({ status: "approved" }),
       Product.countDocuments({ status: "sold" }),
+      RequestModel.countDocuments({ status: "fulfilled" }),
     ]);
+
+  // Marketplace deals: sold listings + fulfilled part requests
+  const soldCount = soldListings + fulfilledRequests;
 
   const featuredProducts = featuredRaw.map((p) => ({
     ...p,

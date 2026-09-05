@@ -50,7 +50,9 @@ export const revalidate = 180;
 
 export default async function RequestsPage() {
   // Anonymous, contact-free snapshot so the board is in the initial HTML.
-  const { requests, total } = await fetchOpenRequests({ limit: 50 });
+  const { requests, total, categoryFacets } = await fetchOpenRequests({
+    limit: 50,
+  });
 
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
@@ -65,7 +67,11 @@ export default async function RequestsPage() {
           </p>
         </header>
         <Suspense fallback={<RequestsFallback />}>
-          <RequestsBoard initialRequests={requests} initialTotal={total} />
+          <RequestsBoard
+            initialRequests={requests}
+            initialTotal={total}
+            initialCategoryFacets={categoryFacets}
+          />
         </Suspense>
       </section>
     </main>

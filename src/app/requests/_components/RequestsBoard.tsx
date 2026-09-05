@@ -62,9 +62,11 @@ function highlightText(text: string, query: string) {
 export default function RequestsBoard({
   initialRequests = [],
   initialTotal = 0,
+  initialCategoryFacets = [],
 }: {
   initialRequests?: PartRequest[];
   initialTotal?: number;
+  initialCategoryFacets?: { name: string; count: number }[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -75,10 +77,13 @@ export default function RequestsBoard({
     searchParams.get("brand") ||
     "";
   const focusId = searchParams.get("focus") || "";
+  const initialCategory = searchParams.get("category") || "";
 
   const [tab, setTab] = useState<RequestsTab>(initialTab);
   const [requests, setRequests] = useState<PartRequest[]>(initialRequests);
   const [total, setTotal] = useState(initialTotal);
+  const [categoryFacets, setCategoryFacets] = useState(initialCategoryFacets);
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory);
   const [loading, setLoading] = useState(false);
   const [searchInput, setSearchInput] = useState(initialQuery);
   const [search, setSearch] = useState(initialQuery.trim());
@@ -97,6 +102,8 @@ export default function RequestsBoard({
       setSearchInput(nextQuery);
       setSearch(nextQuery.trim());
     }
+    const nextCategory = searchParams.get("category") || "";
+    setCategoryFilter(nextCategory);
   }, [searchParams]);
 
   useEffect(() => {
@@ -110,17 +117,25 @@ export default function RequestsBoard({
     el?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [focusId, loading, tab, requests]);
 
-  const loadRequests = async (query = search, silent = false) => {
+  const loadRequests = async (
+    query = search,
+    category = categoryFilter,
+    silent = false,
+  ) => {
     if (!silent) setLoading(true);
     setIsAuthenticated(isLoggedInClient());
     const params = new URLSearchParams({ status: "open", limit: "50" });
     if (query) params.set("search", query);
+    if (category) params.set("category", category);
 
     try {
       const res = await authFetch(`/api/requests?${params.toString()}`);
       const data = await res.json();
       setRequests(data.requests || []);
       setTotal(data.total || 0);
+      if (Array.isArray(data.categoryFacets)) {
+        setCategoryFacets(data.categoryFacets);
+      }
       setIsAuthenticated(!!data.isAuthenticated || isLoggedInClient());
     } catch {
       setRequests([]);
@@ -135,11 +150,16 @@ export default function RequestsBoard({
   const isFirstLoad = useRef(true);
   useEffect(() => {
     if (tab !== "browse") return;
-    const silent = isFirstLoad.current && !search;
+    const silent = isFirstLoad.current && !search && !categoryFilter;
     isFirstLoad.current = false;
-    loadRequests(search, silent);
+    loadRequests(search, categoryFilter, silent);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, tab]);
+  }, [search, categoryFilter, tab]);
+
+  const selectCategoryChip = (name: string) => {
+    const next = categoryFilter.toLowerCase() === name.toLowerCase() ? "" : name;
+    setCategoryFilter(next);
+  };
 
   const respondViaWhatsApp = (request: PartRequest) => {
     if (!isAuthenticated) {
@@ -177,9 +197,12 @@ export default function RequestsBoard({
   };
 
   const emptyMessage = useMemo(() => {
-    if (search) return `No requests match “${search}”. Try different keywords.`;
+    if (search || categoryFilter) {
+      const bits = [categoryFilter, search].filter(Boolean).join(" · ");
+      return `No open requests match “${bits}”. Try another filter.`;
+    }
     return "No open requests right now. Be the first to submit one.";
-  }, [search]);
+  }, [search, categoryFilter]);
 
   return (
     <div className="space-y-6">
@@ -207,7 +230,10 @@ export default function RequestsBoard({
               onSubmitted={() => {
                 setTab("browse");
                 router.replace("/requests");
-                loadRequests("");
+                setCategoryFilter("");
+                setSearchInput("");
+                setSearch("");
+                loadRequests("", "", false);
               }}
             />
           </div>
@@ -286,22 +312,66 @@ export default function RequestsBoard({
                     }}
                     className="rounded-[var(--radius-lg)] border-[var(--ink-inverse)]/20 bg-[var(--ink-inverse)]/10 text-[var(--ink-inverse)] hover:bg-[var(--ink-inverse)]/20"
                   >
-                    Clear
+                    Clear search
                   </Button>
                 )}
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                {["Display", "Battery", "Camera", "Charging port"].map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setSearchInput(chip)}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-[var(--ink-inverse)]/10 hover:bg-[var(--ink-inverse)]/20 border border-[var(--ink-inverse)]/15 transition"
-                  >
-                    {chip}
-                  </button>
-                ))}
+                <button
+                  type="button"
+                  onClick={() => setCategoryFilter("")}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                    !categoryFilter
+                      ? "bg-[var(--ink-inverse)] text-[var(--ink)] border-[var(--ink-inverse)]"
+                      : "bg-[var(--ink-inverse)]/10 hover:bg-[var(--ink-inverse)]/20 border-[var(--ink-inverse)]/15"
+                  }`}
+                >
+                  All parts
+                </button>
+                {(categoryFacets.length > 0
+                  ? categoryFacets
+                  : [
+                      { name: "Display", count: 0 },
+                      { name: "Battery", count: 0 },
+                      { name: "Camera", count: 0 },
+                      { name: "Charging Port", count: 0 },
+                    ]
+                ).map((chip) => {
+                  const active =
+                    categoryFilter.toLowerCase() === chip.name.toLowerCase();
+                  return (
+                    <button
+                      key={chip.name}
+                      type="button"
+                      onClick={() => selectCategoryChip(chip.name)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                        active
+                          ? "bg-[var(--ink-inverse)] text-[var(--ink)] border-[var(--ink-inverse)]"
+                          : "bg-[var(--ink-inverse)]/10 hover:bg-[var(--ink-inverse)]/20 border-[var(--ink-inverse)]/15"
+                      }`}
+                    >
+                      {chip.name}
+                      {chip.count > 0 ? (
+                        <span className="ml-1 opacity-70">({chip.count})</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
+              {categoryFilter ? (
+                <p className="mt-3 text-xs text-[var(--ink-inverse)]/80">
+                  Filtering by part:{" "}
+                  <span className="font-semibold">{categoryFilter}</span>
+                  {" · "}
+                  <button
+                    type="button"
+                    className="underline underline-offset-2"
+                    onClick={() => setCategoryFilter("")}
+                  >
+                    Clear filter
+                  </button>
+                </p>
+              ) : null}
             </div>
           </div>
 

@@ -90,6 +90,14 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .lean();
 
+    let categoryFacets: { name: string; count: number }[] = [];
+    if (!mine && (status === "open" || !status)) {
+      const { fetchOpenRequestCategoryFacets } = await import(
+        "@/lib/requests/openRequests"
+      );
+      categoryFacets = await fetchOpenRequestCategoryFacets(12);
+    }
+
     const sanitized = requests.map((item) => {
       const row = item as {
         email?: string;
@@ -121,6 +129,7 @@ export async function GET(req: NextRequest) {
         page,
         pages: Math.ceil(total / limit),
         isAuthenticated: Boolean(payload),
+        categoryFacets,
       },
       { status: 200 },
     );

@@ -15,6 +15,49 @@ export type PublicPartRequest = {
   hasContact: boolean;
 };
 
+export type RequestFacet = { name: string; count: number };
+
+/**
+ * Top part categories currently in open requests (for browse filter chips).
+ */
+export async function fetchOpenRequestCategoryFacets(
+  limit = 12,
+): Promise<RequestFacet[]> {
+  try {
+    await connectDB();
+    const rows = await RequestModel.aggregate<{
+      _id: string;
+      count: number;
+      label: string;
+    }>([
+      {
+        $match: {
+          status: "open",
+          category: { $exists: true, $nin: [null, ""] },
+        },
+      },
+      {
+        $group: {
+          _id: { $toLower: { $trim: { input: "$category" } } },
+          count: { $sum: 1 },
+          label: { $first: "$category" },
+        },
+      },
+      { $sort: { count: -1, label: 1 } },
+      { $limit: Math.min(24, Math.max(1, limit)) },
+    ]);
+
+    return rows
+      .filter((r) => r._id && r.label)
+      .map((r) => ({
+        name: String(r.label).trim(),
+        count: r.count,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Open part requests without contact details.
  *
@@ -23,16 +66,21 @@ export type PublicPartRequest = {
  */
 export async function fetchOpenRequests(
   opts: { limit?: number } = {},
-): Promise<{ requests: PublicPartRequest[]; total: number }> {
+): Promise<{
+  requests: PublicPartRequest[];
+  total: number;
+  categoryFacets: RequestFacet[];
+}> {
   try {
     await connectDB();
 
     const limit = Math.min(100, Math.max(1, opts.limit ?? 50));
     const query = { status: "open" };
 
-    const [total, docs] = await Promise.all([
+    const [total, docs, categoryFacets] = await Promise.all([
       RequestModel.countDocuments(query),
       RequestModel.find(query).sort({ createdAt: -1 }).limit(limit).lean(),
+      fetchOpenRequestCategoryFacets(12),
     ]);
 
     const requests: PublicPartRequest[] = docs.map(
@@ -50,8 +98,8 @@ export async function fetchOpenRequests(
       }),
     );
 
-    return { requests, total };
+    return { requests, total, categoryFacets };
   } catch {
-    return { requests: [], total: 0 };
+    return { requests: [], total: 0, categoryFacets: [] };
   }
 }

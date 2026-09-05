@@ -396,7 +396,16 @@ export async function DELETE(
     }
 
     const { Product } = await import("@/lib/models/Product");
+    const products = await Product.find({ technician: id })
+      .select("images")
+      .lean();
     const deleteResult = await Product.deleteMany({ technician: id });
+    if (products.length) {
+      const { deleteImagesForProducts } = await import(
+        "@/lib/images/deleteProductImages"
+      );
+      void deleteImagesForProducts(products);
+    }
 
     await User.findByIdAndDelete(id);
 

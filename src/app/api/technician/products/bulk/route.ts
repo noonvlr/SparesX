@@ -222,10 +222,22 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (action === "delete") {
+      const toDelete = await Product.find({
+        ...filter,
+        status: { $in: ["pending", "rejected", "sold"] },
+      })
+        .select("images")
+        .lean();
       const result = await Product.deleteMany({
         ...filter,
         status: { $in: ["pending", "rejected", "sold"] },
       });
+      if (toDelete.length) {
+        const { deleteImagesForProducts } = await import(
+          "@/lib/images/deleteProductImages"
+        );
+        void deleteImagesForProducts(toDelete);
+      }
       return NextResponse.json({
         message: "Deleted",
         deleted: result.deletedCount,
