@@ -37,8 +37,8 @@ export function formatUpdateLine(update: {
 
 export const DEFAULT_BUG_THANKS_POINTS = 5;
 
-/** Allowed trust reward amounts when publishing bug thanks. */
-export const BUG_THANKS_POINT_OPTIONS = [0, 5, 10, 15, 20, 25] as const;
+/** Hard ceiling so a mistype cannot dump absurd points (trust score itself caps at 100). */
+export const MAX_BUG_THANKS_POINTS = 100;
 
 /** @deprecated use DEFAULT_BUG_THANKS_POINTS */
 export const BUG_THANKS_POINTS = DEFAULT_BUG_THANKS_POINTS;
@@ -46,13 +46,7 @@ export const BUG_THANKS_POINTS = DEFAULT_BUG_THANKS_POINTS;
 export function normalizeBugThanksPoints(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(n)) return DEFAULT_BUG_THANKS_POINTS;
-  const rounded = Math.round(n);
-  if (
-    (BUG_THANKS_POINT_OPTIONS as readonly number[]).includes(rounded)
-  ) {
-    return rounded;
-  }
-  return Math.max(0, Math.min(25, rounded));
+  return Math.max(0, Math.min(MAX_BUG_THANKS_POINTS, Math.round(n)));
 }
 
 export function buildBugThanksMessage(

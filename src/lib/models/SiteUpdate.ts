@@ -52,7 +52,7 @@ const SiteUpdateSchema: Schema<ISiteUpdate> = new Schema(
       index: true,
     },
     isPublished: { type: Boolean, default: true, index: true },
-    rewardPoints: { type: Number, default: 0, min: 0, max: 25 },
+    rewardPoints: { type: Number, default: 0, min: 0, max: 100 },
     pointsAwarded: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

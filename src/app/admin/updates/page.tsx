@@ -12,8 +12,9 @@ import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
 import {
   buildBugThanksMessage,
-  BUG_THANKS_POINT_OPTIONS,
   DEFAULT_BUG_THANKS_POINTS,
+  MAX_BUG_THANKS_POINTS,
+  normalizeBugThanksPoints,
 } from "@/lib/updates/format";
 
 type UpdateRow = {
@@ -58,11 +59,6 @@ const DEFAULT_PLACEHOLDERS: Record<string, string> = {
   bug_thanks:
     "Thanks {name} for reporting a bug. Now fixed — +5 trust score awarded.",
 };
-
-const REWARD_OPTIONS = BUG_THANKS_POINT_OPTIONS.map((pts) => ({
-  value: String(pts),
-  label: pts === 0 ? "No reward" : `+${pts} trust points`,
-}));
 
 function isDefaultBugThanks(text: string): boolean {
   const t = text.trim().toLowerCase();
@@ -160,7 +156,10 @@ export default function AdminUpdatesPage() {
     setBody(buildBugThanksMessage(name || "a community member", undefined, points));
   }
 
-  function onRewardPointsChange(next: number) {
+  function onRewardPointsChange(raw: string) {
+    const next = normalizeBugThanksPoints(
+      raw === "" ? 0 : Number(raw),
+    );
     setRewardPoints(next);
     if (kind === "bug_thanks" && isDefaultBugThanks(body)) {
       applyBugThanksTemplate(
@@ -506,21 +505,18 @@ export default function AdminUpdatesPage() {
             <Field
               label="Reward points"
               htmlFor="update-reward"
-              hint="Added to the reporter’s trust score when published."
+              hint={`Any whole number from 0–${MAX_BUG_THANKS_POINTS}. Added to the reporter’s trust score when published.`}
             >
-              <Select
+              <Input
                 id="update-reward"
-                value={String(rewardPoints)}
-                onChange={(e) =>
-                  onRewardPointsChange(Number(e.target.value))
-                }
-              >
-                {REWARD_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </Select>
+                type="number"
+                inputMode="numeric"
+                min={0}
+                max={MAX_BUG_THANKS_POINTS}
+                step={1}
+                value={rewardPoints}
+                onChange={(e) => onRewardPointsChange(e.target.value)}
+              />
             </Field>
           )}
 

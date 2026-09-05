@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import { AdminPage } from "@/components/layout";
 import { Card, Badge, PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { Textarea } from "@/components/ui/Input";
+import { Textarea, Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
@@ -14,8 +14,9 @@ import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
 import UploadedImage from "@/components/ui/UploadedImage";
 import {
-  BUG_THANKS_POINT_OPTIONS,
   DEFAULT_BUG_THANKS_POINTS,
+  MAX_BUG_THANKS_POINTS,
+  normalizeBugThanksPoints,
 } from "@/lib/updates/format";
 
 const STATUS_OPTIONS = [
@@ -25,11 +26,6 @@ const STATUS_OPTIONS = [
   { value: "resolved", label: "Resolved" },
   { value: "closed", label: "Closed" },
 ];
-
-const REWARD_OPTIONS = BUG_THANKS_POINT_OPTIONS.map((pts) => ({
-  value: String(pts),
-  label: pts === 0 ? "No reward" : `+${pts} trust points`,
-}));
 
 export default function AdminSupportCasePage() {
   const params = useParams<{ id: string }>();
@@ -489,22 +485,25 @@ export default function AdminSupportCasePage() {
                   <Field
                     label="Thanks reward"
                     htmlFor="thanks-reward"
-                    hint="Trust points granted with the public thanks update"
+                    hint={`Any whole number from 0–${MAX_BUG_THANKS_POINTS}`}
                   >
-                    <Select
+                    <Input
                       id="thanks-reward"
-                      value={String(thanksRewardPoints)}
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      max={MAX_BUG_THANKS_POINTS}
+                      step={1}
+                      value={thanksRewardPoints}
                       onChange={(e) =>
-                        setThanksRewardPoints(Number(e.target.value))
+                        setThanksRewardPoints(
+                          normalizeBugThanksPoints(
+                            e.target.value === "" ? 0 : Number(e.target.value),
+                          ),
+                        )
                       }
                       disabled={postingThanks || saving}
-                    >
-                      {REWARD_OPTIONS.map((o) => (
-                        <option key={o.value} value={o.value}>
-                          {o.label}
-                        </option>
-                      ))}
-                    </Select>
+                    />
                   </Field>
                   <Button
                     type="button"
