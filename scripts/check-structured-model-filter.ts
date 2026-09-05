@@ -2,7 +2,7 @@
  * Runtime assertions for structured deviceModel matching (no Mongo required).
  * Invoked by verify-product-filter-matching.mjs
  */
-import * as modelFilter from "../src/lib/products/structuredModelFilter.ts";
+import * as modelFilter from "../src/lib/products/structuredModelFilter";
 
 const { buildStructuredModelFilter } = modelFilter;
 
