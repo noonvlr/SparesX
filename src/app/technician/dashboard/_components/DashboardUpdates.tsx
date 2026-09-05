@@ -4,12 +4,39 @@ import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { cn } from "@/lib/ui/cn";
 
 type UpdateRow = {
   _id: string;
   line: string;
   kind: string;
 };
+
+function kindTone(kind: string): string {
+  switch (kind) {
+    case "bug_thanks":
+      return "bg-[var(--success-soft)] text-[var(--success)]";
+    case "feature":
+      return "bg-[var(--brand-soft)] text-[var(--brand-hover)]";
+    case "fix":
+      return "bg-[var(--info-soft)] text-[var(--info)]";
+    default:
+      return "bg-[var(--surface-3)] text-[var(--muted)]";
+  }
+}
+
+function kindLabel(kind: string): string {
+  switch (kind) {
+    case "bug_thanks":
+      return "Thanks";
+    case "feature":
+      return "Feature";
+    case "fix":
+      return "Fix";
+    default:
+      return "Notice";
+  }
+}
 
 /**
  * Compact dated feed of site updates (features, fixes, bug thanks).
@@ -45,7 +72,11 @@ export default function DashboardUpdates() {
 
   if (loading) {
     return (
-      <Card className="p-5 mb-6 md:mb-8">
+      <Card className="dash-updates p-5 mb-6 md:mb-8">
+        <div
+          aria-hidden
+          className="dash-updates__bar pointer-events-none"
+        />
         <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
           <Spinner size="sm" /> Loading updates…
         </div>
@@ -56,20 +87,48 @@ export default function DashboardUpdates() {
   if (updates.length === 0) return null;
 
   return (
-    <Card className="p-5 md:p-6 mb-6 md:mb-8">
-      <div className="flex items-baseline justify-between gap-3 mb-4">
-        <h3 className="text-lg md:text-xl font-semibold text-[var(--ink)]">
-          Updates
-        </h3>
-        <p className="text-xs text-[var(--muted)]">Newest first</p>
+    <Card className="dash-updates p-5 md:p-6 mb-6 md:mb-8">
+      <div aria-hidden className="dash-updates__bar pointer-events-none" />
+
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="dash-updates__dot flex-shrink-0" aria-hidden />
+          <h3 className="text-lg md:text-xl font-semibold text-[var(--ink)] tracking-tight">
+            Updates
+          </h3>
+          <span className="hidden sm:inline text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-hover)] bg-[var(--brand-muted)]/60 px-2 py-0.5 rounded-full">
+            What’s new
+          </span>
+        </div>
+        <p className="text-xs text-[var(--muted)] flex-shrink-0">Newest first</p>
       </div>
-      <ul className="space-y-3">
-        {updates.map((u) => (
+
+      <ul className="space-y-2">
+        {updates.map((u, index) => (
           <li
             key={u._id}
-            className="text-sm text-[var(--ink-secondary)] leading-relaxed border-l-2 border-[var(--brand-muted)] pl-3"
+            className={cn(
+              "dash-updates__row rounded-[var(--radius)] border border-transparent px-3 py-2.5",
+              "text-sm text-[var(--ink-secondary)] leading-relaxed",
+            )}
+            style={{ animationDelay: `${Math.min(index, 7) * 55}ms` }}
           >
-            {u.line}
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span
+                className={cn(
+                  "text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded",
+                  kindTone(u.kind),
+                )}
+              >
+                {kindLabel(u.kind)}
+              </span>
+              {index === 0 ? (
+                <span className="text-[10px] font-semibold uppercase tracking-wide text-[var(--brand)]">
+                  Latest
+                </span>
+              ) : null}
+            </div>
+            <p>{u.line}</p>
           </li>
         ))}
       </ul>
