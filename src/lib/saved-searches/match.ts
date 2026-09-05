@@ -8,118 +8,19 @@ import { Notification } from "@/lib/models/Notification";
 import { createNotification } from "@/lib/notifications/create";
 import { productPath } from "@/lib/seo/site";
 import { formatListingTitle } from "@/lib/products/listingTitle";
+import {
+  buildSavedSearchCandidateOr,
+  productMatchesSavedFilters,
+  type SavedSearchProductLike,
+} from "@/lib/saved-searches/filters";
 
-type ProductLike = {
-  _id: unknown;
-  name?: string;
-  description?: string;
-  brand?: string;
-  deviceModel?: string;
-  partType?: string;
-  category?: string;
-  deviceCategory?: string;
-  condition?: string;
-  price?: number;
-  priceNegotiable?: boolean;
-  slug?: string | null;
-  technician?: unknown;
-  status?: string;
-};
+export {
+  buildSavedSearchCandidateOr,
+  productMatchesSavedFilters,
+  savedSearchPassesCandidateOr,
+} from "@/lib/saved-searches/filters";
 
-type SellerFlags = {
-  city?: string | null;
-  isTrusted?: boolean;
-  kycVerified?: boolean;
-  businessVerified?: boolean;
-  phoneVerified?: boolean;
-  eliteApproved?: boolean;
-};
-
-function includesIgnoreCase(haystack: string, needle: string) {
-  return haystack.toLowerCase().includes(needle.toLowerCase());
-}
-
-function sellerMatchesType(
-  seller: SellerFlags | null | undefined,
-  sellerType?: string,
-): boolean {
-  if (!sellerType?.trim()) return true;
-  if (!seller) return false;
-  switch (sellerType.trim().toLowerCase()) {
-    case "trusted":
-      return Boolean(seller.isTrusted);
-    case "kyc":
-      return Boolean(seller.kycVerified);
-    case "business":
-      return Boolean(seller.businessVerified);
-    case "phone":
-      return Boolean(seller.phoneVerified);
-    case "elite":
-      return Boolean(seller.eliteApproved);
-    default:
-      return true;
-  }
-}
-
-export function productMatchesSavedFilters(
-  product: ProductLike,
-  filters: SavedSearchFilters,
-  seller?: SellerFlags | null,
-): boolean {
-  if (filters.deviceCategory) {
-    if (
-      String(product.deviceCategory || "").toLowerCase() !==
-      filters.deviceCategory.toLowerCase()
-    ) {
-      return false;
-    }
-  }
-  if (filters.brand) {
-    if (
-      String(product.brand || "").toLowerCase() !== filters.brand.toLowerCase()
-    ) {
-      return false;
-    }
-  }
-  if (filters.partType) {
-    const part = String(product.partType || product.category || "").toLowerCase();
-    if (part !== filters.partType.toLowerCase()) return false;
-  }
-  if (filters.condition) {
-    if (
-      String(product.condition || "").toLowerCase() !==
-      filters.condition.toLowerCase()
-    ) {
-      return false;
-    }
-  }
-  if (filters.deviceModel) {
-    const modelHay = `${product.deviceModel || ""} ${product.name || ""}`;
-    if (!includesIgnoreCase(modelHay, filters.deviceModel)) return false;
-  }
-  if (filters.search) {
-    const hay = `${product.name || ""} ${product.description || ""} ${product.brand || ""} ${product.deviceModel || ""} ${product.partType || ""}`;
-    if (!includesIgnoreCase(hay, filters.search)) return false;
-  }
-  if (filters.minPrice) {
-    const min = Number(filters.minPrice);
-    if (!Number.isNaN(min) && Number(product.price || 0) < min) return false;
-  }
-  if (filters.maxPrice) {
-    const max = Number(filters.maxPrice);
-    if (!Number.isNaN(max) && Number(product.price || 0) > max) return false;
-  }
-  if (filters.negotiable === "1" || filters.negotiable === "true") {
-    if (!product.priceNegotiable) return false;
-  }
-  if (filters.city) {
-    if (!seller?.city || !includesIgnoreCase(seller.city, filters.city)) {
-      return false;
-    }
-  }
-  if (!sellerMatchesType(seller, filters.sellerType)) return false;
-  return true;
-}
+type ProductLike = SavedSearchProductLike;
 
 /**
  * After a listing becomes publicly approved, notify users with matching saved searches.
@@ -131,32 +32,9 @@ export async function notifySavedSearchesForProduct(product: ProductLike) {
   try {
     await connectDB();
     const ownerId = String(product.technician || "");
-    const or: Record<string, unknown>[] = [
-      { "filters.search": { $exists: true, $ne: "" } },
-    ];
-    if (product.brand) {
-      or.push({
-        "filters.brand": {
-          $regex: `^${String(product.brand).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-          $options: "i",
-        },
-      });
-    }
-    if (product.partType || product.category) {
-      const part = String(product.partType || product.category);
-      or.push({
-        "filters.partType": {
-          $regex: `^${part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
-          $options: "i",
-        },
-      });
-    }
-    if (product.deviceCategory) {
-      or.push({
-        "filters.deviceCategory": product.deviceCategory,
-      });
-    }
+    const or = buildSavedSearchCandidateOr(product);
 
+    // Scale cap (deferred): may miss matches when >100 candidates match $or.
     const searches = await SavedSearch.find({ $or: or })
       .sort({ updatedAt: -1 })
       .limit(100)

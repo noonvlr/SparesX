@@ -1,6 +1,7 @@
 /**
- * Structured `deviceModel` / `model` query clauses.
- * Kept free of DB imports so filters can be unit-checked without Mongo.
+ * Structured `deviceModel` / `model` matching.
+ * Kept free of DB imports so list queries and saved-search matching share
+ * the same semantics without Mongo coupling.
  */
 
 function escapeRegex(value: string) {
@@ -29,8 +30,40 @@ export function normalizeModelTokens(deviceModel: string, brand?: string | null)
     .filter((token) => token.length >= 2);
 }
 
+/** Bounded token segment inside a deviceModel string (not mid-word). */
+function deviceModelHasToken(deviceModel: string, token: string): boolean {
+  return new RegExp(
+    `(^|[\\s\\-_/])${escapeRegex(token)}([\\s\\-_/]|$)`,
+    "i",
+  ).test(deviceModel);
+}
+
 /**
- * Structured `deviceModel` / `model` filter.
+ * In-memory structured `deviceModel` match — same rules as
+ * `buildStructuredModelFilter` / live `/products` listing.
+ * Only inspects Product.deviceModel (never name/modelNumber).
+ */
+export function matchesStructuredDeviceModel(
+  productDeviceModel: string | null | undefined,
+  filterDeviceModel: string,
+  brand?: string | null,
+): boolean {
+  const filter = filterDeviceModel.trim();
+  if (!filter) return true;
+
+  const hay = String(productDeviceModel || "");
+  const tokens = normalizeModelTokens(filter, brand);
+
+  if (tokens.length > 0) {
+    return tokens.every((token) => deviceModelHasToken(hay, token));
+  }
+
+  // Values shorter than the token threshold: exact deviceModel only
+  return new RegExp(`^${escapeRegex(filter)}$`, "i").test(hay);
+}
+
+/**
+ * Structured `deviceModel` / `model` Mongo filter clause.
  * Matches only Product.deviceModel (not name/modelNumber) — free-text `search`
  * remains responsible for broad multi-field matching.
  */
