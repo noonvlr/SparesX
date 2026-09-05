@@ -45,11 +45,6 @@ const CONTROLS = [
     desc: "Read user chats for dispute and policy review",
   },
   {
-    href: "/admin/disputes",
-    title: "Dispute SOP",
-    desc: "Internal checklist: tickets, evidence, warn/block",
-  },
-  {
     href: "/admin/reports",
     title: "Reports",
     desc: "Counts across users, products, chats, and support",

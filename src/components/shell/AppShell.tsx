@@ -216,7 +216,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/admin/requests", label: "Requests", icon: <IconGrid className="h-5 w-5" /> },
         { href: "/admin/device-management", label: "Devices", icon: <IconSearch className="h-5 w-5" /> },
         { href: "/admin/chat", label: "Chat disputes", icon: <IconChat className="h-5 w-5" /> },
-        { href: "/admin/disputes", label: "Dispute SOP", icon: <IconMore className="h-5 w-5" /> },
         { href: "/admin/site-settings", label: "Site settings", icon: <IconMore className="h-5 w-5" /> },
         { href: "/admin/updates", label: "Site updates", icon: <IconMore className="h-5 w-5" /> },
         { href: "/admin/settings", label: "Control center", icon: <IconUser className="h-5 w-5" /> },
@@ -418,7 +417,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/admin/device-management", label: "Devices" },
         { href: "/admin/support", label: "Support", badge: supportUnread },
         { href: "/admin/chat", label: "Chat disputes" },
-        { href: "/admin/disputes", label: "Dispute SOP" },
         { href: "/admin/site-settings", label: "Site settings" },
         { href: "/admin/updates", label: "Site updates" },
       ];

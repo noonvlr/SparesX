@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPage } from "@/components/layout";
 import { Card, PageHeader, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,6 +10,7 @@ import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
+import { buildBugThanksMessage } from "@/lib/updates/format";
 
 type UpdateRow = {
   _id: string;
@@ -21,6 +22,13 @@ type UpdateRow = {
   line: string;
 };
 
+type UserOption = {
+  _id: string;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
 const KIND_OPTIONS = [
   { value: "notice", label: "Notice" },
   { value: "feature", label: "Feature" },
@@ -28,16 +36,40 @@ const KIND_OPTIONS = [
   { value: "bug_thanks", label: "Bug thanks" },
 ];
 
+const DEFAULT_PLACEHOLDERS: Record<string, string> = {
+  notice: "Scheduled maintenance this Sunday 2–4 AM IST.",
+  feature: "Request browse filters now follow live demand categories.",
+  fix: "Fixed model add Forbidden error for sellers.",
+  bug_thanks: "Thanks {name} for reporting a bug. Now fixed.",
+};
+
+function isDefaultBugThanks(text: string): boolean {
+  const t = text.trim().toLowerCase();
+  return (
+    !t ||
+    (t.startsWith("thanks ") &&
+      t.includes("for reporting") &&
+      t.includes("now fixed"))
+  );
+}
+
 export default function AdminUpdatesPage() {
   const [updates, setUpdates] = useState<UpdateRow[]>([]);
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [userSearch, setUserSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [kind, setKind] = useState("notice");
   const [body, setBody] = useState("");
   const [publishedAt, setPublishedAt] = useState("");
+  const [mentionedUserId, setMentionedUserId] = useState("");
   const [flash, setFlash] = useState("");
+
+  const selectedUser = useMemo(
+    () => users.find((u) => u._id === mentionedUserId),
+    [users, mentionedUserId],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -57,9 +89,50 @@ export default function AdminUpdatesPage() {
     }
   }, []);
 
+  const loadUsers = useCallback(async (q: string) => {
+    try {
+      const params = new URLSearchParams({ limit: "40" });
+      if (q.trim()) params.set("q", q.trim());
+      const res = await authFetch(`/api/admin/users?${params}`);
+      const data = await res.json();
+      if (res.ok) setUsers(data.users || []);
+    } catch {
+      // keep previous list
+    }
+  }, []);
+
   useEffect(() => {
     void load();
-  }, [load]);
+    void loadUsers("");
+  }, [load, loadUsers]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => void loadUsers(userSearch), 250);
+    return () => clearTimeout(timer);
+  }, [userSearch, loadUsers]);
+
+  function applyBugThanksTemplate(name?: string) {
+    setBody(buildBugThanksMessage(name || "a community member"));
+  }
+
+  function onKindChange(next: string) {
+    setKind(next);
+    if (next === "bug_thanks") {
+      applyBugThanksTemplate(selectedUser?.name);
+      return;
+    }
+    if (isDefaultBugThanks(body)) {
+      setBody("");
+    }
+  }
+
+  function onUserChange(userId: string) {
+    setMentionedUserId(userId);
+    const user = users.find((u) => u._id === userId);
+    if (kind === "bug_thanks" && (isDefaultBugThanks(body) || !body.trim())) {
+      applyBugThanksTemplate(user?.name);
+    }
+  }
 
   async function createUpdate(e: React.FormEvent) {
     e.preventDefault();
@@ -74,6 +147,8 @@ export default function AdminUpdatesPage() {
           kind,
           message: body,
           publishedAt: publishedAt || undefined,
+          mentionedUserId: mentionedUserId || undefined,
+          mentionedName: selectedUser?.name || undefined,
           isPublished: true,
         }),
       });
@@ -85,6 +160,8 @@ export default function AdminUpdatesPage() {
       setBody("");
       setPublishedAt("");
       setKind("notice");
+      setMentionedUserId("");
+      setUserSearch("");
       setFlash("Update published — it will show on user dashboards.");
       await load();
     } catch {
@@ -131,6 +208,18 @@ export default function AdminUpdatesPage() {
     }
   }
 
+  const previewDate = publishedAt
+    ? new Date(publishedAt).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : new Date().toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      });
+
   return (
     <AdminPage containerSize="md">
       <PageHeader
@@ -157,7 +246,7 @@ export default function AdminUpdatesPage() {
               <Select
                 id="update-kind"
                 value={kind}
-                onChange={(e) => setKind(e.target.value)}
+                onChange={(e) => onKindChange(e.target.value)}
               >
                 {KIND_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -179,6 +268,39 @@ export default function AdminUpdatesPage() {
               />
             </Field>
           </div>
+
+          <Field
+            label="Mention user (optional)"
+            htmlFor="update-user-search"
+            hint={
+              kind === "bug_thanks"
+                ? "Pick the reporter — they get a private notification when published."
+                : "Optional credit in the update; used for bug thanks."
+            }
+          >
+            <Input
+              id="update-user-search"
+              value={userSearch}
+              onChange={(e) => setUserSearch(e.target.value)}
+              placeholder="Search by name, email, or mobile"
+              className="mb-2"
+            />
+            <Select
+              id="update-user"
+              value={mentionedUserId}
+              onChange={(e) => onUserChange(e.target.value)}
+            >
+              <option value="">No user selected</option>
+              {users.map((u) => (
+                <option key={u._id} value={u._id}>
+                  {u.name || "User"}
+                  {u.email ? ` · ${u.email}` : ""}
+                  {u.role ? ` (${u.role})` : ""}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
           <Field
             label="Message"
             htmlFor="update-body"
@@ -188,26 +310,26 @@ export default function AdminUpdatesPage() {
               id="update-body"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              placeholder="Request browse filters now follow live demand categories."
+              placeholder={DEFAULT_PLACEHOLDERS[kind] || DEFAULT_PLACEHOLDERS.notice}
               required
               maxLength={400}
             />
           </Field>
+          {kind === "bug_thanks" && (
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => applyBugThanksTemplate(selectedUser?.name)}
+            >
+              Use default bug-thanks message
+            </Button>
+          )}
           {body.trim() ? (
             <p className="text-sm text-[var(--muted)] rounded-[var(--radius)] bg-[var(--surface-2)] px-3 py-2 border border-[var(--border)]">
               Preview:{" "}
               <span className="text-[var(--ink)]">
-                {(publishedAt
-                  ? new Date(publishedAt).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : new Date().toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric",
-                    })) +
+                {previewDate +
                   " · " +
                   (KIND_OPTIONS.find((o) => o.value === kind)?.label ||
                     "Notice") +

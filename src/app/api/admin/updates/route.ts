@@ -11,6 +11,7 @@ import {
   serializeSiteUpdate,
 } from "@/lib/updates/format";
 import { SupportRequest } from "@/lib/models/SupportRequest";
+import { User } from "@/lib/models/User";
 import { createNotification } from "@/lib/notifications/create";
 
 export async function GET(req: NextRequest) {
@@ -149,17 +150,48 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Invalid date" }, { status: 400 });
     }
 
+    let mentionedUserId: string | undefined;
+    let mentionedName =
+      typeof body.mentionedName === "string"
+        ? body.mentionedName.trim().slice(0, 80) || undefined
+        : undefined;
+
+    if (
+      typeof body.mentionedUserId === "string" &&
+      mongoose.Types.ObjectId.isValid(body.mentionedUserId)
+    ) {
+      const user = await User.findById(body.mentionedUserId)
+        .select("name")
+        .lean();
+      if (!user) {
+        return NextResponse.json({ message: "User not found" }, { status: 404 });
+      }
+      mentionedUserId = String(user._id);
+      if (!mentionedName) {
+        mentionedName = String(user.name || "").trim().slice(0, 80) || undefined;
+      }
+    }
+
     const doc = await SiteUpdate.create({
       publishedAt,
       kind,
       message,
-      mentionedName:
-        typeof body.mentionedName === "string"
-          ? body.mentionedName.trim().slice(0, 80) || undefined
-          : undefined,
+      mentionedName,
+      mentionedUser: mentionedUserId || undefined,
       isPublished: body.isPublished !== false,
       createdBy: admin.id,
     });
+
+    if (doc.isPublished && mentionedUserId && kind === "bug_thanks") {
+      void createNotification({
+        userId: mentionedUserId,
+        type: "system",
+        title: "Thank you for your bug report",
+        body: message.slice(0, 400),
+        href: "/technician/dashboard",
+        meta: { siteUpdateId: String(doc._id) },
+      });
+    }
 
     return NextResponse.json(
       {

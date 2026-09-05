@@ -152,11 +152,19 @@ export default function AdminSupportPage() {
         title="Support cases"
         description="Investigate reports with listing, user, and message context captured at submit time."
         actions={
-          unreadCount > 0 ? (
-            <Badge tone="success">
-              {unreadCount > 99 ? "99+" : unreadCount} unread
-            </Badge>
-          ) : undefined
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admin/disputes"
+              className="text-sm font-semibold text-[var(--brand)] hover:underline"
+            >
+              Dispute SOP
+            </Link>
+            {unreadCount > 0 ? (
+              <Badge tone="success">
+                {unreadCount > 99 ? "99+" : unreadCount} unread
+              </Badge>
+            ) : null}
+          </div>
         }
       />
 

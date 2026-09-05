@@ -177,7 +177,13 @@ export default function AdminChatPage() {
         title="Chat disputes"
         description="Read-only access to user chats for dispute review. Delete only when content violates policy."
         actions={
-          <div className="flex gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <Link
+              href="/admin/disputes"
+              className="text-sm font-semibold text-[var(--brand)] hover:underline"
+            >
+              Dispute SOP
+            </Link>
             <Badge tone="brand">
               {stats.conversationCount} conversations
             </Badge>
