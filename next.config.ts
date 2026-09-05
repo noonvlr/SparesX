@@ -95,6 +95,37 @@ const nextConfig: NextConfig = {
     return [
       { source: "/browse", destination: "/products", permanent: true },
       { source: "/products/:id", destination: "/product/:id", permanent: true },
+      // Legacy seller dashboard → technician hub (Phase 1 consolidation)
+      {
+        source: "/dashboard/seller",
+        destination: "/technician/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/seller/listings",
+        destination: "/technician/products",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/seller/add",
+        destination: "/technician/products/new",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/seller/messages",
+        destination: "/messages",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/seller/profile",
+        destination: "/technician/profile",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/seller/verification",
+        destination: "/technician/profile",
+        permanent: true,
+      },
       // www is canonical. Explicit 308 so Google treats this as permanent
       // (Vercel’s Domains UI redirect is a 307 and does not pass ranking).
       {

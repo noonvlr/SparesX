@@ -67,14 +67,15 @@ BUYER DASHBOARD:
 - /dashboard/buyer/saved
 - /dashboard/buyer/profile
 
-SELLER DASHBOARD:
+TECHNICIAN DASHBOARD (canonical seller UI):
 
-- /dashboard/seller
-- /dashboard/seller/listings
-- /dashboard/seller/add
-- /dashboard/seller/messages
-- /dashboard/seller/verification
-- /dashboard/seller/profile
+- /technician/dashboard
+- /technician/products
+- /technician/products/new
+- /technician/products/edit/[id]
+- /technician/profile
+
+Legacy `/dashboard/seller/*` permanently redirects to the technician routes above (see `next.config.ts`). Do not add new links to `/dashboard/seller`.
 
 ADMIN:
 

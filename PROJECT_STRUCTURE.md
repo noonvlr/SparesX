@@ -47,7 +47,8 @@
 
 ## 👤 **LEGACY DASHBOARD REDIRECTS**
 
-Most `/dashboard/buyer/*` and `/dashboard/seller/*` routes **redirect** into the technician hub or saved parts.
+Most `/dashboard/buyer/*` routes **redirect** into the technician hub or saved parts.  
+`/dashboard/seller/*` pages were removed; **permanent redirects** live in `next.config.ts`.
 
 | Legacy path | Current target |
 |---|---|
@@ -56,8 +57,12 @@ Most `/dashboard/buyer/*` and `/dashboard/seller/*` routes **redirect** into the
 | `/dashboard/buyer/requests` | `/requests?tab=mine` |
 | `/dashboard/buyer/profile` | `/technician/profile` |
 | `/dashboard/buyer/saved` | **Live** saved parts UI |
-| `/dashboard/seller/*` (most) | technician equivalents |
-| `/dashboard/seller/verification` | Honest badge status page |
+| `/dashboard/seller` | `/technician/dashboard` (308 via next.config) |
+| `/dashboard/seller/listings` | `/technician/products` |
+| `/dashboard/seller/add` | `/technician/products/new` |
+| `/dashboard/seller/messages` | `/messages` |
+| `/dashboard/seller/profile` | `/technician/profile` |
+| `/dashboard/seller/verification` | `/technician/profile` |
 
 ---
 
