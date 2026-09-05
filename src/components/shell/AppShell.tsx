@@ -218,6 +218,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/admin/chat", label: "Chat disputes", icon: <IconChat className="h-5 w-5" /> },
         { href: "/admin/disputes", label: "Dispute SOP", icon: <IconMore className="h-5 w-5" /> },
         { href: "/admin/site-settings", label: "Site settings", icon: <IconMore className="h-5 w-5" /> },
+        { href: "/admin/updates", label: "Site updates", icon: <IconMore className="h-5 w-5" /> },
         { href: "/admin/settings", label: "Control center", icon: <IconUser className="h-5 w-5" /> },
         {
           label: "Logout",
@@ -419,6 +420,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         { href: "/admin/chat", label: "Chat disputes" },
         { href: "/admin/disputes", label: "Dispute SOP" },
         { href: "/admin/site-settings", label: "Site settings" },
+        { href: "/admin/updates", label: "Site updates" },
       ];
     }
 

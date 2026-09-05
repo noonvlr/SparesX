@@ -32,6 +32,8 @@ export default function AdminSupportCasePage() {
   const [note, setNote] = useState("");
   const [upholdComplaint, setUpholdComplaint] = useState(true);
   const [admins, setAdmins] = useState<{ _id: string; name: string }[]>([]);
+  const [postingThanks, setPostingThanks] = useState(false);
+  const [thanksFlash, setThanksFlash] = useState("");
 
   async function load() {
     setLoading(true);
@@ -102,6 +104,32 @@ export default function AdminSupportCasePage() {
       }
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function postThanks() {
+    setPostingThanks(true);
+    setThanksFlash("");
+    setError("");
+    try {
+      const res = await authFetch("/api/admin/updates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fromCaseId: params.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || "Failed to post thanks");
+        return;
+      }
+      setThanksFlash(
+        data.update?.line ||
+          "Thanks update published to the user dashboard feed.",
+      );
+    } catch {
+      setError("Failed to post thanks");
+    } finally {
+      setPostingThanks(false);
     }
   }
 
@@ -441,7 +469,29 @@ export default function AdminSupportCasePage() {
                   Reopen
                 </Button>
               )}
+              {(ticket.type === "bug" || ticket.type === "technical") && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={postingThanks || saving}
+                  loading={postingThanks}
+                  onClick={() => void postThanks()}
+                >
+                  Post thanks to Updates
+                </Button>
+              )}
             </div>
+            {thanksFlash ? (
+              <Alert tone="success" className="mt-2">
+                {thanksFlash}{" "}
+                <Link
+                  href="/admin/updates"
+                  className="font-semibold underline underline-offset-2"
+                >
+                  Manage updates
+                </Link>
+              </Alert>
+            ) : null}
           </Card>
 
           <Card className="p-5 space-y-3">

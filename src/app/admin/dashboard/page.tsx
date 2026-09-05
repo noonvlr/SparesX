@@ -113,6 +113,7 @@ export default function AdminDashboard() {
     { href: "/admin/categories", title: "Categories", desc: "Manage part categories" },
     { href: "/admin/reports", title: "Reports", desc: "Platform counts overview" },
     { href: "/admin/site-settings", title: "Site settings", desc: "SMS provider & OTP credentials" },
+    { href: "/admin/updates", title: "Site updates", desc: "Dashboard changelog & bug thanks" },
     { href: "/admin/settings", title: "Control center", desc: "All admin tools in one place" },
   ];
 

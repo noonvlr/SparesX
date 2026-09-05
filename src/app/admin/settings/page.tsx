@@ -59,6 +59,11 @@ const CONTROLS = [
     title: "Site settings",
     desc: "SMS provider (Renflair/Twilio/MSG91), credentials, and email OTP SMTP",
   },
+  {
+    href: "/admin/updates",
+    title: "Site updates",
+    desc: "Publish dated updates and bug thanks for the user dashboard feed",
+  },
 ];
 
 export default function AdminSettingsPage() {
