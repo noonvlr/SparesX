@@ -4,6 +4,9 @@ import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
 import { buildPartTypeMatch } from "@/lib/categories/partTypeMatch";
 import { ensureCategoriesReconciled } from "@/lib/categories/ensureReconciled";
+import { buildStructuredModelFilter } from "@/lib/products/structuredModelFilter";
+
+export { buildStructuredModelFilter } from "@/lib/products/structuredModelFilter";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -31,46 +34,85 @@ const OPTIONAL_SEARCH_TOKENS = new Set([
   "phone",
 ]);
 
-/** Strip brand / marketing prefixes so "Galaxy S24 Ultra" ≈ "S24 Ultra". */
-function normalizeModelTokens(deviceModel: string, brand?: string | null) {
-  let normalized = deviceModel.trim();
+type LegacyCategoryResolution =
+  | { kind: "deviceCategory"; slug: string }
+  | { kind: "partType"; value: string }
+  | { kind: "legacyField"; value: string };
 
-  if (brand) {
-    normalized = normalized.replace(
-      new RegExp(`^${escapeRegex(brand)}\\s+`, "i"),
-      "",
-    );
+/**
+ * Resolve legacy `?category=` to one deterministic axis.
+ * Preference: known DeviceType → known part Category → exact Product.category.
+ * Does not OR across unrelated fields.
+ */
+export async function resolveLegacyCategoryParam(
+  category: string,
+): Promise<LegacyCategoryResolution> {
+  const raw = category.trim();
+  if (!raw) return { kind: "legacyField", value: raw };
+  const slug = raw.toLowerCase();
+
+  const DeviceType = (await import("@/lib/models/DeviceType")).default;
+  const device = await DeviceType.findOne({
+    $or: [
+      { slug },
+      { name: { $regex: `^${escapeRegex(raw)}$`, $options: "i" } },
+    ],
+    isActive: { $ne: false },
+  })
+    .select("slug")
+    .lean();
+  if (device?.slug) {
+    return { kind: "deviceCategory", slug: String(device.slug) };
   }
 
-  normalized = normalized.replace(
-    /^(galaxy|iphone|ipad|pixel|redmi|poco|moto|nokia|oneplus|realme|oppo|vivo)\s+/i,
-    "",
-  );
+  const Category = (await import("@/lib/models/Category")).default;
+  const { normalizeCategoryName } = await import("@/lib/categories/normalize");
+  const allParts = await Category.find({ isActive: { $ne: false } })
+    .select("name slug")
+    .lean();
+  const nameKey = normalizeCategoryName(raw);
+  const part =
+    allParts.find((c) => c.slug === slug || c.slug === raw) ||
+    allParts.find(
+      (c) => normalizeCategoryName(c.name) === nameKey,
+    ) ||
+    // Device-prefixed slugs e.g. mobile-display ↔ display
+    allParts.find(
+      (c) =>
+        typeof c.slug === "string" &&
+        c.slug.includes("-") &&
+        c.slug.split("-").slice(1).join("-") === slug,
+    );
 
-  return normalized
-    .split(/[\s\-_/]+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length >= 2);
+  if (part) {
+    return { kind: "partType", value: raw };
+  }
+
+  return { kind: "legacyField", value: raw };
 }
 
-function buildModelFilter(deviceModel: string, brand?: string | null) {
-  const tokens = normalizeModelTokens(deviceModel, brand);
-  const fields = ["deviceModel", "name", "modelNumber"] as const;
-
-  const fieldMatch = (pattern: string) => ({
-    $or: fields.map((field) => ({
-      [field]: { $regex: pattern, $options: "i" },
-    })),
-  });
-
-  // Prefer token match so catalog "Galaxy S24 Ultra" hits product "S24 Ultra"
-  if (tokens.length > 0) {
-    return {
-      $and: tokens.map((token) => fieldMatch(escapeRegex(token))),
-    };
+async function applyDeviceCategoryFilter(
+  slug: string,
+  query: Record<string, unknown>,
+  andClauses: Record<string, unknown>[],
+): Promise<void> {
+  const normalized = slug.toLowerCase();
+  try {
+    const { resolveCatalogRefs } = await import("@/lib/catalog/resolveRefs");
+    const refs = await resolveCatalogRefs({ deviceCategory: normalized });
+    if (refs.deviceTypeId) {
+      andClauses.push({
+        $or: [
+          { deviceCategory: normalized },
+          { deviceTypeId: refs.deviceTypeId },
+        ],
+      });
+    } else {
+      query.deviceCategory = normalized;
+    }
+  } catch {
+    query.deviceCategory = normalized;
   }
-
-  return fieldMatch(escapeRegex(deviceModel));
 }
 
 /**
@@ -321,34 +363,32 @@ export async function fetchProductList(
   const query: Record<string, unknown> = { status: "approved" };
   const andClauses: Record<string, unknown>[] = [];
 
+  // Explicit deviceCategory wins over legacy `category`.
+  // Legacy `category` is resolved to exactly one axis (device / part / legacy field).
+  let effectivePartType = partType || null;
   if (deviceCategory) {
-    const slug = deviceCategory.toLowerCase();
-    try {
-      const { resolveCatalogRefs } = await import("@/lib/catalog/resolveRefs");
-      const refs = await resolveCatalogRefs({ deviceCategory: slug });
-      if (refs.deviceTypeId) {
-        andClauses.push({
-          $or: [{ deviceCategory: slug }, { deviceTypeId: refs.deviceTypeId }],
-        });
-      } else {
-        query.deviceCategory = slug;
-      }
-    } catch {
-      query.deviceCategory = slug;
-    }
+    await applyDeviceCategoryFilter(deviceCategory, query, andClauses);
   } else if (category) {
-    // Legacy `category` may be a device slug or a part-type slug
-    andClauses.push({
-      $or: [
-        { deviceCategory: category.toLowerCase() },
-        { category },
-        { partType: category },
-      ],
-    });
+    const resolved = await resolveLegacyCategoryParam(category);
+    if (resolved.kind === "deviceCategory") {
+      await applyDeviceCategoryFilter(resolved.slug, query, andClauses);
+    } else if (resolved.kind === "partType") {
+      // Explicit partType takes precedence over legacy category→partType.
+      if (!effectivePartType) {
+        effectivePartType = resolved.value;
+      }
+    } else {
+      andClauses.push({
+        category: {
+          $regex: `^${escapeRegex(resolved.value)}$`,
+          $options: "i",
+        },
+      });
+    }
   }
 
-  if (partType) {
-    Object.assign(query, await buildPartTypeMatch(partType));
+  if (effectivePartType) {
+    Object.assign(query, await buildPartTypeMatch(effectivePartType));
   }
 
   if (brand) {
@@ -385,7 +425,7 @@ export async function fetchProductList(
   }
 
   if (deviceModel) {
-    andClauses.push(buildModelFilter(deviceModel, brand));
+    andClauses.push(buildStructuredModelFilter(deviceModel, brand));
   }
 
   if (condition) query.condition = condition;
