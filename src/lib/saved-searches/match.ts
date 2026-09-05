@@ -8,6 +8,7 @@ import { Notification } from "@/lib/models/Notification";
 import { createNotification } from "@/lib/notifications/create";
 import { productPath } from "@/lib/seo/site";
 import { formatListingTitle } from "@/lib/products/listingTitle";
+import { createPartTypeAliasResolver } from "@/lib/categories/partTypeMatch";
 import {
   buildSavedSearchCandidateOr,
   productMatchesSavedFilters,
@@ -49,6 +50,7 @@ export async function notifySavedSearchesForProduct(product: ProductLike) {
           )
           .lean()
       : null;
+    const resolvePartTypeAliases = await createPartTypeAliasResolver();
     const href = productPath(product as { slug?: string | null; _id: unknown });
     const title = formatListingTitle(product);
     const productId = String(product._id);
@@ -62,7 +64,16 @@ export async function notifySavedSearchesForProduct(product: ProductLike) {
       if (notifiedUsers.has(userId)) continue;
 
       const filters = (row.filters || {}) as SavedSearchFilters;
-      if (!productMatchesSavedFilters(product, filters, seller)) continue;
+      const partTypeAliasValues = filters.partType
+        ? resolvePartTypeAliases(filters.partType)
+        : null;
+      if (
+        !productMatchesSavedFilters(product, filters, seller, {
+          partTypeAliasValues,
+        })
+      ) {
+        continue;
+      }
 
       // Avoid spamming the same search within 30 minutes
       if (

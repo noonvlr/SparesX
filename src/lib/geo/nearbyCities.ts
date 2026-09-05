@@ -74,6 +74,27 @@ export function isSameCity(preferred: string, sellerCity?: string | null) {
   return norm(canonicalizeCity(preferred)) === norm(canonicalizeCity(sellerCity));
 }
 
+/**
+ * Live `/products` city filter semantics for a seller city.
+ * - city only: exact canonical match
+ * - city + nearby: seller city in the same deterministic cluster
+ * Partial substrings (e.g. "Chen" vs "Chennai") do not match.
+ */
+export function sellerCityMatchesFilter(
+  sellerCity: string | null | undefined,
+  filterCity: string,
+  nearby?: boolean,
+): boolean {
+  const preferred = filterCity.trim();
+  if (!preferred || !sellerCity?.trim()) return false;
+
+  if (nearby) {
+    return expandNearbyCities(preferred).some((c) => isSameCity(c, sellerCity));
+  }
+
+  return isSameCity(preferred, sellerCity);
+}
+
 /** Well-known city names for NL parsing ("near Chennai"). */
 export function knownCityNames(): string[] {
   const set = new Set<string>();

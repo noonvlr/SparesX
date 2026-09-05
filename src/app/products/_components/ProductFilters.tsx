@@ -599,6 +599,7 @@ export default function ProductFilters() {
       minPrice: priceRange.min || undefined,
       maxPrice: priceRange.max || undefined,
       city: selectedCity || undefined,
+      nearby: selectedCity && includeNearby ? true : undefined,
       sellerType: selectedSellerType || undefined,
       negotiable: negotiableOnly ? "1" : undefined,
     };

@@ -3,6 +3,8 @@
  * Used by notification fan-out and verification scripts.
  */
 import { matchesStructuredDeviceModel } from "@/lib/products/structuredModelFilter";
+import { sellerCityMatchesFilter } from "@/lib/geo/nearbyCities";
+import { partTypeValueInAliases } from "@/lib/categories/partTypeMatch";
 import type { SavedSearchFilters } from "@/lib/models/SavedSearch";
 
 export type SavedSearchProductLike = {
@@ -29,6 +31,15 @@ export type SavedSearchSellerFlags = {
   businessVerified?: boolean;
   phoneVerified?: boolean;
   eliteApproved?: boolean;
+};
+
+export type SavedSearchMatchContext = {
+  /**
+   * Optional Category-driven alias values for `filters.partType`
+   * (from `collectPartTypeAliasValues` / `createPartTypeAliasResolver`).
+   * When omitted, falls back to exact case-insensitive equality.
+   */
+  partTypeAliasValues?: string[] | null;
 };
 
 function includesIgnoreCase(haystack: string, needle: string) {
@@ -69,9 +80,10 @@ export function buildSavedSearchCandidateOr(
 ): Record<string, unknown>[] {
   const or: Record<string, unknown>[] = [
     { "filters.search": { $exists: true, $ne: "" } },
-    // Structured-only searches (model/city/price/…) must still enter the set
+    // Structured-only searches (model/city/price/partType/…) must still enter the set
     { "filters.deviceModel": { $exists: true, $ne: "" } },
     { "filters.city": { $exists: true, $ne: "" } },
+    { "filters.partType": { $exists: true, $ne: "" } },
     { "filters.minPrice": { $exists: true, $ne: "" } },
     { "filters.maxPrice": { $exists: true, $ne: "" } },
     { "filters.condition": { $exists: true, $ne: "" } },
@@ -116,6 +128,7 @@ export function savedSearchPassesCandidateOr(
   if (filters.search?.trim()) return true;
   if (filters.deviceModel?.trim()) return true;
   if (filters.city?.trim()) return true;
+  if (filters.partType?.trim()) return true;
   if (filters.minPrice?.trim()) return true;
   if (filters.maxPrice?.trim()) return true;
   if (filters.condition?.trim()) return true;
@@ -128,10 +141,6 @@ export function savedSearchPassesCandidateOr(
     filters.brand.toLowerCase() === String(product.brand).toLowerCase()
   ) {
     return true;
-  }
-  if (filters.partType?.trim() && (product.partType || product.category)) {
-    const part = String(product.partType || product.category);
-    if (filters.partType.toLowerCase() === part.toLowerCase()) return true;
   }
   if (
     filters.deviceCategory?.trim() &&
@@ -147,6 +156,7 @@ export function productMatchesSavedFilters(
   product: SavedSearchProductLike,
   filters: SavedSearchFilters,
   seller?: SavedSearchSellerFlags | null,
+  context?: SavedSearchMatchContext,
 ): boolean {
   if (filters.deviceCategory) {
     if (
@@ -164,8 +174,13 @@ export function productMatchesSavedFilters(
     }
   }
   if (filters.partType) {
-    const part = String(product.partType || product.category || "").toLowerCase();
-    if (part !== filters.partType.toLowerCase()) return false;
+    const part = String(product.partType || product.category || "");
+    const aliases = context?.partTypeAliasValues;
+    if (aliases && aliases.length > 0) {
+      if (!partTypeValueInAliases(part, aliases)) return false;
+    } else if (part.toLowerCase() !== filters.partType.toLowerCase()) {
+      return false;
+    }
   }
   if (filters.condition) {
     if (
@@ -203,7 +218,13 @@ export function productMatchesSavedFilters(
     if (!product.priceNegotiable) return false;
   }
   if (filters.city) {
-    if (!seller?.city || !includesIgnoreCase(seller.city, filters.city)) {
+    if (
+      !sellerCityMatchesFilter(
+        seller?.city,
+        filters.city,
+        Boolean(filters.nearby),
+      )
+    ) {
       return false;
     }
   }

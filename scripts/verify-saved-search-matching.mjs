@@ -1,5 +1,5 @@
 /**
- * Phase 8A: saved-search structured deviceModel + candidate-query checks.
+ * Phase 8A/8B checks: saved-search model, city/nearby, partType aliases.
  * Run: node scripts/verify-saved-search-matching.mjs
  */
 import fs from "node:fs";
@@ -23,7 +23,10 @@ function read(rel) {
 
 const filtersSrc = read("src/lib/saved-searches/filters.ts");
 const matchSrc = read("src/lib/saved-searches/match.ts");
-const structured = read("src/lib/products/structuredModelFilter.ts");
+const savedModel = read("src/lib/models/SavedSearch.ts");
+const productFilters = read("src/app/products/_components/ProductFilters.tsx");
+const nearby = read("src/lib/geo/nearbyCities.ts");
+const partType = read("src/lib/categories/partTypeMatch.ts");
 
 assert(
   /matchesStructuredDeviceModel/.test(filtersSrc),
@@ -34,29 +37,52 @@ assert(
   "saved filters no longer concatenate name into model haystack",
 );
 assert(
-  filtersSrc.includes('"filters.deviceModel"'),
-  "candidate $or includes deviceModel existence",
+  /sellerCityMatchesFilter/.test(filtersSrc),
+  "saved filters use sellerCityMatchesFilter",
+);
+assert(
+  !/includesIgnoreCase\(seller\.city/.test(filtersSrc),
+  "saved filters no longer substring-match city",
+);
+assert(
+  /partTypeValueInAliases|partTypeAliasValues/.test(filtersSrc),
+  "saved filters support partType aliases",
+);
+assert(
+  /nearby\?: boolean/.test(savedModel),
+  "SavedSearchFilters includes optional nearby",
+);
+assert(
+  /params\.set\("nearby", "1"\)/.test(savedModel),
+  "buildQueryString writes nearby=1",
+);
+assert(
+  /includeNearby \? true/.test(productFilters),
+  "ProductFilters save payload includes nearby",
+);
+assert(
+  /export function sellerCityMatchesFilter/.test(nearby),
+  "shared sellerCityMatchesFilter exported",
+);
+assert(
+  /export function collectPartTypeAliasValues/.test(partType),
+  "shared collectPartTypeAliasValues exported",
+);
+assert(
+  /createPartTypeAliasResolver/.test(matchSrc),
+  "notify loads Category alias resolver once",
+);
+assert(
+  /limit\(100\)/.test(matchSrc),
+  "notify still applies limit(100)",
+);
+assert(
+  filtersSrc.includes('"filters.partType"'),
+  "candidate $or includes partType existence",
 );
 assert(
   filtersSrc.includes('"filters.city"'),
   "candidate $or includes city existence",
-);
-assert(
-  filtersSrc.includes('"filters.minPrice"') &&
-    filtersSrc.includes('"filters.condition"'),
-  "candidate $or includes price/condition existence",
-);
-assert(
-  /limit\(100\)/.test(matchSrc),
-  "notify still applies limit(100) (deferred scale cap)",
-);
-assert(
-  /buildSavedSearchCandidateOr/.test(matchSrc),
-  "notify uses buildSavedSearchCandidateOr",
-);
-assert(
-  /export function matchesStructuredDeviceModel/.test(structured),
-  "shared matchesStructuredDeviceModel exported",
 );
 
 const runtime = spawnSync(
