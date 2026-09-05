@@ -8,6 +8,7 @@ import { openChatUi } from "@/components/chat/openChat";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { productPath } from "@/lib/seo/site";
 
 type ConnectItem = {
   _id: string;
@@ -16,7 +17,7 @@ type ConnectItem = {
   createdAt: string;
   respondedAt?: string;
   expiresAt?: string;
-  product?: { _id: string; name: string } | null;
+  product?: { _id: string; name: string; slug?: string } | null;
   peer: {
     _id: string;
     name: string;
@@ -207,7 +208,7 @@ export default function WhatsAppConnectClient() {
                       <p className="text-sm text-[var(--ink-secondary)] mt-1">
                         About:{" "}
                         <Link
-                          href={`/product/${item.product._id}`}
+                          href={productPath(item.product)}
                           className="text-[var(--brand)] hover:underline"
                         >
                           {item.product.name}

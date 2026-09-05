@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
         .limit(50)
         .populate("requester", "name profilePicture city")
         .populate("seller", "name profilePicture city")
-        .populate("product", "name")
+        .populate("product", "name slug")
         .lean();
 
       const items = rows.map((r) => {
@@ -66,6 +66,7 @@ export async function GET(req: NextRequest) {
               ? {
                   _id: String((r.product as any)._id),
                   name: (r.product as any).name,
+                  slug: (r.product as any).slug || undefined,
                 }
               : null,
           peer: peerDoc

@@ -1,5 +1,4 @@
 import { notFound, permanentRedirect } from "next/navigation";
-import { headers } from "next/headers";
 import { Types } from "mongoose";
 import type { Metadata } from "next";
 import ProductDetail from "./_components/ProductDetail";
@@ -10,25 +9,8 @@ import {
   formatProductHeading,
 } from "@/lib/seo/productMeta";
 import { formatPartTypeLabel } from "@/lib/products/listingTitle";
+import { loadPublicProductForPage } from "@/lib/products/loadPublicProduct";
 import { SITE_NAME, absoluteUrl, partsPath, productPath, productUrl, slugifyPathSegment } from "@/lib/seo/site";
-
-/** Origin for server-side self-fetch (must be this instance, not the public domain). */
-async function requestOrigin() {
-  const headerList = await headers();
-  const host = headerList.get("host");
-  if (!host) return absoluteUrl("/");
-  const protocol = host.includes("localhost") ? "http" : "https";
-  return `${protocol}://${host}`;
-}
-
-async function loadProduct(slug: string) {
-  const origin = await requestOrigin();
-  const res = await fetch(`${origin}/api/products/${slug}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-  return res.json();
-}
 
 export async function generateMetadata({
   params,
@@ -38,8 +20,8 @@ export async function generateMetadata({
   const { slug } = await params;
 
   try {
-    const data = await loadProduct(slug);
-    if (!data?.product) {
+    const data = await loadPublicProductForPage(slug);
+    if (!data.ok || !data.product) {
       return {
         title: "Product Not Found",
         description: "The product you're looking for could not be found.",
@@ -50,8 +32,9 @@ export async function generateMetadata({
     const { product } = data;
     // Canonical always points at the slug form so /product/<id> doesn't compete.
     const canonicalUrl = productUrl(product);
-    const productImageRaw = product.images?.[0] || "/og-image.jpg";
-    const productImage = absoluteUrl(productImageRaw);
+    const productImageRaw =
+      (Array.isArray(product.images) && product.images[0]) || "/og-image.jpg";
+    const productImage = absoluteUrl(String(productImageRaw));
     const pageTitle = buildProductSeoTitle(product);
     const heading = formatProductHeading(product);
     const description = buildProductSeoDescription(product);
@@ -90,7 +73,7 @@ export async function generateMetadata({
         images: [productImage],
       },
       other: {
-        "product:brand": product.brand || "",
+        "product:brand": String(product.brand || ""),
         "product:condition":
           product.condition === "used" ? "used" : "new",
         "product:price:amount": String(product.price ?? ""),
@@ -119,14 +102,8 @@ export default async function ProductSlugPage({
 }) {
   const { slug } = await params;
 
-  let data: any = null;
-  try {
-    data = await loadProduct(slug);
-  } catch {
-    return notFound();
-  }
-
-  if (!data?.product) return notFound();
+  const data = await loadPublicProductForPage(slug);
+  if (!data.ok || !data.product) return notFound();
 
   const { product, similarProducts = [] } = data;
 
@@ -137,11 +114,17 @@ export default async function ProductSlugPage({
     void trackMarketplaceEvent({
       type: "product_view",
       productId: String(product._id),
-      brand: product.brand || undefined,
-      partType: product.partType || product.category || undefined,
-      deviceModel: product.deviceModel || undefined,
+      brand: typeof product.brand === "string" ? product.brand : undefined,
+      partType:
+        (typeof product.partType === "string" && product.partType) ||
+        (typeof product.category === "string" && product.category) ||
+        undefined,
+      deviceModel:
+        typeof product.deviceModel === "string" ? product.deviceModel : undefined,
       city:
-        tech && typeof tech === "object" ? tech.city || undefined : undefined,
+        tech && typeof tech === "object" && tech !== null && "city" in tech
+          ? (tech.city as string | undefined) || undefined
+          : undefined,
       meta: { source: "product_ssr" },
     });
   }
@@ -150,31 +133,44 @@ export default async function ProductSlugPage({
   // indexes two URLs for the same listing. Query-string visits keep working.
   const looksLikeObjectId =
     Types.ObjectId.isValid(slug) && String(new Types.ObjectId(slug)) === slug;
-  if (looksLikeObjectId && product.slug && product.slug !== slug) {
+  if (
+    looksLikeObjectId &&
+    typeof product.slug === "string" &&
+    product.slug &&
+    product.slug !== slug
+  ) {
     permanentRedirect(productPath(product));
   }
 
   const canonicalUrl = productUrl(product);
   const heading = formatProductHeading(product);
-  const partTypeLabel = formatPartTypeLabel(product.partType) || "Spare Parts";
+  const partTypeLabel =
+    formatPartTypeLabel(
+      typeof product.partType === "string" ? product.partType : undefined,
+    ) || "Spare Parts";
   const images = Array.isArray(product.images)
-    ? product.images.filter(Boolean).map((src: string) => absoluteUrl(src))
+    ? product.images.filter(Boolean).map((src) => absoluteUrl(String(src)))
     : [];
   const isSold = product.status === "sold";
 
-  const brandHref = product.brand
-    ? `/products?brand=${encodeURIComponent(product.brand)}`
-    : null;
+  const brandHref =
+    typeof product.brand === "string" && product.brand
+      ? `/products?brand=${encodeURIComponent(product.brand)}`
+      : null;
   const hubHref = partsPath({
-    partType: product.partType,
-    brand: product.brand,
-    deviceModel: product.deviceModel,
+    partType: typeof product.partType === "string" ? product.partType : null,
+    brand: typeof product.brand === "string" ? product.brand : null,
+    deviceModel:
+      typeof product.deviceModel === "string" ? product.deviceModel : null,
   });
-  const partHref = product.partType
-    ? `/products?partType=${encodeURIComponent(product.partType)}${
-        product.brand ? `&brand=${encodeURIComponent(product.brand)}` : ""
-      }`
-    : null;
+  const partHref =
+    typeof product.partType === "string" && product.partType
+      ? `/products?partType=${encodeURIComponent(product.partType)}${
+          typeof product.brand === "string" && product.brand
+            ? `&brand=${encodeURIComponent(product.brand)}`
+            : ""
+        }`
+      : null;
 
   const breadcrumbs = hubHref
     ? [
@@ -182,11 +178,11 @@ export default async function ProductSlugPage({
         { name: "Parts", href: "/parts" },
         {
           name: partTypeLabel,
-          href: `/parts/${slugifyPathSegment(product.partType)}`,
+          href: `/parts/${slugifyPathSegment(String(product.partType))}`,
         },
         {
           name: String(product.brand),
-          href: `/parts/${slugifyPathSegment(product.partType)}/${slugifyPathSegment(product.brand)}`,
+          href: `/parts/${slugifyPathSegment(String(product.partType))}/${slugifyPathSegment(String(product.brand))}`,
         },
         {
           name: String(product.deviceModel),
@@ -198,7 +194,7 @@ export default async function ProductSlugPage({
         { name: "Home", href: "/" },
         { name: "Products", href: "/products" },
         ...(product.brand && brandHref
-          ? [{ name: product.brand, href: brandHref }]
+          ? [{ name: String(product.brand), href: brandHref }]
           : []),
         ...(product.partType && partHref
           ? [{ name: partTypeLabel, href: partHref }]
@@ -206,18 +202,27 @@ export default async function ProductSlugPage({
         { name: heading, href: productPath(product) },
       ];
 
+  const technician =
+    product.technician && typeof product.technician === "object"
+      ? (product.technician as Record<string, unknown>)
+      : null;
+
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: heading,
     description: buildProductSeoDescription(product),
     image: images.length ? images : undefined,
-    sku: product.modelNumber || String(product._id),
-    mpn: product.modelNumber || undefined,
+    sku:
+      (typeof product.modelNumber === "string" && product.modelNumber) ||
+      String(product._id),
+    mpn:
+      typeof product.modelNumber === "string" ? product.modelNumber : undefined,
     brand: product.brand
-      ? { "@type": "Brand", name: product.brand }
+      ? { "@type": "Brand", name: String(product.brand) }
       : undefined,
-    model: product.deviceModel || undefined,
+    model:
+      typeof product.deviceModel === "string" ? product.deviceModel : undefined,
     category: partTypeLabel,
     itemCondition:
       product.condition === "used"
@@ -227,21 +232,21 @@ export default async function ProductSlugPage({
           : "https://schema.org/NewCondition",
     // Seller ratings belong on the Person/seller node — not AggregateRating on Product
     // (avoids Google rich-result mismatch for marketplace listings).
-    ...(product.technician?._id || product.technician?.id
+    ...(technician?._id || technician?.id
       ? {
           seller: {
             "@type": "Person",
-            name: product.technician?.name || "Seller",
-            url: absoluteUrl(`/u/${product.technician._id || product.technician.id}`),
-            ...(typeof product.technician?.averageRating === "number" &&
-            product.technician.averageRating > 0 &&
-            typeof product.technician?.ratingCount === "number" &&
-            product.technician.ratingCount > 0
+            name: (technician.name as string) || "Seller",
+            url: absoluteUrl(`/u/${technician._id || technician.id}`),
+            ...(typeof technician.averageRating === "number" &&
+            technician.averageRating > 0 &&
+            typeof technician.ratingCount === "number" &&
+            technician.ratingCount > 0
               ? {
                   aggregateRating: {
                     "@type": "AggregateRating",
-                    ratingValue: product.technician.averageRating,
-                    reviewCount: product.technician.ratingCount,
+                    ratingValue: technician.averageRating,
+                    reviewCount: technician.ratingCount,
                     bestRating: 5,
                     worstRating: 1,
                   },
@@ -264,17 +269,17 @@ export default async function ProductSlugPage({
             ? "https://schema.org/RefurbishedCondition"
             : "https://schema.org/NewCondition",
       url: canonicalUrl,
-      seller: product.technician?.name
+      seller: technician?.name
         ? {
             "@type": "Person",
-            name: product.technician.name,
-            ...(product.technician.city
+            name: String(technician.name),
+            ...(technician.city
               ? {
                   address: {
                     "@type": "PostalAddress",
-                    addressLocality: product.technician.city,
-                    ...(product.technician.state
-                      ? { addressRegion: product.technician.state }
+                    addressLocality: String(technician.city),
+                    ...(technician.state
+                      ? { addressRegion: String(technician.state) }
                       : {}),
                     addressCountry: "IN",
                   },
@@ -318,8 +323,12 @@ export default async function ProductSlugPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       <ProductDetail
-        product={product}
-        similarProducts={similarProducts}
+        product={product as unknown as Parameters<typeof ProductDetail>[0]["product"]}
+        similarProducts={
+          similarProducts as unknown as NonNullable<
+            Parameters<typeof ProductDetail>[0]["similarProducts"]
+          >
+        }
         breadcrumbs={breadcrumbs}
       />
     </>

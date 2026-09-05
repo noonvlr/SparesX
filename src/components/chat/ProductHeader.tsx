@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ChatProduct } from "@/types/chat";
 import { Badge } from "@/components/ui/Card";
+import { productPath } from "@/lib/seo/site";
 
 export default function ProductHeader({
   product,
@@ -10,9 +11,7 @@ export default function ProductHeader({
   product?: ChatProduct | string | null;
 }) {
   if (!product || typeof product === "string") return null;
-  const href = product.slug
-    ? `/product/${product.slug}`
-    : `/product/${product._id}`;
+  const href = productPath(product);
   const img = product.images?.[0];
 
   return (

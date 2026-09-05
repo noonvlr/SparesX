@@ -27,7 +27,7 @@ import {
   formatDeviceLabel,
   formatProductHeading,
 } from "@/lib/seo/productMeta";
-import { partsPath } from "@/lib/seo/site";
+import { partsPath, productPath } from "@/lib/seo/site";
 import { authFetch, getCachedUserId, isLoggedInClient, resolveSessionUserId } from "@/lib/auth/clientAuth";
 
 interface Seller {
@@ -1095,7 +1095,7 @@ export default function ProductDetail({
       <AuthPromptSheet
         open={showAuthPrompt}
         onClose={() => setShowAuthPrompt(false)}
-        nextPath={`/product/${product._id}`}
+        nextPath={productPath(product)}
         description={
           authPromptReason === "save"
             ? "Please login or create an account to save this listing for later."
