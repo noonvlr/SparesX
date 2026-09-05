@@ -243,6 +243,17 @@ export default async function HomePage() {
               </Link>
             </div>
 
+            <p className="mt-4 text-sm text-[var(--muted)]">
+              <Link
+                href="/parts"
+                className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+              >
+                Parts
+              </Link>
+              {" — "}
+              browse by type, brand, and model
+            </p>
+
             <HomeMarketplaceStats
               listedCount={listedCount}
               soldCount={soldCount}

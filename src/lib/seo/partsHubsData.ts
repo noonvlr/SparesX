@@ -8,6 +8,15 @@ export const PARTS_HUB_SOFT_LIMIT = 10_000;
 /** Sitemap leaf URL cap (unchanged from prior sitemap behavior). */
 export const PARTS_HUB_SITEMAP_LEAF_LIMIT = 1500;
 
+/** One exact partType × brand × deviceModel bucket from approved products. */
+export type PartsHubRawGroup = {
+  partType: string;
+  brand: string;
+  deviceModel: string;
+  count: number;
+  updatedAt: Date;
+};
+
 export type QualifyingPartsHub = {
   categorySlug: string;
   brandSlug: string;
@@ -45,6 +54,19 @@ export type PartsHubModel = {
   path: string;
 };
 
+export type PartsHubLeafMembership = {
+  path: string;
+  categorySlug: string;
+  brandSlug: string;
+  modelSlug: string;
+  categoryLabel: string;
+  brandLabel: string;
+  modelLabel: string;
+  /** Exact approved-listing count for this URL (sum of matching raw groups). */
+  total: number;
+  rawGroups: PartsHubRawGroup[];
+};
+
 function asDate(value: unknown): Date {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
   if (typeof value === "string" || typeof value === "number") {
@@ -80,11 +102,10 @@ type RawHubRow = {
 };
 
 /**
- * Authoritative SEO hub eligibility (uncached): approved products grouped by
- * partType × brand × deviceModel with at least 2 listings, then merged by
- * slugified URL path (same convention as `partsPath()` / leaf hubs).
+ * All approved partType × brand × deviceModel buckets (any count).
+ * Shared foundation for qualifying hubs (>=2) and leaf membership.
  */
-export async function loadQualifyingPartsHubs(): Promise<QualifyingPartsHub[]> {
+export async function loadRawPartsHubGroups(): Promise<PartsHubRawGroup[]> {
   await connectDB();
 
   const rows = await Product.aggregate<RawHubRow>([
@@ -107,24 +128,50 @@ export async function loadQualifyingPartsHubs(): Promise<QualifyingPartsHub[]> {
         count: { $sum: 1 },
       },
     },
-    { $match: { count: { $gte: 2 } } },
     { $sort: { updatedAt: -1 } },
     { $limit: PARTS_HUB_SOFT_LIMIT },
   ]);
 
-  const byPath = new Map<string, QualifyingPartsHub>();
+  return rows
+    .map((row) => {
+      const partType = String(row._id.partType || "").trim();
+      const brand = String(row._id.brand || "").trim();
+      const deviceModel = String(row._id.deviceModel || "").trim();
+      if (!partType || !brand || !deviceModel) return null;
+      if (
+        !slugifyPathSegment(partType) ||
+        !slugifyPathSegment(brand) ||
+        !slugifyPathSegment(deviceModel)
+      ) {
+        return null;
+      }
+      return {
+        partType,
+        brand,
+        deviceModel,
+        count: row.count,
+        updatedAt: asDate(row.updatedAt),
+      };
+    })
+    .filter((row): row is PartsHubRawGroup => Boolean(row));
+}
 
-  for (const row of rows) {
-    const partType = String(row._id.partType || "").trim();
-    const brand = String(row._id.brand || "").trim();
-    const deviceModel = String(row._id.deviceModel || "").trim();
-    const categorySlug = slugifyPathSegment(partType);
-    const brandSlug = slugifyPathSegment(brand);
-    const modelSlug = slugifyPathSegment(deviceModel);
+/** Merge raw buckets that share a slugified `/parts/...` path. */
+export function mergeRawGroupsByPath(
+  raw: PartsHubRawGroup[],
+): Map<string, QualifyingPartsHub & { rawGroups: PartsHubRawGroup[] }> {
+  const byPath = new Map<
+    string,
+    QualifyingPartsHub & { rawGroups: PartsHubRawGroup[] }
+  >();
+
+  for (const row of raw) {
+    const categorySlug = slugifyPathSegment(row.partType);
+    const brandSlug = slugifyPathSegment(row.brand);
+    const modelSlug = slugifyPathSegment(row.deviceModel);
     if (!categorySlug || !brandSlug || !modelSlug) continue;
 
     const path = `/parts/${categorySlug}/${brandSlug}/${modelSlug}`;
-    const updatedAt = asDate(row.updatedAt);
     const existing = byPath.get(path);
 
     if (!existing) {
@@ -132,28 +179,84 @@ export async function loadQualifyingPartsHubs(): Promise<QualifyingPartsHub[]> {
         categorySlug,
         brandSlug,
         modelSlug,
-        categoryLabel: partType || labelFromSlug(categorySlug),
-        brandLabel: brand || labelFromSlug(brandSlug),
-        modelLabel: deviceModel || labelFromSlug(modelSlug),
+        categoryLabel: row.partType || labelFromSlug(categorySlug),
+        brandLabel: row.brand || labelFromSlug(brandSlug),
+        modelLabel: row.deviceModel || labelFromSlug(modelSlug),
         count: row.count,
-        updatedAt,
+        updatedAt: row.updatedAt,
         path,
+        rawGroups: [row],
       });
       continue;
     }
 
     existing.count += row.count;
-    if (updatedAt.getTime() > existing.updatedAt.getTime()) {
-      existing.updatedAt = updatedAt;
+    existing.rawGroups.push(row);
+    if (row.updatedAt.getTime() > existing.updatedAt.getTime()) {
+      existing.updatedAt = row.updatedAt;
     }
-    existing.categoryLabel = preferLabel(existing.categoryLabel, partType);
-    existing.brandLabel = preferLabel(existing.brandLabel, brand);
-    existing.modelLabel = preferLabel(existing.modelLabel, deviceModel);
+    existing.categoryLabel = preferLabel(existing.categoryLabel, row.partType);
+    existing.brandLabel = preferLabel(existing.brandLabel, row.brand);
+    existing.modelLabel = preferLabel(existing.modelLabel, row.deviceModel);
   }
 
-  return [...byPath.values()].sort(
-    (a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
-  );
+  return byPath;
+}
+
+/**
+ * Authoritative SEO hub eligibility: path-merged raw groups with at least
+ * 2 approved listings (same convention as sitemap leaf inclusion).
+ */
+export function buildQualifyingPartsHubsFromRaw(
+  raw: PartsHubRawGroup[],
+): QualifyingPartsHub[] {
+  return [...mergeRawGroupsByPath(raw).values()]
+    .filter((hub) => hub.count >= 2)
+    .map((hub) => ({
+      categorySlug: hub.categorySlug,
+      brandSlug: hub.brandSlug,
+      modelSlug: hub.modelSlug,
+      categoryLabel: hub.categoryLabel,
+      brandLabel: hub.brandLabel,
+      modelLabel: hub.modelLabel,
+      count: hub.count,
+      updatedAt: hub.updatedAt,
+      path: hub.path,
+    }))
+    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+}
+
+/** @deprecated Prefer buildQualifyingPartsHubsFromRaw(getRaw…). Kept for scripts. */
+export async function loadQualifyingPartsHubs(): Promise<QualifyingPartsHub[]> {
+  return buildQualifyingPartsHubsFromRaw(await loadRawPartsHubGroups());
+}
+
+export function resolvePartsHubLeafMembershipFromRaw(
+  raw: PartsHubRawGroup[],
+  categorySlug: string,
+  brandSlug: string,
+  modelSlug: string,
+): PartsHubLeafMembership | null {
+  const cat = slugifyPathSegment(categorySlug);
+  const brand = slugifyPathSegment(brandSlug);
+  const model = slugifyPathSegment(modelSlug);
+  if (!cat || !brand || !model) return null;
+
+  const path = `/parts/${cat}/${brand}/${model}`;
+  const merged = mergeRawGroupsByPath(raw).get(path);
+  if (!merged) return null;
+
+  return {
+    path: merged.path,
+    categorySlug: merged.categorySlug,
+    brandSlug: merged.brandSlug,
+    modelSlug: merged.modelSlug,
+    categoryLabel: merged.categoryLabel,
+    brandLabel: merged.brandLabel,
+    modelLabel: merged.modelLabel,
+    total: merged.count,
+    rawGroups: merged.rawGroups,
+  };
 }
 
 export function buildPartsHubCategories(

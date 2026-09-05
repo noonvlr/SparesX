@@ -10,7 +10,7 @@ import {
   formatProductHeading,
 } from "@/lib/seo/productMeta";
 import { formatPartTypeLabel } from "@/lib/products/listingTitle";
-import { SITE_NAME, absoluteUrl, partsPath, productPath, productUrl } from "@/lib/seo/site";
+import { SITE_NAME, absoluteUrl, partsPath, productPath, productUrl, slugifyPathSegment } from "@/lib/seo/site";
 
 /** Origin for server-side self-fetch (must be this instance, not the public domain). */
 async function requestOrigin() {
@@ -176,32 +176,35 @@ export default async function ProductSlugPage({
       }`
     : null;
 
-  const breadcrumbs = [
-    { name: "Home", href: "/" },
-    { name: "Products", href: "/products" },
-    ...(hubHref
-      ? [
-          {
-            name: [
-              product.brand,
-              product.deviceModel,
-              formatPartTypeLabel(product.partType),
-            ]
-              .filter(Boolean)
-              .join(" "),
-            href: hubHref,
-          },
-        ]
-      : [
-          ...(product.brand && brandHref
-            ? [{ name: product.brand, href: brandHref }]
-            : []),
-          ...(product.partType && partHref
-            ? [{ name: partTypeLabel, href: partHref }]
-            : []),
-        ]),
-    { name: heading, href: productPath(product) },
-  ];
+  const breadcrumbs = hubHref
+    ? [
+        { name: "Home", href: "/" },
+        { name: "Parts", href: "/parts" },
+        {
+          name: partTypeLabel,
+          href: `/parts/${slugifyPathSegment(product.partType)}`,
+        },
+        {
+          name: String(product.brand),
+          href: `/parts/${slugifyPathSegment(product.partType)}/${slugifyPathSegment(product.brand)}`,
+        },
+        {
+          name: String(product.deviceModel),
+          href: hubHref,
+        },
+        { name: heading, href: productPath(product) },
+      ]
+    : [
+        { name: "Home", href: "/" },
+        { name: "Products", href: "/products" },
+        ...(product.brand && brandHref
+          ? [{ name: product.brand, href: brandHref }]
+          : []),
+        ...(product.partType && partHref
+          ? [{ name: partTypeLabel, href: partHref }]
+          : []),
+        { name: heading, href: productPath(product) },
+      ];
 
   const productSchema = {
     "@context": "https://schema.org",

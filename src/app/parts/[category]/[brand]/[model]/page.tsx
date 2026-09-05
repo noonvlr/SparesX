@@ -7,7 +7,7 @@ import {
 } from "@/components/seo/Breadcrumbs";
 import { EmptyState, PageHeader } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { fetchProductList } from "@/lib/products/listQuery";
+import { loadPartsHubLeafListings } from "@/lib/seo/partsHubs";
 import { slugifyPathSegment } from "@/lib/seo/partsPath";
 import { SITE_NAME, absoluteUrl, productPath } from "@/lib/seo/site";
 
@@ -17,7 +17,7 @@ type Params = {
   params: Promise<{ category: string; brand: string; model: string }>;
 };
 
-/** Decoded, title-cased URL segments for display and metadata. */
+/** Normalize URL segments; display labels prefer hub membership when available. */
 function decodeSegments(raw: {
   category: string;
   brand: string;
@@ -34,9 +34,9 @@ function decodeSegments(raw: {
   const modelSlug = slugifyPathSegment(raw.model);
 
   return {
-    category: titleCase(clean(raw.category)),
-    brand: titleCase(clean(raw.brand)),
-    model: clean(raw.model),
+    categoryFallback: titleCase(clean(raw.category)),
+    brandFallback: titleCase(clean(raw.brand)),
+    modelFallback: clean(raw.model),
     categorySlug,
     brandSlug,
     modelSlug,
@@ -46,33 +46,47 @@ function decodeSegments(raw: {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const raw = await params;
-  const { category, brand, model, path, categorySlug } = decodeSegments(raw);
+  const {
+    categoryFallback,
+    brandFallback,
+    modelFallback,
+    path,
+    categorySlug,
+    brandSlug,
+    modelSlug,
+  } = decodeSegments(raw);
+
+  const { membership, total } = await loadPartsHubLeafListings({
+    categorySlug: categorySlug || raw.category,
+    brandSlug: brandSlug || raw.brand,
+    modelSlug: modelSlug || raw.model,
+    limit: 1,
+  });
+
+  const category = membership?.categoryLabel || categoryFallback;
+  const brand = membership?.brandLabel || brandFallback;
+  const model = membership?.modelLabel || modelFallback;
+  const canonical = membership?.path || path;
 
   const title = `${brand} ${model} ${category} Parts`;
   const description = `Buy ${brand} ${model} ${category.toLowerCase()} spare parts from technicians across India. Compare prices and condition, then contact the seller directly on ${SITE_NAME}.`;
 
-  const { total } = await fetchProductList({
-    partType: categorySlug || raw.category,
-    brand,
-    deviceModel: model,
-  });
-
   return {
     title,
     description,
-    alternates: { canonical: path },
+    alternates: { canonical },
     openGraph: {
       title: `${title} | ${SITE_NAME}`,
       description,
       type: "website",
-      url: path,
+      url: canonical,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${SITE_NAME}`,
       description,
     },
-    // Empty or single-listing hubs are thin doorway pages — keep out of the index.
+    // Indexability matches hub aggregation (>=2 exact approved listings on this path).
     robots: { index: total >= 2, follow: true },
   };
 }
@@ -80,29 +94,37 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 export default async function PartsModelPage({ params }: Params) {
   const raw = await params;
   const {
-    category,
-    brand,
-    model,
+    categoryFallback,
+    brandFallback,
+    modelFallback,
     path,
     categorySlug,
     brandSlug,
+    modelSlug,
   } = decodeSegments(raw);
 
-  const { products, total } = await fetchProductList({
-    partType: categorySlug || raw.category,
-    brand,
-    deviceModel: model,
-    limit: "24",
+  const { membership, products, total } = await loadPartsHubLeafListings({
+    categorySlug: categorySlug || raw.category,
+    brandSlug: brandSlug || raw.brand,
+    modelSlug: modelSlug || raw.model,
+    limit: 24,
   });
 
-  const categoryHref = `/parts/${categorySlug || raw.category}`;
-  const brandHref = `${categoryHref}/${brandSlug || raw.brand}`;
+  const category = membership?.categoryLabel || categoryFallback;
+  const brand = membership?.brandLabel || brandFallback;
+  const model = membership?.modelLabel || modelFallback;
+  const canonicalPath = membership?.path || path;
+  const resolvedCategorySlug = membership?.categorySlug || categorySlug || raw.category;
+  const resolvedBrandSlug = membership?.brandSlug || brandSlug || raw.brand;
+
+  const categoryHref = `/parts/${resolvedCategorySlug}`;
+  const brandHref = `${categoryHref}/${resolvedBrandSlug}`;
 
   const jsonLdCrumbs = [
     { name: "Parts", href: "/parts" },
     { name: category, href: categoryHref },
     { name: brand, href: brandHref },
-    { name: model, href: path },
+    { name: model, href: canonicalPath },
   ];
 
   const itemListSchema = {
@@ -185,7 +207,7 @@ export default async function PartsModelPage({ params }: Params) {
               {brand} {model} listings
             </Link>
             <Link
-              href={`/products?partType=${encodeURIComponent(categorySlug || raw.category)}`}
+              href={`/products?partType=${encodeURIComponent(resolvedCategorySlug)}`}
               className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
             >
               Browse {category.toLowerCase()}

@@ -67,7 +67,7 @@ const faqs = [
   {
     question: "Can I edit or delete a listing after posting it?",
     answer:
-      "Yes, you can edit details or remove a listing at any time from your seller dashboard.",
+      "Yes, you can edit details or remove a listing at any time from your technician dashboard.",
   },
   {
     question: "What happens if I sell a part outside SparesX?",
