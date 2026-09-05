@@ -16,7 +16,7 @@ Generated from the App Router (`src/app`). Dynamic SEO sitemap (crawlable public
 | `/faq` | FAQ |
 | `/trust-score` | Trust score explained |
 | `/guidelines` | Community guidelines |
-| `/seller-guidelines` | Seller guidelines |
+| `/technician-guidelines` | Technician guidelines |
 | `/prohibited-items` | Prohibited items |
 | `/disputes` | Dispute policy |
 | `/refund` | Refund policy |
@@ -38,8 +38,8 @@ Generated from the App Router (`src/app`). Dynamic SEO sitemap (crawlable public
 | `/products` | Browse / search listings |
 | `/product/[slug]` | Listing detail |
 | `/parts/[category]/[brand]/[model]` | Parts hub by category/brand/model |
-| `/sellers` | Seller directory |
-| `/u/[id]` | Public seller / user profile |
+| `/technicians` | Technician directory |
+| `/u/[id]` | Public technician / user profile |
 | `/requests` | Open part requests board |
 | `/requests/mine` | My requests (auth) |
 
@@ -109,7 +109,7 @@ Canonical seller/technician UI: `/technician/*` (see section 4).
 | `/admin/site-settings` | SMS / site config |
 | `/admin/updates` | Site updates (dashboard feed) |
 | `/admin/users` | User management |
-| `/admin/technicians` | Technicians |
+| `/admin/technicians` | Permanent redirect → `/admin/users` |
 | `/admin/listings` | Listings moderation |
 | `/admin/products` | Products |
 | `/admin/requests` | Requests moderation |
@@ -136,7 +136,7 @@ Canonical seller/technician UI: `/technician/*` (see section 4).
 
 ### Included in `/sitemap.xml` (crawlable)
 
-Static: `/`, `/products`, `/requests`, `/sellers`, `/support`, `/how-it-works`, `/about`, `/faq`, `/trust-score`, `/seller-guidelines`, `/guidelines`, `/prohibited-items`, `/disputes`, `/refund`, `/report-abuse`, `/terms`, `/privacy`
+Static: `/`, `/products`, `/requests`, `/technicians`, `/support`, `/how-it-works`, `/about`, `/faq`, `/trust-score`, `/technician-guidelines`, `/guidelines`, `/prohibited-items`, `/disputes`, `/refund`, `/report-abuse`, `/terms`, `/privacy`
 
 Dynamic (from DB): `/product/[slug]`, `/parts/[category]/[brand]/[model]` (hubs with ≥2 listings), `/u/[id]` (active sellers)
 
@@ -184,7 +184,7 @@ Auth, admin, and dashboard URLs are **not** in the SEO sitemap.
 | `/api/device-management/part-categories/[id]/disable` | Disable category |
 | `/api/conditions` | Conditions list |
 | `/api/cities` | Cities |
-| `/api/sellers` | Sellers directory API |
+| `/api/sellers` | Technician directory API (legacy path name; response `{ sellers }`) |
 | `/api/users/[id]/public` | Public profile API |
 | `/api/upload` | Image upload |
 | `/api/ratings` | Seller ratings |

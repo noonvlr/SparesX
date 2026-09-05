@@ -790,7 +790,7 @@ export default function ProductDetail({
             {/* Seller + contact */}
             <Card className="p-5 sm:p-7">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <h2 className="text-lg font-semibold text-[var(--ink)]">Seller</h2>
+                <h2 className="text-lg font-semibold text-[var(--ink)]">Technician</h2>
                 {!isOwner && seller && (
                   <button
                     type="button"
@@ -892,7 +892,7 @@ export default function ProductDetail({
                   ) : null}
                 </div>
               ) : (
-                <p className="text-sm text-[var(--muted)]">Seller details unavailable.</p>
+                <p className="text-sm text-[var(--muted)]">Technician details unavailable.</p>
               )}
 
               {!isLoggedIn && !isOwner && (

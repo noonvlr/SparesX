@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Trust Score Explained | SparesX",
     description:
-      "Learn how SparesX calculates trust scores and what badges mean for sellers.",
+      "Learn how SparesX calculates trust scores and what badges mean for technicians.",
     type: "website",
   },
 };
@@ -53,8 +53,8 @@ export default function TrustScorePage() {
             Every SparesX account has a Trust Score from{" "}
             <strong className="text-[var(--ink)]">0 to 100</strong>. It is
             calculated automatically from verification, marketplace activity,
-            and ratings — so buyers can judge sellers at a glance, and sellers
-            know what to improve.
+            and ratings — so buyers can judge technicians at a glance, and
+            technicians know what to improve.
           </p>
         </header>
 
@@ -163,7 +163,7 @@ export default function TrustScorePage() {
           <p className="text-sm text-[var(--muted)] leading-relaxed">
             After a mutual in-app chat with a seller, buyers can rate overall
             experience, behaviour, and response. Those reviews update the
-            seller&apos;s average rating, which feeds the Trust Score and can
+            technician&apos;s average rating, which feeds the Trust Score and can
             unlock reputation badges over time.
           </p>
           <p className="text-sm text-[var(--muted)] leading-relaxed">
@@ -200,10 +200,10 @@ export default function TrustScorePage() {
             Complete verification
           </Link>
           <Link
-            href="/sellers"
+            href="/technicians"
             className="inline-flex px-5 py-2.5 rounded-[var(--radius)] border border-[var(--border-strong)] text-[var(--ink)] text-sm font-semibold hover:bg-[var(--surface-2)]"
           >
-            Browse sellers
+            Browse technicians
           </Link>
           <Link
             href="/how-it-works"

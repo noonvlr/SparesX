@@ -2,20 +2,21 @@ import type { Metadata } from "next";
 import LegalPage from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Seller Guidelines",
-  description: "Listing standards and communication expectations for SparesX sellers.",
-  alternates: { canonical: "/seller-guidelines" },
+  title: "Technician Guidelines",
+  description:
+    "Listing standards and communication expectations for SparesX technicians.",
+  alternates: { canonical: "/technician-guidelines" },
   robots: { index: true, follow: true },
 };
 
-export default function SellerGuidelinesPage() {
+export default function TechnicianGuidelinesPage() {
   return (
-    <LegalPage title="Seller Guidelines" updated="3 August 2026">
+    <LegalPage title="Technician Guidelines" updated="3 August 2026">
       <section>
         <h2 className="text-xl font-bold text-[var(--ink)] mb-2">
-          Seller Expectations
+          Technician Expectations
         </h2>
-        <p>Sellers on SparesX are expected to:</p>
+        <p>Technicians on SparesX are expected to:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1">
           <li>Use clear, accurate titles, prices, and condition labels</li>
           <li>Upload genuine photographs of the actual item being sold</li>
@@ -38,7 +39,7 @@ export default function SellerGuidelinesPage() {
       <section>
         <h2 className="text-xl font-bold text-[var(--ink)] mb-2">Eligibility</h2>
         <p>
-          Any individual or business located in India may register and sell on
+          Any individual or business located in India may register and list on
           SparesX, subject to these Guidelines, the Terms of Service, and
           applicable Indian law.
         </p>

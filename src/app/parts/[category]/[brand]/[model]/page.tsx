@@ -157,7 +157,7 @@ export default async function PartsPage({ params }: Params) {
           </p>
           <p>
             Looking for {category.toLowerCase()} parts for the {brand} {model}?
-            Compare listings below, then check each seller&apos;s trust score and
+            Compare listings below, then check each technician&apos;s trust score and
             verification badges before you reach out. If nobody has the part you
             need yet,{" "}
             <Link
@@ -166,7 +166,7 @@ export default async function PartsPage({ params }: Params) {
             >
               post a part request
             </Link>{" "}
-            and sellers will come to you.
+            and technicians will come to you.
           </p>
           <nav
             aria-label="Related searches"
@@ -191,10 +191,10 @@ export default async function PartsPage({ params }: Params) {
               Browse {category.toLowerCase()}
             </Link>
             <Link
-              href="/sellers"
+              href="/technicians"
               className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
             >
-              Find sellers
+              Find technicians
             </Link>
           </nav>
         </div>
@@ -203,7 +203,7 @@ export default async function PartsPage({ params }: Params) {
           <EmptyState
             className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)]"
             title="No listings for this model yet"
-            description="Post a request and matching sellers can contact you when they have the part."
+            description="Post a request and matching technicians can contact you when they have the part."
             action={
               <Link
                 href="/requests?tab=submit"

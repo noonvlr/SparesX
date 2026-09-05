@@ -52,12 +52,15 @@ PUBLIC:
 - /parts/[category]/[brand]/[model]
 - /product/[slug]
 - /requests
-- /sellers
+- /technicians
+- /technician-guidelines
 - /how-it-works
 - /about
 - /faq
 - /login
 - /register
+
+Legacy public redirects (see `next.config.ts`): `/sellers` → `/technicians`, `/seller-guidelines` → `/technician-guidelines`.
 
 BUYER DASHBOARD:
 

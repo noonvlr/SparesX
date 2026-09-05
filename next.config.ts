@@ -126,6 +126,22 @@ const nextConfig: NextConfig = {
         destination: "/technician/profile",
         permanent: true,
       },
+      // Phase 2 — public "seller" routes → technician terminology
+      {
+        source: "/sellers",
+        destination: "/technicians",
+        permanent: true,
+      },
+      {
+        source: "/seller-guidelines",
+        destination: "/technician-guidelines",
+        permanent: true,
+      },
+      {
+        source: "/admin/technicians",
+        destination: "/admin/users",
+        permanent: true,
+      },
       // www is canonical. Explicit 308 so Google treats this as permanent
       // (Vercel’s Domains UI redirect is a 307 and does not pass ranking).
       {

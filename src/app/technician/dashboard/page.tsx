@@ -94,7 +94,7 @@ export default function TechnicianDashboard() {
   return (
     <DashboardPage
       title="Technician Dashboard"
-      description="Manage your spare part listings and seller profile."
+      description="Manage your spare part listings and profile."
     >
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
         {QUICK_LINKS.map((item) => (

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     absolute: "SparesX – Buy & Sell Mobile Spare Parts Online",
   },
   description:
-    "SparesX is a B2B marketplace for mobile repair technicians to list, find, and request spare parts. Browse listings, check trust scores and badges, and connect directly with sellers — SparesX does not process payments.",
+    "SparesX is a B2B marketplace for mobile repair technicians to list, find, and request spare parts. Browse listings, check trust scores and badges, and connect directly with technicians — SparesX does not process payments.",
   keywords: [
     "mobile spare parts",
     "technician marketplace",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SparesX – Buy & Sell Mobile Spare Parts Online",
     description:
-      "Marketplace for technicians: listings, trust scores, and direct seller connections.",
+      "Marketplace for technicians: listings, trust scores, and direct technician connections.",
     images: ["/og-image.jpg"],
   },
   alternates: {
@@ -158,7 +158,7 @@ export default async function HomePage() {
     url: baseUrl,
     logo: `${baseUrl}/icon-512.png`,
     description:
-      "Marketplace connecting buyers and sellers of mobile, laptop, and desktop spare parts across India. SparesX does not sell parts or process payments.",
+      "Marketplace connecting buyers and technicians of mobile, laptop, and desktop spare parts across India. SparesX does not sell parts or process payments.",
     areaServed: {
       "@type": "Country",
       name: "India",

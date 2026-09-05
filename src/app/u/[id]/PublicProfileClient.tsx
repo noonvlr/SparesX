@@ -117,8 +117,8 @@ export default function PublicProfileClient({
         title="Profile not found"
         description={error || "This user is unavailable."}
         action={
-          <Link href="/sellers" className={buttonVariants({ variant: "primary" })}>
-            Browse sellers
+          <Link href="/technicians" className={buttonVariants({ variant: "primary" })}>
+            Browse technicians
           </Link>
         }
       />
@@ -170,7 +170,7 @@ export default function PublicProfileClient({
                   {profile.name}
                 </h1>
                 <p className="text-sm text-[var(--muted)] mt-1 capitalize">
-                  {profile.role === "admin" ? "Administrator" : "Seller on SparesX"}
+                  {profile.role === "admin" ? "Administrator" : "Technician on SparesX"}
                   {profile.createdAt
                     ? ` · Joined ${new Date(profile.createdAt).toLocaleDateString(
                         "en-IN",

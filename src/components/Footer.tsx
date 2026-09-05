@@ -22,9 +22,9 @@ export default function Footer() {
             <BrandMark size="md" tone="onDark" />
             <p className="mt-4 text-sm leading-relaxed text-[var(--footer-muted)] max-w-sm">
               A dedicated marketplace for mobile spare parts in India, built for
-              technicians. Every listing is tied to a seller&apos;s Trust Score.
-              SparesX connects buyers and sellers directly — organized listing,
-              no middleman.
+              technicians. Every listing is tied to a technician&apos;s Trust
+              Score. SparesX connects buyers and technicians directly —
+              organized listing, no middleman.
             </p>
           </div>
 
@@ -42,8 +42,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/sellers" className={linkClass}>
-                  Sellers
+                <Link href="/technicians" className={linkClass}>
+                  Technicians
                 </Link>
               </li>
               <li>
@@ -112,8 +112,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/seller-guidelines" className={linkClass}>
-                  Seller Guidelines
+                <Link href="/technician-guidelines" className={linkClass}>
+                  Technician Guidelines
                 </Link>
               </li>
               <li>

@@ -19,7 +19,7 @@ export default function HomeMarketplaceStats({
     return (
       <div className="mt-10 sm:mt-12 mx-auto max-w-lg rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-6 sm:py-6 text-center shadow-[var(--shadow-sm)]">
         <p className="text-sm font-semibold text-[var(--ink)]">
-          Be one of the first sellers on SparesX
+          Be one of the first technicians on SparesX
         </p>
         <p className="mt-1.5 text-sm text-[var(--muted)] leading-relaxed">
           List a spare part or request what you need — help build the technician

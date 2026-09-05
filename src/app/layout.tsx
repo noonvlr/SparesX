@@ -26,13 +26,13 @@ export const metadata: Metadata = {
     template: "%s | SparesX",
   },
   description:
-    "Marketplace for mobile repair technicians to list, find, and request spare parts. Verified listings, trust scores, and direct connections with sellers.",
+    "Marketplace for mobile repair technicians to list, find, and request spare parts. Verified listings, trust scores, and direct connections with technicians.",
   keywords: [
     "mobile spare parts",
     "technician marketplace",
     "phone parts",
     "mobile repair",
-    "spare parts seller",
+    "spare parts technician",
   ],
   authors: [{ name: "SparesX Team" }],
   // Do NOT set alternates.canonical here — Next merges it onto every child
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SparesX – Mobile Spare Parts Marketplace",
     description:
-      "Verified technician listings, trust scores, and direct seller connections for mobile spare parts.",
+      "Verified technician listings, trust scores, and direct technician connections for mobile spare parts.",
   },
   robots: {
     index: true,

@@ -5,11 +5,11 @@ import { useEffect, useState } from "react";
 import { isLoggedInClient } from "@/lib/auth/clientAuth";
 
 /**
- * "Become a seller" — register if logged out, add-product if logged in.
+ * "Become a technician" — register if logged out, add-product if logged in.
  */
 export default function BecomeSellerLink({
   className,
-  children = "Become a seller",
+  children = "Become a technician",
 }: {
   className?: string;
   children?: React.ReactNode;

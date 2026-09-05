@@ -24,7 +24,9 @@
 ### Marketplace
 
 - **`/requests`** - View/create spare part requests
-- **`/sellers`** - Browse technicians (phone-verified / trusted badges where set)
+- **`/technicians`** - Browse technicians (phone-verified / trusted badges where set)
+- **`/technician-guidelines`** - Listing standards for technicians
+- Legacy: `/sellers` and `/seller-guidelines` permanently redirect to the routes above
 
 ---
 
@@ -79,7 +81,7 @@ Most `/dashboard/buyer/*` routes **redirect** into the technician hub or saved p
 ### User Management
 
 - **`/admin/users`** - Users + verification flags (primary)
-- **`/admin/technicians`**, **`/admin/verification`** - Redirects into users
+- **`/admin/technicians`**, **`/admin/verification`** - Permanent / soft redirects into `/admin/users`
 
 ### Safety / ops
 
