@@ -10,7 +10,11 @@ import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
-import { buildBugThanksMessage } from "@/lib/updates/format";
+import {
+  buildBugThanksMessage,
+  BUG_THANKS_POINT_OPTIONS,
+  DEFAULT_BUG_THANKS_POINTS,
+} from "@/lib/updates/format";
 
 type UpdateRow = {
   _id: string;
@@ -18,6 +22,7 @@ type UpdateRow = {
   kind: string;
   message: string;
   mentionedName?: string;
+  rewardPoints?: number;
   isPublished: boolean;
   line: string;
 };
@@ -50,8 +55,14 @@ const DEFAULT_PLACEHOLDERS: Record<string, string> = {
   notice: "Scheduled maintenance this Sunday 2–4 AM IST.",
   feature: "Request browse filters now follow live demand categories.",
   fix: "Fixed model add Forbidden error for sellers.",
-  bug_thanks: "Thanks {name} for reporting a bug. Now fixed — +5 trust score awarded.",
+  bug_thanks:
+    "Thanks {name} for reporting a bug. Now fixed — +5 trust score awarded.",
 };
+
+const REWARD_OPTIONS = BUG_THANKS_POINT_OPTIONS.map((pts) => ({
+  value: String(pts),
+  label: pts === 0 ? "No reward" : `+${pts} trust points`,
+}));
 
 function isDefaultBugThanks(text: string): boolean {
   const t = text.trim().toLowerCase();
@@ -78,6 +89,7 @@ export default function AdminUpdatesPage() {
   const [kind, setKind] = useState("notice");
   const [body, setBody] = useState("");
   const [publishedAt, setPublishedAt] = useState("");
+  const [rewardPoints, setRewardPoints] = useState(DEFAULT_BUG_THANKS_POINTS);
   const [flash, setFlash] = useState("");
 
   const load = useCallback(async () => {
@@ -144,8 +156,18 @@ export default function AdminUpdatesPage() {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  function applyBugThanksTemplate(name?: string) {
-    setBody(buildBugThanksMessage(name || "a community member"));
+  function applyBugThanksTemplate(name?: string, points = rewardPoints) {
+    setBody(buildBugThanksMessage(name || "a community member", undefined, points));
+  }
+
+  function onRewardPointsChange(next: number) {
+    setRewardPoints(next);
+    if (kind === "bug_thanks" && isDefaultBugThanks(body)) {
+      applyBugThanksTemplate(
+        selectedUser?.name || selectedUser?.email,
+        next,
+      );
+    }
   }
 
   function onKindChange(next: string) {
@@ -199,6 +221,7 @@ export default function AdminUpdatesPage() {
           publishedAt: publishedAt || undefined,
           mentionedUserId: selectedUser?._id || undefined,
           mentionedName: selectedUser?.name || undefined,
+          rewardPoints: kind === "bug_thanks" ? rewardPoints : undefined,
           isPublished: true,
         }),
       });
@@ -210,6 +233,7 @@ export default function AdminUpdatesPage() {
       setBody("");
       setPublishedAt("");
       setKind("notice");
+      setRewardPoints(DEFAULT_BUG_THANKS_POINTS);
       clearSelectedUser();
       setFlash("Update published — it will show on user dashboards.");
       await load();
@@ -478,6 +502,28 @@ export default function AdminUpdatesPage() {
             </div>
           </Field>
 
+          {kind === "bug_thanks" && (
+            <Field
+              label="Reward points"
+              htmlFor="update-reward"
+              hint="Added to the reporter’s trust score when published."
+            >
+              <Select
+                id="update-reward"
+                value={String(rewardPoints)}
+                onChange={(e) =>
+                  onRewardPointsChange(Number(e.target.value))
+                }
+              >
+                {REWARD_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
+
           <Field
             label="Message"
             htmlFor="update-body"
@@ -497,7 +543,9 @@ export default function AdminUpdatesPage() {
               type="button"
               size="sm"
               variant="secondary"
-              onClick={() => applyBugThanksTemplate(selectedUser?.name)}
+              onClick={() =>
+                applyBugThanksTemplate(selectedUser?.name || selectedUser?.email)
+              }
             >
               Use default bug-thanks message
             </Button>
@@ -544,6 +592,11 @@ export default function AdminUpdatesPage() {
                     <span className="text-xs text-[var(--muted)] uppercase tracking-wide">
                       {row.kind.replace(/_/g, " ")}
                     </span>
+                    {row.kind === "bug_thanks" &&
+                    typeof row.rewardPoints === "number" &&
+                    row.rewardPoints > 0 ? (
+                      <Badge tone="success">+{row.rewardPoints} pts</Badge>
+                    ) : null}
                   </div>
                   <p className="text-sm text-[var(--ink)] leading-relaxed">
                     {row.line}

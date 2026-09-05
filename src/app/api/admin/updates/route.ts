@@ -8,7 +8,8 @@ import {
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import {
   buildBugThanksMessage,
-  BUG_THANKS_POINTS,
+  DEFAULT_BUG_THANKS_POINTS,
+  normalizeBugThanksPoints,
   serializeSiteUpdate,
 } from "@/lib/updates/format";
 import { SupportRequest } from "@/lib/models/SupportRequest";
@@ -57,6 +58,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     await connectDB();
 
+    const rewardPoints = normalizeBugThanksPoints(
+      body.rewardPoints ?? DEFAULT_BUG_THANKS_POINTS,
+    );
+
     // Shortcut: post thanks from a support bug case
     if (body.fromCaseId) {
       const caseId = String(body.fromCaseId);
@@ -95,7 +100,7 @@ export async function POST(req: NextRequest) {
       const message =
         typeof body.message === "string" && body.message.trim()
           ? body.message.trim().slice(0, 400)
-          : buildBugThanksMessage(name, ticket.subject);
+          : buildBugThanksMessage(name, ticket.subject, rewardPoints);
 
       const doc = await SiteUpdate.create({
         publishedAt: body.publishedAt
@@ -106,18 +111,27 @@ export async function POST(req: NextRequest) {
         mentionedName: name.slice(0, 80),
         mentionedUser: ticket.user,
         relatedCase: ticket._id,
+        rewardPoints,
         isPublished: body.isPublished !== false,
         createdBy: admin.id,
       });
 
       if (doc.isPublished && ticket.user) {
+        const notifyBody =
+          rewardPoints > 0
+            ? `${message.slice(0, 360)} (+${rewardPoints} trust score)`
+            : message.slice(0, 400);
         void createNotification({
           userId: String(ticket.user),
           type: "system",
           title: "Thank you for your bug report",
-          body: `${message.slice(0, 360)} (+${BUG_THANKS_POINTS} trust score)`,
+          body: notifyBody,
           href: "/technician/dashboard",
-          meta: { siteUpdateId: String(doc._id), caseId },
+          meta: {
+            siteUpdateId: String(doc._id),
+            caseId,
+            rewardPoints,
+          },
         });
         void awardBugThanksPoints({
           siteUpdateId: String(doc._id),
@@ -178,24 +192,31 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const storedRewardPoints = kind === "bug_thanks" ? rewardPoints : 0;
+
     const doc = await SiteUpdate.create({
       publishedAt,
       kind,
       message,
       mentionedName,
       mentionedUser: mentionedUserId || undefined,
+      rewardPoints: storedRewardPoints,
       isPublished: body.isPublished !== false,
       createdBy: admin.id,
     });
 
     if (doc.isPublished && mentionedUserId && kind === "bug_thanks") {
+      const notifyBody =
+        storedRewardPoints > 0
+          ? `${message.slice(0, 360)} (+${storedRewardPoints} trust score)`
+          : message.slice(0, 400);
       void createNotification({
         userId: mentionedUserId,
         type: "system",
         title: "Thank you for your bug report",
-        body: `${message.slice(0, 360)} (+${BUG_THANKS_POINTS} trust score)`,
+        body: notifyBody,
         href: "/technician/dashboard",
-        meta: { siteUpdateId: String(doc._id) },
+        meta: { siteUpdateId: String(doc._id), rewardPoints: storedRewardPoints },
       });
       void awardBugThanksPoints({
         siteUpdateId: String(doc._id),

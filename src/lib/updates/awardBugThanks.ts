@@ -1,10 +1,14 @@
 import { SiteUpdate } from "@/lib/models/SiteUpdate";
 import { User } from "@/lib/models/User";
 import { recomputeUserBadges } from "@/lib/badges/engine";
-import { BUG_THANKS_POINTS } from "@/lib/updates/format";
+import {
+  DEFAULT_BUG_THANKS_POINTS,
+  normalizeBugThanksPoints,
+} from "@/lib/updates/format";
 
 /**
- * Grant +BUG_THANKS_POINTS trust score once per published bug_thanks update.
+ * Grant trust points once per published bug_thanks update.
+ * Amount comes from SiteUpdate.rewardPoints (falls back to default).
  * Idempotent via SiteUpdate.pointsAwarded.
  */
 export async function awardBugThanksPoints(opts: {
@@ -24,13 +28,21 @@ export async function awardBugThanksPoints(opts: {
   );
   if (!update) return false;
 
-  await User.findByIdAndUpdate(opts.userId, {
-    $inc: { bugThanksPoints: BUG_THANKS_POINTS },
-  });
-  try {
-    await recomputeUserBadges(opts.userId);
-  } catch (err) {
-    console.warn("[bugThanks] recompute badges failed:", err);
+  const points = normalizeBugThanksPoints(
+    typeof update.rewardPoints === "number"
+      ? update.rewardPoints
+      : DEFAULT_BUG_THANKS_POINTS,
+  );
+
+  if (points > 0) {
+    await User.findByIdAndUpdate(opts.userId, {
+      $inc: { bugThanksPoints: points },
+    });
+    try {
+      await recomputeUserBadges(opts.userId);
+    } catch (err) {
+      console.warn("[bugThanks] recompute badges failed:", err);
+    }
   }
   return true;
 }

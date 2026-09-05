@@ -13,6 +13,10 @@ import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
 import UploadedImage from "@/components/ui/UploadedImage";
+import {
+  BUG_THANKS_POINT_OPTIONS,
+  DEFAULT_BUG_THANKS_POINTS,
+} from "@/lib/updates/format";
 
 const STATUS_OPTIONS = [
   { value: "open", label: "Open" },
@@ -21,6 +25,11 @@ const STATUS_OPTIONS = [
   { value: "resolved", label: "Resolved" },
   { value: "closed", label: "Closed" },
 ];
+
+const REWARD_OPTIONS = BUG_THANKS_POINT_OPTIONS.map((pts) => ({
+  value: String(pts),
+  label: pts === 0 ? "No reward" : `+${pts} trust points`,
+}));
 
 export default function AdminSupportCasePage() {
   const params = useParams<{ id: string }>();
@@ -34,6 +43,9 @@ export default function AdminSupportCasePage() {
   const [admins, setAdmins] = useState<{ _id: string; name: string }[]>([]);
   const [postingThanks, setPostingThanks] = useState(false);
   const [thanksFlash, setThanksFlash] = useState("");
+  const [thanksRewardPoints, setThanksRewardPoints] = useState(
+    DEFAULT_BUG_THANKS_POINTS,
+  );
 
   async function load() {
     setLoading(true);
@@ -115,7 +127,10 @@ export default function AdminSupportCasePage() {
       const res = await authFetch("/api/admin/updates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fromCaseId: params.id }),
+        body: JSON.stringify({
+          fromCaseId: params.id,
+          rewardPoints: thanksRewardPoints,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -470,15 +485,38 @@ export default function AdminSupportCasePage() {
                 </Button>
               )}
               {(ticket.type === "bug" || ticket.type === "technical") && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={postingThanks || saving}
-                  loading={postingThanks}
-                  onClick={() => void postThanks()}
-                >
-                  Post thanks to Updates
-                </Button>
+                <div className="space-y-2 w-full">
+                  <Field
+                    label="Thanks reward"
+                    htmlFor="thanks-reward"
+                    hint="Trust points granted with the public thanks update"
+                  >
+                    <Select
+                      id="thanks-reward"
+                      value={String(thanksRewardPoints)}
+                      onChange={(e) =>
+                        setThanksRewardPoints(Number(e.target.value))
+                      }
+                      disabled={postingThanks || saving}
+                    >
+                      {REWARD_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={postingThanks || saving}
+                    loading={postingThanks}
+                    onClick={() => void postThanks()}
+                    className="w-full"
+                  >
+                    Post thanks to Updates
+                  </Button>
+                </div>
               )}
             </div>
             {thanksFlash ? (

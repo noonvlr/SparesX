@@ -24,7 +24,9 @@ export interface ISiteUpdate extends Document {
   mentionedUser?: Types.ObjectId;
   relatedCase?: Types.ObjectId;
   isPublished: boolean;
-  /** True after +5 trust points were granted to mentionedUser */
+  /** Trust points granted with this bug_thanks (0 = none) */
+  rewardPoints?: number;
+  /** True after rewardPoints were applied to mentionedUser */
   pointsAwarded: boolean;
   createdBy?: Types.ObjectId;
   createdAt: Date;
@@ -50,6 +52,7 @@ const SiteUpdateSchema: Schema<ISiteUpdate> = new Schema(
       index: true,
     },
     isPublished: { type: Boolean, default: true, index: true },
+    rewardPoints: { type: Number, default: 0, min: 0, max: 25 },
     pointsAwarded: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

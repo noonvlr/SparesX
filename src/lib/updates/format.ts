@@ -35,14 +35,40 @@ export function formatUpdateLine(update: {
   return `${date} · ${label} — ${update.message.trim()}`;
 }
 
-export const BUG_THANKS_POINTS = 5;
+export const DEFAULT_BUG_THANKS_POINTS = 5;
 
-export function buildBugThanksMessage(name: string, subject?: string): string {
+/** Allowed trust reward amounts when publishing bug thanks. */
+export const BUG_THANKS_POINT_OPTIONS = [0, 5, 10, 15, 20, 25] as const;
+
+/** @deprecated use DEFAULT_BUG_THANKS_POINTS */
+export const BUG_THANKS_POINTS = DEFAULT_BUG_THANKS_POINTS;
+
+export function normalizeBugThanksPoints(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return DEFAULT_BUG_THANKS_POINTS;
+  const rounded = Math.round(n);
+  if (
+    (BUG_THANKS_POINT_OPTIONS as readonly number[]).includes(rounded)
+  ) {
+    return rounded;
+  }
+  return Math.max(0, Math.min(25, rounded));
+}
+
+export function buildBugThanksMessage(
+  name: string,
+  subject?: string,
+  points: number = DEFAULT_BUG_THANKS_POINTS,
+): string {
   const who = name.trim() || "a community member";
   const topic = subject?.trim()
     ? ` for reporting “${subject.trim().slice(0, 80)}”`
     : " for reporting a bug";
-  return `Thanks ${who}${topic}. Now fixed — +${BUG_THANKS_POINTS} trust score awarded.`;
+  const pts = normalizeBugThanksPoints(points);
+  if (pts > 0) {
+    return `Thanks ${who}${topic}. Now fixed — +${pts} trust score awarded.`;
+  }
+  return `Thanks ${who}${topic}. Now fixed.`;
 }
 
 export function serializeSiteUpdate(doc: {
@@ -54,9 +80,15 @@ export function serializeSiteUpdate(doc: {
   mentionedUser?: unknown;
   relatedCase?: unknown;
   isPublished?: unknown;
+  rewardPoints?: unknown;
+  pointsAwarded?: unknown;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }) {
+  const rewardPoints =
+    typeof doc.rewardPoints === "number" && Number.isFinite(doc.rewardPoints)
+      ? doc.rewardPoints
+      : undefined;
   return {
     _id: String(doc._id),
     publishedAt:
@@ -68,6 +100,8 @@ export function serializeSiteUpdate(doc: {
     mentionedName: doc.mentionedName || undefined,
     mentionedUserId: doc.mentionedUser ? String(doc.mentionedUser) : undefined,
     relatedCaseId: doc.relatedCase ? String(doc.relatedCase) : undefined,
+    rewardPoints,
+    pointsAwarded: doc.pointsAwarded === true,
     isPublished: doc.isPublished !== false,
     line: formatUpdateLine({
       publishedAt: doc.publishedAt || new Date(),
