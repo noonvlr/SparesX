@@ -3,7 +3,12 @@ import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
 import { SITE_URL } from "@/lib/seo/site";
-import { slugifyPathSegment } from "@/lib/seo/partsPath";
+import {
+  PARTS_HUB_SITEMAP_LEAF_LIMIT,
+  getPartsHubCategories,
+  getQualifyingPartsHubs,
+  getPartsHubLeavesForSitemap,
+} from "@/lib/seo/partsHubs";
 
 /** Rebuild hourly — avoids sticky failed prerenders and keeps crawl data fresh. */
 export const revalidate = 3600;
@@ -12,7 +17,6 @@ export const revalidate = 3600;
 export const maxDuration = 60;
 
 const PRODUCT_LIMIT = 5000;
-const PARTS_HUB_LIMIT = 1500;
 const SELLER_LIMIT = 2000;
 /** Abort slow Mongo work so the route still returns static URLs. */
 const DB_BUDGET_MS = 20_000;
@@ -20,6 +24,7 @@ const DB_BUDGET_MS = 20_000;
 const staticRoutes = [
   { path: "", priority: 1.0, changeFrequency: "daily" as const },
   { path: "/products", priority: 0.9, changeFrequency: "daily" as const },
+  { path: "/parts", priority: 0.85, changeFrequency: "daily" as const },
   { path: "/requests", priority: 0.8, changeFrequency: "daily" as const },
   { path: "/technicians", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/support", priority: 0.5, changeFrequency: "monthly" as const },
@@ -122,51 +127,56 @@ async function loadProductEntries(): Promise<MetadataRoute.Sitemap> {
   );
 }
 
+/**
+ * Parts SEO hierarchy from the shared qualifying-hubs util.
+ * - Categories + brands: derived from the full qualifying set (not leaf-capped).
+ * - Model leaves: recent-first, capped at PARTS_HUB_SITEMAP_LEAF_LIMIT.
+ * Intermediate HTML pages still list every qualifying leaf for crawl-through.
+ */
 async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
-  const partHubs = await Product.aggregate<{
-    _id: {
-      partType?: string;
-      brand?: string;
-      deviceModel?: string;
-    };
-    updatedAt: Date;
-    count: number;
-  }>([
-    {
-      $match: {
-        status: "approved",
-      },
-    },
-    {
-      $group: {
-        _id: {
-          partType: "$partType",
-          brand: "$brand",
-          deviceModel: "$deviceModel",
-        },
-        updatedAt: { $max: "$updatedAt" },
-        count: { $sum: 1 },
-      },
-    },
-    // Align with hub page robots: thin single-listing hubs stay out of the sitemap.
-    { $match: { count: { $gte: 2 } } },
-    { $sort: { updatedAt: -1 } },
-    { $limit: PARTS_HUB_LIMIT },
+  // Warm the shared cache once; hierarchy + leaves reuse the same aggregation.
+  await getQualifyingPartsHubs();
+
+  const [categories, allHubs, leafHubs] = await Promise.all([
+    getPartsHubCategories(),
+    getQualifyingPartsHubs(),
+    getPartsHubLeavesForSitemap(PARTS_HUB_SITEMAP_LEAF_LIMIT),
   ]);
 
-  return compact(
-    partHubs.map((hub) => {
-      const category = slugifyPathSegment(String(hub._id.partType || ""));
-      const brand = slugifyPathSegment(String(hub._id.brand || ""));
-      const model = slugifyPathSegment(String(hub._id.deviceModel || ""));
-      if (!category || !brand || !model) return null;
-      return entry(`/parts/${category}/${brand}/${model}`, {
-        lastModified: asDate(hub.updatedAt),
-        changeFrequency: "weekly",
-        priority: 0.7,
-      });
+  const brandPaths = new Map<string, Date>();
+  for (const hub of allHubs) {
+    const path = `/parts/${hub.categorySlug}/${hub.brandSlug}`;
+    const prev = brandPaths.get(path);
+    if (!prev || hub.updatedAt.getTime() > prev.getTime()) {
+      brandPaths.set(path, hub.updatedAt);
+    }
+  }
+
+  const categoryEntries = categories.map((category) =>
+    entry(`/parts/${category.slug}`, {
+      lastModified: asDate(category.updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
     }),
   );
+
+  const brandEntries = [...brandPaths.entries()].map(([path, updatedAt]) =>
+    entry(path, {
+      lastModified: asDate(updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.72,
+    }),
+  );
+
+  const leafEntries = leafHubs.map((hub) =>
+    entry(hub.path, {
+      lastModified: asDate(hub.updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }),
+  );
+
+  return compact([...categoryEntries, ...brandEntries, ...leafEntries]);
 }
 
 async function loadSellerEntries(): Promise<MetadataRoute.Sitemap> {

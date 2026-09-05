@@ -37,7 +37,10 @@ Generated from the App Router (`src/app`). Dynamic SEO sitemap (crawlable public
 |------|--------|
 | `/products` | Browse / search listings |
 | `/product/[slug]` | Listing detail |
-| `/parts/[category]/[brand]/[model]` | Parts hub by category/brand/model |
+| `/parts` | Parts index (qualifying part types) |
+| `/parts/[category]` | Brands for a part type (≥2-listing hubs) |
+| `/parts/[category]/[brand]` | Models for part type + brand |
+| `/parts/[category]/[brand]/[model]` | Parts hub by part type / brand / model |
 | `/technicians` | Technician directory |
 | `/u/[id]` | Public technician / user profile |
 | `/requests` | Open part requests board |
@@ -138,7 +141,7 @@ Canonical seller/technician UI: `/technician/*` (see section 4).
 
 Static: `/`, `/products`, `/requests`, `/technicians`, `/support`, `/how-it-works`, `/about`, `/faq`, `/trust-score`, `/technician-guidelines`, `/guidelines`, `/prohibited-items`, `/disputes`, `/refund`, `/report-abuse`, `/terms`, `/privacy`
 
-Dynamic (from DB): `/product/[slug]`, `/parts/[category]/[brand]/[model]` (hubs with ≥2 listings), `/u/[id]` (active sellers)
+Dynamic (from DB): `/product/[slug]`, `/parts` hierarchy (`/parts`, `/parts/[category]`, `/parts/[category]/[brand]`, and `/parts/[category]/[brand]/[model]` hubs with ≥2 listings), `/u/[id]` (active sellers)
 
 Auth, admin, and dashboard URLs are **not** in the SEO sitemap.
 

@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import {
+  BreadcrumbJsonLd,
+  Breadcrumbs,
+} from "@/components/seo/Breadcrumbs";
 import { EmptyState, PageHeader } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { fetchProductList } from "@/lib/products/listQuery";
+import { slugifyPathSegment } from "@/lib/seo/partsPath";
 import { SITE_NAME, absoluteUrl, productPath } from "@/lib/seo/site";
+
+export const revalidate = 3600;
 
 type Params = {
   params: Promise<{ category: string; brand: string; model: string }>;
@@ -22,23 +29,30 @@ function decodeSegments(raw: {
   const titleCase = (value: string) =>
     value.replace(/\b\w/g, (c) => c.toUpperCase());
 
+  const categorySlug = slugifyPathSegment(raw.category);
+  const brandSlug = slugifyPathSegment(raw.brand);
+  const modelSlug = slugifyPathSegment(raw.model);
+
   return {
     category: titleCase(clean(raw.category)),
     brand: titleCase(clean(raw.brand)),
     model: clean(raw.model),
-    path: `/parts/${raw.category}/${raw.brand}/${raw.model}`,
+    categorySlug,
+    brandSlug,
+    modelSlug,
+    path: `/parts/${categorySlug || raw.category}/${brandSlug || raw.brand}/${modelSlug || raw.model}`,
   };
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const raw = await params;
-  const { category, brand, model, path } = decodeSegments(raw);
+  const { category, brand, model, path, categorySlug } = decodeSegments(raw);
 
   const title = `${brand} ${model} ${category} Parts`;
   const description = `Buy ${brand} ${model} ${category.toLowerCase()} spare parts from technicians across India. Compare prices and condition, then contact the seller directly on ${SITE_NAME}.`;
 
   const { total } = await fetchProductList({
-    category: raw.category,
+    partType: categorySlug || raw.category,
     brand,
     deviceModel: model,
   });
@@ -63,36 +77,33 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   };
 }
 
-export default async function PartsPage({ params }: Params) {
+export default async function PartsModelPage({ params }: Params) {
   const raw = await params;
-  const { category, brand, model, path } = decodeSegments(raw);
+  const {
+    category,
+    brand,
+    model,
+    path,
+    categorySlug,
+    brandSlug,
+  } = decodeSegments(raw);
 
   const { products, total } = await fetchProductList({
-    category: raw.category,
+    partType: categorySlug || raw.category,
     brand,
     deviceModel: model,
     limit: "24",
   });
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: absoluteUrl("/") },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "Products",
-        item: absoluteUrl("/products"),
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: `${brand} ${model} ${category}`,
-        item: absoluteUrl(path),
-      },
-    ],
-  };
+  const categoryHref = `/parts/${categorySlug || raw.category}`;
+  const brandHref = `${categoryHref}/${brandSlug || raw.brand}`;
+
+  const jsonLdCrumbs = [
+    { name: "Parts", href: "/parts" },
+    { name: category, href: categoryHref },
+    { name: brand, href: brandHref },
+    { name: model, href: path },
+  ];
 
   const itemListSchema = {
     "@context": "https://schema.org",
@@ -113,10 +124,7 @@ export default async function PartsPage({ params }: Params) {
 
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
+      <BreadcrumbJsonLd items={jsonLdCrumbs} />
       {products.length > 0 ? (
         <script
           type="application/ld+json"
@@ -125,22 +133,14 @@ export default async function PartsPage({ params }: Params) {
       ) : null}
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-4 text-sm text-[var(--muted)]"
-        >
-          <Link href="/" className="hover:text-[var(--brand)]">
-            Home
-          </Link>
-          <span className="mx-2">/</span>
-          <Link href="/products" className="hover:text-[var(--brand)]">
-            Products
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-[var(--ink-secondary)]">
-            {brand} {model}
-          </span>
-        </nav>
+        <Breadcrumbs
+          items={[
+            { name: "Parts", href: "/parts" },
+            { name: category, href: categoryHref },
+            { name: brand, href: brandHref },
+            { name: model },
+          ]}
+        />
 
         <PageHeader
           className="mb-6"
@@ -185,7 +185,7 @@ export default async function PartsPage({ params }: Params) {
               {brand} {model} listings
             </Link>
             <Link
-              href={`/products?partType=${encodeURIComponent(raw.category)}`}
+              href={`/products?partType=${encodeURIComponent(categorySlug || raw.category)}`}
               className="text-xs font-semibold rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-[var(--ink)] hover:border-[var(--brand-muted)] hover:text-[var(--brand)]"
             >
               Browse {category.toLowerCase()}

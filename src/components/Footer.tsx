@@ -37,6 +37,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/parts" className={linkClass}>
+                  Parts
+                </Link>
+              </li>
+              <li>
                 <Link href="/requests" className={linkClass}>
                   Part requests
                 </Link>
