@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db/connect";
 import { CategoryBrand, IModel } from "@/lib/models/CategoryBrand";
-import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
+import { isAuthError, requireUser } from "@/lib/auth/requireUser";
 import { slugifyModelName } from "@/lib/utils/modelSuggest";
+import { checkRateLimitAsync } from "@/lib/security/authRateLimit";
 
 function normalizeKey(name: string, modelNumber?: string) {
   return `${name}::${modelNumber || ""}`.toLowerCase().trim();
@@ -76,14 +77,30 @@ export async function GET(
   }
 }
 
-/** Add a model to the brand catalog (admin only). */
+/**
+ * Add a model to the brand catalog.
+ * Logged-in users (sellers/buyers) can contribute missing models when listing
+ * or requesting parts. Previously admin-only, which caused Forbidden for users.
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
-    const admin = await requireAdmin(req);
-    if (isAdminError(admin)) return admin;
+    const auth = await requireUser(req);
+    if (isAuthError(auth)) return auth;
+
+    const rate = await checkRateLimitAsync({
+      key: `catalog-model-create:${auth.id}`,
+      limit: 20,
+      windowMs: 60 * 60 * 1000,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { message: "Too many new models. Try again later." },
+        { status: 429 },
+      );
+    }
 
     await connectDB();
     const { slug } = await params;
@@ -102,6 +119,13 @@ export async function POST(
     if (name.length < 2 || name.length > 80) {
       return NextResponse.json(
         { message: "Model name must be between 2 and 80 characters" },
+        { status: 400 },
+      );
+    }
+
+    if (modelNumber.length > 40) {
+      return NextResponse.json(
+        { message: "Model number must be 40 characters or fewer" },
         { status: 400 },
       );
     }
@@ -129,6 +153,22 @@ export async function POST(
       );
       return NextResponse.json(
         { message: "Model already exists", model: existing, created: false },
+        { status: 200 },
+      );
+    }
+
+    // Also treat same model name (any model number) as existing for user adds,
+    // so typos don't create near-duplicates of catalog models.
+    const sameName = (brand.models || []).find(
+      (m: IModel) => m.name.trim().toLowerCase() === name.toLowerCase(),
+    );
+    if (sameName && auth.role !== "admin") {
+      return NextResponse.json(
+        {
+          message: "Model already exists",
+          model: sameName,
+          created: false,
+        },
         { status: 200 },
       );
     }
