@@ -215,6 +215,14 @@ export async function PATCH(req: NextRequest) {
           // ignore
         }
       }
+      try {
+        const { revalidateListingCaches } = await import(
+          "@/lib/products/revalidateListings"
+        );
+        revalidateListingCaches();
+      } catch {
+        // cache optional
+      }
       return NextResponse.json({
         message: "Marked sold",
         modified: result.modifiedCount,

@@ -73,6 +73,15 @@ export async function POST(
   product.featured = false;
   await product.save();
 
+  try {
+    const { revalidateListingCaches } = await import(
+      "@/lib/products/revalidateListings"
+    );
+    revalidateListingCaches(product);
+  } catch {
+    // cache optional
+  }
+
   // Closed-loop trust: SparesX-attributed sales bump completedSales + badges.
   if (soldVia === "sparesx") {
     try {

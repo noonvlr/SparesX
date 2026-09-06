@@ -35,6 +35,15 @@ export async function DELETE(
     await product.save();
 
     try {
+      const { revalidateListingCaches } = await import(
+        "@/lib/products/revalidateListings"
+      );
+      revalidateListingCaches(product);
+    } catch {
+      // cache optional
+    }
+
+    try {
       const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
       void trackMarketplaceEvent({
         type: "listing_sold",
@@ -103,6 +112,14 @@ export async function DELETE(
   const images = product.images;
   await product.deleteOne();
   await deleteStoredProductImages(images);
+  try {
+    const { revalidateListingCaches } = await import(
+      "@/lib/products/revalidateListings"
+    );
+    revalidateListingCaches({ _id: id });
+  } catch {
+    // cache optional
+  }
   return NextResponse.json(
     {
       message: "Product deleted",

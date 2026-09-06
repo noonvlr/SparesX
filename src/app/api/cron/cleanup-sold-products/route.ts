@@ -22,6 +22,16 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await cleanupExpiredSoldProducts({ limit: 200 });
+    if (result.deleted > 0) {
+      try {
+        const { revalidateListingCaches } = await import(
+          "@/lib/products/revalidateListings"
+        );
+        revalidateListingCaches();
+      } catch {
+        // cache optional
+      }
+    }
     console.log("[cron/cleanup-sold]", result);
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {

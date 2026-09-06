@@ -36,6 +36,8 @@ export interface ProductCardData {
   condition?: string;
   priceNegotiable?: boolean;
   slug?: string;
+  /** Listing status — sold cards are hidden on public grids. */
+  status?: string;
   /** Owner user id — when it matches the signed-in seller, show owner actions. */
   technician?: string;
 }
@@ -61,7 +63,9 @@ export default function ProductCard({
   const [isOwner, setIsOwner] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
-  const [hidden, setHidden] = useState(false);
+  const [hidden, setHidden] = useState(
+    () => product.status === "sold",
+  );
   const contact = useContactFlow(product._id);
   const detailPath = productPath(product);
 

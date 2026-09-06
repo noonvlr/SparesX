@@ -108,6 +108,15 @@ export async function PATCH(
     await product.save();
     await product.populate("technician", "name email mobile");
 
+    try {
+      const { revalidateListingCaches } = await import(
+        "@/lib/products/revalidateListings"
+      );
+      revalidateListingCaches(product);
+    } catch {
+      // cache optional
+    }
+
     if (previousStatus !== "approved" && product.status === "approved") {
       const { notifySavedSearchesForProduct } = await import(
         "@/lib/saved-searches/match"

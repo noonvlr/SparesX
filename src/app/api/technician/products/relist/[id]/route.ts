@@ -40,6 +40,15 @@ export async function POST(
   product.soldAt = null;
   await product.save();
 
+  try {
+    const { revalidateListingCaches } = await import(
+      "@/lib/products/revalidateListings"
+    );
+    revalidateListingCaches(product);
+  } catch {
+    // cache optional
+  }
+
   if (product.status === "approved") {
     const { notifySavedSearchesForProduct } = await import(
       "@/lib/saved-searches/match"

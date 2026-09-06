@@ -30,11 +30,13 @@ export default function FeaturedProducts({
         </Link>
       </div>
 
-      {products?.length ? (
+      {products?.filter((p) => p.status !== "sold").length ? (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 lg:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product._id} product={product} />
-          ))}
+          {products
+            .filter((product) => product.status !== "sold")
+            .map((product) => (
+              <ProductCard key={product._id} product={product} />
+            ))}
         </div>
       ) : (
         <EmptyState
