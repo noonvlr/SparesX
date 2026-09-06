@@ -34,6 +34,11 @@ export interface ISiteSettings extends Document {
    * Default false keeps the current auto-approve marketplace flow.
    */
   requireListingApproval?: boolean;
+  /**
+   * Lifetime count of listings marked sold. Increments on sell; never decrements
+   * when sold products are permanently deleted (homepage "sold / fulfilled").
+   */
+  lifetimeSoldListings?: number;
   updatedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -62,6 +67,7 @@ const SiteSettingsSchema: Schema<ISiteSettings> = new Schema(
     smtpPassEnc: { type: String, default: "" },
     smtpFrom: { type: String, default: "" },
     requireListingApproval: { type: Boolean, default: false },
+    lifetimeSoldListings: { type: Number, default: 0, min: 0 },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true },

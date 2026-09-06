@@ -44,6 +44,15 @@ export async function DELETE(
     }
 
     try {
+      const { recordLifetimeSoldListing } = await import(
+        "@/lib/analytics/lifetimeSold"
+      );
+      void recordLifetimeSoldListing(1);
+    } catch {
+      // counter optional
+    }
+
+    try {
       const { trackMarketplaceEvent } = await import("@/lib/analytics/events");
       void trackMarketplaceEvent({
         type: "listing_sold",

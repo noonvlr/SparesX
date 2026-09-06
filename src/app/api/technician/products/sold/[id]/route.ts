@@ -82,6 +82,15 @@ export async function POST(
     // cache optional
   }
 
+  try {
+    const { recordLifetimeSoldListing } = await import(
+      "@/lib/analytics/lifetimeSold"
+    );
+    void recordLifetimeSoldListing(1);
+  } catch {
+    // counter optional
+  }
+
   // Closed-loop trust: SparesX-attributed sales bump completedSales + badges.
   if (soldVia === "sparesx") {
     try {

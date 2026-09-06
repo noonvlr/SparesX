@@ -223,6 +223,25 @@ export async function PATCH(req: NextRequest) {
       } catch {
         // cache optional
       }
+      if (result.modifiedCount > 0) {
+        try {
+          const { recordLifetimeSoldListing } = await import(
+            "@/lib/analytics/lifetimeSold"
+          );
+          void recordLifetimeSoldListing(result.modifiedCount);
+          const { trackMarketplaceEvent } = await import(
+            "@/lib/analytics/events"
+          );
+          for (let i = 0; i < result.modifiedCount; i++) {
+            void trackMarketplaceEvent({
+              type: "listing_sold",
+              meta: { soldVia, via: "bulk" },
+            });
+          }
+        } catch {
+          // analytics optional
+        }
+      }
       return NextResponse.json({
         message: "Marked sold",
         modified: result.modifiedCount,

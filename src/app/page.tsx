@@ -16,6 +16,7 @@ import {
   SITE_OPERATOR,
   SITE_URL,
 } from "@/lib/seo/site";
+import { getLifetimeSoldListingCount } from "@/lib/analytics/lifetimeSold";
 
 export const metadata: Metadata = {
   title: {
@@ -97,11 +98,11 @@ export default async function HomePage() {
         { $group: { _id: "$partType", count: { $sum: 1 } } },
       ]),
       Product.countDocuments({ status: "approved" }),
-      Product.countDocuments({ status: "sold" }),
+      getLifetimeSoldListingCount(),
       RequestModel.countDocuments({ status: "fulfilled" }),
     ]);
 
-  // Marketplace deals: sold listings + fulfilled part requests
+  // Marketplace deals: lifetime sold listings (durable) + fulfilled part requests
   const soldCount = soldListings + fulfilledRequests;
 
   const featuredProducts = featuredRaw.map((p) => ({
