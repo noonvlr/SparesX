@@ -6,9 +6,9 @@ import { deleteStoredProductImages } from "@/lib/images/deleteProductImages";
 
 /**
  * Owner removes a listing.
- * Approved live listings are treated as sold (soldVia "other") so marketplace
- * sold/fulfilled stats stay accurate — same outcome as removing stock that moved.
+ * Approved live listings are marked sold (soldVia "other").
  * Pending / rejected / already-sold rows are hard-deleted.
+ * Sold listings are also purged automatically after 7 days by cron.
  */
 export async function DELETE(
   req: NextRequest,
@@ -87,7 +87,7 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        message: "Listing removed and counted as sold",
+        message: "Listing marked as sold",
         treatedAsSold: true,
         product: {
           _id: String(product._id),
@@ -102,13 +102,11 @@ export async function DELETE(
 
   const images = product.images;
   await product.deleteOne();
-  // Await so Blob/local files are removed before the client refreshes.
-  const cleanup = await deleteStoredProductImages(images);
+  await deleteStoredProductImages(images);
   return NextResponse.json(
     {
       message: "Product deleted",
       treatedAsSold: false,
-      imagesRemoved: cleanup.deleted,
     },
     { status: 200 },
   );

@@ -95,8 +95,8 @@ export default function ProductCard({
     if (
       !confirm(
         permanent
-          ? `Permanently delete "${title}"? This cannot be undone and removes listing images from storage.`
-          : `Remove "${title}" from the marketplace?\n\nIt will be marked Sold (for your records). To erase it and free image storage, open Sold and choose Delete permanently.`,
+          ? `Delete "${title}"? This cannot be undone.`
+          : `Remove "${title}" from the marketplace? It will be marked as sold.`,
       )
     ) {
       return;
@@ -111,9 +111,7 @@ export default function ProductCard({
       if (res.ok) {
         setHidden(true);
         if ((data as { treatedAsSold?: boolean }).treatedAsSold) {
-          alert(
-            "Listing moved to Sold. Open your Sold tab and delete permanently if you want to erase images and free storage.",
-          );
+          alert("Listing moved to Sold.");
         }
         router.refresh();
       } else {

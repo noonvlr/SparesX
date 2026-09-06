@@ -101,8 +101,8 @@ export default function MyProductsPage() {
     if (
       !confirm(
         asSold
-          ? "Remove this listing from the marketplace?\n\nIt will be marked Sold (kept for your records / relist). To permanently erase it and delete images from storage, use Delete on the Sold tab."
-          : "Permanently delete this product? This cannot be undone and removes listing images from storage.",
+          ? "Remove this listing from the marketplace? It will be marked as sold."
+          : "Delete this product? This cannot be undone.",
       )
     ) {
       return;
@@ -127,9 +127,7 @@ export default function MyProductsPage() {
           ),
         );
         setTab("sold");
-        alert(
-          "Moved to Sold. Use Delete on a sold listing to permanently erase it and free image storage.",
-        );
+        alert("Listing moved to Sold.");
       } else {
         setProducts(products.filter((p) => p._id !== productId));
       }
@@ -312,7 +310,7 @@ export default function MyProductsPage() {
             }
             description={
               tab === "sold"
-                ? "When you mark a listing sold, it will show up here so you can relist it later."
+                ? "Sold listings stay here for 7 days so you can relist them. After that they are removed automatically."
                 : tab === "pending"
                   ? "New listings appear here until a moderator approves them."
                   : tab === "rejected"
@@ -499,7 +497,7 @@ export default function MyProductsPage() {
                           disabled={deleting === product._id}
                           loading={deleting === product._id}
                         >
-                          Delete permanently
+                          Delete
                         </Button>
                       </>
                     ) : (

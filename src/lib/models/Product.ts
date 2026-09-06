@@ -92,6 +92,7 @@ ProductSchema.index({ brand: 1, deviceModel: 1, partType: 1 });
 ProductSchema.index({ deviceCategory: 1, brand: 1 });
 ProductSchema.index({ status: 1, featured: -1, createdAt: -1 });
 ProductSchema.index({ status: 1, createdAt: -1 });
+ProductSchema.index({ status: 1, soldAt: 1 });
 ProductSchema.index(
   {
     name: "text",
