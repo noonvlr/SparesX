@@ -54,3 +54,26 @@ export function sniffImageMime(
 
   return null;
 }
+
+/** True for HEIC/HEIF (common iPhone camera format — not accepted for upload). */
+export function isHeicLike(input: Buffer | Uint8Array): boolean {
+  const buf = Buffer.isBuffer(input) ? input : Buffer.from(input);
+  if (buf.length < 12) return false;
+  // ISO BMFF: ....ftypXXXX
+  if (
+    buf[4] !== 0x66 ||
+    buf[5] !== 0x74 ||
+    buf[6] !== 0x79 ||
+    buf[7] !== 0x70
+  ) {
+    return false;
+  }
+  const brand = buf.slice(8, 12).toString("ascii").toLowerCase();
+  return (
+    brand === "heic" ||
+    brand === "heif" ||
+    brand === "mif1" ||
+    brand === "msf1" ||
+    brand === "hevx"
+  );
+}

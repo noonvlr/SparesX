@@ -112,11 +112,22 @@ export async function POST(req: NextRequest) {
     }
 
     const idPart = userId.slice(-6);
-    const { sniffImageMime } = await import("@/lib/images/sniffImage");
+    const { sniffImageMime, isHeicLike } = await import(
+      "@/lib/images/sniffImage"
+    );
 
     for (const file of files) {
       const ab = await file.arrayBuffer();
       const raw = Buffer.from(new Uint8Array(ab));
+      if (isHeicLike(raw)) {
+        return NextResponse.json(
+          {
+            error:
+              "HEIC/HEIF photos are not supported. On iPhone: Settings → Camera → Formats → Most Compatible, or export/share as JPEG.",
+          },
+          { status: 400 },
+        );
+      }
       const sniffed = sniffImageMime(raw);
       if (!sniffed) {
         return NextResponse.json(
@@ -125,18 +136,36 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      let optimized;
+      let optimized: {
+        buffer: Buffer;
+        contentType: string;
+        ext: string;
+      };
       try {
         const { optimizeUploadImage } = await import(
           "@/lib/images/optimizeUpload"
         );
         optimized = await optimizeUploadImage(raw, sniffed);
       } catch (optErr) {
-        console.warn("[Upload] optimize failed:", optErr);
-        return NextResponse.json(
-          { error: "Could not process image. Try a different file." },
-          { status: 400 },
+        // Never block upload solely because sharp failed to load/process —
+        // store the already-validated original bytes.
+        console.warn(
+          "[Upload] optimize failed, storing original bytes:",
+          optErr,
         );
+        const ext =
+          sniffed === "image/png"
+            ? "png"
+            : sniffed === "image/gif"
+              ? "gif"
+              : sniffed === "image/webp"
+                ? "webp"
+                : "jpg";
+        optimized = {
+          buffer: raw,
+          contentType: sniffed,
+          ext,
+        };
       }
 
       const uploadBody = Buffer.from(optimized.buffer);

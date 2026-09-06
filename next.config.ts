@@ -49,6 +49,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Keep sharp as a native Node module — bundling it breaks image uploads on Vercel.
+  serverExternalPackages: ["sharp"],
   images: {
     // AVIF first, WebP fallback — listing grids are image-heavy on mobile.
     formats: ["image/avif", "image/webp"],
