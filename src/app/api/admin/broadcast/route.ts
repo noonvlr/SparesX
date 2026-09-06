@@ -27,6 +27,11 @@ export async function POST(req: NextRequest) {
       unknown
     >;
     const text = typeof body.text === "string" ? body.text : "";
+    const idempotencyKey =
+      (typeof body.idempotencyKey === "string" && body.idempotencyKey) ||
+      req.headers.get("idempotency-key") ||
+      "";
+
     const filters = normalizeBroadcastFilters({
       ...(typeof body.filters === "object" && body.filters
         ? (body.filters as Record<string, unknown>)
@@ -38,12 +43,10 @@ export async function POST(req: NextRequest) {
       adminId: admin.id,
       text,
       filters,
+      idempotencyKey,
     });
 
-    return NextResponse.json({
-      message: `Sent ${result.sent} of ${result.attempted} messages`,
-      ...result,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
   }

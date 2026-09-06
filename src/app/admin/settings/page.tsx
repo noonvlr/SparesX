@@ -46,8 +46,8 @@ const CONTROLS = [
   },
   {
     href: "/admin/broadcast",
-    title: "Bulk messaging",
-    desc: "Filter users and send in-app chat broadcasts",
+    title: "Broadcast messages",
+    desc: "Targeted in-app bulk messaging with audience review & history",
   },
   {
     href: "/admin/reports",

@@ -109,7 +109,7 @@ export default function AdminDashboard() {
     { href: "/admin/device-management", title: "Devices", desc: "Types, brands, models, parts" },
     { href: "/admin/support", title: "Support", desc: "Reply to user tickets" },
     { href: "/admin/chat", title: "Chat disputes", desc: "Read chats for dispute review" },
-    { href: "/admin/broadcast", title: "Bulk messaging", desc: "Filter users & send in-app chat" },
+    { href: "/admin/broadcast", title: "Broadcast messages", desc: "Targeted bulk chat with review & history" },
     { href: "/admin/categories", title: "Categories", desc: "Manage part categories" },
     { href: "/admin/reports", title: "Reports", desc: "Platform counts overview" },
     { href: "/admin/site-settings", title: "Site settings", desc: "SMS provider & OTP credentials" },
