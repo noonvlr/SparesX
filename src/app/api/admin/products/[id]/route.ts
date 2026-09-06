@@ -195,7 +195,7 @@ export async function DELETE(
     const { deleteStoredProductImages } = await import(
       "@/lib/images/deleteProductImages"
     );
-    void deleteStoredProductImages(product.images);
+    await deleteStoredProductImages(product.images);
     return NextResponse.json(
       { message: "Product deleted" },
       { status: 200 },

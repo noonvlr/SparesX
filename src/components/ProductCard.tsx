@@ -89,9 +89,14 @@ export default function ProductCard({
   const partLabel = formatPartTypeLabel(product.partType);
 
   async function handleDelete() {
+    const status = (product as { status?: string }).status;
+    const permanent =
+      status === "sold" || status === "pending" || status === "rejected";
     if (
       !confirm(
-        `Remove "${title}"? It will be marked sold/fulfilled and leave the marketplace.`,
+        permanent
+          ? `Permanently delete "${title}"? This cannot be undone and removes listing images from storage.`
+          : `Remove "${title}" from the marketplace?\n\nIt will be marked Sold (for your records). To erase it and free image storage, open Sold and choose Delete permanently.`,
       )
     ) {
       return;
@@ -102,11 +107,20 @@ export default function ProductCard({
       const res = await authFetch(`/api/technician/products/delete/${product._id}`, {
         method: "DELETE",
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setHidden(true);
+        if ((data as { treatedAsSold?: boolean }).treatedAsSold) {
+          alert(
+            "Listing moved to Sold. Open your Sold tab and delete permanently if you want to erase images and free storage.",
+          );
+        }
         router.refresh();
       } else {
-        alert("Failed to delete product. Try again.");
+        alert(
+          (data as { message?: string }).message ||
+            "Failed to delete product. Try again.",
+        );
       }
     } catch {
       alert("Failed to delete product. Try again.");

@@ -102,9 +102,14 @@ export async function DELETE(
 
   const images = product.images;
   await product.deleteOne();
-  void deleteStoredProductImages(images);
+  // Await so Blob/local files are removed before the client refreshes.
+  const cleanup = await deleteStoredProductImages(images);
   return NextResponse.json(
-    { message: "Product deleted", treatedAsSold: false },
+    {
+      message: "Product deleted",
+      treatedAsSold: false,
+      imagesRemoved: cleanup.deleted,
+    },
     { status: 200 },
   );
 }

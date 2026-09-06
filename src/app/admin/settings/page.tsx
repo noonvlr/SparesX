@@ -45,6 +45,11 @@ const CONTROLS = [
     desc: "Read user chats for dispute and policy review",
   },
   {
+    href: "/admin/broadcast",
+    title: "Bulk messaging",
+    desc: "Filter users and send in-app chat broadcasts",
+  },
+  {
     href: "/admin/reports",
     title: "Reports",
     desc: "Counts across users, products, chats, and support",

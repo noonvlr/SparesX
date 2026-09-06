@@ -59,10 +59,20 @@ export async function POST(req: NextRequest) {
     }
 
     for (const file of files) {
+      // Mobile browsers often omit File.type — validate via magic bytes below.
       const mime = (file.type || "").toLowerCase();
-      if (!ALLOWED_MIME.has(mime)) {
+      if (mime && !ALLOWED_MIME.has(mime) && !mime.startsWith("image/")) {
         return NextResponse.json(
           { error: "Only JPEG, PNG, WebP, or GIF images are allowed" },
+          { status: 400 },
+        );
+      }
+      if (mime && !ALLOWED_MIME.has(mime) && mime.startsWith("image/")) {
+        return NextResponse.json(
+          {
+            error:
+              "Unsupported image format. Use JPEG, PNG, WebP, or GIF (not HEIC).",
+          },
           { status: 400 },
         );
       }
@@ -79,6 +89,19 @@ export async function POST(req: NextRequest) {
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     const isDevelopment = process.env.NODE_ENV === "development";
     const useLocalStorage = isDevelopment || !token;
+
+    if (!isDevelopment && !token) {
+      console.error(
+        "[Upload] BLOB_READ_WRITE_TOKEN is missing — uploads cannot persist in production",
+      );
+      return NextResponse.json(
+        {
+          error:
+            "Image storage is not configured. Please contact support (missing BLOB_READ_WRITE_TOKEN).",
+        },
+        { status: 503 },
+      );
+    }
 
     if (useLocalStorage) {
       try {

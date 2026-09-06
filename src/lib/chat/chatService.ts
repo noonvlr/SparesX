@@ -63,12 +63,14 @@ export async function getOrCreateConversation(params: {
   userId: string;
   peerId: string;
   productId?: string;
+  /** Admin/system bulk sends — skip per-user conversation create limits. */
+  skipRateLimit?: boolean;
 }) {
-  const { userId, peerId, productId } = params;
+  const { userId, peerId, productId, skipRateLimit } = params;
   if (userId === peerId) {
     throw Object.assign(new Error("Cannot chat with yourself"), { status: 400 });
   }
-  if (!(await allowConversationCreate(userId))) {
+  if (!skipRateLimit && !(await allowConversationCreate(userId))) {
     throw Object.assign(new Error("Too many conversation requests"), {
       status: 429,
     });
@@ -332,6 +334,8 @@ export async function sendMessage(params: {
   receiverOnline?: boolean;
   /** When true, skip in-app/email notify (receiver has the thread open). */
   receiverViewing?: boolean;
+  /** Admin/system bulk sends — skip per-user message rate limits. */
+  skipRateLimit?: boolean;
 }) {
   const {
     conversationId,
@@ -341,9 +345,10 @@ export async function sendMessage(params: {
     mediaUrl,
     receiverOnline = false,
     receiverViewing = false,
+    skipRateLimit = false,
   } = params;
 
-  if (!(await allowMessageSend(senderId))) {
+  if (!skipRateLimit && !(await allowMessageSend(senderId))) {
     throw Object.assign(new Error("Too many messages"), { status: 429 });
   }
 
@@ -428,7 +433,11 @@ export async function sendMessage(params: {
       senderId,
       conversationId: String(conversation._id),
       preview,
-      sendEmail: previousUnread === 0,
+      // First unread burst always; also email when recipient looks offline
+      // (with cooldown inside notify for follow-up messages).
+      sendEmail: previousUnread === 0 || !receiverOnline,
+      receiverOnline,
+      isFirstUnreadBurst: previousUnread === 0,
     });
   }
 
@@ -496,15 +505,20 @@ async function trackResponseRateOnSend(params: {
   }
 }
 
+const CHAT_EMAIL_COOLDOWN_MS = 60 * 60 * 1000; // 1h between follow-up emails
+
 async function notifyOfflineChatMessage(params: {
   receiverId: string;
   senderId: string;
   conversationId: string;
   preview: string;
   sendEmail: boolean;
+  receiverOnline?: boolean;
+  isFirstUnreadBurst?: boolean;
 }) {
   try {
     const { createNotification } = await import("@/lib/notifications/create");
+    const { Notification } = await import("@/lib/models/Notification");
     const deepLink = `/messages?open=${encodeURIComponent(params.conversationId)}`;
     const result = await createNotification({
       userId: params.receiverId,
@@ -519,9 +533,27 @@ async function notifyOfflineChatMessage(params: {
       },
     });
 
-    // Email only on the first unread burst (sendEmail) and when we created
-    // a fresh notification row — not on every collapsed update.
-    if (!params.sendEmail || !result.created) return;
+    if (!params.sendEmail || !result.id) return;
+
+    // Fresh notification → email. Collapsed follow-ups → email only when
+    // recipient appears offline and last email for this thread was ≥1h ago.
+    let shouldEmail = Boolean(result.created && params.isFirstUnreadBurst);
+    if (!shouldEmail && !params.receiverOnline && !result.created) {
+      const existing = await Notification.findById(result.id)
+        .select("meta")
+        .lean();
+      const lastRaw = existing?.meta?.lastEmailAt;
+      const lastMs =
+        typeof lastRaw === "string" || typeof lastRaw === "number"
+          ? new Date(lastRaw).getTime()
+          : 0;
+      shouldEmail =
+        !lastMs || Date.now() - lastMs >= CHAT_EMAIL_COOLDOWN_MS;
+    } else if (result.created && params.sendEmail) {
+      shouldEmail = true;
+    }
+
+    if (!shouldEmail) return;
 
     const receiver = await User.findById(params.receiverId)
       .select("email name")
@@ -531,12 +563,18 @@ async function notifyOfflineChatMessage(params: {
         "@/lib/services/emailService"
       );
       const { absoluteUrl } = await import("@/lib/seo/site");
-      void sendChatMessageEmail({
+      const sent = await sendChatMessageEmail({
         recipientEmail: receiver.email,
         recipientName: receiver.name || receiver.email.split("@")[0],
         preview: params.preview,
         href: absoluteUrl(deepLink),
       });
+      if (sent) {
+        await Notification.updateOne(
+          { _id: result.id },
+          { $set: { "meta.lastEmailAt": new Date().toISOString() } },
+        );
+      }
     }
   } catch (err) {
     console.warn("[chat] offline notify failed:", err);
