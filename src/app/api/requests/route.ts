@@ -110,15 +110,26 @@ export async function GET(req: NextRequest) {
       if (isOwner || isAdmin || mine) {
         return item;
       }
-      const { email, phone, ...rest } = row as Record<string, unknown> & {
+      // Never expose email/phone on the public board. Authenticated sellers
+      // get requesterId so they can open in-app chat (same pattern as listings).
+      const { email, phone, userId, ...rest } = row as Record<
+        string,
+        unknown
+      > & {
         email?: string;
         phone?: string;
+        userId?: unknown;
       };
+      const requesterId =
+        payload?.id && userId ? String(userId) : undefined;
       return {
         ...rest,
         email: undefined,
         phone: undefined,
-        hasContact: !!(email || phone),
+        userId: undefined,
+        requesterId,
+        canMessage: Boolean(requesterId),
+        hasContact: Boolean(requesterId),
       };
     });
 

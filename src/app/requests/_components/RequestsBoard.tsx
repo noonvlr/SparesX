@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Card, Badge, EmptyState, Skeleton, Avatar } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
-import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { authFetch, getCachedUserId, isLoggedInClient } from "@/lib/auth/clientAuth";
+import { openChatUi } from "@/components/chat/openChat";
 
 interface PartRequest {
   _id: string;
@@ -24,6 +25,9 @@ interface PartRequest {
   status: string;
   createdAt: string;
   hasContact?: boolean;
+  /** Present for signed-in viewers — opens in-app chat with the requester. */
+  requesterId?: string;
+  canMessage?: boolean;
 }
 
 type RequestsTab = "browse" | "submit" | "mine";
@@ -161,39 +165,27 @@ export default function RequestsBoard({
     setCategoryFilter(next);
   };
 
-  const respondViaWhatsApp = (request: PartRequest) => {
+  const respondToRequest = (request: PartRequest) => {
     if (!isAuthenticated) {
       setAuthPromptId(request._id);
       return;
     }
-    if (!request.phone) {
-      if (request.email) {
-        window.location.href = `mailto:${request.email}?subject=${encodeURIComponent(
-          `Regarding your ${request.category} request on SparesX`,
-        )}`;
-        return;
-      }
+
+    const peerId = request.requesterId?.trim();
+    if (!peerId) {
       alert(
-        request.hasContact
-          ? "Contact details are private. Use SparesX chat or ask the requester to share WhatsApp after you connect."
-          : "No contact details available for this request.",
+        "This requester isn’t available for chat yet. Ask them to post the request while logged in.",
       );
       return;
     }
 
-    const phone = request.phone.replace(/\D/g, "");
-    const text = encodeURIComponent(
-      `Hi ${request.name}, I saw your SparesX request for ${request.category}${
-        request.brand ? ` (${request.brand}` : ""
-      }${request.deviceModel ? ` ${request.deviceModel}` : ""}${
-        request.brand ? ")" : ""
-      }. I may have the part you need.`,
-    );
-    window.open(
-      `https://wa.me/${phone}?text=${text}`,
-      "_blank",
-      "noopener,noreferrer",
-    );
+    const me = getCachedUserId();
+    if (me && String(me) === String(peerId)) {
+      alert("This is your own request.");
+      return;
+    }
+
+    openChatUi({ peerId });
   };
 
   const emptyMessage = useMemo(() => {
@@ -479,15 +471,14 @@ export default function RequestsBoard({
                       <div className="flex sm:flex-col items-stretch justify-end gap-2 sm:w-44 flex-shrink-0">
                         <Button
                           type="button"
-                          onClick={() => respondViaWhatsApp(request)}
-                          className="bg-[#25D366] hover:bg-[#1ebe57] shadow-none"
+                          onClick={() => respondToRequest(request)}
                         >
                           I have this part
                         </Button>
                         <Button
                           type="button"
                           variant="secondary"
-                          onClick={() => respondViaWhatsApp(request)}
+                          onClick={() => respondToRequest(request)}
                         >
                           Message buyer
                         </Button>
