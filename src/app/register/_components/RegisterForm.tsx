@@ -12,8 +12,8 @@ import {
   Checkbox,
   Divider,
   Field,
-  IconButton,
   Input,
+  PasswordInput,
   Modal,
   Select,
   Spinner,
@@ -39,8 +39,6 @@ export default function RegisterForm() {
   });
 
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isMobileWhatsapp, setIsMobileWhatsapp] = useState(true);
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -420,47 +418,18 @@ export default function RegisterForm() {
               label="Password"
               htmlFor="password"
               required
-              hint="Minimum 6 characters"
+              hint="Minimum 8 characters"
             >
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="Create a strong password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="pr-12"
-                  required
-                  minLength={8}
-                />
-                <IconButton
-                  type="button"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-14-14zM10 18a8 8 0 100-16 8 8 0 000 16zm0-14a3.978 3.978 0 00-1.482.285 4 4 0 015.656 5.656 3.978 3.978 0 00-.285-1.482A4 4 0 0010 4zm6.707 6.707a4 4 0 01-5.656 5.656 4 4 0 005.656-5.656z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </IconButton>
-              </div>
+              <PasswordInput
+                id="password"
+                name="password"
+                placeholder="Create a strong password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                minLength={8}
+                autoComplete="new-password"
+              />
             </Field>
 
             <Field
@@ -473,48 +442,17 @@ export default function RegisterForm() {
                   : null
               }
             >
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  variant={passwordMatch ? "default" : "error"}
-                  className="pr-12"
-                  required
-                  minLength={8}
-                />
-                <IconButton
-                  type="button"
-                  aria-label={
-                    showConfirmPassword ? "Hide password" : "Show password"
-                  }
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path
-                        fillRule="evenodd"
-                        d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-14-14zM10 18a8 8 0 100-16 8 8 0 000 16zm0-14a3.978 3.978 0 00-1.482.285 4 4 0 015.656 5.656 3.978 3.978 0 00-.285-1.482A4 4 0 0010 4zm6.707 6.707a4 4 0 01-5.656 5.656 4 4 0 005.656-5.656z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
-                </IconButton>
-              </div>
+              <PasswordInput
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                variant={passwordMatch ? "default" : "error"}
+                required
+                minLength={8}
+                autoComplete="new-password"
+              />
             </Field>
           </div>
         </div>

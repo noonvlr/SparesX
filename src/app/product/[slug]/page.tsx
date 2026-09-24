@@ -2,6 +2,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { Types } from "mongoose";
 import type { Metadata } from "next";
 import ProductDetail from "./_components/ProductDetail";
+import ProductScrollToTop from "./ProductScrollToTop";
 import {
   buildProductKeywords,
   buildProductSeoDescription,
@@ -307,6 +308,7 @@ export default async function ProductSlugPage({
 
   return (
     <>
+      <ProductScrollToTop />
       {/*
         Next's Metadata API rewrites unknown openGraph.type values, so the
         product OG type has to be emitted as a raw meta tag. App Router hoists

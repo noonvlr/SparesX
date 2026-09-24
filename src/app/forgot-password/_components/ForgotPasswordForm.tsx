@@ -8,6 +8,7 @@ import {
   Card,
   Field,
   Input,
+  PasswordInput,
 } from "@/components/ui";
 
 type Step = "email" | "otp" | "newPassword" | "success";
@@ -23,8 +24,6 @@ export default function ForgotPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const resend = useOtpResendCooldown(120);
 
   async function requestOtp(isResend = false) {
@@ -244,54 +243,30 @@ export default function ForgotPasswordForm() {
         {step === "newPassword" && (
           <form onSubmit={handleResetPassword} className="space-y-4">
             <Field label="New Password" htmlFor="forgot-new-password" required>
-              <div className="relative">
-                <Input
-                  id="forgot-new-password"
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Create a strong password"
-                  className="pr-16"
-                  minLength={8}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </Button>
-              </div>
+              <PasswordInput
+                id="forgot-new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Create a strong password"
+                minLength={8}
+                required
+                autoComplete="new-password"
+              />
             </Field>
             <Field
               label="Confirm Password"
               htmlFor="forgot-confirm-password"
               required
             >
-              <div className="relative">
-                <Input
-                  id="forgot-confirm-password"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  className="pr-16"
-                  minLength={8}
-                  required
-                />
-                <Button
-                  type="button"
-                  variant="link"
-                  size="sm"
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? "Hide" : "Show"}
-                </Button>
-              </div>
+              <PasswordInput
+                id="forgot-confirm-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm your password"
+                minLength={8}
+                required
+                autoComplete="new-password"
+              />
             </Field>
             <Button type="submit" className="w-full" loading={loading}>
               Reset Password

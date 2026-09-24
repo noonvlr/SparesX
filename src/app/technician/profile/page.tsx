@@ -15,6 +15,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -806,8 +807,7 @@ export default function TechnicianProfilePage() {
             <form onSubmit={handlePasswordChange} className="space-y-4 max-w-xl">
               {profile?.hasPassword ? (
                 <Field label="Current password">
-                  <Input
-                    type="password"
+                  <PasswordInput
                     value={pwCurrent}
                     onChange={(e) => setPwCurrent(e.target.value)}
                     autoComplete="current-password"
@@ -818,8 +818,7 @@ export default function TechnicianProfilePage() {
               <Field
                 label={profile?.hasPassword ? "New password" : "Password"}
               >
-                <Input
-                  type="password"
+                <PasswordInput
                   value={pwNew}
                   onChange={(e) => setPwNew(e.target.value)}
                   autoComplete="new-password"
@@ -834,8 +833,7 @@ export default function TechnicianProfilePage() {
                     : "Confirm password"
                 }
               >
-                <Input
-                  type="password"
+                <PasswordInput
                   value={pwConfirm}
                   onChange={(e) => setPwConfirm(e.target.value)}
                   autoComplete="new-password"

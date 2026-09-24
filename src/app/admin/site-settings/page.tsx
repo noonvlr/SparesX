@@ -5,6 +5,7 @@ import { AdminPage } from "@/components/layout";
 import { Card, PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Field } from "@/components/ui/Field";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Alert } from "@/components/ui/Alert";
@@ -280,9 +281,8 @@ export default function SiteSettingsPage() {
                 : undefined
             }
           >
-            <Input
+            <PasswordInput
               id="renflair-key"
-              type="password"
               autoComplete="new-password"
               placeholder="Leave blank to keep existing"
               value={renflairApiKey}
@@ -317,9 +317,8 @@ export default function SiteSettingsPage() {
                 : undefined
             }
           >
-            <Input
+            <PasswordInput
               id="twilio-token"
-              type="password"
               autoComplete="new-password"
               placeholder="Leave blank to keep existing"
               value={twilioAuthToken}
@@ -363,9 +362,8 @@ export default function SiteSettingsPage() {
                 : undefined
             }
           >
-            <Input
+            <PasswordInput
               id="msg91-key"
-              type="password"
               autoComplete="new-password"
               placeholder="Leave blank to keep existing"
               value={msg91AuthKey}
@@ -450,9 +448,8 @@ export default function SiteSettingsPage() {
                   : undefined
               }
             >
-              <Input
+              <PasswordInput
                 id="smtp-pass"
-                type="password"
                 autoComplete="new-password"
                 placeholder="Leave blank to keep existing"
                 value={smtpPass}

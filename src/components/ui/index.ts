@@ -2,6 +2,7 @@ export { Button } from "@/components/ui/Button";
 export { buttonVariants } from "@/components/ui/button-variants";
 export { IconButton, iconButtonVariants } from "@/components/ui/IconButton";
 export { Input, Textarea, inputVariants } from "@/components/ui/Input";
+export { PasswordInput } from "@/components/ui/PasswordInput";
 export { Label } from "@/components/ui/Label";
 export { Field } from "@/components/ui/Field";
 export { Select, selectVariants } from "@/components/ui/Select";

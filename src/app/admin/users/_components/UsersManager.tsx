@@ -7,6 +7,7 @@ import { AdminPage } from "@/components/layout";
 import { Card, PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { Field } from "@/components/ui/Field";
 import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
@@ -320,22 +321,29 @@ export default function UsersManager() {
             ] as const
           ).map(([key, label]) => (
             <Field key={key} label={label} htmlFor={`create-${key}`} required>
-              <Input
-                id={`create-${key}`}
-                type={
-                  key === "password"
-                    ? "password"
-                    : key === "email"
-                      ? "email"
-                      : "text"
-                }
-                value={createForm[key]}
-                onChange={(e) =>
-                  setCreateForm((f) => ({ ...f, [key]: e.target.value }))
-                }
-                required
-                size="sm"
-              />
+              {key === "password" ? (
+                <PasswordInput
+                  id={`create-${key}`}
+                  value={createForm[key]}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                  required
+                  size="sm"
+                  autoComplete="new-password"
+                />
+              ) : (
+                <Input
+                  id={`create-${key}`}
+                  type={key === "email" ? "email" : "text"}
+                  value={createForm[key]}
+                  onChange={(e) =>
+                    setCreateForm((f) => ({ ...f, [key]: e.target.value }))
+                  }
+                  required
+                  size="sm"
+                />
+              )}
             </Field>
           ))}
           <Field label="Role" htmlFor="create-role">
