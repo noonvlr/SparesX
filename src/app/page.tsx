@@ -11,19 +11,21 @@ import { findPublicCategories } from "@/lib/categories/publicQuery";
 import { Product } from "@/lib/models/Product";
 import { RequestModel } from "@/lib/models/Request";
 import {
-  SITE_CONTACT_EMAIL,
-  SITE_NAME,
-  SITE_OPERATOR,
-  SITE_URL,
-} from "@/lib/seo/site";
+  FOUNDER_EDUCATION_DEGREE,
+  FOUNDER_EXPERIENCE_YEARS,
+  FOUNDER_NAME,
+  FOUNDER_PATH,
+  HOME_META,
+  buildOrganizationJsonLd,
+  buildWebSiteJsonLd,
+} from "@/lib/seo/entities";
 import { getLifetimeSoldListingCount } from "@/lib/analytics/lifetimeSold";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "SparesX – Buy & Sell Mobile Spare Parts Online",
+    absolute: HOME_META.title,
   },
-  description:
-    "SparesX is a B2B marketplace for mobile repair technicians to list, find, and request spare parts. Browse listings, check trust scores and badges, and connect directly with technicians — SparesX does not process payments.",
+  description: HOME_META.description,
   keywords: [
     "mobile spare parts",
     "technician marketplace",
@@ -33,9 +35,8 @@ export const metadata: Metadata = {
     "mobile battery screen camera",
   ],
   openGraph: {
-    title: "SparesX – Buy & Sell Mobile Spare Parts Online",
-    description:
-      "List, find, and request spare parts with technicians across India. Trust scores and badges help you connect directly — SparesX does not process payments.",
+    title: HOME_META.title,
+    description: HOME_META.description,
     url: "/",
     siteName: "SparesX",
     type: "website",
@@ -51,9 +52,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SparesX – Buy & Sell Mobile Spare Parts Online",
-    description:
-      "Marketplace for technicians: listings, trust scores, and direct technician connections.",
+    title: HOME_META.title,
+    description: HOME_META.description,
     images: ["/og-image.jpg"],
   },
   alternates: {
@@ -126,54 +126,8 @@ export default async function HomePage() {
     .sort((a, b) => b.listings - a.listings || a.name.localeCompare(b.name))
     .slice(0, 10);
 
-  const baseUrl = SITE_URL;
-
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${baseUrl}/#website`,
-    name: SITE_NAME,
-    alternateName: ["SparesX.com", "sparesx.com", "Spares X"],
-    description:
-      "India's B2B marketplace for mobile spare parts connecting technicians with quality parts",
-    url: baseUrl,
-    inLanguage: "en-IN",
-    publisher: { "@id": `${baseUrl}/#organization` },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${baseUrl}/products?search={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
-  };
-
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "@id": `${baseUrl}/#organization`,
-    name: SITE_NAME,
-    alternateName: ["SparesX.com", "sparesx.com"],
-    legalName: SITE_OPERATOR,
-    url: baseUrl,
-    logo: `${baseUrl}/icon-512.png`,
-    description:
-      "Marketplace connecting buyers and technicians of mobile, laptop, and desktop spare parts across India. SparesX does not sell parts or process payments.",
-    areaServed: {
-      "@type": "Country",
-      name: "India",
-    },
-    contactPoint: [
-      {
-        "@type": "ContactPoint",
-        contactType: "customer support",
-        email: SITE_CONTACT_EMAIL,
-        areaServed: "IN",
-        availableLanguage: ["en"],
-      },
-    ],
-  };
+  const jsonLd = buildWebSiteJsonLd();
+  const organizationSchema = buildOrganizationJsonLd();
 
   return (
     <>
@@ -305,6 +259,37 @@ export default async function HomePage() {
         </div>
 
         <FeaturedProducts products={featuredProducts as any} />
+
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+          <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-5 py-8 sm:px-8 sm:py-10 text-center shadow-[var(--shadow-sm)]">
+            <h2 className="text-title sm:text-[1.75rem] font-semibold tracking-tight text-[var(--ink)] mb-3">
+              Built by Someone Who Knows Mobile Repair
+            </h2>
+            <p className="text-[15px] sm:text-base leading-relaxed text-[var(--muted)] mb-6">
+              SparesX was founded by {FOUNDER_NAME}, an {FOUNDER_EDUCATION_DEGREE}{" "}
+              graduate with more than {FOUNDER_EXPERIENCE_YEARS} years of
+              hands-on experience in mobile phone repair, chip-level servicing
+              and technician training.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href={FOUNDER_PATH}
+                className={cn(buttonVariants({ size: "md" }), "w-full sm:w-auto")}
+              >
+                Meet the Founder
+              </Link>
+              <Link
+                href="/about"
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "md" }),
+                  "w-full sm:w-auto",
+                )}
+              >
+                About SparesX
+              </Link>
+            </div>
+          </div>
+        </section>
       </main>
     </>
   );

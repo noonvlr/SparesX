@@ -69,17 +69,22 @@ export default function Footer() {
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/about" className={linkClass}>
-                  About us
+                  About SparesX
+                </Link>
+              </li>
+              <li>
+                <Link href="/founder" className={linkClass}>
+                  Founder
+                </Link>
+              </li>
+              <li>
+                <Link href="/support" className={linkClass}>
+                  Contact
                 </Link>
               </li>
               <li>
                 <Link href="/faq" className={linkClass}>
                   FAQ
-                </Link>
-              </li>
-              <li>
-                <Link href="/support" className={linkClass}>
-                  Support
                 </Link>
               </li>
               <li>
@@ -92,13 +97,13 @@ export default function Footer() {
             <h3 className={headingClass}>Legal</h3>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
               <li>
-                <Link href="/privacy" className={linkClass}>
-                  Privacy Policy
+                <Link href="/terms" className={linkClass}>
+                  Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className={linkClass}>
-                  Terms of Service
+                <Link href="/privacy" className={linkClass}>
+                  Privacy Policy
                 </Link>
               </li>
               <li>
@@ -145,7 +150,11 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-6 border-t border-[var(--footer-border)] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs text-[var(--footer-muted)]">
-          <p>© {YEAR} SparesX · Noon Computers. All rights reserved.</p>
+          <p>
+            © {YEAR} SparesX · Noon Computers. All rights reserved.
+            <span className="mx-1.5">·</span>
+            Founded by Syed Idrees
+          </p>
           <p>Made for technicians across India.</p>
         </div>
       </div>
