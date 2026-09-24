@@ -16,6 +16,7 @@ import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import UploadedImage from "@/components/ui/UploadedImage";
+import ProductImageLightbox from "@/components/ProductImageLightbox";
 import { cn } from "@/lib/ui/cn";
 import { resolveUploadUrl } from "@/lib/ui/imageUrl";
 import {
@@ -129,6 +130,8 @@ export default function ProductDetail({
   const [waLoading, setWaLoading] = useState(false);
   const [waActionLoading, setWaActionLoading] = useState(false);
   const [soldOpen, setSoldOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [sellerRating, setSellerRating] = useState({
     averageRating: initialProduct.technician &&
     typeof initialProduct.technician === "object"
@@ -613,7 +616,20 @@ export default function ProductDetail({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10">
           {/* Gallery */}
           <Card className="p-4 sm:p-6">
-            <div className="relative aspect-square rounded-[var(--radius)] bg-[var(--surface-3)] border border-[var(--border)] overflow-hidden flex items-center justify-center">
+            <button
+              type="button"
+              disabled={!selectedImage}
+              aria-label="Open image fullscreen to zoom"
+              onClick={() => {
+                const idx = Math.max(
+                  0,
+                  images.findIndex((img) => img === selectedImage),
+                );
+                setLightboxIndex(idx);
+                setLightboxOpen(true);
+              }}
+              className="relative aspect-square w-full rounded-[var(--radius)] bg-[var(--surface-3)] border border-[var(--border)] overflow-hidden flex items-center justify-center group cursor-zoom-in disabled:cursor-default focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+            >
               {product.priceNegotiable && (
                 <Badge
                   tone="success"
@@ -623,18 +639,37 @@ export default function ProductDetail({
                 </Badge>
               )}
               {selectedImage ? (
-                <UploadedImage
-                  src={selectedImage}
-                  alt={imageAlt}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 560px"
-                  priority
-                  className="object-contain p-4"
-                />
+                <>
+                  <UploadedImage
+                    src={selectedImage}
+                    alt={imageAlt}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 560px"
+                    priority
+                    className="object-contain p-4"
+                  />
+                  <span className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-[var(--ink)]/70 px-2.5 py-1 text-[11px] font-medium text-[var(--ink-inverse)] opacity-90 group-hover:opacity-100 transition-opacity pointer-events-none">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      aria-hidden
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6"
+                      />
+                    </svg>
+                    Tap to zoom
+                  </span>
+                </>
               ) : (
                 <p className="text-[var(--muted)]">No image available</p>
               )}
-            </div>
+            </button>
             {images.length > 1 && (
               <div className="mt-4 grid grid-cols-4 sm:grid-cols-5 gap-2">
                 {images.map((img, idx) => (
@@ -643,6 +678,11 @@ export default function ProductDetail({
                     type="button"
                     aria-label={`View image ${idx + 1}`}
                     onClick={() => setSelectedImage(img)}
+                    onDoubleClick={() => {
+                      setSelectedImage(img);
+                      setLightboxIndex(idx);
+                      setLightboxOpen(true);
+                    }}
                     className={cn(
                       "aspect-square rounded-[var(--radius-sm)] border-2 overflow-hidden bg-[var(--surface)] transition-colors",
                       selectedImage === img
@@ -1101,6 +1141,18 @@ export default function ProductDetail({
             ? "Please login or create an account to save this listing for later."
             : "Please login or create an account to contact the seller via WhatsApp or in-app chat."
         }
+      />
+
+      <ProductImageLightbox
+        open={lightboxOpen}
+        images={images}
+        alt={imageAlt}
+        index={lightboxIndex}
+        onIndexChange={(i) => {
+          setLightboxIndex(i);
+          if (images[i]) setSelectedImage(images[i]);
+        }}
+        onClose={() => setLightboxOpen(false)}
       />
     </main>
   );
