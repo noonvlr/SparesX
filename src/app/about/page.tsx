@@ -15,6 +15,8 @@ import {
   NOON_COMPUTERS_NAME,
   NOON_COMPUTERS_URL,
   PERSON_ID,
+  YOUTUBE_CHANNEL_NAME,
+  YOUTUBE_CHANNEL_URL,
   buildAboutPageJsonLd,
   buildOrganizationJsonLd,
 } from "@/lib/seo/entities";
@@ -167,6 +169,18 @@ export default function AboutPage() {
                   {FOUNDER_LOCATION}. It covers practical repair work — including
                   chip-level servicing, board-level diagnostics and
                   micro-soldering — alongside technician training.
+                </p>
+                <p>
+                  The team also publishes detailed mobile service videos on the{" "}
+                  <a
+                    href={YOUTUBE_CHANNEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+                  >
+                    {YOUTUBE_CHANNEL_NAME}
+                  </a>{" "}
+                  YouTube channel.
                 </p>
                 <p>
                   SparesX is operated by {FOUNDER_NAME}, trading as{" "}

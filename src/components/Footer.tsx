@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BecomeSellerLink from "@/components/BecomeSellerLink";
 import { BrandMark } from "@/components/BrandMark";
+import { YOUTUBE_CHANNEL_URL } from "@/lib/seo/entities";
 
 const YEAR = new Date().getFullYear();
 
@@ -81,6 +82,16 @@ export default function Footer() {
                 <Link href="/support" className={linkClass}>
                   Contact
                 </Link>
+              </li>
+              <li>
+                <a
+                  href={YOUTUBE_CHANNEL_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                >
+                  YouTube
+                </a>
               </li>
               <li>
                 <Link href="/faq" className={linkClass}>

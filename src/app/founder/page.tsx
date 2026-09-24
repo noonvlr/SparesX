@@ -14,6 +14,8 @@ import {
   FOUNDER_PATH,
   NOON_COMPUTERS_NAME,
   NOON_COMPUTERS_URL,
+  YOUTUBE_CHANNEL_NAME,
+  YOUTUBE_CHANNEL_URL,
   buildFounderPersonJsonLd,
 } from "@/lib/seo/entities";
 import { SITE_NAME } from "@/lib/seo/site";
@@ -201,6 +203,34 @@ export default function FounderPage() {
                     )}
                   >
                     Visit {NOON_COMPUTERS_NAME}
+                  </a>
+                </p>
+              </div>
+            </Card>
+
+            <Card className="p-6 sm:p-7">
+              <div className={sectionClass}>
+                <h2 className={h2Class}>YouTube — Mobile Repair Videos</h2>
+                <p>
+                  {NOON_COMPUTERS_NAME} also runs a dedicated YouTube channel,{" "}
+                  <strong className="text-[var(--ink)]">
+                    {YOUTUBE_CHANNEL_NAME}
+                  </strong>
+                  , where detailed mobile service and repair videos are posted —
+                  covering practical diagnostics, chip-level work and technician
+                  training topics from the lab.
+                </p>
+                <p>
+                  <a
+                    href={YOUTUBE_CHANNEL_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      buttonVariants({ variant: "secondary", size: "md" }),
+                      "inline-flex mt-1",
+                    )}
+                  >
+                    Watch on YouTube
                   </a>
                 </p>
               </div>

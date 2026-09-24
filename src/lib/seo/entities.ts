@@ -24,9 +24,20 @@ export const FOUNDER_EXPERIENCE_YEARS = "16+";
 export const NOON_COMPUTERS_URL = "https://noonvlr.in/";
 export const NOON_COMPUTERS_NAME = SITE_OPERATOR;
 
+/**
+ * Official YouTube channel for detailed mobile service / repair videos
+ * (Noon Computers Tamil), verified via noonvlr.in and the live channel handle.
+ */
+export const YOUTUBE_CHANNEL_NAME = "Noon Computers Tamil";
+export const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@NoonComputersTamil";
+
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 export const PERSON_ID = `${SITE_URL}/#founder`;
+
+/** Verified public profile URLs for Schema.org sameAs. */
+export const FOUNDER_SAME_AS = [YOUTUBE_CHANNEL_URL] as const;
+export const NOON_COMPUTERS_SAME_AS = [YOUTUBE_CHANNEL_URL] as const;
 
 export const FOUNDER_META = {
   title: "Syed Idrees — Founder of SparesX & Noon Computers",
@@ -133,6 +144,7 @@ export function buildFounderPersonJsonLd() {
       "Mobile repair training",
       "Spare parts marketplace",
     ],
+    sameAs: [...FOUNDER_SAME_AS],
     worksFor: {
       "@type": "Organization",
       "@id": ORGANIZATION_ID,
@@ -152,6 +164,7 @@ export function buildFounderPersonJsonLd() {
         url: NOON_COMPUTERS_URL,
         description:
           "Mobile service, repair and technician training business in Vellore, Tamil Nadu.",
+        sameAs: [...NOON_COMPUTERS_SAME_AS],
       },
     ],
   };
