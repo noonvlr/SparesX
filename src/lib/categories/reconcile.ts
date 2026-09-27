@@ -35,8 +35,14 @@ export type ReconcileReport = {
  */
 export async function reconcilePartCategories(options?: {
   deleteInactiveDuplicates?: boolean;
+  /**
+   * Must be false when called while rendering a page — Next.js throws if
+   * revalidateTag/revalidatePath run during render.
+   */
+  revalidate?: boolean;
 }): Promise<ReconcileReport> {
   const deleteInactive = options?.deleteInactiveDuplicates ?? true;
+  const shouldRevalidate = options?.revalidate ?? true;
 
   const [categories, deviceTypes] = await Promise.all([
     Category.find({}).lean() as Promise<CatDoc[]>,
@@ -252,6 +258,6 @@ export async function reconcilePartCategories(options?: {
     }
   }
 
-  revalidateCategoryCaches();
+  if (shouldRevalidate) revalidateCategoryCaches();
   return report;
 }
