@@ -1,9 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useChatDock } from "@/components/chat/ChatProvider";
+import {
+  isNearBottom,
+  planScroll,
+  preservedScrollTop,
+  type ListEdges,
+  type ScrollMetrics,
+} from "@/lib/chat/scrollAnchor";
+import { SYNC_STATUS_COPY } from "@/lib/chat/syncStatus";
+import { authFetch } from "@/lib/auth/clientAuth";
+import { showToast } from "@/components/ToastHost";
+import type { ChatMessage } from "@/types/chat";
 import ConversationList from "@/components/chat/ConversationList";
 import MessageBubble from "@/components/chat/MessageBubble";
 import MessageInput from "@/components/chat/MessageInput";
@@ -50,6 +61,7 @@ function peerOf(c?: ChatConversation | null, userId?: string | null) {
 
 const FAB_SIZE = 56;
 const FAB_MARGIN = 16;
+const NO_MESSAGES: ChatMessage[] = [];
 
 function clampFabPosition(x: number, y: number) {
   if (typeof window === "undefined") return { x, y };
@@ -59,32 +71,261 @@ function clampFabPosition(x: number, y: number) {
   };
 }
 
-function ThreadBody({
+export function reportUserHref(peerId: string, conversationId: string) {
+  return `/support/report?type=user&id=${encodeURIComponent(peerId)}&conversationId=${encodeURIComponent(conversationId)}`;
+}
+
+export function reportMessageHref(messageId: string, conversationId: string) {
+  return `/support/report?type=message&id=${encodeURIComponent(messageId)}&conversationId=${encodeURIComponent(conversationId)}`;
+}
+
+/**
+ * Block / unblock with confirmation. The server enforces auth and revokes
+ * WhatsApp unlocks on block; this only drives the request and feedback.
+ */
+function usePeerBlockToggle(
+  onBlockedChange: (userId: string, blocked: boolean) => void,
+) {
+  const [busy, setBusy] = useState(false);
+  const toggle = useCallback(
+    async (
+      peer: { _id: string; name?: string },
+      currentlyBlocked: boolean,
+    ): Promise<boolean> => {
+      if (busy) return false;
+      if (
+        !currentlyBlocked &&
+        !window.confirm(
+          `Block ${peer.name || "this user"}? They won't be able to message you, and any WhatsApp access between you will be revoked.`,
+        )
+      ) {
+        return false;
+      }
+      setBusy(true);
+      try {
+        const res = await authFetch("/api/chat/block", {
+          method: currentlyBlocked ? "DELETE" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: peer._id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showToast(
+            data.message ||
+              (currentlyBlocked ? "Could not unblock" : "Could not block"),
+            "error",
+            3500,
+          );
+          return false;
+        }
+        onBlockedChange(String(peer._id), !currentlyBlocked);
+        showToast(currentlyBlocked ? "User unblocked" : "User blocked");
+        return true;
+      } catch {
+        showToast("No connection — please try again", "error", 3500);
+        return false;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [busy, onBlockedChange],
+  );
+  return { toggle, busy };
+}
+
+function ThreadMenu({
   conversationId,
-  compact,
+  peer,
+  peerBlocked,
+  onBlockedChange,
 }: {
   conversationId: string;
-  compact?: boolean;
+  peer: { _id: string; name?: string };
+  peerBlocked: boolean;
+  onBlockedChange: (userId: string, blocked: boolean) => void;
 }) {
   const chat = useChatDock();
   const router = useRouter();
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const messages = chat.messagesById[conversationId] || [];
-  const conversation = chat.getConversation(conversationId);
-  const peer = peerOf(conversation, chat.userId);
-  const typing = chat.typingById[conversationId];
-  const online = peer?._id ? chat.onlineMap[peer._id] : false;
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const { toggle, busy } = usePeerBlockToggle(onBlockedChange);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, typing, conversationId]);
+    if (!open) return;
+    const onDown = (e: PointerEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const go = (href: string) => {
+    setOpen(false);
+    chat.closePanel();
+    router.push(href);
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <IconButton
+        type="button"
+        size="sm"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Chat options"
+        aria-haspopup="menu"
+        aria-expanded={open}
+      >
+        ⋮
+      </IconButton>
+      {open ? (
+        <div
+          role="menu"
+          className="absolute right-0 top-full mt-1 z-[100] min-w-[180px] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-md)] py-1 text-sm"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            className="w-full text-left px-3 py-2.5 hover:bg-[var(--surface-2)] text-[var(--ink)]"
+            onClick={() => go(`/u/${peer._id}`)}
+          >
+            View profile
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            className="w-full text-left px-3 py-2.5 hover:bg-[var(--surface-2)] text-[var(--ink)]"
+            onClick={() => go(reportUserHref(peer._id, conversationId))}
+          >
+            Report user
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={busy}
+            className="w-full text-left px-3 py-2.5 hover:bg-[var(--surface-2)] text-[var(--danger)] font-semibold disabled:opacity-60"
+            onClick={() => {
+              setOpen(false);
+              void toggle(peer, peerBlocked);
+            }}
+          >
+            {peerBlocked ? "Unblock user" : "Block user"}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ThreadBody({
+  conversationId,
+  compact,
+  peerBlocked,
+}: {
+  conversationId: string;
+  compact?: boolean;
+  peerBlocked?: boolean;
+}) {
+  const chat = useChatDock();
+  const router = useRouter();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const metricsRef = useRef<ScrollMetrics>({
+    scrollTop: 0,
+    scrollHeight: 0,
+    clientHeight: 0,
+  });
+  const edgesRef = useRef<ListEdges>({ count: 0 });
+  const threadRef = useRef<string | null>(null);
+  const [showJump, setShowJump] = useState(false);
+  const [draft, setDraft] = useState<{ text: string; nonce: number } | null>(null);
+  const messages = chat.messagesById[conversationId] ?? NO_MESSAGES;
+  const conversation = chat.getConversation(conversationId);
+  const typing = chat.typingById[conversationId];
+  const myId = chat.userId;
+
+  const captureMetrics = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    metricsRef.current = {
+      scrollTop: el.scrollTop,
+      scrollHeight: el.scrollHeight,
+      clientHeight: el.clientHeight,
+    };
+  };
+
+  const jumpToLatest = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+    captureMetrics();
+    setShowJump(false);
+  };
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const last = messages[messages.length - 1];
+    const next: ListEdges = {
+      firstId: messages[0]?._id,
+      lastId: last?._id,
+      count: messages.length,
+    };
+    const prev = edgesRef.current;
+    const plan = planScroll(prev, next, {
+      wasNearBottom: isNearBottom(metricsRef.current),
+      lastIsMine: Boolean(last) && String(last.senderId) === String(myId),
+      threadChanged: threadRef.current !== conversationId,
+    });
+    // The jump button depends on scroll measurements only available here.
+    if (plan === "bottom") {
+      el.scrollTop = el.scrollHeight;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setShowJump(false);
+    } else if (plan === "preserve") {
+      el.scrollTop = preservedScrollTop(
+        metricsRef.current.scrollTop,
+        metricsRef.current.scrollHeight,
+        el.scrollHeight,
+      );
+    } else if (next.lastId !== prev.lastId && next.count > 0) {
+      setShowJump(true);
+    }
+    edgesRef.current = next;
+    threadRef.current = conversationId;
+    captureMetrics();
+  }, [messages, conversationId, myId]);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !typing) return;
+    if (isNearBottom(metricsRef.current)) {
+      el.scrollTop = el.scrollHeight;
+      captureMetrics();
+    }
+  }, [typing]);
+
+  const clientIdOf = (m: ChatMessage) => m.clientId || m._id;
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-[var(--chat-thread)]">
       {!compact && (
         <ProductHeader product={conversation?.productId as any} />
       )}
-      <div className="flex-1 overflow-y-auto px-3 py-3">
+      <div className="relative flex-1 min-h-0">
+      <div
+        ref={scrollRef}
+        onScroll={() => {
+          captureMetrics();
+          if (isNearBottom(metricsRef.current)) setShowJump(false);
+        }}
+        className="h-full overflow-y-auto px-3 py-3"
+      >
         {chat.hasMoreById[conversationId] && (
           <div className="text-center mb-2">
             <Button
@@ -114,31 +355,52 @@ function ThreadBody({
         ) : (
           messages.map((m) => (
             <MessageBubble
-              key={m._id}
+              key={clientIdOf(m)}
               message={m}
-              mine={String(m.senderId) === String(chat.userId)}
+              mine={String(m.senderId) === String(myId)}
               onReport={
-                String(m.senderId) === String(chat.userId)
+                String(m.senderId) === String(myId) || m.clientStatus
                   ? undefined
                   : (msg) => {
-                      router.push(
-                        `/support/report?type=message&id=${encodeURIComponent(msg._id)}&conversationId=${encodeURIComponent(conversationId)}`,
-                      );
+                      chat.closePanel();
+                      router.push(reportMessageHref(msg._id, conversationId));
                     }
               }
+              onRetry={(msg) => void chat.retrySend(conversationId, clientIdOf(msg))}
+              onEdit={(msg) => {
+                chat.discardFailed(conversationId, clientIdOf(msg));
+                setDraft({ text: msg.text || "", nonce: Date.now() });
+              }}
+              onDiscard={(msg) => chat.discardFailed(conversationId, clientIdOf(msg))}
             />
           ))
         )}
-        <TypingIndicator visible={!!typing} />
-        <div ref={bottomRef} />
+        <TypingIndicator visible={!!typing && !peerBlocked} />
       </div>
-      <MessageInput
-        onSend={(t) => chat.sendText(conversationId, t)}
-        onSendImage={(url) => chat.sendImage(conversationId, url)}
-        onTyping={() => chat.onTyping(conversationId)}
-        disabled={!chat.userId}
-        showQuickReplies={messages.length < 3}
-      />
+      {showJump ? (
+        <button
+          type="button"
+          onClick={jumpToLatest}
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--brand)] text-[var(--primary-foreground)] text-xs font-semibold px-3 py-1.5 shadow-[var(--shadow-md)]"
+        >
+          New messages ↓
+        </button>
+      ) : null}
+      </div>
+      {peerBlocked ? (
+        <div className="p-3 border-t border-[var(--border)] bg-[var(--surface)] text-sm text-[var(--muted)] text-center">
+          You blocked this user. Unblock to send messages again.
+        </div>
+      ) : (
+        <MessageInput
+          onSend={(t) => chat.sendText(conversationId, t)}
+          onSendImage={(url) => chat.sendImage(conversationId, url)}
+          onTyping={() => chat.onTyping(conversationId)}
+          disabled={!chat.userId}
+          showQuickReplies={messages.length < 3}
+          restoreDraft={draft}
+        />
+      )}
     </div>
   );
 }
@@ -160,6 +422,8 @@ function FloatingWindow({
   const minimized = chat.minimizedIds.has(conversationId);
   const right = 24 + index * 340;
   const peerBlocked = peer?._id ? blockedIds.has(String(peer._id)) : false;
+  const { toggle: toggleBlock, busy: blockBusy } =
+    usePeerBlockToggle(onBlockedChange);
 
   if (minimized) return null;
 
@@ -211,7 +475,7 @@ function FloatingWindow({
         </div>
         {peer?._id ? (
           <Link
-            href={`/support/report?type=user&id=${encodeURIComponent(peer._id)}&conversationId=${encodeURIComponent(conversationId)}`}
+            href={reportUserHref(peer._id, conversationId)}
             className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1"
             title="Report this user"
           >
@@ -221,34 +485,13 @@ function FloatingWindow({
         {peer?._id ? (
           <button
             type="button"
-            className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1"
+            disabled={blockBusy}
+            className="text-[10px] font-semibold uppercase tracking-wide text-[var(--ink-inverse)]/80 hover:text-[var(--ink-inverse)] hover:underline px-1 disabled:opacity-60"
             title={peerBlocked ? "Unblock this user" : "Block this user"}
             onClick={() => {
-              void (async () => {
-                try {
-                  const { authFetch } = await import("@/lib/auth/clientAuth");
-                  const { showToast } = await import("@/components/ToastHost");
-                  const res = await authFetch("/api/chat/block", {
-                    method: peerBlocked ? "DELETE" : "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ userId: peer._id }),
-                  });
-                  const data = await res.json().catch(() => ({}));
-                  if (!res.ok) {
-                    showToast(
-                      data.message ||
-                        (peerBlocked ? "Could not unblock" : "Could not block"),
-                      "error",
-                    );
-                    return;
-                  }
-                  onBlockedChange(String(peer._id), !peerBlocked);
-                  showToast(peerBlocked ? "User unblocked" : "User blocked");
-                  if (!peerBlocked) chat.closeFloating(conversationId);
-                } catch {
-                  // ignore
-                }
-              })();
+              void toggleBlock(peer, peerBlocked).then((ok) => {
+                if (ok && !peerBlocked) chat.closeFloating(conversationId);
+              });
             }}
           >
             {peerBlocked ? "Unblock" : "Block"}
@@ -273,14 +516,26 @@ function FloatingWindow({
           ×
         </IconButton>
       </div>
+      {chat.syncStatus === "offline" || chat.syncStatus === "reconnecting" ? (
+        <p
+          role="status"
+          title={SYNC_STATUS_COPY[chat.syncStatus].title}
+          className={`px-3 py-1 text-[11px] font-semibold ${
+            chat.syncStatus === "offline"
+              ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+              : "bg-[var(--warning-soft)] text-[var(--warning)]"
+          }`}
+        >
+          {SYNC_STATUS_COPY[chat.syncStatus].label} —{" "}
+          {SYNC_STATUS_COPY[chat.syncStatus].title}
+        </p>
+      ) : null}
       <div className="flex-1 min-h-0">
-        {peerBlocked ? (
-          <div className="p-4 text-sm text-[var(--muted)]">
-            You blocked this user. Unblock to send messages again.
-          </div>
-        ) : (
-          <ThreadBody conversationId={conversationId} compact />
-        )}
+        <ThreadBody
+          conversationId={conversationId}
+          compact
+          peerBlocked={peerBlocked}
+        />
       </div>
     </div>
   );
@@ -293,6 +548,15 @@ export default function FloatingChatDock() {
   const [fabDismissed, setFabDismissed] = useState(false);
   const [chatVisited, setChatVisited] = useState(false);
   const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+  const handleBlockedChange = useCallback((userId: string, blocked: boolean) => {
+    setBlockedIds((prev) => {
+      const next = new Set(prev);
+      if (blocked) next.add(userId);
+      else next.delete(userId);
+      return next;
+    });
+  }, []);
+  const statusCopy = SYNC_STATUS_COPY[chat.syncStatus];
   const [fabPosition, setFabPosition] = useState<{ x: number; y: number } | null>(
     null,
   );
@@ -531,14 +795,7 @@ export default function FloatingChatDock() {
           conversationId={id}
           index={i}
           blockedIds={blockedIds}
-          onBlockedChange={(userId, blocked) => {
-            setBlockedIds((prev) => {
-              const next = new Set(prev);
-              if (blocked) next.add(userId);
-              else next.delete(userId);
-              return next;
-            });
-          }}
+          onBlockedChange={handleBlockedChange}
         />
       ))}
 
@@ -609,22 +866,31 @@ export default function FloatingChatDock() {
                 {muted ? "🔇" : "🔊"}
               </IconButton>
               <span
-                className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-[var(--muted)] px-1"
-                title={
-                  chat.connected
-                    ? "Connected — messages update live"
-                    : "Reconnecting…"
-                }
+                className={`${
+                  statusCopy.tone === "success" ? "hidden sm:inline-flex" : "inline-flex"
+                } items-center gap-1 text-[10px] font-medium text-[var(--muted)] px-1`}
+                title={statusCopy.title}
+                role="status"
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
-                    chat.connected
+                    statusCopy.tone === "success"
                       ? "bg-[var(--success)]"
-                      : "bg-[var(--warning)]"
+                      : statusCopy.tone === "warning"
+                        ? "bg-[var(--warning)]"
+                        : "bg-[var(--danger)]"
                   }`}
                 />
-                {chat.connected ? "Live" : "Offline"}
+                {statusCopy.label}
               </span>
+              {chat.panelView === "thread" && activePeer?._id ? (
+                <ThreadMenu
+                  conversationId={chat.activeId || ""}
+                  peer={activePeer}
+                  peerBlocked={blockedIds.has(String(activePeer._id))}
+                  onBlockedChange={handleBlockedChange}
+                />
+              ) : null}
               <IconButton
                 type="button"
                 size="sm"
@@ -656,7 +922,12 @@ export default function FloatingChatDock() {
                   }}
                 />
               ) : chat.activeId ? (
-                <ThreadBody conversationId={chat.activeId} />
+                <ThreadBody
+                  conversationId={chat.activeId}
+                  peerBlocked={
+                    activePeer?._id ? blockedIds.has(String(activePeer._id)) : false
+                  }
+                />
               ) : null}
             </div>
           </aside>

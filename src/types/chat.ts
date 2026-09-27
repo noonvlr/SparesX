@@ -55,4 +55,10 @@ export type ChatMessage = {
   delivered: boolean;
   read: boolean;
   createdAt: string;
+  /** Client-only: optimistic bubble state until the server confirms it. */
+  clientStatus?: "sending" | "failed";
+  /** Client-only: stable id of an optimistic bubble across retries. */
+  clientId?: string;
+  /** Client-only: server reason shown on a failed bubble. */
+  clientError?: string;
 };

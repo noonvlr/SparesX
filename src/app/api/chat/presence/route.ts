@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   markUserOffline,
   setConversationTyping,
+  setConversationViewing,
   updateLastSeen,
 } from "@/lib/chat/chatService";
 import { errorResponse, isAuthError, requireUser } from "@/lib/auth/requireUser";
 
-/** Heartbeat + optional typing + explicit offline for Vercel REST presence. */
+/**
+ * REST presence: heartbeat, optional typing, viewing leases for open threads,
+ * and explicit offline.
+ */
 export async function POST(req: NextRequest) {
   const user = await requireUser(req);
   if (isAuthError(user)) return user;
@@ -19,23 +23,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, status: "offline" }, { status: 200 });
     }
 
-    await updateLastSeen(user.id);
-
-    let typing: { typingUserId: string | null; typingUntil: Date | null } | null =
-      null;
-    if (
+    const typingRequested =
       typeof body?.conversationId === "string" &&
-      typeof body?.typing === "boolean"
-    ) {
-      typing = await setConversationTyping({
-        conversationId: body.conversationId,
-        userId: user.id,
-        typing: body.typing,
-      });
-    }
+      typeof body?.typing === "boolean";
+
+    const [, viewing, typing] = await Promise.all([
+      updateLastSeen(user.id),
+      body?.viewing !== undefined || body?.stopViewing !== undefined
+        ? setConversationViewing({
+            userId: user.id,
+            viewing: body.viewing,
+            stopViewing: body.stopViewing,
+          })
+        : null,
+      typingRequested
+        ? setConversationTyping({
+            conversationId: body.conversationId,
+            userId: user.id,
+            typing: body.typing,
+          })
+        : null,
+    ]);
 
     return NextResponse.json(
-      { ok: true, lastSeen: new Date().toISOString(), typing },
+      {
+        ok: true,
+        lastSeen: new Date().toISOString(),
+        typing,
+        viewing: viewing?.viewing ?? undefined,
+      },
       { status: 200 },
     );
   } catch (error) {

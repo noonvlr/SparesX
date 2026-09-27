@@ -129,42 +129,27 @@ export function useShellAuth() {
     };
   }, [isAuthenticated, userRole, pathname]);
 
-  // Chat unread badge for any authenticated user
+  // Chat unread badge: ChatProvider owns the count (inbox sync + read
+  // responses) and broadcasts it; ask it for the current value on mount.
   useEffect(() => {
     if (!isAuthenticated) {
       setChatUnread(0);
       return;
     }
 
-    const fetchUnread = async () => {
-      try {
-        const res = await authFetch("/api/chat/unread-count");
-        const data = await res.json();
-        if (res.ok) setChatUnread(data.unreadTotal || 0);
-      } catch {
-        // ignore
-      }
-    };
-
-    fetchUnread();
-    const interval = setInterval(fetchUnread, 12000);
     const onUpdated = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (typeof detail?.unreadTotal === "number") {
         setChatUnread(detail.unreadTotal);
-      } else {
-        fetchUnread();
       }
     };
     window.addEventListener("chat-unread-updated", onUpdated);
-    window.addEventListener("focus", fetchUnread);
+    window.dispatchEvent(new CustomEvent("chat-unread-request"));
 
     return () => {
-      clearInterval(interval);
       window.removeEventListener("chat-unread-updated", onUpdated);
-      window.removeEventListener("focus", fetchUnread);
     };
-  }, [isAuthenticated, pathname]);
+  }, [isAuthenticated]);
 
   const handleLogout = useCallback(async () => {
     try {

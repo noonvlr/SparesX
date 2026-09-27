@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
 import { Textarea } from "@/components/ui/Input";
 import { authFetch } from "@/lib/auth/clientAuth";
+import { showToast } from "@/components/ToastHost";
 
 const QUICK_REPLIES = [
   "Is this available?",
@@ -18,6 +19,7 @@ export default function MessageInput({
   onTyping,
   disabled,
   showQuickReplies,
+  restoreDraft,
 }: {
   onSend: (text: string) => Promise<void> | void;
   onSendImage: (url: string) => Promise<void> | void;
@@ -25,18 +27,41 @@ export default function MessageInput({
   disabled?: boolean;
   /** Client-only preset chips shown above the input for new/short threads. */
   showQuickReplies?: boolean;
+  /** Put text back into the composer (e.g. "Edit" on a failed bubble). */
+  restoreDraft?: { text: string; nonce: number } | null;
 }) {
   const [text, setText] = useState("");
   const [uploading, setUploading] = useState(false);
   const [sendingReply, setSendingReply] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const submittingRef = useRef(false);
+
+  useEffect(() => {
+    if (!restoreDraft) return;
+    setText(restoreDraft.text);
+    textareaRef.current?.focus();
+  }, [restoreDraft]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const value = text.trim();
-    if (!value || disabled) return;
+    if (!value || disabled || submittingRef.current) return;
+    submittingRef.current = true;
+    // The bubble keeps the text (with Retry) if delivery fails.
     setText("");
-    await onSend(value);
+    try {
+      await onSend(value);
+    } catch (err) {
+      setText((current) => current || value);
+      showToast(
+        err instanceof Error && err.message ? err.message : "Message not sent",
+        "error",
+        3500,
+      );
+    } finally {
+      submittingRef.current = false;
+    }
   }
 
   async function handleQuickReply(reply: string) {
@@ -61,12 +86,16 @@ export default function MessageInput({
         method: "POST",
         body: formData,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       const url = data.urls?.[0];
-      if (!url) throw new Error("Upload failed");
+      if (!res.ok || !url) throw new Error(data.message || "Image upload failed");
       await onSendImage(url);
-    } catch {
-      alert("Image upload failed");
+    } catch (err) {
+      showToast(
+        err instanceof Error && err.message ? err.message : "Image upload failed",
+        "error",
+        3500,
+      );
     } finally {
       setUploading(false);
     }
@@ -114,6 +143,7 @@ export default function MessageInput({
           {uploading ? "…" : "📷"}
         </IconButton>
         <Textarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => {
             setText(e.target.value);

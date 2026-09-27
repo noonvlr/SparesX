@@ -14,6 +14,8 @@ export interface IConversation extends Document {
   /** 1:1 typing indicator (REST/Vercel-safe) */
   typingUserId?: Types.ObjectId;
   typingUntil?: Date;
+  /** Per-user "has this thread open" lease, keyed by userId (REST presence). */
+  viewingUntil?: Map<string, Date>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +48,11 @@ const ConversationSchema: Schema<IConversation> = new Schema(
     },
     typingUserId: { type: Schema.Types.ObjectId, ref: "User" },
     typingUntil: { type: Date },
+    viewingUntil: {
+      type: Map,
+      of: Date,
+      default: undefined,
+    },
   },
   { timestamps: true },
 );

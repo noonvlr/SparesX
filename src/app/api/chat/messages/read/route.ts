@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { markConversationRead } from "@/lib/chat/chatService";
+import { getTotalUnread, markConversationRead } from "@/lib/chat/chatService";
 import { errorResponse, isAuthError, requireUser } from "@/lib/auth/requireUser";
 
 export async function PATCH(req: NextRequest) {
@@ -9,7 +9,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
     const conversationId = body?.conversationId;
-    if (!conversationId) {
+    if (!conversationId || typeof conversationId !== "string") {
       return NextResponse.json(
         { message: "conversationId required" },
         { status: 400 },
@@ -19,13 +19,16 @@ export async function PATCH(req: NextRequest) {
     const result = await markConversationRead({
       conversationId,
       userId: user.id,
+      opened: body?.opened !== false,
     });
+    const unreadTotal = await getTotalUnread(user.id);
 
     return NextResponse.json(
       {
         ok: true,
         modifiedCount: result.modifiedCount,
         peerIds: result.peerIds,
+        unreadTotal,
       },
       { status: 200 },
     );

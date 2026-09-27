@@ -15,23 +15,34 @@ import {
   recomputeResponseRate,
   RESPONSE_WINDOW_MS,
 } from "@/lib/trust/responseRate";
+import {
+  MAX_VIEWING_IDS,
+  ONLINE_WINDOW_MS,
+  TYPING_WINDOW_MS,
+  VIEWING_TTL_MS,
+  decideChatEmail,
+  isRecentlyOnline,
+  isViewingConversation,
+} from "@/lib/chat/presenceRules";
 
 void User;
 void Product;
 
-/** Consider online if lastSeen within this window (Vercel REST presence). */
-export const ONLINE_WINDOW_MS = 90_000;
-export const TYPING_WINDOW_MS = 4_000;
+export { ONLINE_WINDOW_MS, TYPING_WINDOW_MS };
 
 function toOid(id: string | Types.ObjectId) {
   return typeof id === "string" ? new Types.ObjectId(id) : id;
 }
 
-function isRecentlyOnline(lastSeen?: Date | string | null) {
-  if (!lastSeen) return false;
-  const t = new Date(lastSeen).getTime();
-  if (Number.isNaN(t)) return false;
-  return Date.now() - t < ONLINE_WINDOW_MS;
+function validIds(ids: unknown, max: number): string[] {
+  if (!Array.isArray(ids)) return [];
+  const out = new Set<string>();
+  for (const raw of ids) {
+    if (typeof raw !== "string" || !Types.ObjectId.isValid(raw)) continue;
+    out.add(raw);
+    if (out.size >= max) break;
+  }
+  return [...out];
 }
 
 function isActivelyTyping(
@@ -318,10 +329,20 @@ export async function listMessages(params: {
       ? messages[messages.length - 1].createdAt.toISOString()
       : null;
 
+  const peerId =
+    (conversation.participants as unknown[])
+      .map(String)
+      .find((id) => id !== String(userId)) || "";
+
   return {
     messages: messages.reverse(),
     nextCursor,
     hasMore: Boolean(nextCursor),
+    peerTyping: isActivelyTyping(
+      (conversation as { typingUserId?: unknown }).typingUserId,
+      (conversation as { typingUntil?: Date }).typingUntil,
+      peerId,
+    ),
   };
 }
 
@@ -331,8 +352,12 @@ export async function sendMessage(params: {
   type?: MessageType;
   text?: string;
   mediaUrl?: string;
+  /** Omit to derive from the receiver's `lastSeen` (REST presence). */
   receiverOnline?: boolean;
-  /** When true, skip in-app/email notify (receiver has the thread open). */
+  /**
+   * When true, skip in-app/email notify (receiver has the thread open).
+   * A fresh `viewingUntil` lease on the conversation also counts.
+   */
   receiverViewing?: boolean;
   /** Admin/system bulk sends — skip per-user message rate limits. */
   skipRateLimit?: boolean;
@@ -343,8 +368,6 @@ export async function sendMessage(params: {
     type = "text",
     text,
     mediaUrl,
-    receiverOnline = false,
-    receiverViewing = false,
     skipRateLimit = false,
   } = params;
 
@@ -395,6 +418,19 @@ export async function sendMessage(params: {
 
   const previousUnread = conversation.unreadCounts.get(receiverId) || 0;
 
+  const receiverViewing =
+    params.receiverViewing === true ||
+    isViewingConversation(conversation.viewingUntil, receiverId);
+  let receiverOnline = params.receiverOnline;
+  if (receiverOnline === undefined) {
+    if (receiverViewing) {
+      receiverOnline = true;
+    } else {
+      const receiver = await User.findById(receiverId).select("lastSeen").lean();
+      receiverOnline = isRecentlyOnline(receiver?.lastSeen);
+    }
+  }
+
   const message = await Message.create({
     conversationId: conversation._id,
     senderId: toOid(senderId),
@@ -415,6 +451,11 @@ export async function sendMessage(params: {
 
   conversation.unreadCounts.set(receiverId, previousUnread + 1);
   conversation.unreadCounts.set(senderId, 0);
+  // Sending ends the sender's typing state (saves the client a stop request).
+  if (String(conversation.typingUserId || "") === String(senderId)) {
+    conversation.typingUserId = undefined;
+    conversation.typingUntil = undefined;
+  }
   await conversation.save();
 
   // Closed-loop responseRate: new inbound burst → opportunity on receiver;
@@ -427,21 +468,21 @@ export async function sendMessage(params: {
     previousUnread,
   });
 
-  if (!receiverViewing) {
-    void notifyOfflineChatMessage({
-      receiverId,
-      senderId,
-      conversationId: String(conversation._id),
-      preview,
-      // First unread burst always; also email when recipient looks offline
-      // (with cooldown inside notify for follow-up messages).
-      sendEmail: previousUnread === 0 || !receiverOnline,
-      receiverOnline,
-      isFirstUnreadBurst: previousUnread === 0,
-    });
-  }
+  const notification: Promise<void> = receiverViewing
+    ? Promise.resolve()
+    : notifyOfflineChatMessage({
+        receiverId,
+        senderId,
+        conversationId: String(conversation._id),
+        preview,
+        // First unread burst always; also email when recipient looks offline
+        // (with cooldown inside notify for follow-up messages).
+        sendEmail: previousUnread === 0 || !receiverOnline,
+        receiverOnline,
+        isFirstUnreadBurst: previousUnread === 0,
+      });
 
-  return { message, conversation, receiverId };
+  return { message, conversation, receiverId, receiverViewing, notification };
 }
 
 async function trackResponseRateOnSend(params: {
@@ -505,8 +546,6 @@ async function trackResponseRateOnSend(params: {
   }
 }
 
-const CHAT_EMAIL_COOLDOWN_MS = 60 * 60 * 1000; // 1h between follow-up emails
-
 async function notifyOfflineChatMessage(params: {
   receiverId: string;
   senderId: string;
@@ -535,24 +574,24 @@ async function notifyOfflineChatMessage(params: {
 
     if (!params.sendEmail || !result.id) return;
 
-    // Fresh notification → email. Collapsed follow-ups → email only when
-    // recipient appears offline and last email for this thread was ≥1h ago.
-    let shouldEmail = Boolean(result.created && params.isFirstUnreadBurst);
-    if (!shouldEmail && !params.receiverOnline && !result.created) {
+    let lastEmailAt: string | number | null = null;
+    if (!result.created && !params.receiverOnline) {
       const existing = await Notification.findById(result.id)
         .select("meta")
         .lean();
       const lastRaw = existing?.meta?.lastEmailAt;
-      const lastMs =
-        typeof lastRaw === "string" || typeof lastRaw === "number"
-          ? new Date(lastRaw).getTime()
-          : 0;
-      shouldEmail =
-        !lastMs || Date.now() - lastMs >= CHAT_EMAIL_COOLDOWN_MS;
-    } else if (result.created && params.sendEmail) {
-      shouldEmail = true;
+      if (typeof lastRaw === "string" || typeof lastRaw === "number") {
+        lastEmailAt = lastRaw;
+      }
     }
 
+    const shouldEmail = decideChatEmail({
+      sendEmail: params.sendEmail,
+      created: result.created,
+      isFirstUnreadBurst: Boolean(params.isFirstUnreadBurst),
+      receiverOnline: Boolean(params.receiverOnline),
+      lastEmailAt,
+    });
     if (!shouldEmail) return;
 
     const receiver = await User.findById(params.receiverId)
@@ -584,8 +623,16 @@ async function notifyOfflineChatMessage(params: {
 export async function markConversationRead(params: {
   conversationId: string;
   userId: string;
+  /**
+   * True when the thread was just opened: also clears the thread's chat
+   * notifications even if no message changed state.
+   */
+  opened?: boolean;
 }) {
-  const { conversationId, userId } = params;
+  const { conversationId, userId, opened = true } = params;
+  if (!Types.ObjectId.isValid(conversationId)) {
+    throw Object.assign(new Error("Forbidden"), { status: 403 });
+  }
   await connectDB();
 
   const conversation = await Conversation.findById(conversationId);
@@ -604,8 +651,18 @@ export async function markConversationRead(params: {
     { $set: { read: true, readAt: now, delivered: true, deliveredAt: now } },
   );
 
-  conversation.unreadCounts.set(userId, 0);
-  await conversation.save();
+  const counterDirty = (conversation.unreadCounts.get(userId) || 0) !== 0;
+  if (result.modifiedCount === 0 && !counterDirty && !opened) {
+    return { conversation, modifiedCount: 0, peerIds: [] as string[] };
+  }
+
+  if (counterDirty) {
+    await Conversation.updateOne(
+      { _id: conversation._id },
+      { $set: { [`unreadCounts.${userId}`]: 0 } },
+    );
+    conversation.unreadCounts.set(userId, 0);
+  }
 
   // Clear collapsed chat notifications when the thread is opened.
   try {
@@ -628,12 +685,15 @@ export async function markConversationRead(params: {
     console.warn("[chat] mark notifications read failed:", err);
   }
 
-  const senderIds = await Message.distinct("senderId", {
-    conversationId: conversation._id,
-    receiverId: toOid(userId),
-    read: true,
-    readAt: now,
-  });
+  const senderIds =
+    result.modifiedCount > 0
+      ? await Message.distinct("senderId", {
+          conversationId: conversation._id,
+          receiverId: toOid(userId),
+          read: true,
+          readAt: now,
+        })
+      : [];
 
   return {
     conversation,
@@ -703,13 +763,64 @@ export async function updateLastSeen(userId: string) {
 export async function markUserOffline(userId: string) {
   await connectDB();
   const offlineAt = new Date(Date.now() - ONLINE_WINDOW_MS - 5_000);
+  const viewingKey = `viewingUntil.${userId}`;
   await Promise.all([
     User.findByIdAndUpdate(userId, { lastSeen: offlineAt }),
     Conversation.updateMany(
       { typingUserId: toOid(userId) },
       { $unset: { typingUserId: 1, typingUntil: 1 } },
     ),
+    Conversation.updateMany(
+      { participants: toOid(userId), [viewingKey]: { $exists: true } },
+      { $unset: { [viewingKey]: 1 } },
+      { timestamps: false },
+    ),
   ]);
+}
+
+/**
+ * Refresh / release "viewing" leases for threads the user has open.
+ * Participant check is part of each update filter, so ids for conversations
+ * the user is not in are silently ignored.
+ */
+export async function setConversationViewing(params: {
+  userId: string;
+  viewing?: unknown;
+  stopViewing?: unknown;
+  now?: number;
+}) {
+  const { userId } = params;
+  const viewing = validIds(params.viewing, MAX_VIEWING_IDS);
+  const stopViewing = validIds(params.stopViewing, MAX_VIEWING_IDS * 2).filter(
+    (id) => !viewing.includes(id),
+  );
+  if (viewing.length === 0 && stopViewing.length === 0) {
+    return { viewing: [] as string[], stopped: [] as string[] };
+  }
+
+  await connectDB();
+  const key = `viewingUntil.${userId}`;
+  const until = new Date((params.now ?? Date.now()) + VIEWING_TTL_MS);
+  const me = toOid(userId);
+
+  await Promise.all([
+    viewing.length
+      ? Conversation.updateMany(
+          { _id: { $in: viewing.map(toOid) }, participants: me },
+          { $set: { [key]: until } },
+          { timestamps: false },
+        )
+      : null,
+    stopViewing.length
+      ? Conversation.updateMany(
+          { _id: { $in: stopViewing.map(toOid) }, participants: me },
+          { $unset: { [key]: 1 } },
+          { timestamps: false },
+        )
+      : null,
+  ]);
+
+  return { viewing, stopped: stopViewing };
 }
 
 export async function setConversationTyping(params: {
@@ -718,6 +829,9 @@ export async function setConversationTyping(params: {
   typing: boolean;
 }) {
   const { conversationId, userId, typing } = params;
+  if (!Types.ObjectId.isValid(conversationId)) {
+    throw Object.assign(new Error("Forbidden"), { status: 403 });
+  }
   await connectDB();
   const conversation = await Conversation.findById(conversationId);
   if (!conversation || !assertParticipant(conversation, userId)) {
