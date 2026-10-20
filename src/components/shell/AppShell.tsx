@@ -13,6 +13,7 @@ import { ThemeToggle, ThemeCycleButton } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/ui/cn";
 import { useShellAuth } from "./useShellAuth";
 import VisitBeacon from "@/components/analytics/VisitBeacon";
+import { InstallAppBanner, InstallAppMenuItem } from "@/components/pwa/InstallAppOption";
 
 const HIDE_SHELL_ROUTES = [
   "/login",
@@ -448,6 +449,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-1 flex-col min-h-0">
       <VisitBeacon />
+      {!hideShell && <InstallAppBanner />}
       {hideShell && (
         <header className="sticky top-0 z-40 glass h-[var(--nav-h)] relative flex items-center justify-center px-4">
           <BrandMark size="sm" />
@@ -821,6 +823,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <ThemeToggle showLabels />
             </div>
             <div className="px-3 pb-3 space-y-0.5 max-h-[50dvh] overflow-y-auto">
+              <InstallAppMenuItem onDone={() => setMobileMoreOpen(false)} />
               {moreLinks.map((item) => {
                 const className = cn(
                   "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium min-h-12",
