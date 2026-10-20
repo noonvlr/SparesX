@@ -11,6 +11,7 @@ import {
 } from "@/lib/seo/productMeta";
 import { formatPartTypeLabel } from "@/lib/products/listingTitle";
 import { loadPublicProductForPage } from "@/lib/products/loadPublicProduct";
+import { productJsonLdImages } from "@/lib/seo/productJsonLdImages";
 import { SITE_NAME, absoluteUrl, partsPath, productPath, productUrl, slugifyPathSegment } from "@/lib/seo/site";
 
 export async function generateMetadata({
@@ -149,9 +150,8 @@ export default async function ProductSlugPage({
     formatPartTypeLabel(
       typeof product.partType === "string" ? product.partType : undefined,
     ) || "Spare Parts";
-  const images = Array.isArray(product.images)
-    ? product.images.filter(Boolean).map((src) => absoluteUrl(String(src)))
-    : [];
+  // Only this listing's public photos. No site-wide fallback image.
+  const images = productJsonLdImages(product.images);
   const isSold = product.status === "sold";
 
   const brandHref =
