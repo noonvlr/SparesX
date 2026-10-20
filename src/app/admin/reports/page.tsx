@@ -14,6 +14,7 @@ type DayPoint = {
   approved: number;
   requests: number;
   open: number;
+  visitors?: number;
 };
 
 function MiniBars({
@@ -136,11 +137,31 @@ export default function AdminReportsPage() {
     <AdminPage>
       <PageHeader
         title="Reports"
-        description="Live platform counts plus a 30-day view of new listings and part requests."
+        description="Unique visitors are one browser, counted once per day. History starts the day this tracking went live."
       />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {[
+          { label: "Visitors today", value: stats.visitors?.today ?? 0 },
+          { label: "Unique, last 7 days", value: stats.visitors?.last7 ?? 0 },
+          { label: "Unique, last 30 days", value: stats.visitors?.last30 ?? 0 },
+          { label: "Unique recorded", value: stats.visitors?.allTime ?? 0 },
+        ].map((item) => (
+          <Card key={item.label} padding="md" className="bg-[var(--brand-soft)]">
+            <div className="text-sm text-[var(--muted)]">{item.label}</div>
+            <div className="text-3xl font-bold mt-2 text-[var(--ink)]">{item.value}</div>
+          </Card>
+        ))}
+      </div>
 
       {series.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <MiniBars
+            points={series}
+            valueKey="visitors"
+            color="var(--brand)"
+            label="Unique visitors / day"
+          />
           <MiniBars
             points={series}
             valueKey="listings"

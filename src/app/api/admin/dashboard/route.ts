@@ -7,6 +7,8 @@ import { SupportRequest } from "@/lib/models/SupportRequest";
 import { Conversation } from "@/lib/models/Conversation";
 import { Message } from "@/lib/models/Message";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
+import { getUniqueVisitorStats } from "@/lib/analytics/visits";
+import { recentUtcDays } from "@/lib/analytics/visitRules";
 
 export async function GET(req: NextRequest) {
   const admin = await requireAdmin(req);
@@ -72,21 +74,26 @@ export async function GET(req: NextRequest) {
     ]),
   ]);
 
+  let visitors = { today: 0, last7: 0, last30: 0, allTime: 0, series: [] as { date: string; visitors: number }[] };
+  try {
+    visitors = await getUniqueVisitorStats();
+  } catch (err) {
+    console.warn("[admin] visitor stats failed:", err instanceof Error ? err.name : "error");
+  }
+
+  const visitByDay = new Map(visitors.series.map((point) => [point.date, point.visitors]));
   const byDay = new Map<
     string,
-    { date: string; listings: number; approved: number; requests: number; open: number }
+    { date: string; listings: number; approved: number; requests: number; open: number; visitors: number }
   >();
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+  for (const key of recentUtcDays(30)) {
     byDay.set(key, {
       date: key,
       listings: 0,
       approved: 0,
       requests: 0,
       open: 0,
+      visitors: visitByDay.get(key) || 0,
     });
   }
   for (const row of listingSeries) {
@@ -117,6 +124,12 @@ export async function GET(req: NextRequest) {
       blockedUsers,
       conversationCount,
       messageCount,
+      visitors: {
+        today: visitors.today,
+        last7: visitors.last7,
+        last30: visitors.last30,
+        allTime: visitors.allTime,
+      },
       series: Array.from(byDay.values()),
     },
     { status: 200 },

@@ -12,6 +12,7 @@ import { Avatar, Badge } from "@/components/ui/Card";
 import { ThemeToggle, ThemeCycleButton } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/ui/cn";
 import { useShellAuth } from "./useShellAuth";
+import VisitBeacon from "@/components/analytics/VisitBeacon";
 
 const HIDE_SHELL_ROUTES = [
   "/login",
@@ -446,6 +447,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-1 flex-col min-h-0">
+      <VisitBeacon />
       {hideShell && (
         <header className="sticky top-0 z-40 glass h-[var(--nav-h)] relative flex items-center justify-center px-4">
           <BrandMark size="sm" />

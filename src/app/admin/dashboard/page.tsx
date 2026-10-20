@@ -100,6 +100,15 @@ export default function AdminDashboard() {
       soft: "bg-[var(--danger-soft)]",
       labelClass: "text-[var(--danger)]",
     },
+    {
+      label: "Unique visitors",
+      value: stats.visitors?.last30 ?? 0,
+      href: "/admin/reports",
+      soft: "bg-[var(--brand-soft)]",
+      labelClass: "text-[var(--brand-hover)]",
+      badge: `${stats.visitors?.today ?? 0} today`,
+      badgeTone: "neutral" as const,
+    },
   ];
 
   const links = [
@@ -111,7 +120,7 @@ export default function AdminDashboard() {
     { href: "/admin/chat", title: "Chat disputes", desc: "Read chats for dispute review" },
     { href: "/admin/broadcast", title: "Broadcast messages", desc: "Targeted bulk chat with review & history" },
     { href: "/admin/categories", title: "Categories", desc: "Manage part categories" },
-    { href: "/admin/reports", title: "Reports", desc: "Platform counts overview" },
+    { href: "/admin/reports", title: "Reports", desc: "Unique visitors and platform counts" },
     { href: "/admin/site-settings", title: "Site settings", desc: "SMS provider & OTP credentials" },
     { href: "/admin/updates", title: "Site updates", desc: "Dashboard changelog & bug thanks" },
     { href: "/admin/settings", title: "Control center", desc: "All admin tools in one place" },

@@ -52,7 +52,7 @@ const CONTROLS = [
   {
     href: "/admin/reports",
     title: "Reports",
-    desc: "Counts across users, products, chats, and support",
+    desc: "Unique visitors plus counts across users, products, chats, and support",
   },
   {
     href: "/admin/site-settings",
