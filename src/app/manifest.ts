@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-/** Makes SparesX installable from Chrome on Android (Add to Home screen). */
+/** Install metadata for Android Chrome and iPhone or iPad Add to Home Screen. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SparesX",

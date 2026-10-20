@@ -52,6 +52,14 @@ export const metadata: Metadata = {
     description:
       "Verified technician listings, trust scores, and direct technician connections for mobile spare parts.",
   },
+  appleWebApp: {
+    capable: true,
+    title: "SparesX",
+    statusBarStyle: "default",
+  },
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+  },
   robots: {
     index: true,
     follow: true,

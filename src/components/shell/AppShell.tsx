@@ -13,7 +13,7 @@ import { ThemeToggle, ThemeCycleButton } from "@/components/theme/ThemeToggle";
 import { cn } from "@/lib/ui/cn";
 import { useShellAuth } from "./useShellAuth";
 import VisitBeacon from "@/components/analytics/VisitBeacon";
-import { InstallAppBanner, InstallAppMenuItem } from "@/components/pwa/InstallAppOption";
+import { InstallAppBanner, InstallAppDesktopButton, InstallAppGuide, InstallAppMenuItem } from "@/components/pwa/InstallAppOption";
 
 const HIDE_SHELL_ROUTES = [
   "/login",
@@ -450,6 +450,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex flex-1 flex-col min-h-0">
       <VisitBeacon />
       {!hideShell && <InstallAppBanner />}
+      {!hideShell && <InstallAppGuide />}
       {hideShell && (
         <header className="sticky top-0 z-40 glass h-[var(--nav-h)] relative flex items-center justify-center px-4">
           <BrandMark size="sm" />
@@ -515,6 +516,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              <InstallAppDesktopButton />
               <ThemeToggle size="sm" />
               {isAuthenticated && userRole !== "admin" ? (
                 <Link
