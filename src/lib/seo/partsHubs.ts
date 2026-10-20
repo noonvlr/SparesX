@@ -15,6 +15,7 @@ import {
   type PartsHubCategory,
   type PartsHubLeafMembership,
   type PartsHubModel,
+  type PartsHubRawGroup,
   type QualifyingPartsHub,
 } from "@/lib/seo/partsHubsData";
 
@@ -29,12 +30,25 @@ export {
   type PartsHubRawGroup,
 } from "@/lib/seo/partsHubsData";
 
-/** Cached raw partType×brand×deviceModel buckets — single aggregation source. */
-export const getRawPartsHubGroups = unstable_cache(
+/**
+ * Cached raw partType×brand×deviceModel buckets — single aggregation source.
+ * Next stores the return value with JSON.stringify, which turns Date into a
+ * string. Callers must revive those strings before using Date methods.
+ */
+const readCachedRawPartsHubGroups = unstable_cache(
   loadRawPartsHubGroups,
   ["parts-seo-raw-hubs-v1"],
   { revalidate: 3600 },
 );
+
+export async function getRawPartsHubGroups(): Promise<PartsHubRawGroup[]> {
+  const rows = await readCachedRawPartsHubGroups();
+  return rows.map((row) => ({
+    ...row,
+    updatedAt:
+      row.updatedAt instanceof Date ? row.updatedAt : new Date(row.updatedAt),
+  }));
+}
 
 /** Qualifying leaf hubs (>=2) derived from the same raw aggregation. */
 export async function getQualifyingPartsHubs(): Promise<QualifyingPartsHub[]> {

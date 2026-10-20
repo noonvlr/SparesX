@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cache } from "react";
 import ProductFilters, { ProductSearchBar } from "./_components/ProductFilters";
 import ProductSortSelect from "./_components/ProductSortSelect";
 import ProductCard from "@/components/ProductCard";
@@ -12,28 +13,18 @@ import {
 } from "@/lib/products/listQuery";
 import { formatPartTypeLabel } from "@/lib/products/listingTitle";
 import { SITE_NAME, absoluteUrl, productPath } from "@/lib/seo/site";
+import {
+  hasListingFilters,
+  listingHref,
+  listingPageMeta,
+  listingPageNumbers,
+  requestedListingPage,
+} from "@/lib/seo/listingPagination";
 import { requestSubmitHref } from "@/lib/requests/demandLinks";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 
 type RawSearchParams = Record<string, string | string[] | undefined>;
-
-const FILTER_KEYS = [
-  "deviceCategory",
-  "category",
-  "brand",
-  "deviceModel",
-  "model",
-  "partType",
-  "condition",
-  "minPrice",
-  "maxPrice",
-  "search",
-  "city",
-  "nearby",
-  "sellerType",
-  "negotiable",
-] as const;
 
 function toListParams(raw: RawSearchParams): ProductListParams {
   return {
@@ -86,12 +77,16 @@ async function withPreferCity(
   }
 }
 
-/** Filtered and paginated views are near-duplicates, so only /products is indexed. */
+/** Filtered views are near-duplicates, so only the default list is indexed. */
 function isFilteredView(raw: RawSearchParams) {
-  const pageNumber = parseInt(firstParam(raw.page) || "1", 10) || 1;
-  if (pageNumber > 1) return true;
-  return FILTER_KEYS.some((key) => Boolean(firstParam(raw[key])));
+  return hasListingFilters(raw);
 }
+
+const loadBrowseListing = cache(async (key: string) => {
+  const raw = JSON.parse(key) as RawSearchParams;
+  const params = await withPreferCity(toListParams(raw));
+  return fetchProductList(params);
+});
 
 /**
  * Human-readable summary of the active filters, e.g.
@@ -114,17 +109,6 @@ function describeFilters(params: ProductListParams) {
   return `${phrase.charAt(0).toUpperCase()}${phrase.slice(1)}${suffix}`;
 }
 
-function buildPageHref(raw: RawSearchParams, page: number) {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(raw)) {
-    const single = firstParam(value);
-    if (single && key !== "page") params.set(key, single);
-  }
-  if (page > 1) params.set("page", String(page));
-  const query = params.toString();
-  return query ? `/products?${query}` : "/products";
-}
-
 export async function generateMetadata({
   searchParams,
 }: {
@@ -133,9 +117,16 @@ export async function generateMetadata({
   const raw = await searchParams;
   const filtered = isFilteredView(raw);
   const summary = describeFilters(toListParams(raw));
+  const { pages } = await loadBrowseListing(JSON.stringify(raw));
+  const { index, canonical } = listingPageMeta(raw, pages);
+  const pageNumber = requestedListingPage(raw);
+  const pageLabel =
+    index && pageNumber > 1 ? ` (page ${pageNumber})` : "";
 
   const title =
-    filtered && summary ? summary : "Browse Mobile Spare Parts";
+    filtered && summary
+      ? summary
+      : `Browse Mobile Spare Parts${pageLabel}`;
   const description =
     filtered && summary
       ? `${summary} listed by technicians on ${SITE_NAME}. Compare prices and contact sellers directly.`
@@ -152,21 +143,21 @@ export async function generateMetadata({
       "technician marketplace",
       "technician listings",
     ],
-    alternates: { canonical: "/products" },
+    alternates: { canonical },
     openGraph: {
       title: `${title} | ${SITE_NAME}`,
       description,
       type: "website",
-      url: "/products",
+      url: canonical,
     },
     twitter: {
       card: "summary_large_image",
       title: `${title} | ${SITE_NAME}`,
       description,
     },
-    // Filter permutations are infinite; keep the crawl budget on /products
-    // and on the individual listings these pages link to.
-    robots: { index: !filtered, follow: true },
+    // Filter permutations stay out of the index. Numbered pages of the
+    // default list are real URLs and keep their own canonical.
+    robots: { index, follow: true },
   };
 }
 
@@ -177,7 +168,9 @@ export default async function BrowseProductsPage({
 }) {
   const raw = await searchParams;
   const params = await withPreferCity(toListParams(raw));
-  const { products, total, page, pages } = await fetchProductList(params);
+  const { products, total, page, pages } = await loadBrowseListing(
+    JSON.stringify(raw),
+  );
 
   // Evidence layer: SSR browse path must emit search events (API list is unused here).
   const searchQ = params.search?.trim();
@@ -297,18 +290,34 @@ export default async function BrowseProductsPage({
               >
                 {page > 1 ? (
                   <Link
-                    href={buildPageHref(raw, page - 1)}
+                    href={listingHref(raw, page > pages ? pages : page - 1)}
                     className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:text-[var(--brand)] transition-colors"
                   >
                     Previous
                   </Link>
                 ) : null}
-                <span className="px-2 text-sm text-[var(--muted)]">
-                  Page {page} of {pages}
-                </span>
+                {listingPageNumbers(page, pages).map((pageNumber) =>
+                  pageNumber === page ? (
+                    <span
+                      key={pageNumber}
+                      aria-current="page"
+                      className="rounded-[var(--radius)] border border-[var(--brand)] bg-[var(--brand-soft)] px-3 py-2 text-sm font-semibold text-[var(--brand)]"
+                    >
+                      {pageNumber}
+                    </span>
+                  ) : (
+                    <Link
+                      key={pageNumber}
+                      href={listingHref(raw, pageNumber)}
+                      className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:text-[var(--brand)] transition-colors"
+                    >
+                      {pageNumber}
+                    </Link>
+                  ),
+                )}
                 {page < pages ? (
                   <Link
-                    href={buildPageHref(raw, page + 1)}
+                    href={listingHref(raw, page + 1)}
                     className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm font-medium text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:text-[var(--brand)] transition-colors"
                   >
                     Next

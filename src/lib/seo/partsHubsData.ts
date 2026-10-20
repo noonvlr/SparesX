@@ -171,6 +171,10 @@ export function mergeRawGroupsByPath(
     const modelSlug = slugifyPathSegment(row.deviceModel);
     if (!categorySlug || !brandSlug || !modelSlug) continue;
 
+    // unstable_cache JSON.stringifies this payload, so a cache hit returns
+    // updatedAt as a string. Revive it before any Date method.
+    const updatedAt = asDate(row.updatedAt);
+    const group: PartsHubRawGroup = { ...row, updatedAt };
     const path = `/parts/${categorySlug}/${brandSlug}/${modelSlug}`;
     const existing = byPath.get(path);
 
@@ -183,17 +187,17 @@ export function mergeRawGroupsByPath(
         brandLabel: row.brand || labelFromSlug(brandSlug),
         modelLabel: row.deviceModel || labelFromSlug(modelSlug),
         count: row.count,
-        updatedAt: row.updatedAt,
+        updatedAt,
         path,
-        rawGroups: [row],
+        rawGroups: [group],
       });
       continue;
     }
 
     existing.count += row.count;
-    existing.rawGroups.push(row);
-    if (row.updatedAt.getTime() > existing.updatedAt.getTime()) {
-      existing.updatedAt = row.updatedAt;
+    existing.rawGroups.push(group);
+    if (updatedAt.getTime() > existing.updatedAt.getTime()) {
+      existing.updatedAt = updatedAt;
     }
     existing.categoryLabel = preferLabel(existing.categoryLabel, row.partType);
     existing.brandLabel = preferLabel(existing.brandLabel, row.brand);

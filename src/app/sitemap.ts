@@ -83,8 +83,30 @@ function entry(
   return { url, ...extra };
 }
 
-function compact(entries: Array<MetadataRoute.Sitemap[number] | null>): MetadataRoute.Sitemap {
-  return entries.filter((item): item is MetadataRoute.Sitemap[number] => Boolean(item?.url));
+export function productSitemapPath(product: {
+  _id?: unknown;
+  slug?: string | null;
+  tags?: unknown;
+}): string | null {
+  const tags = Array.isArray(product.tags) ? product.tags : [];
+  if (tags.includes("possible_duplicate")) return null;
+  const ident = String(product.slug || product._id || "").trim();
+  if (!ident) return null;
+  return `/product/${encodeURIComponent(ident)}`;
+}
+
+/** Drop missing and repeated URLs so the sitemap cannot list the same page twice. */
+export function uniqueSitemapEntries(
+  entries: Array<MetadataRoute.Sitemap[number] | null | undefined>,
+): MetadataRoute.Sitemap {
+  const seen = new Set<string>();
+  const unique: MetadataRoute.Sitemap = [];
+  for (const item of entries) {
+    if (!item?.url || seen.has(item.url)) continue;
+    seen.add(item.url);
+    unique.push(item);
+  }
+  return unique;
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
@@ -113,13 +135,11 @@ async function loadProductEntries(): Promise<MetadataRoute.Sitemap> {
     .limit(PRODUCT_LIMIT)
     .lean();
 
-  return compact(
+  return uniqueSitemapEntries(
     products.map((product) => {
-      const tags = Array.isArray(product.tags) ? product.tags : [];
-      if (tags.includes("possible_duplicate")) return null;
-      const ident = String(product.slug || product._id || "").trim();
-      if (!ident) return null;
-      return entry(`/product/${encodeURIComponent(ident)}`, {
+      const path = productSitemapPath(product);
+      if (!path) return null;
+      return entry(path, {
         lastModified: asDate(product.updatedAt),
         changeFrequency: "weekly",
         priority: 0.8,
@@ -177,7 +197,7 @@ async function loadPartsEntries(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return compact([...categoryEntries, ...brandEntries, ...leafEntries]);
+  return uniqueSitemapEntries([...categoryEntries, ...brandEntries, ...leafEntries]);
 }
 
 async function loadSellerEntries(): Promise<MetadataRoute.Sitemap> {
@@ -194,7 +214,7 @@ async function loadSellerEntries(): Promise<MetadataRoute.Sitemap> {
     .limit(SELLER_LIMIT)
     .lean();
 
-  return compact(
+  return uniqueSitemapEntries(
     sellers.map((seller) =>
       entry(`/u/${encodeURIComponent(String(seller._id))}`, {
         lastModified: asDate(seller.updatedAt),
@@ -207,7 +227,7 @@ async function loadSellerEntries(): Promise<MetadataRoute.Sitemap> {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
-  const staticEntries = compact(
+  const staticEntries = uniqueSitemapEntries(
     staticRoutes.map((route) =>
       entry(route.path, {
         lastModified: now,
@@ -221,31 +241,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const started = Date.now();
     await withTimeout(connectDB(), Math.min(8_000, DB_BUDGET_MS), "connect");
 
-    // Products first so a slow hub aggregation cannot starve listing URLs.
+    // A hub or product failure must fail the sitemap. Returning only the
+    // static URLs would look complete while omitting the catalog.
     const products = await withTimeout(
       loadProductEntries(),
       12_000,
       "products",
-    ).catch((error) => {
-      console.error("sitemap products failed:", error);
-      return [] as MetadataRoute.Sitemap;
-    });
+    );
 
     const remaining = Math.max(4_000, DB_BUDGET_MS - (Date.now() - started));
     const [parts, sellers] = await Promise.all([
-      withTimeout(loadPartsEntries(), remaining, "parts").catch((error) => {
-        console.error("sitemap parts failed:", error);
-        return [] as MetadataRoute.Sitemap;
-      }),
+      withTimeout(loadPartsEntries(), remaining, "parts"),
       withTimeout(loadSellerEntries(), remaining, "sellers").catch((error) => {
         console.error("sitemap sellers failed:", error);
         return [] as MetadataRoute.Sitemap;
       }),
     ]);
 
-    return [...staticEntries, ...products, ...parts, ...sellers];
+    return uniqueSitemapEntries([...staticEntries, ...products, ...parts, ...sellers]);
   } catch (error) {
     console.error("Error generating sitemap:", error);
-    return staticEntries;
+    throw error;
   }
 }
