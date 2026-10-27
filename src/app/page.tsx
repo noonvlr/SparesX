@@ -19,8 +19,6 @@ import {
   buildOrganizationJsonLd,
   buildWebSiteJsonLd,
 } from "@/lib/seo/entities";
-import { getLifetimeSoldListingCount } from "@/lib/analytics/lifetimeSold";
-
 export const metadata: Metadata = {
   title: {
     absolute: HOME_META.title,
@@ -82,8 +80,7 @@ export default async function HomePage() {
     categoryRows,
     listingCounts,
     listedCount,
-    soldListings,
-    fulfilledRequests,
+    openRequestsCount,
   ] = await Promise.all([
       Product.find({ status: "approved" })
         .sort({ createdAt: -1 })
@@ -98,12 +95,8 @@ export default async function HomePage() {
         { $group: { _id: "$partType", count: { $sum: 1 } } },
       ]),
       Product.countDocuments({ status: "approved" }),
-      getLifetimeSoldListingCount(),
-      RequestModel.countDocuments({ status: "fulfilled" }),
+      RequestModel.countDocuments({ status: "open" }),
     ]);
-
-  // Marketplace deals: lifetime sold listings (durable) + fulfilled part requests
-  const soldCount = soldListings + fulfilledRequests;
 
   const featuredProducts = featuredRaw.map((p) => ({
     ...p,
@@ -211,7 +204,7 @@ export default async function HomePage() {
 
             <HomeMarketplaceStats
               listedCount={listedCount}
-              soldCount={soldCount}
+              openRequestsCount={openRequestsCount}
             />
           </div>
         </section>
