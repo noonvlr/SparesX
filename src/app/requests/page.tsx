@@ -5,9 +5,9 @@ import { Skeleton } from "@/components/ui/Card";
 import { fetchOpenRequests } from "@/lib/requests/openRequests";
 
 export const metadata: Metadata = {
-  title: "Part Requests",
+  title: "Parts Others Are Looking For",
   description:
-    "Browse open spare-part requests from technicians, or post your own request and connect directly with sellers who have the part.",
+    "Browse open spare-part requests from technicians who need a part. If you have it, message them — or post your own request on SparesX.",
   keywords: [
     "request spare part",
     "part request",
@@ -19,9 +19,9 @@ export const metadata: Metadata = {
     canonical: "/requests",
   },
   openGraph: {
-    title: "Part Requests | SparesX",
+    title: "Parts Others Are Looking For | SparesX",
     description:
-      "Post or browse spare-part requests and connect directly with technicians. SparesX does not process payments.",
+      "See open part requests from technicians across India. Supply a part if you have it, or post your own request. SparesX does not process payments.",
     type: "website",
     url: "/requests",
   },
@@ -59,11 +59,11 @@ export default async function RequestsPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
         <header className="mb-6 sm:mb-8 animate-in fade-in slide-in-from-top-2 duration-500">
           <h1 className="text-3xl sm:text-4xl font-bold text-[var(--ink)] mb-3">
-            Part Requests
+            Parts others are looking for
           </h1>
           <p className="text-[var(--muted)] text-base sm:text-lg max-w-3xl">
-            See what parts other users need and respond if you have them — or
-            post your own request for sellers to fulfill.
+            These are open requests from technicians who need a spare part. If
+            you have it, message them. Or post your own request.
           </p>
         </header>
         <Suspense fallback={<RequestsFallback />}>

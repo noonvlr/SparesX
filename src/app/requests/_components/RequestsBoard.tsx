@@ -39,6 +39,20 @@ function tabFromSearchParams(searchParams: URLSearchParams): RequestsTab {
   return "browse";
 }
 
+/** Card headline: brand + model + part type so the need is obvious at a glance. */
+function requestHeadline(request: {
+  category: string;
+  brand?: string;
+  deviceModel?: string;
+}): string {
+  const brand = String(request.brand || "").trim();
+  const model = String(request.deviceModel || "").trim();
+  const category = String(request.category || "").trim() || "Part";
+  const device = [brand, model].filter(Boolean).join(" ");
+  if (device) return `${device} — ${category}`;
+  return category;
+}
+
 function highlightText(text: string, query: string) {
   if (!query.trim()) return text;
   const tokens = query
@@ -262,14 +276,12 @@ export default function RequestsBoard({
             <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-[var(--ink-inverse)]/10 blur-2xl" />
             <div className="absolute -left-8 bottom-0 w-32 h-32 rounded-full bg-[var(--info)]/20 blur-2xl" />
             <div className="relative">
-              <p className="text-[var(--brand-muted)] text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2">
-                Live demand board
-              </p>
               <h2 className="text-2xl sm:text-3xl font-bold mb-2">
-                Parts people need right now
+                Open requests
               </h2>
               <p className="text-[var(--ink-inverse)]/90 text-sm sm:text-base mb-5 max-w-2xl">
-                Browse open requests like a job feed — claim ones you can fulfill and message the buyer instantly.
+                Each card is a part someone asked for. Search or filter by part
+                type, then contact them if you can supply it.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
@@ -431,13 +443,7 @@ export default function RequestsBoard({
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
                             <h3 className="font-bold text-[var(--ink)] text-base sm:text-lg">
-                              {highlightText(request.category, search)}
-                              {request.brand ? (
-                                <span className="text-[var(--muted)] font-semibold">
-                                  {" · "}
-                                  {highlightText(request.brand, search)}
-                                </span>
-                              ) : null}
+                              {highlightText(requestHeadline(request), search)}
                             </h3>
                             <Badge tone="success">Open</Badge>
                           </div>
@@ -447,11 +453,11 @@ export default function RequestsBoard({
                                 {request.deviceCategory}
                               </Badge>
                             )}
-                            {request.deviceModel && (
+                            {!request.brand && request.deviceModel ? (
                               <Badge tone="info" className="rounded-md">
                                 {highlightText(request.deviceModel, search)}
                               </Badge>
-                            )}
+                            ) : null}
                             <Badge tone="warning" className="rounded-md">
                               {ageLabel}
                             </Badge>
@@ -474,13 +480,6 @@ export default function RequestsBoard({
                           onClick={() => respondToRequest(request)}
                         >
                           I have this part
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => respondToRequest(request)}
-                        >
-                          Message buyer
                         </Button>
                       </div>
                     </div>
@@ -521,7 +520,8 @@ export default function RequestsBoard({
         }
       >
         <p className="text-sm text-[var(--muted)]">
-          Login or sign up to respond to part requests and contact buyers.
+          Login or sign up to respond to part requests and contact the
+          requester.
         </p>
       </Modal>
     </div>

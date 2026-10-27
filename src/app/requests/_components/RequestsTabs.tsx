@@ -8,8 +8,8 @@ export default function RequestsTabs({
   active: "browse" | "submit" | "mine";
 }) {
   const items: { key: typeof active; label: string; href: string }[] = [
-    { key: "browse", label: "Browse requests", href: "/requests" },
-    { key: "submit", label: "Submit request", href: "/requests?tab=submit" },
+    { key: "browse", label: "Open requests", href: "/requests" },
+    { key: "submit", label: "Post a request", href: "/requests?tab=submit" },
     { key: "mine", label: "My requests", href: "/requests?tab=mine" },
   ];
 
