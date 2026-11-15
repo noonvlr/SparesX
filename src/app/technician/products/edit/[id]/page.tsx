@@ -10,6 +10,7 @@ import { Input, Textarea } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import PriceSuggestHint from "@/components/PriceSuggestHint";
 
 interface Brand {
   _id: string;
@@ -634,6 +635,15 @@ export default function EditProductPage() {
                       setForm((f) => ({ ...f, price: e.target.value }))
                     }
                     required
+                  />
+                  <PriceSuggestHint
+                    brand={form.brand}
+                    partType={form.partType}
+                    deviceModel={form.deviceModel}
+                    condition={form.condition}
+                    onApplyMedian={(median) =>
+                      setForm((f) => ({ ...f, price: String(median) }))
+                    }
                   />
                 </Field>
 

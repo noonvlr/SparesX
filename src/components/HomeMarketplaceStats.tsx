@@ -17,7 +17,7 @@ export default function HomeMarketplaceStats({
 }: HomeMarketplaceStatsProps) {
   if (listedCount <= 0 && openRequestsCount <= 0) {
     return (
-      <div className="mt-10 sm:mt-12 mx-auto max-w-lg rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-6 sm:py-6 text-center shadow-[var(--shadow-sm)]">
+      <div className="mx-auto max-w-lg rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] px-5 py-5 sm:px-6 sm:py-6 text-center shadow-[var(--shadow-sm)]">
         <p className="text-sm font-semibold text-[var(--ink)]">
           Be one of the first technicians on SparesX
         </p>
@@ -49,7 +49,7 @@ export default function HomeMarketplaceStats({
   return (
     <div
       className={cn(
-        "mt-10 sm:mt-12 mx-auto grid max-w-lg grid-cols-2 gap-3 sm:gap-4",
+        "mx-auto grid max-w-lg grid-cols-2 gap-3 sm:gap-4",
         "home-stats-enter",
       )}
     >

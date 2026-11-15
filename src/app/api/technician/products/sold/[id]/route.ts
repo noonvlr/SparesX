@@ -114,7 +114,12 @@ export async function POST(
       partType: product.partType || undefined,
       deviceModel: product.deviceModel || undefined,
       city: undefined,
-      meta: { soldVia },
+      meta: {
+        soldVia,
+        price:
+          typeof product.price === "number" ? product.price : undefined,
+        condition: product.condition || undefined,
+      },
     });
   } catch {
     // analytics optional

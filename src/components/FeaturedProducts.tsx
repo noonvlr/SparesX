@@ -16,7 +16,7 @@ export default function FeaturedProducts({
       <div className="flex justify-between items-end mb-6 sm:mb-8 gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-hover)] mb-2">
-            Fresh listings
+            On SparesX
           </p>
           <h2 className="text-title sm:text-[1.75rem] font-semibold tracking-tight text-[var(--ink)]">
             Featured products

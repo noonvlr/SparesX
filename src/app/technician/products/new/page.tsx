@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { ShareListingPanel } from "@/components/ShareListing";
+import PriceSuggestHint from "@/components/PriceSuggestHint";
 import { productPath } from "@/lib/seo/site";
 import type { ShareableListing } from "@/lib/share/listingShare";
 
@@ -866,6 +867,15 @@ function AddProductForm() {
                       setForm((f) => ({ ...f, price: e.target.value }))
                     }
                     required
+                  />
+                  <PriceSuggestHint
+                    brand={form.brand}
+                    partType={form.partType}
+                    deviceModel={form.deviceModel}
+                    condition={form.condition}
+                    onApplyMedian={(median) =>
+                      setForm((f) => ({ ...f, price: String(median) }))
+                    }
                   />
                   <label className="mt-3 flex items-center gap-2 cursor-pointer select-none">
                     <Checkbox

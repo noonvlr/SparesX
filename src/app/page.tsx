@@ -10,6 +10,8 @@ import { connectDB } from "@/lib/db/connect";
 import { findPublicCategories } from "@/lib/categories/publicQuery";
 import { Product } from "@/lib/models/Product";
 import { RequestModel } from "@/lib/models/Request";
+import { loadHomepageFeatured } from "@/lib/products/featuredHome";
+import { resolveUploadUrl } from "@/lib/ui/imageUrl";
 import {
   FOUNDER_EDUCATION_DEGREE,
   FOUNDER_EXPERIENCE_YEARS,
@@ -76,19 +78,13 @@ export default async function HomePage() {
   await connectDB();
 
   const [
-    featuredRaw,
+    featuredProducts,
     categoryRows,
     listingCounts,
     listedCount,
     openRequestsCount,
   ] = await Promise.all([
-      Product.find({ status: "approved" })
-        .sort({ createdAt: -1 })
-        .limit(6)
-        .select(
-          "name price images brand partType condition deviceModel deviceCategory slug status priceNegotiable technician",
-        )
-        .lean(),
+      loadHomepageFeatured(6),
       findPublicCategories({ dedupeByName: true }),
       Product.aggregate<{ _id: string; count: number }>([
         { $match: { status: "approved", partType: { $nin: [null, ""] } } },
@@ -98,11 +94,15 @@ export default async function HomePage() {
       RequestModel.countDocuments({ status: "open" }),
     ]);
 
-  const featuredProducts = featuredRaw.map((p) => ({
-    ...p,
-    _id: String(p._id),
-    technician: p.technician ? String(p.technician) : undefined,
-  }));
+  const heroThumbs = featuredProducts
+    .flatMap((p) => {
+      const first = Array.isArray(p.images) ? p.images[0] : null;
+      const src = resolveUploadUrl(first);
+      return src
+        ? [{ src, alt: [p.brand, p.deviceModel, p.partType].filter(Boolean).join(" ") || p.name || "Spare part" }]
+        : [];
+    })
+    .slice(0, 8);
 
   const countBySlug = new Map(
     listingCounts.map((row) => [String(row._id), row.count]),
@@ -136,77 +136,104 @@ export default async function HomePage() {
       />
 
       <main className="min-h-screen bg-[var(--surface-2)]">
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden home-hero">
           <div
             aria-hidden
-            className="absolute inset-0 -z-20 bg-gradient-to-b from-[var(--brand-soft)] via-[var(--surface)] to-[var(--surface-2)]"
+            className="absolute inset-0 -z-20 bg-[linear-gradient(180deg,var(--brand-soft)_0%,var(--surface)_42%,var(--surface-2)_100%)]"
           />
           <div
             aria-hidden
-            className="absolute -top-40 left-1/2 -z-10 h-[420px] w-[780px] -translate-x-1/2 rounded-full bg-[var(--brand)]/15 blur-[100px]"
+            className="absolute inset-0 -z-20 opacity-[0.35] home-hero-grid"
+          />
+          <div
+            aria-hidden
+            className="absolute -top-32 left-1/2 -z-10 h-[480px] w-[min(920px,140vw)] -translate-x-1/2 rounded-full bg-[var(--brand)]/18 blur-[110px]"
           />
 
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 sm:pt-24 sm:pb-28 text-center">
-            <div className="mb-6 flex justify-center">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8 sm:pt-16 sm:pb-12 text-center">
+            <div className="mb-5 sm:mb-7 flex flex-col items-center gap-2.5 home-hero-enter">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/icon-512.png"
-                alt="SparesX"
-                width={160}
-                height={160}
-                className="h-24 w-24 sm:h-28 sm:w-28 rounded-[var(--radius-lg)] object-contain shadow-[var(--shadow-md)]"
+                alt=""
+                width={192}
+                height={192}
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded-[var(--radius-lg)] object-contain shadow-[var(--shadow-md)]"
                 decoding="async"
               />
+              <p
+                className="text-[1.75rem] sm:text-[2.5rem] font-bold tracking-tight text-[var(--ink)] leading-none"
+                aria-label="SparesX"
+              >
+                Spares<span className="text-[var(--brand)]">X</span>
+              </p>
             </div>
 
-            <h1 className="text-display text-balance text-[var(--ink)] mb-5 sm:mb-6">
-              SparesX — the spare parts marketplace, built for technicians.
+            <h1 className="text-[1.65rem] sm:text-display text-balance font-bold tracking-tight text-[var(--ink)] mb-3 sm:mb-4 home-hero-enter home-hero-enter--delay-1">
+              Mobile spare parts, built for technicians.
             </h1>
 
-            <p className="mx-auto max-w-2xl text-base sm:text-lg leading-relaxed text-[var(--muted)] mb-8 sm:mb-9 px-2">
-              SparesX is the dedicated marketplace where mobile repair
-              technicians list, find, and request spare parts — searchable,
-              organized, and built just for the trade.
+            <p className="mx-auto max-w-xl text-[15px] sm:text-lg leading-relaxed text-[var(--ink-secondary)] mb-5 sm:mb-7 px-1 home-hero-enter home-hero-enter--delay-2">
+              List what you have, find what you need, or request a part — made
+              for the repair trade.
             </p>
 
-            <div className="mb-8 sm:mb-10 px-2">
+            <div className="mb-4 sm:mb-5 px-1 home-hero-enter home-hero-enter--delay-3">
               <HomeSearch />
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center px-4">
+            <div className="flex flex-row gap-2.5 justify-center px-1 home-hero-enter home-hero-enter--delay-3">
               <Link
                 href="/products"
-                className={cn(buttonVariants({ size: "lg" }), "w-full sm:w-auto")}
+                className={cn(
+                  buttonVariants({ variant: "secondary", size: "md" }),
+                  "flex-1 sm:flex-none sm:w-auto",
+                )}
               >
                 Browse Parts
               </Link>
               <Link
                 href="/requests?tab=submit"
                 className={cn(
-                  buttonVariants({ variant: "secondary", size: "lg" }),
-                  "w-full sm:w-auto",
+                  buttonVariants({ variant: "secondary", size: "md" }),
+                  "flex-1 sm:flex-none sm:w-auto",
                 )}
               >
                 Request a Part
               </Link>
             </div>
-
-            <p className="mt-4 text-sm text-[var(--muted)]">
-              <Link
-                href="/parts"
-                className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
-              >
-                Parts
-              </Link>
-              {" — "}
-              browse by type, brand, and model
-            </p>
-
-            <HomeMarketplaceStats
-              listedCount={listedCount}
-              openRequestsCount={openRequestsCount}
-            />
           </div>
+
+          {heroThumbs.length >= 4 ? (
+            <div
+              aria-hidden
+              className="relative mx-auto max-w-5xl px-4 sm:px-6 pb-10 sm:pb-14 home-hero-enter home-hero-enter--delay-4"
+            >
+              <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 sm:gap-2">
+                {heroThumbs.map((thumb, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={`${thumb.src}-${i}`}
+                    src={thumb.src}
+                    alt=""
+                    className="aspect-square w-full object-cover rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                ))}
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-10 sm:bottom-14 h-16 bg-gradient-to-t from-[var(--surface-2)] to-transparent" />
+            </div>
+          ) : (
+            <div className="h-6 sm:h-10" />
+          )}
+        </section>
+
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
+          <HomeMarketplaceStats
+            listedCount={listedCount}
+            openRequestsCount={openRequestsCount}
+          />
         </section>
 
         {categories.length > 0 && (

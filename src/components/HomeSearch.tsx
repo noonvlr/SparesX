@@ -33,9 +33,9 @@ export default function HomeSearch() {
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search parts, brands, models…"
         aria-label="Search spare parts"
-        className="flex-1 bg-[var(--surface)] shadow-[var(--shadow-sm)]"
+        className="flex-1 !h-12 bg-[var(--surface)] shadow-[var(--shadow)] text-base"
       />
-      <Button type="submit" size="md" className="shrink-0 px-5">
+      <Button type="submit" size="lg" className="shrink-0 px-6">
         Search
       </Button>
     </form>

@@ -61,7 +61,13 @@ export async function DELETE(
         partType: product.partType || undefined,
         deviceModel: product.deviceModel || undefined,
         city: undefined,
-        meta: { soldVia: "other", via: "delete" },
+        meta: {
+          soldVia: "other",
+          via: "delete",
+          price:
+            typeof product.price === "number" ? product.price : undefined,
+          condition: product.condition || undefined,
+        },
       });
     } catch {
       // analytics optional
