@@ -1,26 +1,16 @@
 import { connectDB } from "@/lib/db/connect";
 import { Product } from "@/lib/models/Product";
 import { User } from "@/lib/models/User";
+import {
+  mergeFeaturedSlots,
+  type HomepageFeaturedItem,
+} from "@/lib/products/featuredSlots";
+
+export type { HomepageFeaturedItem } from "@/lib/products/featuredSlots";
+export { mergeFeaturedSlots } from "@/lib/products/featuredSlots";
 
 const FEATURED_SELECT =
   "name price images brand partType condition deviceModel deviceCategory slug status priceNegotiable technician featured createdAt";
-
-export type HomepageFeaturedItem = {
-  _id: string;
-  name: string;
-  price: number;
-  images?: string[];
-  brand?: string;
-  partType?: string;
-  condition?: string;
-  deviceModel?: string;
-  deviceCategory?: string;
-  slug?: string;
-  status?: string;
-  priceNegotiable?: boolean;
-  technician?: string;
-  featured?: boolean;
-};
 
 function mapDoc(p: Record<string, unknown>): HomepageFeaturedItem {
   return {
@@ -39,10 +29,6 @@ function mapDoc(p: Record<string, unknown>): HomepageFeaturedItem {
     technician: p.technician ? String(p.technician) : undefined,
     featured: Boolean(p.featured),
   };
-}
-
-function hasImage(p: HomepageFeaturedItem) {
-  return Array.isArray(p.images) && p.images.some(Boolean);
 }
 
 /**
@@ -102,15 +88,5 @@ export async function loadHomepageFeatured(
     for (const s of sellers) trusted.add(String(s._id));
   }
 
-  const ranked = [...candidates].sort((a, b) => {
-    const imgDelta = Number(hasImage(b)) - Number(hasImage(a));
-    if (imgDelta !== 0) return imgDelta;
-    const trustDelta =
-      Number(trusted.has(b.technician || "")) -
-      Number(trusted.has(a.technician || ""));
-    if (trustDelta !== 0) return trustDelta;
-    return 0; // already newest-first from query; stable enough
-  });
-
-  return [...pinned, ...ranked.slice(0, fillNeed)];
+  return mergeFeaturedSlots(pinned, candidates, trusted, safeLimit);
 }
