@@ -6,7 +6,6 @@ import { openChatUi } from "@/components/chat/openChat";
 import { showToast } from "@/components/ToastHost";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/ui/cn";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 
 export type WaState = {
@@ -42,12 +41,8 @@ export function ContactSheet({
   waActionLoading,
   onWhatsApp,
 }: ContactSheetProps) {
-  const waLabel = (() => {
-    if (waActionLoading) return "…";
-    if (waState?.unlocked) return "Open WhatsApp";
-    if (waState?.status === "pending") return "WhatsApp pending";
-    return "Request WhatsApp";
-  })();
+  const waLabel = waActionLoading ? "…" : "Connect on WhatsApp";
+  const waReady = Boolean(waState?.unlocked && waState.whatsappUrl);
 
   return (
     <Modal open={open} onClose={onClose} title="Contact seller">
@@ -63,28 +58,19 @@ export function ContactSheet({
         <div className="space-y-2">
           <Button
             type="button"
-            disabled={waActionLoading || !waState}
+            disabled={waActionLoading || !waState || !waReady}
             onClick={onWhatsApp}
-            className={cn(
-              "w-full",
-              waState?.status === "pending" && !waState.unlocked
-                ? "!bg-[var(--warning-soft)] !text-[var(--warning)] border border-[var(--warning)]/30"
-                : "!bg-[#25D366] hover:!bg-[#1ebe57]",
-            )}
+            className="w-full !bg-[#25D366] hover:!bg-[#1ebe57]"
           >
             {waLabel}
           </Button>
-          {waState?.status === "pending" && !waState.unlocked && (
-            <p className="text-xs text-[var(--warning)]">
-              Once approved, WhatsApp unlocks for all of this seller&apos;s
-              listings.
+          {waReady ? (
+            <p className="text-xs text-[var(--muted)]">
+              Opens WhatsApp with a message about this listing.
             </p>
-          )}
-          {waState?.unlocked && (
-            <p className="text-xs text-[var(--success)]">
-              Already unlocked — works for any of their products.
-            </p>
-          )}
+          ) : waState?.reason ? (
+            <p className="text-xs text-[var(--warning)]">{waState.reason}</p>
+          ) : null}
           <Button
             type="button"
             variant="primary"
@@ -145,7 +131,7 @@ export function AuthPromptSheet({
   );
 }
 
-/** Shared WhatsApp connect action used by ProductCard and ProductDetail. */
+/** Open WhatsApp for a listing. Logged-in users get a prefilled chat immediately. */
 export async function runWhatsAppAction(opts: {
   sellerId: string;
   productId: string;
@@ -160,57 +146,30 @@ export async function runWhatsAppAction(opts: {
     window.open(waState.whatsappUrl, "_blank", "noopener,noreferrer");
     return;
   }
-  if (waState?.status === "pending") {
-    showToast("Waiting for the seller to approve your WhatsApp request");
-    return;
-  }
-  if (waState && !waState.canRequest) {
-    showToast(waState.reason || "Cannot request WhatsApp right now", "error");
-    return;
-  }
 
   setLoading(true);
   try {
-    const res = await authFetch("/api/whatsapp-connect", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ sellerId, productId }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      showToast(data.message || "Could not send request", "error");
-      return;
-    }
-    if (data.unlocked || data.status === "approved") {
-      const waRes = await authFetch(
-        `/api/whatsapp-connect?sellerId=${encodeURIComponent(sellerId)}&productId=${encodeURIComponent(productId)}`,
-      );
-      const waData = await waRes.json().catch(() => ({}));
-      if (waRes.ok) {
-        setWaState({
-          status: waData.status || "approved",
-          unlocked: !!waData.unlocked,
-          canRequest: false,
-          whatsappUrl: waData.whatsappUrl || null,
-        });
-        if (waData.whatsappUrl) {
-          window.open(waData.whatsappUrl, "_blank", "noopener,noreferrer");
-        }
-      }
-      showToast("WhatsApp unlocked for all listings from this seller");
-      return;
-    }
-    setWaState({
-      status: "pending",
-      unlocked: false,
-      canRequest: false,
-      reason: "Waiting for approval",
-    });
-    showToast(
-      "Request sent. Once approved, WhatsApp stays unlocked for all their listings.",
+    const waRes = await authFetch(
+      `/api/whatsapp-connect?sellerId=${encodeURIComponent(sellerId)}&productId=${encodeURIComponent(productId)}`,
     );
+    const waData = await waRes.json().catch(() => ({}));
+    if (!waRes.ok) {
+      showToast(waData.message || "Could not open WhatsApp", "error");
+      return;
+    }
+    const next: WaState = {
+      status: waData.status || "approved",
+      unlocked: !!waData.unlocked,
+      canRequest: false,
+      reason: waData.reason,
+      whatsappUrl: waData.whatsappUrl || null,
+    };
+    setWaState(next);
+    if (next.unlocked && next.whatsappUrl) {
+      window.open(next.whatsappUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+    showToast(next.reason || "WhatsApp is not available for this seller", "error");
   } catch {
     showToast("Something went wrong. Try again.", "error");
   } finally {

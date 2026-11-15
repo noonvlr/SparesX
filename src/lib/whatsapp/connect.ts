@@ -36,6 +36,10 @@ export async function getConnectionBetween(requesterId: string, sellerId: string
   }).lean();
 }
 
+/**
+ * Logged-in viewers may open WhatsApp for any peer who is not blocked.
+ * Approval requests are no longer required.
+ */
 export async function isWhatsAppUnlocked(
   viewerId: string,
   peerId: string,
@@ -44,17 +48,7 @@ export async function isWhatsAppUnlocked(
   await connectDB();
   const { isPeerBlocked } = await import("@/lib/chat/peerBlock");
   if (await isPeerBlocked(viewerId, peerId)) return false;
-  // Either direction: if A unlocked B, both can use WhatsApp with each other
-  const row = await WhatsAppConnect.findOne({
-    status: "approved",
-    $or: [
-      { requester: viewerId, seller: peerId },
-      { requester: peerId, seller: viewerId },
-    ],
-  })
-    .select("_id")
-    .lean();
-  return !!row;
+  return true;
 }
 
 export type WaProductContext = {
@@ -208,89 +202,49 @@ export async function getPublicConnectStatus(params: {
     };
   }
 
-  await expireStalePending({
-    $or: [
-      { requester: toOid(viewerId), seller: toOid(sellerId) },
-      { requester: toOid(sellerId), seller: toOid(viewerId) },
-    ],
+  const seller = await User.findById(sellerId)
+    .select("countryCode whatsappNumber mobile name isBlocked")
+    .lean();
+
+  if (!seller || seller.isBlocked) {
+    return {
+      status: "none",
+      unlocked: false,
+      canRequest: false,
+      reason: "Seller not found",
+    };
+  }
+
+  if (!seller.whatsappNumber && !seller.mobile) {
+    return {
+      status: "none",
+      unlocked: false,
+      canRequest: false,
+      reason: "This seller has no WhatsApp number on file",
+    };
+  }
+
+  const url = buildWaMeLink({
+    countryCode: seller.countryCode,
+    whatsappNumber: seller.whatsappNumber,
+    mobile: seller.mobile,
+    productName,
+    productUrl,
+    brand,
+    deviceModel,
+    partType,
+    price,
+    condition,
+    sellerName: seller.name,
   });
-
-  // Mutual unlock: approved either direction
-  const approved = await WhatsAppConnect.findOne({
-    status: "approved",
-    $or: [
-      { requester: viewerId, seller: sellerId },
-      { requester: sellerId, seller: viewerId },
-    ],
-  }).lean();
-
-  if (approved) {
-    const seller = await User.findById(sellerId)
-      .select("countryCode whatsappNumber mobile name")
-      .lean();
-    const url = seller
-      ? buildWaMeLink({
-          countryCode: seller.countryCode,
-          whatsappNumber: seller.whatsappNumber,
-          mobile: seller.mobile,
-          productName,
-          productUrl,
-          brand,
-          deviceModel,
-          partType,
-          price,
-          condition,
-          sellerName: seller.name,
-        })
-      : null;
-    const digits = seller?.whatsappNumber || seller?.mobile || "";
-    return {
-      status: "approved",
-      unlocked: true,
-      canRequest: false,
-      requestId: String(approved._id),
-      whatsappUrl: url,
-      maskedNumber: maskPhone(seller?.countryCode, digits),
-    };
-  }
-
-  const outgoing = await WhatsAppConnect.findOne({
-    requester: viewerId,
-    seller: sellerId,
-  }).lean();
-
-  if (outgoing?.status === "pending") {
-    return {
-      status: "pending",
-      unlocked: false,
-      canRequest: false,
-      reason: "Waiting for the seller to approve your WhatsApp request",
-      requestId: String(outgoing._id),
-    };
-  }
-
-  if (outgoing?.status === "declined") {
-    const cooled =
-      outgoing.respondedAt &&
-      Date.now() - new Date(outgoing.respondedAt).getTime() <
-        24 * 60 * 60 * 1000;
-    return {
-      status: "declined",
-      unlocked: false,
-      canRequest: !cooled,
-      reason: cooled
-        ? "Request was declined. You can try again after 24 hours."
-        : "Previous request was declined. You can request again.",
-      requestId: String(outgoing._id),
-    };
-  }
+  const digits = seller.whatsappNumber || seller.mobile || "";
 
   return {
-    status: outgoing?.status === "expired" || outgoing?.status === "revoked"
-      ? outgoing.status
-      : "none",
-    unlocked: false,
-    canRequest: true,
+    status: "approved",
+    unlocked: true,
+    canRequest: false,
+    whatsappUrl: url,
+    maskedNumber: maskPhone(seller.countryCode, digits),
   };
 }
 
