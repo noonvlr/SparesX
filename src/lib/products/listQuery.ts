@@ -14,28 +14,6 @@ function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Marketing / filler words that shouldn't block a multi-token search. */
-const OPTIONAL_SEARCH_TOKENS = new Set([
-  "galaxy",
-  "iphone",
-  "ipad",
-  "pixel",
-  "redmi",
-  "poco",
-  "moto",
-  "nokia",
-  "oneplus",
-  "realme",
-  "oppo",
-  "vivo",
-  "for",
-  "the",
-  "and",
-  "with",
-  "mobile",
-  "phone",
-]);
-
 type LegacyCategoryResolution =
   | { kind: "deviceCategory"; slug: string }
   | { kind: "partType"; value: string }
@@ -115,46 +93,6 @@ async function applyDeviceCategoryFilter(
   } catch {
     query.deviceCategory = normalized;
   }
-}
-
-/**
- * Free-text search: prefer MongoDB `$text` index; fall back to per-token regex.
- */
-function buildSearchFilter(search: string) {
-  const rawTokens = search
-    .trim()
-    .split(/[\s,]+/)
-    .map((t) => t.trim())
-    .filter((t) => t.length >= 2);
-
-  const requiredTokens = rawTokens.filter(
-    (t) => !OPTIONAL_SEARCH_TOKENS.has(t.toLowerCase()),
-  );
-  const tokens = requiredTokens.length > 0 ? requiredTokens : rawTokens;
-
-  const fields = [
-    "name",
-    "brand",
-    "deviceModel",
-    "modelNumber",
-    "partType",
-    "tags",
-    "description",
-  ] as const;
-
-  const fieldMatch = (pattern: string) => ({
-    $or: fields.map((field) => ({
-      [field]: { $regex: pattern, $options: "i" },
-    })),
-  });
-
-  if (tokens.length > 0) {
-    return {
-      $and: tokens.map((token) => fieldMatch(escapeRegex(token))),
-    };
-  }
-
-  return fieldMatch(escapeRegex(search.trim()));
 }
 
 function sanitizeTextSearch(search: string) {
@@ -431,7 +369,16 @@ export async function fetchProductList(
   let preparedSearch = "";
   const trimmedSearch = search?.trim();
   if (trimmedSearch) {
+    const { buildSearchFilter, buildPrimaryTokenAndFilter } = await import(
+      "@/lib/products/searchRelevance"
+    );
     preparedSearch = await prepareSearchQuery(trimmedSearch);
+
+    // Gate: every significant token must hit a primary field so $text / Atlas
+    // OR + description matches cannot surface unrelated listings.
+    const gate = buildPrimaryTokenAndFilter(trimmedSearch);
+    if (gate) andClauses.push(gate);
+
     if (preparedSearch.length >= 2) {
       const { atlasSearchEnabled } = await import("@/lib/products/atlasSearch");
       if (atlasSearchEnabled()) {
@@ -623,6 +570,9 @@ export async function fetchProductList(
     // Text index may not exist yet — fall back to regex token match
     if (usedTextSearch) {
       delete query.$text;
+      const { buildSearchFilter } = await import(
+        "@/lib/products/searchRelevance"
+      );
       andClauses.push(buildSearchFilter(preparedSearch || trimmedSearch!));
       query.$and = andClauses;
       const total = await Product.countDocuments(query);
