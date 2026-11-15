@@ -11,7 +11,6 @@ import { findPublicCategories } from "@/lib/categories/publicQuery";
 import { Product } from "@/lib/models/Product";
 import { RequestModel } from "@/lib/models/Request";
 import { loadHomepageFeatured } from "@/lib/products/featuredHome";
-import { resolveUploadUrl } from "@/lib/ui/imageUrl";
 import {
   FOUNDER_EDUCATION_DEGREE,
   FOUNDER_EXPERIENCE_YEARS,
@@ -93,16 +92,6 @@ export default async function HomePage() {
       Product.countDocuments({ status: "approved" }),
       RequestModel.countDocuments({ status: "open" }),
     ]);
-
-  const heroThumbs = featuredProducts
-    .flatMap((p) => {
-      const first = Array.isArray(p.images) ? p.images[0] : null;
-      const src = resolveUploadUrl(first);
-      return src
-        ? [{ src, alt: [p.brand, p.deviceModel, p.partType].filter(Boolean).join(" ") || p.name || "Spare part" }]
-        : [];
-    })
-    .slice(0, 8);
 
   const countBySlug = new Map(
     listingCounts.map((row) => [String(row._id), row.count]),
@@ -203,30 +192,7 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
-
-          {heroThumbs.length >= 4 ? (
-            <div
-              aria-hidden
-              className="relative mx-auto max-w-5xl px-4 sm:px-6 pb-10 sm:pb-14 home-hero-enter home-hero-enter--delay-4"
-            >
-              <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5 sm:gap-2">
-                {heroThumbs.map((thumb, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={`${thumb.src}-${i}`}
-                    src={thumb.src}
-                    alt=""
-                    className="aspect-square w-full object-cover rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)]"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ))}
-              </div>
-              <div className="pointer-events-none absolute inset-x-0 bottom-10 sm:bottom-14 h-16 bg-gradient-to-t from-[var(--surface-2)] to-transparent" />
-            </div>
-          ) : (
-            <div className="h-6 sm:h-10" />
-          )}
+          <div className="h-6 sm:h-10" />
         </section>
 
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
