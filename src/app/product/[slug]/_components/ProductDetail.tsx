@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import ProductCard from "@/components/ProductCard";
+import SimilarProducts from "@/components/SimilarProducts";
 import { openChatUi } from "@/components/chat/openChat";
 import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
@@ -89,6 +89,7 @@ interface SimilarProduct {
   category?: string;
   deviceCategory?: string;
   condition?: string;
+  priceNegotiable?: boolean;
 }
 
 type Breadcrumb = { name: string; href: string };
@@ -933,26 +934,15 @@ export default function ProductDetail({
           </section>
         </div>
 
-        {/* Similar products */}
-        {similarProducts.length > 0 && (
-          <section className="mt-10 sm:mt-14">
-            <div className="flex items-end justify-between mb-5 gap-3">
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-[var(--ink)] tracking-tight">
-                  Similar products
-                </h2>
-                <p className="text-sm text-[var(--muted)] mt-1">
-                  Based on brand, model, part type, and device category
-                </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
-              {similarProducts.map((item) => (
-                <ProductCard key={item._id} product={item} />
-              ))}
-            </div>
-          </section>
-        )}
+        <SimilarProducts
+          products={similarProducts}
+          seed={{
+            brand: product.brand,
+            partType: product.partType,
+            deviceModel: product.deviceModel,
+          }}
+          hubHref={hubHref}
+        />
       </div>
 
       {/* Mobile sticky — contact first; Rate lives in About the seller */}

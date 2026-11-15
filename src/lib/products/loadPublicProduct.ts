@@ -11,10 +11,6 @@ void User;
 const TECHNICIAN_FIELDS =
   "name city state whatsappNumber countryCode mobile profilePicture phoneVerified emailVerified kycVerified businessVerified addressVerified isTrusted trustScore activeBadgeKeys specialBadgeKeys role createdAt averageRating ratingCount responseRate chatInboundOpportunities";
 
-function escapeRegex(value: string) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 export type PublicProductSimilarItem = {
   _id: string;
   slug?: string;
@@ -28,6 +24,7 @@ export type PublicProductSimilarItem = {
   condition?: string;
   deviceModel?: string;
   technician?: string;
+  priceNegotiable?: boolean;
 };
 
 export type PublicProductPayload = {
@@ -169,54 +166,40 @@ export async function loadPublicProduct(
       productObj.whatsappUnlocked = whatsappUnlocked && !isOwner;
     }
 
-    // Similar products: same brand / partType / deviceCategory, exclude self
-    const similarQuery: Record<string, unknown> = {
-      _id: { $ne: product._id },
-      status: "approved",
-      $or: [
-        ...(product.brand
-          ? [
-              {
-                brand: {
-                  $regex: `^${escapeRegex(product.brand)}$`,
-                  $options: "i",
-                },
-              },
-            ]
-          : []),
-        ...(product.partType ? [{ partType: product.partType }] : []),
-        ...(product.deviceCategory
-          ? [{ deviceCategory: product.deviceCategory }]
-          : []),
-        ...(product.deviceModel
-          ? [
-              {
-                deviceModel: {
-                  $regex: escapeRegex(product.deviceModel),
-                  $options: "i",
-                },
-              },
-            ]
-          : []),
-      ],
-    };
+    const {
+      buildSimilarProductsQuery,
+      rankSimilarProducts,
+    } = await import("@/lib/products/similarProducts");
+    const similarQuery = buildSimilarProductsQuery({
+      _id: product._id,
+      brand: product.brand,
+      partType: product.partType,
+      deviceModel: product.deviceModel,
+      deviceCategory: product.deviceCategory,
+      price: product.price,
+    });
 
-    if ((similarQuery.$or as unknown[]).length === 0) {
-      delete similarQuery.$or;
-    }
+    let similarProducts: PublicProductSimilarItem[] = [];
+    if (similarQuery) {
+      const candidates = await Product.find(similarQuery)
+        .select(
+          "slug name price images brand partType category deviceCategory condition deviceModel technician createdAt priceNegotiable",
+        )
+        .sort({ createdAt: -1 })
+        .limit(48)
+        .lean();
 
-    const similarProducts = await Product.find(similarQuery)
-      .select(
-        "slug name price images brand partType category deviceCategory condition deviceModel technician",
-      )
-      .sort({ createdAt: -1 })
-      .limit(8)
-      .lean();
-
-    return {
-      ok: true,
-      product: productObj,
-      similarProducts: similarProducts.map((p) => ({
+      similarProducts = rankSimilarProducts(
+        {
+          _id: product._id,
+          brand: product.brand,
+          partType: product.partType,
+          deviceModel: product.deviceModel,
+          price: product.price,
+        },
+        candidates,
+        8,
+      ).map((p) => ({
         _id: String(p._id),
         slug: p.slug || undefined,
         name: p.name,
@@ -229,7 +212,16 @@ export async function loadPublicProduct(
         condition: p.condition,
         deviceModel: p.deviceModel,
         technician: p.technician ? String(p.technician) : undefined,
-      })),
+        priceNegotiable: Boolean(
+          (p as { priceNegotiable?: boolean }).priceNegotiable,
+        ),
+      }));
+    }
+
+    return {
+      ok: true,
+      product: productObj,
+      similarProducts,
       meta: { isOwner, isAuthenticated },
     };
   } catch (error) {
