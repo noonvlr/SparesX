@@ -132,6 +132,7 @@ export default function ProductDetail({
   const [soldOpen, setSoldOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [descExpanded, setDescExpanded] = useState(false);
   const [sellerRating, setSellerRating] = useState({
     averageRating: initialProduct.technician &&
     typeof initialProduct.technician === "object"
@@ -448,23 +449,27 @@ export default function ProductDetail({
         }
       : null,
     conditionLabel ? { label: "Condition", value: conditionLabel } : null,
-    {
-      label: "Price",
-      value: `₹${product.price?.toLocaleString("en-IN")}${
-        product.priceNegotiable ? " (negotiable)" : ""
-      }`,
-    },
-    {
-      label: "Availability",
-      value: "In stock — contact seller to confirm",
-    },
   ].filter(Boolean) as Array<{ label: string; value: ReactNode }>;
 
+  const description = (product.description || "").trim();
+  const descLong = description.length > 220;
+  const descVisible =
+    descExpanded || !descLong ? description : `${description.slice(0, 220).trim()}…`;
+
+  const sellerLocation = seller
+    ? [seller.city, seller.state].filter(Boolean).join(", ")
+    : "";
+
+  const contactDisabled =
+    waLoading ||
+    waActionLoading ||
+    (waConnect !== null && !waConnect.unlocked);
+
   return (
-    <main className="min-h-screen bg-[var(--surface-2)] pb-[calc(var(--bottom-nav-h)+4.75rem+env(safe-area-inset-bottom,0px))] lg:pb-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+    <main className="min-h-screen bg-[var(--surface-2)] pb-[calc(var(--bottom-nav-h)+4.25rem+env(safe-area-inset-bottom,0px))] lg:pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8">
         {breadcrumbs.length > 0 ? (
-          <nav aria-label="Breadcrumb" className="mb-4 text-sm text-[var(--muted)]">
+          <nav aria-label="Breadcrumb" className="mb-3 text-sm text-[var(--muted)]">
             <ol className="flex flex-wrap items-center gap-1.5">
               {breadcrumbs.map((crumb, index) => {
                 const isLast = index === breadcrumbs.length - 1;
@@ -490,23 +495,7 @@ export default function ProductDetail({
           </nav>
         ) : null}
 
-        {hubHref ? (
-          <p className="mb-4 text-sm text-[var(--ink-secondary)]">
-            More{" "}
-            <Link
-              href={hubHref}
-              className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
-            >
-              {[product.brand, product.deviceModel, partLabel]
-                .filter(Boolean)
-                .join(" ")}{" "}
-              parts
-            </Link>{" "}
-            from technicians across India.
-          </p>
-        ) : null}
-
-        <div className="mb-4 sm:mb-6 space-y-3">
+        <div className="mb-4 sm:mb-5 space-y-3">
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/products"
@@ -684,39 +673,34 @@ export default function ProductDetail({
             )}
           </Card>
 
-          {/* Details */}
-          <section className="space-y-5">
+          {/* Details — primary → secondary → tertiary */}
+          <section className="space-y-4 sm:space-y-5">
             <Card className="p-5 sm:p-7">
-              <h1 className="text-2xl sm:text-4xl font-bold text-[var(--ink)] leading-tight mb-4 tracking-tight">
-                {heading}
-              </h1>
-
-              <div className="flex flex-wrap gap-2 mb-5">
-                {product.brand && <Badge tone="brand">{product.brand}</Badge>}
-                {product.deviceModel && (
-                  <Badge tone="brand">{product.deviceModel}</Badge>
-                )}
-                {partLabel ? <Badge tone="neutral">{partLabel}</Badge> : null}
-                {(product.deviceCategory || product.category) && (
-                  <Badge tone="neutral">
-                    {product.deviceCategory || product.category}
-                  </Badge>
-                )}
+              {/* Primary: identity + price + contact */}
+              <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--ink)] leading-tight tracking-tight text-balance">
+                  {heading}
+                </h1>
                 {conditionLabel ? (
                   <Badge
                     tone={product.condition === "new" ? "success" : "warning"}
+                    className="shrink-0 mt-1"
                   >
                     {conditionLabel}
                   </Badge>
                 ) : null}
               </div>
 
-              <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] p-5 mb-5">
-                <p className="text-sm text-[var(--ink-inverse)]/80 mb-1">Price</p>
+              <div className="rounded-[var(--radius)] bg-gradient-to-br from-[var(--brand)] to-[var(--brand-hover)] text-[var(--ink-inverse)] p-4 sm:p-5 mb-4">
                 <div className="flex items-baseline gap-3 flex-wrap">
                   <p className="text-price text-3xl sm:text-4xl text-[var(--ink-inverse)]">
-                    ₹{product.price?.toLocaleString()}
+                    ₹{product.price?.toLocaleString("en-IN")}
                   </p>
+                  {product.priceNegotiable ? (
+                    <span className="text-sm text-[var(--ink-inverse)]/85">
+                      Negotiable
+                    </span>
+                  ) : null}
                   {product.status === "sold" ? (
                     <Badge
                       tone="success"
@@ -728,216 +712,222 @@ export default function ProductDetail({
                 </div>
               </div>
 
-              {!isOwner && (
-                <Button
-                  type="button"
-                  onClick={handleToggleSave}
-                  disabled={saveLoading}
-                  variant={isSaved ? "soft" : "secondary"}
-                  className={cn(
-                    "mb-5 hidden sm:inline-flex w-auto",
-                    isSaved &&
-                      "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]",
-                  )}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill={isSaved ? "currentColor" : "none"}
-                    stroke="currentColor"
-                    strokeWidth={2}
+              {!isOwner && product.status !== "sold" ? (
+                <div className="hidden lg:flex flex-wrap items-center gap-2 mb-4">
+                  <Button
+                    type="button"
+                    onClick={handleWhatsAppClick}
+                    disabled={contactDisabled}
+                    className="bg-[#25D366] text-[var(--ink-inverse)] hover:bg-[#1ebe57] shadow-none"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                    />
-                  </svg>
-                  {saveLoading
-                    ? "Please wait…"
-                    : isSaved
-                      ? "Saved for later"
-                      : "Save for later"}
-                </Button>
-              )}
+                    {waButtonLabel}
+                  </Button>
+                  <Button type="button" onClick={handleChatClick}>
+                    In-app chat
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleToggleSave}
+                    disabled={saveLoading}
+                    variant={isSaved ? "soft" : "secondary"}
+                    className={cn(
+                      isSaved &&
+                        "bg-[var(--warning-soft)] text-[var(--warning)] border border-[var(--warning)]/30 hover:bg-[var(--warning-soft)]",
+                    )}
+                  >
+                    {saveLoading
+                      ? "…"
+                      : isSaved
+                        ? "Saved"
+                        : "Save"}
+                  </Button>
+                </div>
+              ) : null}
 
-              <div className="mb-5">
-                <h2 className="text-lg font-semibold text-[var(--ink)] mb-2">
-                  Description
-                </h2>
-                <p className="text-[var(--ink-secondary)] leading-relaxed whitespace-pre-wrap">
-                  {product.description}
+              {!isOwner && product.status === "sold" ? (
+                <p className="mb-4 text-sm font-semibold text-[var(--success)]">
+                  This listing has been marked as sold.
                 </p>
-              </div>
+              ) : null}
 
-              <div className="mb-5">
-                <h2 className="text-lg font-semibold text-[var(--ink)] mb-3">
-                  Product details
-                </h2>
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                  {specRows.map((row) => (
-                    <div
-                      key={row.label}
-                      className="flex flex-col gap-0.5 border-b border-[var(--border)] pb-2"
+              {!isLoggedIn && !isOwner && product.status !== "sold" ? (
+                <p className="mb-4 text-sm text-[var(--ink-secondary)] bg-[var(--warning-soft)] border border-[var(--warning)]/20 rounded-[var(--radius)] px-3 py-2">
+                  Login to contact the seller on WhatsApp or chat.
+                </p>
+              ) : null}
+
+              {/* Seller one-liner (trust before contact detail) */}
+              {seller ? (
+                <div className="mb-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm border-b border-[var(--border)] pb-4">
+                  <span className="text-[var(--muted)]">Seller</span>
+                  {seller._id ? (
+                    <Link
+                      href={`/u/${seller._id}`}
+                      className="font-semibold text-[var(--ink)] hover:text-[var(--brand-hover)]"
                     >
-                      <dt className="text-[var(--muted)] font-medium">
-                        {row.label}
-                      </dt>
-                      <dd className="text-[var(--ink)]">{row.value}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <p className="mt-4 text-sm text-[var(--ink-secondary)] leading-relaxed">
-                  This {conditionLabel.toLowerCase() || "listed"}{" "}
-                  {partLabel ? partLabel.toLowerCase() : "spare part"}
-                  {deviceLabel ? ` for the ${deviceLabel}` : ""} is sold directly
-                  by an independent technician on SparesX. Confirm fitment,
-                  condition, and delivery with the seller before paying —
-                  SparesX does not hold stock or process payments.
-                </p>
-              </div>
+                      {seller.name}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold text-[var(--ink)]">
+                      {seller.name}
+                    </span>
+                  )}
+                  <StarRatingDisplay
+                    value={sellerRating.averageRating}
+                    count={sellerRating.ratingCount}
+                  />
+                  {sellerLocation ? (
+                    <span className="text-[var(--muted)]">{sellerLocation}</span>
+                  ) : null}
+                </div>
+              ) : null}
 
-              <p className="text-sm text-[var(--muted)]">
-                Listed on{" "}
+              {/* Secondary: description + specs */}
+              {description ? (
+                <div className="mb-5">
+                  <h2 className="text-base font-semibold text-[var(--ink)] mb-2">
+                    Description
+                  </h2>
+                  <p className="text-[var(--ink-secondary)] leading-relaxed whitespace-pre-wrap text-[15px]">
+                    {descVisible}
+                  </p>
+                  {descLong ? (
+                    <button
+                      type="button"
+                      onClick={() => setDescExpanded((v) => !v)}
+                      className="mt-1.5 text-sm font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+                    >
+                      {descExpanded ? "Show less" : "Show more"}
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {specRows.length > 0 ? (
+                <div className="mb-4">
+                  <h2 className="text-base font-semibold text-[var(--ink)] mb-3">
+                    Specs
+                  </h2>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                    {specRows.map((row) => (
+                      <div
+                        key={row.label}
+                        className="flex flex-col gap-0.5 border-b border-[var(--border)] pb-2"
+                      >
+                        <dt className="text-[var(--muted)] font-medium">
+                          {row.label}
+                        </dt>
+                        <dd className="text-[var(--ink)]">{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
+              ) : null}
+
+              {hubHref ? (
+                <p className="mb-3 text-sm text-[var(--ink-secondary)]">
+                  <Link
+                    href={hubHref}
+                    className="font-semibold text-[var(--brand)] hover:text-[var(--brand-hover)]"
+                  >
+                    Browse more{" "}
+                    {[product.brand, product.deviceModel, partLabel]
+                      .filter(Boolean)
+                      .join(" ")}{" "}
+                    parts
+                  </Link>
+                </p>
+              ) : null}
+
+              <p className="text-xs text-[var(--muted)] leading-relaxed">
+                Sold directly by an independent technician. Confirm fitment and
+                payment with the seller — SparesX does not hold stock or process
+                payments. Listed{" "}
                 {new Date(product.createdAt).toLocaleDateString("en-IN", {
                   year: "numeric",
-                  month: "long",
+                  month: "short",
                   day: "numeric",
                 })}
+                .
               </p>
             </Card>
 
-            {/* Seller + contact */}
-            <Card className="p-5 sm:p-7">
+            {/* Tertiary: seller trust + safety */}
+            <Card className="p-5 sm:p-6">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <h2 className="text-lg font-semibold text-[var(--ink)]">Technician</h2>
-                {!isOwner && seller && (
+                <h2 className="text-base font-semibold text-[var(--ink)]">
+                  About the seller
+                </h2>
+                {!isOwner && seller ? (
                   <button
                     type="button"
                     onClick={handleReportClick}
-                    title="Report this listing"
-                    aria-label="Report this listing"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--danger)] hover:opacity-80 px-2 py-1 rounded-[var(--radius)] hover:bg-[var(--danger-soft)] transition-colors"
+                    className="text-xs font-semibold text-[var(--danger)] hover:bg-[var(--danger-soft)] px-2 py-1 rounded-[var(--radius)] transition-colors"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"
-                      />
-                    </svg>
                     Report listing
                   </button>
-                )}
+                ) : null}
               </div>
+
               {seller ? (
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {seller._id ? (
-                        <Link
-                          href={`/u/${seller._id}`}
-                          className="font-semibold text-[var(--ink)] hover:text-[var(--brand-hover)]"
-                        >
-                          {seller.name}
-                        </Link>
-                      ) : (
-                        <p className="font-semibold text-[var(--ink)]">{seller.name}</p>
-                      )}
-                      <StarRatingDisplay
-                        value={sellerRating.averageRating}
-                        count={sellerRating.ratingCount}
-                      />
-                    </div>
-                    <div className="mt-2">
-                      <TrustBadges
-                        density="compact"
-                        phoneVerified={seller.phoneVerified}
-                        emailVerified={seller.emailVerified}
-                        kycVerified={seller.kycVerified}
-                        businessVerified={seller.businessVerified}
-                        addressVerified={seller.addressVerified}
-                        isTrusted={seller.isTrusted}
-                        trustScore={seller.trustScore}
-                        trustLabel={seller.trustLabel}
-                        badges={seller.badges}
-                        activeBadgeKeys={seller.activeBadgeKeys}
-                        showScore
-                      />
-                    </div>
-                    {typeof seller.responseRate === "number" &&
-                    (seller.responseSampleSize || 0) >= 3 ? (
-                      <p className="text-xs text-[var(--muted)] mt-1.5">
-                        Usually replies within 24h ({seller.responseRate}%)
-                      </p>
-                    ) : null}
-                    {(seller.city || seller.state) && (
-                      <p className="text-sm text-[var(--muted)] mt-1">
-                        {[seller.city, seller.state].filter(Boolean).join(", ")}
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {seller._id ? (
+                      <Link
+                        href={`/u/${seller._id}`}
+                        className="font-semibold text-[var(--ink)] hover:text-[var(--brand-hover)]"
+                      >
+                        {seller.name}
+                      </Link>
+                    ) : (
+                      <p className="font-semibold text-[var(--ink)]">
+                        {seller.name}
                       </p>
                     )}
+                    <StarRatingDisplay
+                      value={sellerRating.averageRating}
+                      count={sellerRating.ratingCount}
+                    />
                   </div>
-                  {!isOwner && product.status !== "sold" && (
-                    <div className="hidden lg:flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                      <Button
-                        type="button"
-                        onClick={handleWhatsAppClick}
-                        disabled={
-                          waLoading ||
-                          waActionLoading ||
-                          (waConnect !== null && !waConnect.unlocked)
-                        }
-                        className="bg-[#25D366] text-[var(--ink-inverse)] hover:bg-[#1ebe57] shadow-none"
-                      >
-                        {waButtonLabel}
-                      </Button>
-                      <Button type="button" onClick={handleChatClick}>
-                        In-app chat
-                      </Button>
-                      <Button type="button" variant="soft" onClick={handleRateClick}>
-                        Rate seller
-                      </Button>
-                    </div>
-                  )}
-                  {!isOwner && product.status === "sold" ? (
-                    <p className="text-sm font-semibold text-[var(--success)]">
-                      This listing has been marked as sold.
+                  <TrustBadges
+                    density="compact"
+                    phoneVerified={seller.phoneVerified}
+                    emailVerified={seller.emailVerified}
+                    kycVerified={seller.kycVerified}
+                    businessVerified={seller.businessVerified}
+                    addressVerified={seller.addressVerified}
+                    isTrusted={seller.isTrusted}
+                    trustScore={seller.trustScore}
+                    trustLabel={seller.trustLabel}
+                    badges={seller.badges}
+                    activeBadgeKeys={seller.activeBadgeKeys}
+                    showScore
+                  />
+                  {typeof seller.responseRate === "number" &&
+                  (seller.responseSampleSize || 0) >= 3 ? (
+                    <p className="text-xs text-[var(--muted)]">
+                      Usually replies within 24h ({seller.responseRate}%)
                     </p>
+                  ) : null}
+                  {sellerLocation ? (
+                    <p className="text-sm text-[var(--muted)]">{sellerLocation}</p>
+                  ) : null}
+                  {!isOwner ? (
+                    <Button
+                      type="button"
+                      variant="soft"
+                      size="sm"
+                      onClick={handleRateClick}
+                      className="mt-1"
+                    >
+                      Rate seller
+                    </Button>
                   ) : null}
                 </div>
               ) : (
-                <p className="text-sm text-[var(--muted)]">Technician details unavailable.</p>
-              )}
-
-              {!isLoggedIn && !isOwner && (
-                <p className="mt-4 text-sm text-[var(--ink-secondary)] bg-[var(--warning-soft)] border border-[var(--warning)]/20 rounded-[var(--radius)] px-3 py-2">
-                  Login or sign up to contact the seller.
+                <p className="text-sm text-[var(--muted)]">
+                  Seller details unavailable.
                 </p>
-              )}
-              {isLoggedIn && !isOwner && (
-                <div className="mt-4 space-y-1.5">
-                  {waConnect?.unlocked ? (
-                    <p className="text-xs text-[var(--muted)] bg-[var(--surface-3)] border border-[var(--border)] rounded-[var(--radius)] px-3 py-2">
-                      Connect on WhatsApp opens a chat with a message about this
-                      listing
-                      {waConnect.maskedNumber
-                        ? ` (${waConnect.maskedNumber})`
-                        : ""}
-                      .
-                    </p>
-                  ) : null}
-                  <p className="text-xs text-[var(--muted)]">
-                    After chatting with the seller, you can rate their behaviour
-                    and response. Spot misuse? Use Report listing — we attach
-                    the product and seller automatically for admin review.
-                  </p>
-                </div>
               )}
             </Card>
           </section>
@@ -965,7 +955,7 @@ export default function ProductDetail({
         )}
       </div>
 
-      {/* Mobile sticky CTAs — sits above the bottom nav */}
+      {/* Mobile sticky — contact first; Rate lives in About the seller */}
       {!isOwner && product.status !== "sold" && (
         <div
           className="lg:hidden fixed inset-x-0 z-[45] border-t border-[var(--border)] bg-[var(--surface-elevated)]"
@@ -974,46 +964,11 @@ export default function ProductDetail({
               "calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px))",
           }}
         >
-          <div className="max-w-7xl mx-auto grid grid-cols-4 px-1">
-            <button
-              type="button"
-              onClick={handleToggleSave}
-              disabled={saveLoading}
-              className={cn(
-                "flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight",
-                isSaved
-                  ? "text-[var(--brand)]"
-                  : "text-[var(--ink-secondary)]",
-              )}
-            >
-              <span
-                className={cn(
-                  "inline-flex h-8 w-8 items-center justify-center rounded-full",
-                  isSaved
-                    ? "bg-[var(--brand-soft)] text-[var(--brand)]"
-                    : "bg-[var(--surface-3)] text-[var(--ink-secondary)]",
-                )}
-              >
-                <svg
-                  className="h-4 w-4"
-                  viewBox="0 0 24 24"
-                  fill={isSaved ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-                  />
-                </svg>
-              </span>
-              {isSaved ? "Saved" : "Save"}
-            </button>
+          <div className="max-w-7xl mx-auto grid grid-cols-3 px-1">
             <button
               type="button"
               onClick={handleWhatsAppClick}
-              disabled={waLoading || waActionLoading}
+              disabled={contactDisabled}
               className="flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight text-[#128C7E] disabled:opacity-60"
             >
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#25D366]/15 text-[#128C7E]">
@@ -1048,25 +1003,38 @@ export default function ProductDetail({
             </button>
             <button
               type="button"
-              onClick={handleRateClick}
-              className="flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight text-[var(--ink-secondary)]"
+              onClick={handleToggleSave}
+              disabled={saveLoading}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 min-h-12 py-1.5 text-[10px] font-semibold tracking-tight",
+                isSaved
+                  ? "text-[var(--brand)]"
+                  : "text-[var(--ink-secondary)]",
+              )}
             >
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-3)] text-[var(--ink-secondary)]">
+              <span
+                className={cn(
+                  "inline-flex h-8 w-8 items-center justify-center rounded-full",
+                  isSaved
+                    ? "bg-[var(--brand-soft)] text-[var(--brand)]"
+                    : "bg-[var(--surface-3)] text-[var(--ink-secondary)]",
+                )}
+              >
                 <svg
                   className="h-4 w-4"
-                  fill="none"
                   viewBox="0 0 24 24"
+                  fill={isSaved ? "currentColor" : "none"}
                   stroke="currentColor"
+                  strokeWidth={2}
                 >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
                   />
                 </svg>
               </span>
-              Rate
+              {isSaved ? "Saved" : "Save"}
             </button>
           </div>
         </div>
