@@ -119,6 +119,7 @@ export default function AdminDashboard() {
     { href: "/admin/support", title: "Support", desc: "Reply to user tickets" },
     { href: "/admin/chat", title: "Chat disputes", desc: "Read chats for dispute review" },
     { href: "/admin/broadcast", title: "Broadcast messages", desc: "Targeted bulk chat with review & history" },
+    { href: "/admin/ads", title: "Ads Management", desc: "Placements, campaigns, sponsored promos" },
     { href: "/admin/categories", title: "Categories", desc: "Manage part categories" },
     { href: "/admin/reports", title: "Reports", desc: "Unique visitors and platform counts" },
     { href: "/admin/site-settings", title: "Site settings", desc: "SMS provider & OTP credentials" },

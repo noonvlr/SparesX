@@ -50,6 +50,11 @@ const CONTROLS = [
     desc: "Targeted in-app bulk messaging with audience review & history",
   },
   {
+    href: "/admin/ads",
+    title: "Ads Management",
+    desc: "Placements, campaigns, and sponsored promo performance",
+  },
+  {
     href: "/admin/reports",
     title: "Reports",
     desc: "Unique visitors plus counts across users, products, chats, and support",

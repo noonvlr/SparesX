@@ -1,6 +1,6 @@
 # SparesX — Advertisement Management System (AMS)
 
-Living doc. Updated as phases complete. **Status: Phase 1 complete — continuing to Phase 2 next.**
+Living doc. Updated as phases complete. **Status: Phase 2 complete — continuing to Phase 3 next.**
 
 ---
 
@@ -10,7 +10,7 @@ Living doc. Updated as phases complete. **Status: Phase 1 complete — continuin
 |-------|--------|-------|
 | 0 Discovery + plan | **Done** | Approved (300×600 sidebar, leaf parts, house on sidebar, etc.) |
 | 1 Models, indexes, seed, admin API skeleton, effective-status | **Done** | Models + helpers + seed + admin APIs + unit tests |
-| 2 Placement management UI + sidebar entry | Pending | |
+| 2 Placement management UI + sidebar entry | **Done** | Overview, placements edit, campaigns list, nav |
 | 3 Upload + draft wizard + campaigns table | Pending | |
 | 4 Delivery, public API, PromoSlot, cache | Pending | |
 | 5 Page integration + CLS/LCP | Pending | |
@@ -138,12 +138,14 @@ Extend `tsx --test` with pure modules: effective status, eligibility, weighted r
 
 ### Phase 1 — Models + seed + shared status + admin API skeleton — DONE
 
-### Phase 2 — Placement UI + nav
+### Phase 2 — Placement UI + nav — DONE
 
-- `src/app/admin/ads/page.tsx` (Overview shell; stats in Phase 7)
-- `src/app/admin/ads/placements/page.tsx`
-- AppShell admin nav + dashboard/settings CONTROLS: “Ads Management”
-- Admin design system: `AdminPage`, `Card`, `PageHeader`, tables, `Alert`
+**Shipped**
+- Routes: `/admin/ads`, `/admin/ads/placements`, `/admin/ads/campaigns` (list only)
+- `AdsSubnav`; placement list + inline edit (dims, enabled, house fallback, maxSlots)
+- Seed missing placements button
+- Nav: AppShell More + top links, dashboard + control center cards
+- Overview: campaign status counts + impressions/clicks/CTR (zeros until traffic)
 
 ### Phase 3 — Upload + wizard + campaigns
 
