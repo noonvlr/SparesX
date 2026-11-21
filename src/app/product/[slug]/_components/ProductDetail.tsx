@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import SimilarProducts from "@/components/SimilarProducts";
+import PromoSlot from "@/components/promo/PromoSlot";
 import { openChatUi } from "@/components/chat/openChat";
 import TrustBadges from "@/components/TrustBadges";
 import { showToast } from "@/components/ToastHost";
@@ -933,6 +934,8 @@ export default function ProductDetail({
             </Card>
           </section>
         </div>
+
+        <PromoSlot placement="product_details" className="my-8" />
 
         <SimilarProducts
           products={similarProducts}

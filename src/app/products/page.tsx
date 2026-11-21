@@ -4,7 +4,7 @@ import { cache } from "react";
 import ProductFilters, { ProductSearchBar } from "./_components/ProductFilters";
 import ProductSortSelect from "./_components/ProductSortSelect";
 import ProductCard from "@/components/ProductCard";
-import AdSlot from "@/components/AdSlot";
+import PromoSlot from "@/components/promo/PromoSlot";
 import { EmptyState, PageHeader } from "@/components/ui/Card";
 import {
   fetchProductList,
@@ -326,11 +326,7 @@ export default async function BrowseProductsPage({
               </nav>
             ) : null}
 
-            <AdSlot
-              id="products-grid-bottom"
-              size="leaderboard"
-              className="mt-6"
-            />
+            <PromoSlot placement="parts_listing" className="mt-6" />
           </div>
         </div>
       </div>

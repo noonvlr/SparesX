@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Card";
 import { showToast } from "@/components/ToastHost";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import PromoSlot from "@/components/promo/PromoSlot";
 
 interface Brand {
   _id: string;
@@ -913,12 +914,15 @@ export default function ProductFilters() {
   return (
     <>
       {/* Desktop sidebar */}
-      <div className="hidden lg:block rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] p-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)] mb-5">
-          <IconFilter className="h-4 w-4 text-[var(--brand)]" />
-          Refine search
-        </h2>
-        <FilterFields />
+      <div className="hidden lg:block space-y-4">
+        <div className="rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-sm)] p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)] mb-5">
+            <IconFilter className="h-4 w-4 text-[var(--brand)]" />
+            Refine search
+          </h2>
+          <FilterFields />
+        </div>
+        <PromoSlot placement="sidebar_ad" />
       </div>
 
       {/* Mobile floating trigger */}

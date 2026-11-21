@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import FeaturedProducts from "@/components/FeaturedProducts";
-import AdSlot from "@/components/AdSlot";
+import PromoSlot from "@/components/promo/PromoSlot";
 import HomeSearch from "@/components/HomeSearch";
 import HomeMarketplaceStats from "@/components/HomeMarketplaceStats";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -195,6 +195,10 @@ export default async function HomePage() {
           <div className="h-6 sm:h-10" />
         </section>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-2">
+          <PromoSlot placement="homepage_hero" className="my-2" />
+        </div>
+
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6">
           <HomeMarketplaceStats
             listedCount={listedCount}
@@ -241,7 +245,7 @@ export default async function HomePage() {
         )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <AdSlot id="home-mid" size="leaderboard" className="my-2" />
+          <PromoSlot placement="homepage_secondary" className="my-2" />
         </div>
 
         <FeaturedProducts products={featuredProducts as any} />

@@ -1,6 +1,6 @@
 # SparesX — Advertisement Management System (AMS)
 
-Living doc. Updated as phases complete. **Status: Phase 4 complete — ready for Phase 5 (page integration).**
+Living doc. Updated as phases complete. **Status: Phase 5 complete — ready for Phase 6 (tracking).**
 
 ---
 
@@ -13,7 +13,7 @@ Living doc. Updated as phases complete. **Status: Phase 4 complete — ready for
 | 2 Placement management UI + sidebar entry | **Done** | Overview, placements edit, campaigns list, nav |
 | 3 Upload + draft wizard + campaigns table | **Done** | Draft-first wizard, creatives upload, actions |
 | 4 Delivery, public API, PromoSlot, cache | **Done** | Eligibility cache, PromoSlot, click redirect stub |
-| 5 Page integration + CLS/LCP | Pending | |
+| 5 Page integration + CLS/LCP | **Done** | PromoSlot on home/products/parts/PDP; AdSlot removed |
 | 6 Tracking (impressions, clicks, dedupe, rate limit, tokens) | Pending | |
 | 7 Analytics + Overview | Pending | |
 | 8 Security, tests, perf, docs | Pending | |
@@ -166,12 +166,17 @@ Extend `tsx --test` with pure modules: effective status, eligibility, weighted r
 - HMAC `PROMO_HMAC_SECRET` (falls back to `JWT_SECRET`); robots disallow `/api/promos`
 - Tests: rotation weights + token sign/verify
 
-### Phase 5 — Integrate pages
+### Phase 5 — Integrate pages — DONE
 
-- Replace `AdSlot` on `/` and `/products` with `PromoSlot`
-- Add slots on product detail + parts leaf
-- Sidebar slot in products filter column
-- Manual CLS/LCP notes (Lighthouse before/after in Phase 8)
+| Placement | Page |
+|-----------|------|
+| `homepage_hero` | `/` after hero, before stats |
+| `homepage_secondary` | `/` between categories and featured |
+| `parts_listing` | `/products` bottom; `/parts/.../[model]` above grid |
+| `product_details` | `/product/[slug]` above SimilarProducts |
+| `sidebar_ad` | `/products` desktop filter column (below filters) |
+
+Removed unused `AdSlot.tsx`. AdSense script unchanged. Empty slots collapse (no CLS from empty reserved boxes). Loading state briefly reserves aspect ratio.
 
 ### Phase 6 — Tracking
 

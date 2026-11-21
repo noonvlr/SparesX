@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ProductCard from "@/components/ProductCard";
+import PromoSlot from "@/components/promo/PromoSlot";
 import {
   BreadcrumbJsonLd,
   Breadcrumbs,
@@ -220,6 +221,8 @@ export default async function PartsModelPage({ params }: Params) {
             </Link>
           </nav>
         </div>
+
+        <PromoSlot placement="parts_listing" className="mb-6" />
 
         {products.length === 0 ? (
           <EmptyState
