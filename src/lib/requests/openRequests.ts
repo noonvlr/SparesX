@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db/connect";
 import { RequestModel } from "@/lib/models/Request";
+import { openRequestActiveFilter } from "@/lib/requests/expiry";
 
 /** Contact-free request shape, safe to render for anonymous visitors. */
 export type PublicPartRequest = {
@@ -12,6 +13,8 @@ export type PublicPartRequest = {
   description: string;
   status: string;
   createdAt: string;
+  expireAfterDays?: number;
+  expiresAt?: string | null;
   hasContact: boolean;
 };
 
@@ -34,6 +37,7 @@ export async function fetchOpenRequestCategoryFacets(
         $match: {
           status: "open",
           category: { $exists: true, $nin: [null, ""] },
+          ...openRequestActiveFilter(),
         },
       },
       {
@@ -75,7 +79,7 @@ export async function fetchOpenRequests(
     await connectDB();
 
     const limit = Math.min(100, Math.max(1, opts.limit ?? 50));
-    const query = { status: "open" };
+    const query = { status: "open", ...openRequestActiveFilter() };
 
     const [total, docs, categoryFacets] = await Promise.all([
       RequestModel.countDocuments(query),
@@ -94,6 +98,13 @@ export async function fetchOpenRequests(
         description: doc.description || "",
         status: doc.status || "open",
         createdAt: new Date(doc.createdAt).toISOString(),
+        expireAfterDays:
+          typeof doc.expireAfterDays === "number"
+            ? doc.expireAfterDays
+            : undefined,
+        expiresAt: doc.expiresAt
+          ? new Date(doc.expiresAt).toISOString()
+          : null,
         hasContact: Boolean(doc.email || doc.phone),
       }),
     );

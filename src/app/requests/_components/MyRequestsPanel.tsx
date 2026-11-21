@@ -33,6 +33,8 @@ type MyRequest = {
   status: "open" | "fulfilled" | "closed";
   createdAt: string;
   updatedAt: string;
+  expireAfterDays?: number;
+  expiresAt?: string | null;
 };
 
 const STATUS_TONE: Record<string, "warning" | "success" | "neutral"> = {
@@ -253,6 +255,13 @@ export default function MyRequestsPanel() {
                     </p>
                     <p className="text-xs text-[var(--muted)] mt-0.5">
                       Updated {new Date(item.updatedAt).toLocaleString("en-IN")}
+                      {item.status === "open" && item.expiresAt
+                        ? ` · Expires ${new Date(item.expiresAt).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
+                          })}`
+                        : null}
                     </p>
                   </div>
                   <Badge tone={STATUS_TONE[item.status]} className="capitalize">

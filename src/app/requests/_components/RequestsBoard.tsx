@@ -25,10 +25,21 @@ interface PartRequest {
   description: string;
   status: string;
   createdAt: string;
+  expireAfterDays?: number;
+  expiresAt?: string | null;
   hasContact?: boolean;
   /** Present for signed-in viewers — opens in-app chat with the requester. */
   requesterId?: string;
   canMessage?: boolean;
+}
+
+function expiresInLabel(expiresAt?: string | null): string | null {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Expiring soon";
+  const days = Math.ceil(ms / 86_400_000);
+  if (days <= 1) return "Expires today";
+  return `Expires in ${days}d`;
 }
 
 type RequestsTab = "browse" | "submit" | "mine";
@@ -309,7 +320,8 @@ export default function RequestsBoard({
               </li>
             </ul>
             <div className="rounded-[var(--radius)] bg-[var(--brand-soft)] text-[var(--brand-hover)] px-4 py-3 text-sm">
-              Tip: mention condition, urgency, and city in the description for faster replies.
+              Tip: mention condition, urgency, and city in the description. Set
+              “Expire after” so stale requests clear automatically.
             </div>
           </Card>
         </div>
@@ -468,6 +480,7 @@ export default function RequestsBoard({
                 const hours = Math.max(1, Math.round(ageMs / 36e5));
                 const ageLabel =
                   hours < 24 ? `${hours}h ago` : `${Math.round(hours / 24)}d ago`;
+                const expireLabel = expiresInLabel(request.expiresAt);
                 const isFocused = Boolean(focusId && request._id === focusId);
 
                 return (
@@ -507,6 +520,11 @@ export default function RequestsBoard({
                             <Badge tone="warning" className="rounded-md">
                               {ageLabel}
                             </Badge>
+                            {expireLabel ? (
+                              <Badge tone="neutral" className="rounded-md">
+                                {expireLabel}
+                              </Badge>
+                            ) : null}
                           </div>
                           <p className="text-sm text-[var(--muted)] leading-relaxed line-clamp-2 sm:line-clamp-3">
                             {highlightText(request.description, search)}

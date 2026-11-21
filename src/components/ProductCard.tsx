@@ -36,10 +36,23 @@ export interface ProductCardData {
   condition?: string;
   priceNegotiable?: boolean;
   slug?: string;
+  /** ISO timestamp when the listing was created. */
+  createdAt?: string | Date;
   /** Listing status — sold cards are hidden on public grids. */
   status?: string;
   /** Owner user id — when it matches the signed-in seller, show owner actions. */
   technician?: string;
+}
+
+function formatListedDate(value?: string | Date): string | null {
+  if (!value) return null;
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 }
 
 export default function ProductCard({
@@ -91,6 +104,7 @@ export default function ProductCard({
   const title = formatListingTitle(product);
   const imageAlt = formatListingAlt(product);
   const partLabel = formatPartTypeLabel(product.partType);
+  const listedDate = formatListedDate(product.createdAt);
 
   async function handleDelete() {
     const status = (product as { status?: string }).status;
@@ -264,9 +278,16 @@ export default function ProductCard({
           </div>
 
           <div className="mt-auto space-y-2">
-            <p className="text-price text-base sm:text-lg text-[var(--brand)]">
-              ₹{product.price?.toLocaleString()}
-            </p>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-price text-base sm:text-lg text-[var(--brand)]">
+                ₹{product.price?.toLocaleString()}
+              </p>
+              {listedDate ? (
+                <p className="text-[10px] sm:text-[11px] text-[var(--muted)] whitespace-nowrap">
+                  Listed {listedDate}
+                </p>
+              ) : null}
+            </div>
 
             {isOwner ? (
               <div className="grid grid-cols-3 gap-1.5">

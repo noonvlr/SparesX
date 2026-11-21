@@ -53,6 +53,7 @@ export type PublicProfileListing = {
   deviceCategory?: string;
   condition?: string;
   priceNegotiable?: boolean;
+  createdAt?: string;
 };
 
 export type PublicProfileRating = {
@@ -123,6 +124,9 @@ export async function fetchPublicProfile(
       deviceCategory: p.deviceCategory || undefined,
       condition: p.condition || undefined,
       priceNegotiable: Boolean(p.priceNegotiable),
+      createdAt: p.createdAt
+        ? new Date(p.createdAt).toISOString()
+        : undefined,
     }),
   );
 

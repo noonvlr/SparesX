@@ -11,6 +11,7 @@ export type HomepageFeaturedItem = {
   slug?: string;
   status?: string;
   priceNegotiable?: boolean;
+  createdAt?: string;
   technician?: string;
   featured?: boolean;
 };

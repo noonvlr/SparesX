@@ -13,6 +13,10 @@ export interface IRequest extends Document {
   description: string;
   status: RequestStatus;
   userId?: Types.ObjectId;
+  /** How long the request stays open before auto-delete (15 / 30 / 45). */
+  expireAfterDays?: number;
+  /** Absolute expiry — open requests with expiresAt <= now are removed by cron. */
+  expiresAt?: Date | null;
   /** Catalog ObjectId refs when resolvable from string fields */
   deviceTypeId?: Types.ObjectId | null;
   brandId?: Types.ObjectId | null;
@@ -37,6 +41,12 @@ const RequestSchema: Schema<IRequest> = new Schema(
       default: "open",
     },
     userId: { type: Schema.Types.ObjectId, ref: "User" },
+    expireAfterDays: {
+      type: Number,
+      enum: [15, 30, 45],
+      default: 30,
+    },
+    expiresAt: { type: Date, default: null, index: true },
     deviceTypeId: {
       type: Schema.Types.ObjectId,
       ref: "DeviceType",

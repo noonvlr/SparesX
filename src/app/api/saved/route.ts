@@ -63,6 +63,9 @@ export async function GET(req: NextRequest) {
           priceNegotiable: product.priceNegotiable,
           status: product.status,
           slug: product.slug,
+          createdAt: product.createdAt
+            ? new Date(product.createdAt).toISOString()
+            : undefined,
         },
       };
     });

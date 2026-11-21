@@ -3,6 +3,11 @@ import { connectDB } from "@/lib/db/connect";
 import { RequestModel } from "@/lib/models/Request";
 import { getOptionalUser } from "@/lib/auth/getOptionalUser";
 import { isAuthError, requireUser } from "@/lib/auth/requireUser";
+import {
+  normalizeRequestExpireDays,
+  openRequestActiveFilter,
+  requestExpiresAt,
+} from "@/lib/requests/expiry";
 
 function escapeRegex(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -33,11 +38,16 @@ export async function GET(req: NextRequest) {
     }
 
     const query: Record<string, unknown> = {};
+    const andClauses: Record<string, unknown>[] = [];
     if (mine && payload?.id) {
       query.userId = payload.id;
       if (status !== "all") query.status = status;
     } else {
       if (status !== "all") query.status = status;
+      // Public browse: hide expired open requests (cron also hard-deletes them).
+      if (status === "open" || !status) {
+        andClauses.push(openRequestActiveFilter());
+      }
     }
     if (category?.trim()) {
       query.category = {
@@ -71,16 +81,24 @@ export async function GET(req: NextRequest) {
 
       // Every keyword must match at least one field (including description)
       if (tokens.length > 0) {
-        query.$and = tokens.map((token) => ({
-          $or: fields.map((field) => ({
-            [field]: { $regex: escapeRegex(token), $options: "i" },
+        andClauses.push(
+          ...tokens.map((token) => ({
+            $or: fields.map((field) => ({
+              [field]: { $regex: escapeRegex(token), $options: "i" },
+            })),
           })),
-        }));
+        );
       } else {
-        query.$or = fields.map((field) => ({
-          [field]: { $regex: escapeRegex(search.trim()), $options: "i" },
-        }));
+        andClauses.push({
+          $or: fields.map((field) => ({
+            [field]: { $regex: escapeRegex(search.trim()), $options: "i" },
+          })),
+        });
       }
+    }
+
+    if (andClauses.length > 0) {
+      query.$and = andClauses;
     }
 
     const total = await RequestModel.countDocuments(query);
@@ -172,6 +190,7 @@ export async function POST(req: NextRequest) {
       deviceModel,
       deviceCategory,
       description,
+      expireAfterDays: expireAfterDaysRaw,
     } = await req.json();
 
     if (!name || !email || !category || !description) {
@@ -180,6 +199,9 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+
+    const expireAfterDays = normalizeRequestExpireDays(expireAfterDaysRaw);
+    const expiresAt = requestExpiresAt(expireAfterDays);
 
     const { checkRateLimitAsync, clientIpFromRequest } = await import(
       "@/lib/security/authRateLimit"
@@ -215,6 +237,8 @@ export async function POST(req: NextRequest) {
       deviceModel: deviceModel || model || "",
       description,
       status: "open",
+      expireAfterDays,
+      expiresAt,
       userId: auth.id,
       deviceTypeId: catalogRefs.deviceTypeId || null,
       brandId: catalogRefs.brandId || null,

@@ -221,6 +221,8 @@ export type ProductListItem = {
   deviceCategory?: string;
   condition?: string;
   priceNegotiable?: boolean;
+  /** ISO timestamp when the listing was created. */
+  createdAt?: string;
   /** Owner user id — used client-side to swap Contact for owner actions. */
   technician?: string;
   /** Seller city when available (location discovery). */
@@ -444,6 +446,9 @@ export async function fetchProductList(
       deviceCategory: doc.deviceCategory || undefined,
       condition: doc.condition || undefined,
       priceNegotiable: Boolean(doc.priceNegotiable),
+      createdAt: doc.createdAt
+        ? new Date(doc.createdAt).toISOString()
+        : undefined,
       technician: techId,
       sellerCity,
       sameCity: preferredCity
@@ -527,6 +532,7 @@ export async function fetchProductList(
                   deviceCategory: 1,
                   condition: 1,
                   priceNegotiable: 1,
+                  createdAt: 1,
                   technician: 1,
                 },
               },
@@ -555,7 +561,7 @@ export async function fetchProductList(
     const total = await Product.countDocuments(query);
     const docs = await Product.find(query)
       .select(
-        "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
+        "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable createdAt technician",
       )
       .skip((page - 1) * limit)
       .limit(limit)
@@ -578,7 +584,7 @@ export async function fetchProductList(
       const total = await Product.countDocuments(query);
       const docs = await Product.find(query)
         .select(
-          "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable technician",
+          "_id slug name price images brand partType deviceModel category deviceCategory condition priceNegotiable createdAt technician",
         )
         .skip((page - 1) * limit)
         .limit(limit)

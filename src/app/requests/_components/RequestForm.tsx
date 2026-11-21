@@ -10,6 +10,11 @@ import { Field } from "@/components/ui/Field";
 import { Input, Textarea } from "@/components/ui/Input";
 import { LoadingState } from "@/components/feedback";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import {
+  DEFAULT_REQUEST_EXPIRE_DAYS,
+  REQUEST_EXPIRE_DAY_OPTIONS,
+  type RequestExpireDays,
+} from "@/lib/requests/expireOptions";
 
 interface Brand {
   _id: string;
@@ -52,6 +57,7 @@ export default function RequestForm({
     partType: "",
     partTypeLabel: "",
     description: "",
+    expireAfterDays: DEFAULT_REQUEST_EXPIRE_DAYS as RequestExpireDays,
   });
 
   const [deviceCategories, setDeviceCategories] = useState<Option[]>([]);
@@ -336,6 +342,7 @@ export default function RequestForm({
         brand: form.brand,
         deviceModel: form.deviceModel,
         description: form.description,
+        expireAfterDays: form.expireAfterDays,
       }),
     });
 
@@ -350,6 +357,7 @@ export default function RequestForm({
         partType: "",
         partTypeLabel: "",
         description: "",
+        expireAfterDays: DEFAULT_REQUEST_EXPIRE_DAYS,
       }));
       setBrandSearch("");
       setModelSearch("");
@@ -674,6 +682,37 @@ export default function RequestForm({
                 required
               />
             </Field>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-[var(--ink)]">
+                Expire after{" "}
+                <span className="font-normal text-[var(--muted)]">
+                  (unfulfilled requests are removed)
+                </span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {REQUEST_EXPIRE_DAY_OPTIONS.map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() =>
+                      setForm((f) => ({ ...f, expireAfterDays: days }))
+                    }
+                    className={`px-4 py-2.5 rounded-[var(--radius)] border-2 text-sm font-semibold transition-all active:scale-95 ${
+                      form.expireAfterDays === days
+                        ? "border-[var(--brand)] bg-[var(--brand)] text-[var(--ink-inverse)]"
+                        : "border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink-secondary)] hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
+                    }`}
+                  >
+                    {days} days
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-[var(--muted)]">
+                Default is {DEFAULT_REQUEST_EXPIRE_DAYS} days. If no seller
+                fulfills this request by then, it is deleted automatically.
+              </p>
+            </div>
           </div>
         )}
 

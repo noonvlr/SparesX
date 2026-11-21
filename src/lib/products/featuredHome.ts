@@ -26,6 +26,9 @@ function mapDoc(p: Record<string, unknown>): HomepageFeaturedItem {
     slug: p.slug ? String(p.slug) : undefined,
     status: p.status ? String(p.status) : undefined,
     priceNegotiable: Boolean(p.priceNegotiable),
+    createdAt: p.createdAt
+      ? new Date(p.createdAt as string | Date).toISOString()
+      : undefined,
     technician: p.technician ? String(p.technician) : undefined,
     featured: Boolean(p.featured),
   };
