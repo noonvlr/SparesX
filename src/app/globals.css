@@ -415,17 +415,38 @@
     line-height: var(--leading-normal);
   }
 
-  /* Smooth theme switching (colors only) */
-  html.theme-animate,
-  html.theme-animate body,
-  html.theme-animate .glass,
-  html.theme-animate .glass-nav,
-  html.theme-animate [data-theme-transition] {
-    transition:
-      background-color var(--duration-normal) var(--ease-standard),
-      color var(--duration-normal) var(--ease-standard),
-      border-color var(--duration-normal) var(--ease-standard),
-      box-shadow var(--duration-normal) var(--ease-standard);
+  /*
+   * Theme switch UX
+   * - View Transitions path (html.theme-vt): full-page crossfade, CSS transitions off
+   * - Fallback (html.theme-switching / theme-animate): interpolate colors everywhere
+   */
+  html.theme-animate:not(.theme-vt),
+  html.theme-animate:not(.theme-vt) body,
+  html.theme-animate:not(.theme-vt) .glass,
+  html.theme-animate:not(.theme-vt) .glass-nav,
+  html.theme-animate:not(.theme-vt) [data-theme-transition],
+  html.theme-animate:not(.theme-vt) *:not(img):not(svg):not(video):not(canvas):not(iframe):not(path):not(circle):not(rect):not(line):not(polyline):not(polygon) {
+    transition-property: background-color, color, border-color, outline-color,
+      fill, stroke, box-shadow, text-decoration-color, caret-color, accent-color,
+      scrollbar-color !important;
+    transition-duration: 420ms !important;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+  }
+
+  /* During View Transition, kill competing CSS transitions (prevents flicker). */
+  html.theme-vt,
+  html.theme-vt *,
+  html.theme-vt *::before,
+  html.theme-vt *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  html.theme-animate:not(.theme-vt) svg,
+  html.theme-animate:not(.theme-vt) svg * {
+    transition-property: fill, stroke, color, opacity !important;
+    transition-duration: 420ms !important;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
   }
 
   :focus-visible {
@@ -974,6 +995,41 @@
   transform: scale(0.98);
 }
 
+/* Full-page theme crossfade via View Transitions API */
+@supports (view-transition-name: root) {
+  html {
+    view-transition-name: root;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.45s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  ::view-transition-old(root) {
+    z-index: 1;
+    animation-name: theme-vt-fade-out;
+  }
+
+  ::view-transition-new(root) {
+    z-index: 2;
+    animation-name: theme-vt-fade-in;
+  }
+}
+
+@keyframes theme-vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes theme-vt-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-hover,
   .card-image-zoom,
@@ -987,7 +1043,10 @@
   html.theme-animate,
   html.theme-animate body,
   html.theme-animate .glass,
-  html.theme-animate .glass-nav {
+  html.theme-animate .glass-nav,
+  html.theme-animate *:not(img):not(video):not(canvas):not(iframe),
+  html.theme-switching,
+  html.theme-switching * {
     transition: none !important;
     animation: none !important;
   }
@@ -1003,6 +1062,11 @@
 
   .card-hover:hover {
     transform: none;
+  }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
   }
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/ui/cn";
+import { setThemeSmooth } from "@/lib/theme/setThemeSmooth";
 
 type Mode = "light" | "dark" | "system";
 
@@ -47,6 +48,20 @@ const OPTIONS: { value: Mode; label: string; icon: typeof IconSun }[] = [
   { value: "system", label: "System", icon: IconSystem },
 ];
 
+function useThemeSwitcher() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const switchTheme = (next: Mode) => {
+    if (!mounted || theme === next) return;
+    setThemeSmooth(setTheme, next);
+  };
+
+  return { theme, resolvedTheme, mounted, switchTheme };
+}
+
 export function ThemeToggle({
   className,
   size = "md",
@@ -57,10 +72,7 @@ export function ThemeToggle({
   /** Show text labels next to icons (profile / more menus). */
   showLabels?: boolean;
 }) {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const { theme, resolvedTheme, mounted, switchTheme } = useThemeSwitcher();
 
   const active = (mounted ? theme : "system") as Mode;
   const btn = size === "sm" ? "h-8 w-8" : "h-9 w-9";
@@ -79,7 +91,7 @@ export function ThemeToggle({
             <button
               key={value}
               type="button"
-              onClick={() => setTheme(value)}
+              onClick={() => switchTheme(value)}
               aria-pressed={selected}
               className={cn(
                 "flex items-center gap-2.5 w-full rounded-[var(--radius)] px-3 py-2.5 text-sm transition-colors duration-[var(--duration-normal)]",
@@ -123,7 +135,7 @@ export function ThemeToggle({
           <button
             key={value}
             type="button"
-            onClick={() => setTheme(value)}
+            onClick={() => switchTheme(value)}
             aria-label={`${label} theme`}
             aria-pressed={selected}
             title={label}
@@ -152,9 +164,7 @@ export function ThemeToggle({
 
 /** Compact single control that cycles light → dark → system. */
 export function ThemeCycleButton({ className }: { className?: string }) {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const { theme, resolvedTheme, mounted, switchTheme } = useThemeSwitcher();
 
   const order: Mode[] = ["light", "dark", "system"];
   const current = (mounted ? theme || "system" : "system") as Mode;
@@ -172,7 +182,7 @@ export function ThemeCycleButton({ className }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={() => setTheme(next)}
+      onClick={() => switchTheme(next)}
       className={cn(
         "inline-flex h-11 w-11 items-center justify-center rounded-[var(--radius)] text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)] transition-colors duration-[var(--duration-normal)]",
         className,

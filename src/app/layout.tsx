@@ -73,6 +73,8 @@ export const metadata: Metadata = {
   },
 };
 
+const themeBootScript = `(function(){try{var k='sparesx-theme';var t=localStorage.getItem(k);var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var r=(t==='dark'||t==='light')?t:(d?'dark':'light');var e=document.documentElement;e.setAttribute('data-theme',r);e.style.colorScheme=r;}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -80,6 +82,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body className="antialiased min-h-screen flex flex-col font-sans bg-[var(--surface-2)] text-[var(--ink)]">
         <AdSenseScript />
         <ThemeProvider>

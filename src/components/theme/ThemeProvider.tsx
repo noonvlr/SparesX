@@ -10,10 +10,14 @@ import { useEffect, type ReactNode } from "react";
 export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
-    const enable = () => root.classList.add("theme-animate");
-    // Defer so the first paint (anti-FOUC script) does not animate.
-    const id = window.setTimeout(enable, 50);
-    return () => window.clearTimeout(id);
+    // Defer so the anti-FOUC boot script / first paint does not animate.
+    const id = window.setTimeout(() => {
+      root.classList.add("theme-animate");
+    }, 80);
+    return () => {
+      window.clearTimeout(id);
+      root.classList.remove("theme-animate", "theme-vt", "theme-switching");
+    };
   }, []);
 
   return (
@@ -21,7 +25,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       attribute="data-theme"
       defaultTheme="system"
       enableSystem
+      enableColorScheme
       storageKey="sparesx-theme"
+      // Keep CSS transitions available for the non-VT fallback path.
       disableTransitionOnChange={false}
     >
       {children}
