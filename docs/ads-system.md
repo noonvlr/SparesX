@@ -1,6 +1,6 @@
 # SparesX — Advertisement Management System (AMS)
 
-Living doc. Updated as phases complete. **Status: Phase 3 complete — ready for Phase 4 (delivery / PromoSlot).**
+Living doc. Updated as phases complete. **Status: Phase 4 complete — ready for Phase 5 (page integration).**
 
 ---
 
@@ -12,7 +12,7 @@ Living doc. Updated as phases complete. **Status: Phase 3 complete — ready for
 | 1 Models, indexes, seed, admin API skeleton, effective-status | **Done** | Models + helpers + seed + admin APIs + unit tests |
 | 2 Placement management UI + sidebar entry | **Done** | Overview, placements edit, campaigns list, nav |
 | 3 Upload + draft wizard + campaigns table | **Done** | Draft-first wizard, creatives upload, actions |
-| 4 Delivery, public API, PromoSlot, cache | Pending | |
+| 4 Delivery, public API, PromoSlot, cache | **Done** | Eligibility cache, PromoSlot, click redirect stub |
 | 5 Page integration + CLS/LCP | Pending | |
 | 6 Tracking (impressions, clicks, dedupe, rate limit, tokens) | Pending | |
 | 7 Analytics + Overview | Pending | |
@@ -156,13 +156,15 @@ Extend `tsx --test` with pure modules: effective status, eligibility, weighted r
 - UI: `/admin/ads/campaigns/new`, `/admin/ads/campaigns/[id]` wizard (5 steps, draft-first); table with search/filter/actions
 - Preview uses uploaded images; real `PromoSlot` preview mode in Phase 4
 
-### Phase 4 — Delivery + PromoSlot
+### Phase 4 — Delivery + PromoSlot — DONE
 
-- `src/lib/ads/eligibility.ts` + `getEligibleAds` + `unstable_cache` + tags
-- `src/app/api/promos/placement/[key]/route.ts`
-- `src/components/promo/PromoSlot.tsx` (+ picture, rotation, previewMode)
-- `src/lib/ads/token.ts` HMAC
-- Invalidate tags from admin mutations
+**Shipped**
+- `getEligibleAds` via `unstable_cache` (~60s) tags `promo:all` / `promo:placement:{key}`; `revalidatePromoCaches` on publish/pause/activate/archive + placement/creative edits
+- `GET /api/promos/placement/[key]` (rate-limited); `GET /api/promos/click/[campaignId]` (token + Mongo destination + UTM; event rollup in Phase 6)
+- `PromoSlot` client: aspect reserve, `<picture>`, weighted pick, house fallback, date re-check, previewMode
+- Wizard preview uses `PromoSlot` previewMode
+- HMAC `PROMO_HMAC_SECRET` (falls back to `JWT_SECRET`); robots disallow `/api/promos`
+- Tests: rotation weights + token sign/verify
 
 ### Phase 5 — Integrate pages
 

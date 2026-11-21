@@ -10,6 +10,7 @@ import {
   hardDeleteOrArchive,
   parseObjectId,
 } from "@/lib/ads/campaignMutations";
+import { revalidatePromoCaches } from "@/lib/ads/revalidate";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -52,6 +53,13 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     const adminOid = new mongoose.Types.ObjectId(admin.id);
 
+    const placementKeys = [
+      ...new Set([
+        ...(doc.placementKeys || []),
+        ...doc.creatives.map((c) => c.placementKey),
+      ]),
+    ];
+
     if (action === "duplicate") {
       const copy = await duplicateCampaign(doc, admin.id);
       return NextResponse.json(
@@ -65,6 +73,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     if (action === "archive") {
       const result = await hardDeleteOrArchive(doc, admin.id);
+      revalidatePromoCaches(placementKeys);
       if (result.action === "deleted") {
         return NextResponse.json({
           message: "Draft campaign deleted",
@@ -86,6 +95,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       doc.status = "active";
       doc.updatedBy = adminOid;
       await doc.save();
+      revalidatePromoCaches(placementKeys);
       return NextResponse.json({
         message: "Campaign published",
         campaign: serializeCampaign(doc.toObject(), { includeInternal: true }),
@@ -102,6 +112,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       doc.status = "paused";
       doc.updatedBy = adminOid;
       await doc.save();
+      revalidatePromoCaches(placementKeys);
       return NextResponse.json({
         message: "Campaign paused",
         campaign: serializeCampaign(doc.toObject(), { includeInternal: true }),
@@ -122,6 +133,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     doc.status = "active";
     doc.updatedBy = adminOid;
     await doc.save();
+    revalidatePromoCaches(placementKeys);
     return NextResponse.json({
       message: "Campaign activated",
       campaign: serializeCampaign(doc.toObject(), { includeInternal: true }),

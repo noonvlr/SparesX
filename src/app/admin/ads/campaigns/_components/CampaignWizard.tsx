@@ -11,6 +11,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
 import { formatIstLocal } from "@/lib/ads/ist";
 import { cn } from "@/lib/ui/cn";
+import PromoSlot from "@/components/promo/PromoSlot";
+import type { EligibleAdsPayload } from "@/lib/ads/rotation";
 
 type PlacementRow = {
   key: string;
@@ -791,46 +793,67 @@ export default function CampaignWizard({
               </dd>
             </div>
           </dl>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-4">
             {selectedPlacements.map((p) => {
               const desktop = creativeFor(p.key, "desktop");
               const mobile = creativeFor(p.key, "mobile");
+              if (!desktop) {
+                return (
+                  <p key={p.key} className="text-xs text-[var(--danger)]">
+                    {p.name}: missing desktop creative
+                  </p>
+                );
+              }
+              const previewPayload: EligibleAdsPayload = {
+                placementKey: p.key,
+                maxSlots: 1,
+                fallbackToHouseAds: false,
+                aspectDesktop: p.desktop,
+                aspectMobile: p.mobile,
+                fetchedAt: new Date().toISOString(),
+                items: [
+                  {
+                    campaignId: campaignId || "preview",
+                    placementKey: p.key,
+                    priority: schedule.priority,
+                    advertiserType: details.advertiserType,
+                    destinationLabel:
+                      details.ctaLabel || details.name || "Sponsored",
+                    startDate: new Date(Date.now() - 60_000).toISOString(),
+                    endDate: new Date(Date.now() + 86400000).toISOString(),
+                    token: "preview",
+                    desktop: {
+                      url: desktop.url,
+                      width: desktop.width,
+                      height: desktop.height,
+                      altText: desktop.altText,
+                    },
+                    mobile: mobile
+                      ? {
+                          url: mobile.url,
+                          width: mobile.width,
+                          height: mobile.height,
+                          altText: mobile.altText,
+                        }
+                      : null,
+                  },
+                ],
+              };
               return (
-                <div key={p.key} className="space-y-2">
-                  <p className="text-sm font-medium">{p.name}</p>
-                  {desktop ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={desktop.url}
-                      alt={desktop.altText}
-                      className="w-full rounded border border-[var(--border)]"
-                    />
-                  ) : (
-                    <p className="text-xs text-[var(--danger)]">
-                      Missing desktop creative
-                    </p>
-                  )}
-                  {p.mobile ? (
-                    mobile ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={mobile.url}
-                        alt={mobile.altText}
-                        className="w-full max-w-xs rounded border border-[var(--border)]"
-                      />
-                    ) : (
-                      <p className="text-xs text-[var(--danger)]">
-                        Missing mobile creative
-                      </p>
-                    )
-                  ) : null}
+                <div key={p.key}>
+                  <p className="mb-2 text-sm font-medium">{p.name}</p>
+                  <PromoSlot
+                    placement={p.key}
+                    previewMode
+                    previewPayload={previewPayload}
+                  />
                 </div>
               );
             })}
           </div>
           <p className="text-xs text-[var(--muted)]">
-            PromoSlot preview mode ships in Phase 4 — images above use the
-            uploaded creatives without tracking.
+            Preview uses PromoSlot in preview mode (no tracking, no public
+            fetch).
           </p>
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="secondary" onClick={() => setStep(3)}>

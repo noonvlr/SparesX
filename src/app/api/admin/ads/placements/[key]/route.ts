@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/db/connect";
 import { isAdminError, requireAdmin } from "@/lib/auth/requireAdmin";
 import { AdPlacement } from "@/lib/models/AdPlacement";
 import { serializePlacement } from "@/lib/ads/serialize";
+import { revalidatePromoCaches } from "@/lib/ads/revalidate";
 
 const EDITABLE = new Set([
   "name",
@@ -167,6 +168,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       return NextResponse.json({ message: "Placement not found" }, { status: 404 });
     }
 
+    revalidatePromoCaches([key]);
     return NextResponse.json({ placement: serializePlacement(doc) });
   } catch (error) {
     console.error("[admin/ads/placements/[key] PATCH]", error);

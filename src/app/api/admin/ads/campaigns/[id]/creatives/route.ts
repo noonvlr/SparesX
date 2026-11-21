@@ -12,6 +12,7 @@ import {
   mimeToExt,
   storeAdCreative,
 } from "@/lib/ads/blobStorage";
+import { revalidatePromoCaches } from "@/lib/ads/revalidate";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -152,6 +153,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
     campaign.updatedBy = new mongoose.Types.ObjectId(admin.id);
     await campaign.save();
+    revalidatePromoCaches([placementKey]);
 
     return NextResponse.json({
       creative,
@@ -206,6 +208,7 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
     });
     campaign.updatedBy = new mongoose.Types.ObjectId(admin.id);
     await campaign.save();
+    revalidatePromoCaches([placementKey]);
 
     return NextResponse.json({
       message: "Creative removed",

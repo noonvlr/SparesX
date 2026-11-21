@@ -11,6 +11,7 @@ const PRIVATE_PATHS = [
   "/dashboard",
   "/technician",
   "/api",
+  "/api/promos",
   "/messages",
   "/notifications",
   "/support/cases",
