@@ -176,7 +176,7 @@ export default async function HomePage() {
                 href="/products"
                 className={cn(
                   buttonVariants({ variant: "secondary", size: "md" }),
-                  "flex-1 sm:flex-none sm:w-auto",
+                  "home-cta-glow flex-1 sm:flex-none sm:w-auto",
                 )}
               >
                 Browse Parts
@@ -185,7 +185,7 @@ export default async function HomePage() {
                 href="/requests?tab=submit"
                 className={cn(
                   buttonVariants({ variant: "secondary", size: "md" }),
-                  "flex-1 sm:flex-none sm:w-auto",
+                  "home-cta-glow home-cta-glow--alt flex-1 sm:flex-none sm:w-auto",
                 )}
               >
                 Request a Part

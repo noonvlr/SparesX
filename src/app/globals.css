@@ -722,6 +722,66 @@
   animation-delay: 0.34s;
 }
 
+/* Hero CTA edge glow — rotating brand ring around Browse / Request */
+@keyframes homeCtaEdgeSpin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes homeCtaEdgePulse {
+  0%,
+  100% {
+    filter: drop-shadow(
+      0 0 4px color-mix(in srgb, var(--brand) 30%, transparent)
+    );
+  }
+  50% {
+    filter: drop-shadow(
+      0 0 12px color-mix(in srgb, var(--brand) 55%, transparent)
+    );
+  }
+}
+
+.home-cta-glow {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+  overflow: visible;
+  border-color: color-mix(in srgb, var(--brand) 28%, var(--border-strong)) !important;
+}
+
+.home-cta-glow::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  z-index: -1;
+  border-radius: calc(var(--radius) + 2px);
+  transform: translate(-50%, -50%) rotate(0deg);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    transparent 38%,
+    color-mix(in srgb, var(--brand) 50%, transparent) 46%,
+    var(--brand) 50%,
+    color-mix(in srgb, var(--brand) 50%, transparent) 54%,
+    transparent 62%,
+    transparent 100%
+  );
+  animation:
+    homeCtaEdgeSpin 2.8s linear infinite,
+    homeCtaEdgePulse 2.4s var(--ease-standard) infinite;
+  pointer-events: none;
+}
+
+.home-cta-glow--alt::before {
+  animation-duration: 3.2s, 2.4s;
+  animation-delay: 0s, 0.55s;
+}
+
 .home-stats-enter {
   animation: homeStatsEnter 0.55s var(--ease-standard) both;
 }
@@ -900,12 +960,19 @@
   .animate-in,
   .fade-in,
   .zoom-in,
+  .home-cta-glow,
+  .home-cta-glow::before,
   html.theme-animate,
   html.theme-animate body,
   html.theme-animate .glass,
   html.theme-animate .glass-nav {
     transition: none !important;
     animation: none !important;
+  }
+
+  .home-cta-glow::before {
+    filter: none;
+    background: color-mix(in srgb, var(--brand) 45%, transparent);
   }
 
   .card-hover:hover {
