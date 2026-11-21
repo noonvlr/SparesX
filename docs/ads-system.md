@@ -1,6 +1,6 @@
 # SparesX — Advertisement Management System (AMS)
 
-Living doc. Updated as phases complete. **Status: Phase 2 complete — continuing to Phase 3 next.**
+Living doc. Updated as phases complete. **Status: Phase 3 complete — ready for Phase 4 (delivery / PromoSlot).**
 
 ---
 
@@ -11,7 +11,7 @@ Living doc. Updated as phases complete. **Status: Phase 2 complete — continuin
 | 0 Discovery + plan | **Done** | Approved (300×600 sidebar, leaf parts, house on sidebar, etc.) |
 | 1 Models, indexes, seed, admin API skeleton, effective-status | **Done** | Models + helpers + seed + admin APIs + unit tests |
 | 2 Placement management UI + sidebar entry | **Done** | Overview, placements edit, campaigns list, nav |
-| 3 Upload + draft wizard + campaigns table | Pending | |
+| 3 Upload + draft wizard + campaigns table | **Done** | Draft-first wizard, creatives upload, actions |
 | 4 Delivery, public API, PromoSlot, cache | Pending | |
 | 5 Page integration + CLS/LCP | Pending | |
 | 6 Tracking (impressions, clicks, dedupe, rate limit, tokens) | Pending | |
@@ -147,12 +147,14 @@ Extend `tsx --test` with pure modules: effective status, eligibility, weighted r
 - Nav: AppShell More + top links, dashboard + control center cards
 - Overview: campaign status counts + impressions/clicks/CTR (zeros until traffic)
 
-### Phase 3 — Upload + wizard + campaigns
+### Phase 3 — Upload + wizard + campaigns — DONE
 
-- `src/app/api/admin/ads/campaigns/**` CRUD, duplicate (blob copy), archive/delete (D8)
-- `src/app/api/admin/ads/campaigns/[id]/creatives/route.ts` upload/validate/replace/remove + blob delete
-- `src/app/admin/ads/campaigns/page.tsx`, `new/page.tsx`, `[id]/page.tsx`
-- Wizard steps client components under `src/app/admin/ads/campaigns/_components/`
+**Shipped**
+- `placementKeys` on `AdCampaign`; creative upload via magic bytes + sharp dims (exact/2×, ≤2 MB, no SVG)
+- Blob paths `ads/{campaignId}/{placementKey}/{device}-{hash}.{ext}`; replace/remove deletes orphans; duplicate copies blobs
+- APIs: POST campaigns, GET/PATCH/DELETE `[id]`, creatives POST/DELETE, actions publish/pause/activate/archive/duplicate, placement coverage hint
+- UI: `/admin/ads/campaigns/new`, `/admin/ads/campaigns/[id]` wizard (5 steps, draft-first); table with search/filter/actions
+- Preview uses uploaded images; real `PromoSlot` preview mode in Phase 4
 
 ### Phase 4 — Delivery + PromoSlot
 

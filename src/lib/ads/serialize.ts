@@ -48,6 +48,7 @@ type LeanCampaign = Pick<
   | "destinationUrl"
   | "ctaLabel"
   | "internalNotes"
+  | "placementKeys"
   | "creatives"
   | "startDate"
   | "endDate"
@@ -83,7 +84,10 @@ export function serializeCampaign(
     status: doc.status,
     effectiveStatus,
     placementKeys: [
-      ...new Set(doc.creatives.map((c) => c.placementKey)),
+      ...new Set([
+        ...(Array.isArray(doc.placementKeys) ? doc.placementKeys : []),
+        ...doc.creatives.map((c) => c.placementKey),
+      ]),
     ],
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,

@@ -35,6 +35,8 @@ export interface IAdCampaign extends Document {
   destinationUrl: string;
   ctaLabel: string;
   internalNotes: string;
+  /** Selected placements (may exist before creatives are uploaded). */
+  placementKeys: string[];
   creatives: IAdCreative[];
   startDate: Date | null;
   endDate: Date | null;
@@ -77,6 +79,10 @@ const AdCampaignSchema: Schema<IAdCampaign> = new Schema(
     destinationUrl: { type: String, default: "", trim: true, maxlength: 2048 },
     ctaLabel: { type: String, default: "", trim: true, maxlength: 80 },
     internalNotes: { type: String, default: "", trim: true, maxlength: 4000 },
+    placementKeys: {
+      type: [String],
+      default: [],
+    },
     creatives: { type: [AdCreativeSchema], default: [] },
     startDate: { type: Date, default: null, index: true },
     endDate: { type: Date, default: null, index: true },
