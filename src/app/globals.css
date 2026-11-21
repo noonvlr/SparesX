@@ -743,87 +743,6 @@
   animation-delay: 0.34s;
 }
 
-/* Hero CTA edge glow — brand light travelling around the button border.
-   Uses an animated conic angle (@property) on a masked ring so the highlight
-   follows the rounded edge instead of rotating a box behind the button. */
-@property --cta-glow-angle {
-  syntax: "<angle>";
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes homeCtaEdgeSpin {
-  to {
-    --cta-glow-angle: 360deg;
-  }
-}
-
-@keyframes homeCtaEdgePulse {
-  0%,
-  100% {
-    opacity: 0.35;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.home-cta-glow {
-  position: relative;
-  isolation: isolate;
-  border-color: color-mix(in srgb, var(--brand) 35%, var(--border-strong)) !important;
-  --cta-glow-spin: 2.8s;
-  --cta-glow-gradient: conic-gradient(
-    from var(--cta-glow-angle),
-    transparent 0deg,
-    transparent 200deg,
-    color-mix(in srgb, var(--brand) 35%, transparent) 250deg,
-    var(--brand) 320deg,
-    color-mix(in srgb, var(--brand) 55%, white) 345deg,
-    transparent 360deg
-  );
-}
-
-.home-cta-glow--alt {
-  --cta-glow-spin: 3.4s;
-}
-
-/* Bright edge ring (only the 2px border band is painted, via mask). */
-.home-cta-glow::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  padding: 2px;
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--cta-glow-gradient);
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
-  z-index: 2;
-  pointer-events: none;
-  animation: homeCtaEdgeSpin var(--cta-glow-spin) linear infinite;
-}
-
-/* Soft halo that travels with the ring. */
-.home-cta-glow::after {
-  content: "";
-  position: absolute;
-  inset: -3px;
-  border-radius: calc(var(--radius) + 3px);
-  background: var(--cta-glow-gradient);
-  filter: blur(7px);
-  opacity: 0.55;
-  z-index: -1;
-  pointer-events: none;
-  animation:
-    homeCtaEdgeSpin var(--cta-glow-spin) linear infinite,
-    homeCtaEdgePulse 2.4s ease-in-out infinite;
-}
-
 .home-stats-enter {
   animation: homeStatsEnter 0.55s var(--ease-standard) both;
 }
@@ -1037,9 +956,6 @@
   .animate-in,
   .fade-in,
   .zoom-in,
-  .home-cta-glow,
-  .home-cta-glow::before,
-  .home-cta-glow::after,
   html.theme-animate,
   html.theme-animate body,
   html.theme-animate .glass,
@@ -1049,15 +965,6 @@
   html.theme-switching * {
     transition: none !important;
     animation: none !important;
-  }
-
-  .home-cta-glow::before {
-    --cta-glow-angle: 0deg;
-    background: color-mix(in srgb, var(--brand) 45%, transparent);
-  }
-
-  .home-cta-glow::after {
-    opacity: 0.25;
   }
 
   .card-hover:hover {
