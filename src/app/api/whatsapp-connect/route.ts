@@ -14,11 +14,13 @@ import {
   pendingExpiryDate,
 } from "@/lib/whatsapp/connect";
 import { formatListingTitle } from "@/lib/products/listingTitle";
-import { productUrl } from "@/lib/seo/site";
+import { absoluteUrl, productUrl } from "@/lib/seo/site";
 
 /**
  * GET /api/whatsapp-connect?sellerId=&productId=
  *   → status for this viewer↔seller (unlock is per user pair)
+ * GET /api/whatsapp-connect?sellerId=&requestId=
+ *   → same unlock, with a part-request WhatsApp prefill
  * GET /api/whatsapp-connect?box=incoming|outgoing
  *   → list of requests
  */
@@ -34,6 +36,7 @@ export async function GET(req: NextRequest) {
     const box = searchParams.get("box");
     const sellerId = searchParams.get("sellerId")?.trim();
     const productId = searchParams.get("productId")?.trim() || undefined;
+    const requestId = searchParams.get("requestId")?.trim() || undefined;
 
     if (box === "incoming" || box === "outgoing") {
       const filter =
@@ -105,7 +108,27 @@ export async function GET(req: NextRequest) {
     let partType: string | undefined;
     let price: number | null | undefined;
     let condition: string | null | undefined;
-    if (productId && mongoose.Types.ObjectId.isValid(productId)) {
+    let intent: "interest" | "request_offer" = "interest";
+
+    if (requestId && mongoose.Types.ObjectId.isValid(requestId)) {
+      const { RequestModel } = await import("@/lib/models/Request");
+      const partRequest = await RequestModel.findById(requestId)
+        .select("brand deviceModel category description status userId")
+        .lean();
+      if (partRequest) {
+        intent = "request_offer";
+        brand = partRequest.brand || undefined;
+        deviceModel = partRequest.deviceModel || undefined;
+        partType = partRequest.category || undefined;
+        const device = [brand, deviceModel].filter(Boolean).join(" ");
+        productName = device
+          ? `${device} — ${partType || "Part"}`
+          : partType || "Part request";
+        productUrlValue = absoluteUrl(
+          `/requests?focus=${encodeURIComponent(requestId)}`,
+        );
+      }
+    } else if (productId && mongoose.Types.ObjectId.isValid(productId)) {
       const p = await Product.findById(productId)
         .select("name slug brand deviceModel partType price condition")
         .lean();
@@ -131,6 +154,7 @@ export async function GET(req: NextRequest) {
       partType,
       price,
       condition,
+      intent,
     });
 
     return NextResponse.json(status, { status: 200 });

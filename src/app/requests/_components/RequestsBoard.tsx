@@ -11,6 +11,7 @@ import { Card, Badge, EmptyState, Skeleton, Avatar } from "@/components/ui/Card"
 import { Modal } from "@/components/ui/Modal";
 import { authFetch, getCachedUserId, isLoggedInClient } from "@/lib/auth/clientAuth";
 import { openChatUi } from "@/components/chat/openChat";
+import { showToast } from "@/components/ToastHost";
 
 interface PartRequest {
   _id: string;
@@ -107,6 +108,12 @@ export default function RequestsBoard({
   const [search, setSearch] = useState(initialQuery.trim());
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authPromptId, setAuthPromptId] = useState<string | null>(null);
+  const [contactRequest, setContactRequest] = useState<PartRequest | null>(
+    null,
+  );
+  const [waLoading, setWaLoading] = useState(false);
+  const [waUrl, setWaUrl] = useState<string | null>(null);
+  const [waReason, setWaReason] = useState<string | null>(null);
 
   // Keep local tab + deep-link query in sync with the URL
   useEffect(() => {
@@ -179,7 +186,7 @@ export default function RequestsBoard({
     setCategoryFilter(next);
   };
 
-  const respondToRequest = (request: PartRequest) => {
+  const openRequestContact = async (request: PartRequest) => {
     if (!isAuthenticated) {
       setAuthPromptId(request._id);
       return;
@@ -187,19 +194,58 @@ export default function RequestsBoard({
 
     const peerId = request.requesterId?.trim();
     if (!peerId) {
-      alert(
-        "This requester isn’t available for chat yet. Ask them to post the request while logged in.",
+      showToast(
+        "This requester isn’t available for contact yet. Ask them to post while logged in.",
+        "error",
       );
       return;
     }
 
     const me = getCachedUserId();
     if (me && String(me) === String(peerId)) {
-      alert("This is your own request.");
+      showToast("This is your own request.", "error");
       return;
     }
 
+    setContactRequest(request);
+    setWaUrl(null);
+    setWaReason(null);
+    setWaLoading(true);
+    try {
+      const res = await authFetch(
+        `/api/whatsapp-connect?sellerId=${encodeURIComponent(peerId)}&requestId=${encodeURIComponent(request._id)}`,
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setWaReason(data.message || "Could not load WhatsApp");
+        return;
+      }
+      if (data.unlocked && data.whatsappUrl) {
+        setWaUrl(String(data.whatsappUrl));
+        setWaReason(null);
+      } else {
+        setWaUrl(null);
+        setWaReason(
+          data.reason || "WhatsApp is not available for this requester",
+        );
+      }
+    } catch {
+      setWaReason("Could not load WhatsApp options");
+    } finally {
+      setWaLoading(false);
+    }
+  };
+
+  const openRequestChat = () => {
+    const peerId = contactRequest?.requesterId?.trim();
+    if (!peerId) return;
+    setContactRequest(null);
     openChatUi({ peerId });
+  };
+
+  const openRequestWhatsApp = () => {
+    if (!waUrl) return;
+    window.open(waUrl, "_blank", "noopener,noreferrer");
   };
 
   const emptyMessage = useMemo(() => {
@@ -477,7 +523,7 @@ export default function RequestsBoard({
                       <div className="flex sm:flex-col items-stretch justify-end gap-2 sm:w-44 flex-shrink-0">
                         <Button
                           type="button"
-                          onClick={() => respondToRequest(request)}
+                          onClick={() => void openRequestContact(request)}
                         >
                           I have this part
                         </Button>
@@ -490,6 +536,43 @@ export default function RequestsBoard({
           )}
         </div>
       )}
+
+      <Modal
+        open={!!contactRequest}
+        onClose={() => setContactRequest(null)}
+        title="Contact requester"
+      >
+        {contactRequest ? (
+          <div className="space-y-3">
+            <p className="text-sm text-[var(--muted)] line-clamp-2 -mt-1">
+              {requestHeadline(contactRequest)}
+            </p>
+            <Button
+              type="button"
+              disabled={waLoading || !waUrl}
+              onClick={openRequestWhatsApp}
+              className="w-full !bg-[#25D366] hover:!bg-[#1ebe57]"
+            >
+              {waLoading ? "…" : "Connect on WhatsApp"}
+            </Button>
+            {waUrl ? (
+              <p className="text-xs text-[var(--muted)]">
+                Opens WhatsApp with a message about this request.
+              </p>
+            ) : waReason ? (
+              <p className="text-xs text-[var(--warning)]">{waReason}</p>
+            ) : null}
+            <Button
+              type="button"
+              variant="primary"
+              className="w-full"
+              onClick={openRequestChat}
+            >
+              In-app chat
+            </Button>
+          </div>
+        ) : null}
+      </Modal>
 
       <Modal
         open={!!authPromptId}

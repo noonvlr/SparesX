@@ -61,6 +61,14 @@ export type WaProductContext = {
   condition?: string | null;
 };
 
+function formatPartLabel(partType?: string) {
+  if (!partType) return "";
+  return String(partType)
+    .replace(/[-_]/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 /** Build a WhatsApp prefill that identifies the exact listing + deep link. */
 export function buildWhatsAppInterestMessage(params: {
   sellerName?: string;
@@ -83,11 +91,7 @@ export function buildWhatsAppInterestMessage(params: {
   const deviceBits = [p.brand, p.deviceModel].filter(Boolean).join(" ");
   if (deviceBits) lines.push(`• Device: ${deviceBits}`);
   if (p.partType) {
-    const part = String(p.partType)
-      .replace(/[-_]/g, " ")
-      .trim()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-    lines.push(`• Part: ${part}`);
+    lines.push(`• Part: ${formatPartLabel(p.partType)}`);
   }
   if (p.condition) {
     lines.push(
@@ -104,6 +108,34 @@ export function buildWhatsAppInterestMessage(params: {
   return lines.join("\n");
 }
 
+/** Prefill when a technician responds to an open part request. */
+export function buildWhatsAppRequestOfferMessage(params: {
+  requesterName?: string;
+  request?: WaProductContext;
+}): string {
+  const greet = params.requesterName
+    ? `Hi ${params.requesterName},`
+    : "Hi,";
+  const r = params.request;
+  const deviceBits = [r?.brand, r?.deviceModel].filter(Boolean).join(" ");
+  const part = formatPartLabel(r?.partType);
+  const need =
+    r?.productName?.trim() ||
+    [deviceBits, part].filter(Boolean).join(" — ") ||
+    "your part request";
+
+  const lines: string[] = [
+    `${greet} I have the part you requested on SparesX.`,
+    "",
+    `• ${need}`,
+  ];
+  if (r?.productUrl) {
+    lines.push("", `View request: ${r.productUrl}`);
+  }
+  lines.push("", "Happy to share details if you still need it.");
+  return lines.join("\n");
+}
+
 export function buildWaMeLink(params: {
   countryCode?: string;
   whatsappNumber?: string;
@@ -116,6 +148,8 @@ export function buildWaMeLink(params: {
   partType?: string;
   price?: number | null;
   condition?: string | null;
+  /** Default listing interest; request_offer is for "I have this part". */
+  intent?: "interest" | "request_offer";
 }) {
   const code = (params.countryCode || "+91").replace(/\D/g, "");
   const number = (params.whatsappNumber || params.mobile || "").replace(
@@ -124,20 +158,26 @@ export function buildWaMeLink(params: {
   );
   if (!number) return null;
   const phone = `${code}${number}`.replace(/^0+/, "");
-  const text = encodeURIComponent(
-    buildWhatsAppInterestMessage({
-      sellerName: params.sellerName,
-      product: {
-        productName: params.productName,
-        productUrl: params.productUrl,
-        brand: params.brand,
-        deviceModel: params.deviceModel,
-        partType: params.partType,
-        price: params.price,
-        condition: params.condition,
-      },
-    }),
-  );
+  const context = {
+    productName: params.productName,
+    productUrl: params.productUrl,
+    brand: params.brand,
+    deviceModel: params.deviceModel,
+    partType: params.partType,
+    price: params.price,
+    condition: params.condition,
+  };
+  const message =
+    params.intent === "request_offer"
+      ? buildWhatsAppRequestOfferMessage({
+          requesterName: params.sellerName,
+          request: context,
+        })
+      : buildWhatsAppInterestMessage({
+          sellerName: params.sellerName,
+          product: context,
+        });
+  const text = encodeURIComponent(message);
   return `https://wa.me/${phone}?text=${text}`;
 }
 
@@ -170,6 +210,7 @@ export async function getPublicConnectStatus(params: {
   partType?: string;
   price?: number | null;
   condition?: string | null;
+  intent?: "interest" | "request_offer";
 }): Promise<PublicConnectStatus> {
   const {
     viewerId,
@@ -181,14 +222,17 @@ export async function getPublicConnectStatus(params: {
     partType,
     price,
     condition,
+    intent = "interest",
   } = params;
+
+  const isRequestOffer = intent === "request_offer";
 
   if (viewerId === sellerId) {
     return {
       status: "none",
       unlocked: false,
       canRequest: false,
-      reason: "This is your listing",
+      reason: isRequestOffer ? "This is your request" : "This is your listing",
     };
   }
 
@@ -198,7 +242,9 @@ export async function getPublicConnectStatus(params: {
       status: "none",
       unlocked: false,
       canRequest: false,
-      reason: "You cannot contact this seller",
+      reason: isRequestOffer
+        ? "You cannot contact this requester"
+        : "You cannot contact this seller",
     };
   }
 
@@ -211,7 +257,7 @@ export async function getPublicConnectStatus(params: {
       status: "none",
       unlocked: false,
       canRequest: false,
-      reason: "Seller not found",
+      reason: isRequestOffer ? "Requester not found" : "Seller not found",
     };
   }
 
@@ -220,7 +266,9 @@ export async function getPublicConnectStatus(params: {
       status: "none",
       unlocked: false,
       canRequest: false,
-      reason: "This seller has no WhatsApp number on file",
+      reason: isRequestOffer
+        ? "This requester has no WhatsApp number on file"
+        : "This seller has no WhatsApp number on file",
     };
   }
 
@@ -236,6 +284,7 @@ export async function getPublicConnectStatus(params: {
     price,
     condition,
     sellerName: seller.name,
+    intent,
   });
   const digits = seller.whatsappNumber || seller.mobile || "";
 
