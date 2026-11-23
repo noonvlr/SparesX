@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AdminPage } from "@/components/layout";
-import { Card, EmptyState, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card, EmptyState } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Input } from "@/components/ui/Input";
@@ -98,7 +99,7 @@ export default function AdminAdsAnalyticsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Promo analytics"
         description="Impressions, clicks, and CTR from daily rollups (IST days). Source of truth: AdDailyStat."
       />

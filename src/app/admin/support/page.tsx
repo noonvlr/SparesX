@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { Card, Badge } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -153,7 +154,7 @@ export default function AdminSupportPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Support"
         description="Cases with listing, user, and message context from submit time."
         actions={

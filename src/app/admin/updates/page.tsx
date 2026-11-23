@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader, Badge } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
@@ -294,7 +295,7 @@ export default function AdminUpdatesPage() {
 
   return (
     <AdminPage containerSize="md">
-      <PageHeader
+      <AdminPageHeader
         title="Site updates"
         description="Dated public lines shown on the user dashboard — feature notes, fixes, and thanks for valid bug reports. Not shown on the homepage."
       />

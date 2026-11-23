@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { Card, Badge } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
@@ -140,13 +141,13 @@ export default function AdminRequestsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Requests"
         description="Moderate spare-part requests and demand signals (last 30 days)"
         actions={
           <Link
             href="/requests"
-            className="text-sm text-[var(--brand)] hover:underline"
+            className="text-sm font-medium text-[var(--brand)] hover:underline"
           >
             View public board →
           </Link>

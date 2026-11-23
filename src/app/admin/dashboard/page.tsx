@@ -1,12 +1,18 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
-import { Spinner } from "@/components/ui/Spinner";
 import { authFetch } from "@/lib/auth/clientAuth";
 import { AdminNavDirectory } from "@/components/admin/AdminNav";
+import {
+  AdminPageHeader,
+  AdminSection,
+  AdminSkeleton,
+  AdminStatCard,
+} from "@/components/admin/AdminPageChrome";
 
 type DashboardStats = {
   userCount?: number;
@@ -41,7 +47,11 @@ export default function AdminDashboard() {
 
   if (error) {
     return (
-      <AdminPage title="Dashboard">
+      <AdminPage>
+        <AdminPageHeader
+          title="Dashboard"
+          description="Overview of marketplace activity and platform performance."
+        />
         <Alert tone="danger">{error}</Alert>
       </AdminPage>
     );
@@ -49,10 +59,20 @@ export default function AdminDashboard() {
 
   if (!stats) {
     return (
-      <AdminPage title="Dashboard">
-        <div className="flex items-center justify-center gap-2 py-16 text-[var(--muted)]">
-          <Spinner /> Loading…
+      <AdminPage>
+        <AdminPageHeader
+          title="Dashboard"
+          description="Overview of marketplace activity and platform performance."
+        />
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 mb-8">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[5.5rem] animate-pulse rounded-[var(--admin-radius)] bg-[var(--skeleton)]"
+            />
+          ))}
         </div>
+        <AdminSkeleton rows={5} />
       </AdminPage>
     );
   }
@@ -80,66 +100,21 @@ export default function AdminDashboard() {
     });
   }
 
-  const primary = [
-    {
-      label: "Users",
-      value: stats.userCount,
-      href: "/admin/users",
-      hint: `${stats.technicianCount ?? 0} technicians`,
-    },
-    {
-      label: "Products",
-      value: stats.productCount,
-      href: "/admin/products",
-      hint: stats.pendingProducts
-        ? `${stats.pendingProducts} pending`
-        : "All clear",
-      warn: (stats.pendingProducts ?? 0) > 0,
-    },
-    {
-      label: "Support",
-      value: stats.unreadSupport,
-      href: "/admin/support",
-      hint: "Unread tickets",
-      warn: (stats.unreadSupport ?? 0) > 0,
-    },
-    {
-      label: "Visitors",
-      value: stats.visitors?.last30 ?? 0,
-      href: "/admin/reports",
-      hint: `${stats.visitors?.today ?? 0} today`,
-    },
-  ];
-
-  const secondary = [
-    { label: "Open requests", value: stats.openRequests, href: "/admin/requests" },
-    {
-      label: "Chat threads",
-      value: stats.conversationCount,
-      href: "/admin/chat",
-      badge: stats.messageCount ? `${stats.messageCount} msgs` : null,
-    },
-    { label: "Blocked", value: stats.blockedUsers, href: "/admin/users" },
-  ];
-
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Dashboard"
-        description="What needs attention, then the rest of the control panel."
+        description="Overview of marketplace activity and platform performance."
       />
 
       {attention.length > 0 ? (
-        <section className="mb-8">
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-            Needs attention
-          </h2>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <AdminSection title="Needs attention" description="Actionable items first.">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {attention.map((item) => (
               <Link
                 key={item.href + item.label}
                 href={item.href}
-                className="rounded-[var(--radius)] border border-[var(--warning)]/30 bg-[var(--warning-soft)] px-4 py-3 transition-colors hover:border-[var(--warning)]"
+                className="rounded-[var(--admin-radius)] border border-[var(--warning)]/30 bg-[var(--warning-soft)] px-4 py-3.5 transition-colors hover:border-[var(--warning)]"
               >
                 <p className="text-sm font-semibold text-[var(--ink)]">
                   {item.label}
@@ -148,64 +123,84 @@ export default function AdminDashboard() {
               </Link>
             ))}
           </div>
-        </section>
+        </AdminSection>
       ) : null}
 
-      <section className="mb-10">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-          Overview
-        </h2>
+      <AdminSection title="Key metrics">
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {primary.map((card) => (
-            <Link key={card.label} href={card.href} className="block">
-              <Card
-                hover
-                padding="md"
-                className={
-                  card.warn
-                    ? "border-[var(--warning)]/40 bg-[var(--warning-soft)]"
-                    : undefined
-                }
-              >
-                <p className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
-                  {card.label}
-                </p>
-                <p className="mt-1 text-3xl font-bold tabular-nums text-[var(--ink)]">
-                  {card.value ?? 0}
-                </p>
-                <p className="mt-1 text-xs text-[var(--muted)]">{card.hint}</p>
-              </Card>
-            </Link>
-          ))}
+          <AdminStatCard
+            label="Users"
+            value={stats.userCount ?? 0}
+            hint={`${stats.technicianCount ?? 0} technicians`}
+            href="/admin/users"
+          />
+          <AdminStatCard
+            label="Products"
+            value={stats.productCount ?? 0}
+            hint={
+              stats.pendingProducts
+                ? `${stats.pendingProducts} pending`
+                : "All clear"
+            }
+            href="/admin/products"
+            warn={(stats.pendingProducts ?? 0) > 0}
+          />
+          <AdminStatCard
+            label="Support unread"
+            value={stats.unreadSupport ?? 0}
+            hint="Open tickets needing reply"
+            href="/admin/support"
+            warn={(stats.unreadSupport ?? 0) > 0}
+          />
+          <AdminStatCard
+            label="Visitors (30d)"
+            value={stats.visitors?.last30 ?? 0}
+            hint={`${stats.visitors?.today ?? 0} today`}
+            href="/admin/reports"
+          />
         </div>
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {secondary.map((row) => (
+          {[
+            {
+              label: "Open requests",
+              value: stats.openRequests ?? 0,
+              href: "/admin/requests",
+            },
+            {
+              label: "Chat threads",
+              value: stats.conversationCount ?? 0,
+              href: "/admin/chat",
+              badge: stats.messageCount
+                ? `${stats.messageCount} msgs`
+                : null,
+            },
+            {
+              label: "Blocked users",
+              value: stats.blockedUsers ?? 0,
+              href: "/admin/users",
+            },
+          ].map((row) => (
             <Link
               key={row.label}
               href={row.href}
-              className="flex items-center justify-between gap-3 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm hover:border-[var(--brand-muted)]"
+              className="flex items-center justify-between gap-3 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-card)] px-4 py-3 text-sm hover:border-[var(--brand-muted)]"
             >
               <span className="text-[var(--ink-secondary)]">{row.label}</span>
               <span className="flex items-center gap-2 font-semibold tabular-nums text-[var(--ink)]">
-                {row.value ?? 0}
-                {"badge" in row && row.badge ? (
-                  <Badge tone="neutral">{row.badge}</Badge>
-                ) : null}
+                {row.value}
+                {row.badge ? <Badge tone="neutral">{row.badge}</Badge> : null}
               </span>
             </Link>
           ))}
         </div>
-      </section>
+      </AdminSection>
 
-      <section>
-        <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
-          All tools
-        </h2>
-        <p className="mb-4 text-sm text-[var(--muted)]">
-          Grouped by job. Same map as the sidebar and All tools page.
-        </p>
+      <AdminSection
+        title="All tools"
+        description="Same map as the sidebar — grouped by job."
+      >
         <AdminNavDirectory supportUnread={stats.unreadSupport ?? 0} />
-      </section>
+      </AdminSection>
     </AdminPage>
   );
 }

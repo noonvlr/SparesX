@@ -190,6 +190,17 @@
   --container-lg: 72rem;
   --container-xl: 80rem;
 
+  /* Admin SaaS shell */
+  --admin-sidebar-w: 250px;
+  --admin-sidebar-collapsed: 72px;
+  --admin-bg: var(--surface-2);
+  --admin-sidebar: var(--surface);
+  --admin-topbar: var(--surface);
+  --admin-card: var(--surface);
+  --admin-border: var(--border);
+  --admin-radius: var(--radius);
+  --admin-radius-sm: 10px;
+
   /* Z-index */
   --z-nav: 40;
   --z-banner: 35;
@@ -355,6 +366,8 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: clip;
+    /* Prevent horizontal jump when document scrollbar appears/disappears */
+    scrollbar-gutter: stable;
   }
 
   body {

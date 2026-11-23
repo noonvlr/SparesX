@@ -152,6 +152,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const hideShell = HIDE_SHELL_ROUTES.some(
     (r) => pathname === r || pathname.startsWith(`${r}/`),
   );
+  const onAdminSurface = isAdminPath(pathname);
   const isTechnician = userRole === "technician";
   const isAdminUser = isAuthenticated && userRole === "admin";
 
@@ -449,6 +450,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     links.push({ href: "/support", label: "Support" });
     return links;
   })();
+
+  // Admin owns its own SaaS shell — skip marketplace chrome (after all hooks).
+  if (onAdminSurface) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col">
+        <VisitBeacon />
+        <ToastHost />
+        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-1 flex-col min-h-0">

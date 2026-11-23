@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Badge, EmptyState, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Badge, EmptyState } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
@@ -119,7 +120,7 @@ export default function AdminAdsCampaignsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Campaigns"
         description="Create, schedule, pause, and archive sponsored or house promos."
         actions={

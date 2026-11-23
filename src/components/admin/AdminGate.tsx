@@ -2,17 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authFetch } from "@/lib/auth/clientAuth";
+import { authFetch, getCachedRole } from "@/lib/auth/clientAuth";
+import { Spinner } from "@/components/ui/Spinner";
 
-/** Client-side gate for /admin pages (APIs still enforce requireAdmin). */
+/**
+ * Client-side gate for /admin (APIs still enforce requireAdmin).
+ * Uses cached role for instant first paint; verifies with /api/auth/me.
+ * Does not remount the shell on in-admin navigations (layout-owned).
+ */
 export default function AdminGate({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [ready, setReady] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return getCachedRole() === "admin";
+  });
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        if (getCachedRole() === "admin") {
+          setReady(true);
+        }
         const res = await authFetch("/api/auth/me");
         if (!res.ok) {
           router.replace(
@@ -38,8 +49,9 @@ export default function AdminGate({ children }: { children: React.ReactNode }) {
 
   if (!ready) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center text-sm text-[var(--muted)]">
-        Checking admin access…
+      <div className="flex h-dvh flex-col items-center justify-center gap-3 bg-[var(--admin-bg,var(--surface-2))] text-sm text-[var(--muted)]">
+        <Spinner />
+        <p>Checking admin access…</p>
       </div>
     );
   }

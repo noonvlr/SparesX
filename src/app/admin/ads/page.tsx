@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -91,7 +92,7 @@ export default function AdminAdsOverviewPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Ads"
         description="Placements, campaigns, and promo performance"
       />

@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
@@ -256,7 +257,7 @@ export default function AdminDeviceCategoriesPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Device Categories & Brands"
         description="Manage device brands and models for mobile, laptop, and desktop categories"
         actions={

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { AdminPage } from "@/components/layout";
-import { PageHeader } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { AdminNavDirectory } from "@/components/admin/AdminNav";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { authFetch, getCachedRole } from "@/lib/auth/clientAuth";
 
 export default function AdminSettingsPage() {
@@ -32,9 +32,9 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="All tools"
-        description="Full directory of admin pages, grouped by job. Sidebar and mobile More use the same map."
+        description="Full directory of admin pages, grouped by job. Matches the sidebar and mobile drawer."
       />
 
       <AdminNavDirectory supportUnread={supportUnread} />

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -180,7 +181,7 @@ export default function SiteSettingsPage() {
 
   return (
     <AdminPage containerSize="md">
-      <PageHeader
+      <AdminPageHeader
         title="Site settings"
         description="Control SMS provider credentials and email OTP SMTP. Secrets are encrypted at rest. Leave password fields blank to keep existing values."
       />

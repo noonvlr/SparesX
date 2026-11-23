@@ -9,16 +9,19 @@ import {
 } from "@/lib/admin/nav";
 import { cn } from "@/lib/ui/cn";
 import { Badge } from "@/components/ui/Card";
+import { AdminIcon } from "@/components/admin/AdminIcons";
 
 export function AdminNavLink({
   item,
   supportUnread = 0,
   compact = false,
+  collapsed = false,
   onNavigate,
 }: {
   item: AdminNavItem;
   supportUnread?: number;
   compact?: boolean;
+  collapsed?: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname() || "";
@@ -30,56 +33,84 @@ export function AdminNavLink({
     <Link
       href={item.href}
       onClick={onNavigate}
+      title={collapsed ? item.label : undefined}
       className={cn(
-        "flex items-start gap-2 rounded-[var(--radius)] transition-colors",
-        compact
-          ? "px-3 py-2"
-          : "border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3 shadow-[var(--shadow-sm)] hover:border-[var(--brand-muted)]",
-        active
-          ? compact
+        "group relative flex items-center gap-2.5 rounded-[var(--admin-radius-sm)] transition-colors",
+        collapsed ? "justify-center px-2 py-2.5" : "px-2.5 py-2",
+        compact || collapsed
+          ? active
             ? "bg-[var(--brand-soft)] text-[var(--brand-hover)]"
-            : "border-[var(--brand-muted)] bg-[var(--brand-soft)] text-[var(--brand-hover)]"
-          : compact
-            ? "text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]"
-            : "text-[var(--ink)]",
+            : "text-[var(--ink-secondary)] hover:bg-[var(--surface-3)] hover:text-[var(--ink)]"
+          : cn(
+              "border border-[var(--admin-border)] bg-[var(--admin-card)] px-3.5 py-3 shadow-[var(--shadow-sm)]",
+              active
+                ? "border-[var(--brand-muted)] bg-[var(--brand-soft)] text-[var(--brand-hover)]"
+                : "text-[var(--ink)] hover:border-[var(--brand-muted)]",
+            ),
       )}
       aria-current={active ? "page" : undefined}
     >
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 text-sm font-medium">
-          <span className="truncate">{item.label}</span>
-          {badge > 0 ? (
-            <Badge
-              tone="success"
-              className="min-w-[1.15rem] justify-center border-0 bg-[var(--success)] px-1 py-0 text-[10px] text-white"
-            >
-              {badge > 99 ? "99+" : badge}
-            </Badge>
+      {active && (compact || collapsed) ? (
+        <span
+          className="absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-[var(--brand)]"
+          aria-hidden
+        />
+      ) : null}
+      <AdminIcon
+        name={item.icon}
+        className={cn(
+          active ? "opacity-100" : "opacity-70 group-hover:opacity-100",
+        )}
+      />
+      {!collapsed ? (
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center gap-2 text-[13px] font-medium leading-none">
+            <span className="truncate">{item.label}</span>
+            {badge > 0 ? (
+              <Badge
+                tone="success"
+                className="min-w-[1.15rem] justify-center border-0 bg-[var(--success)] px-1 py-0 text-[10px] text-white"
+              >
+                {badge > 99 ? "99+" : badge}
+              </Badge>
+            ) : null}
+          </span>
+          {!compact ? (
+            <span className="mt-1 block text-xs leading-snug text-[var(--muted)]">
+              {item.desc}
+            </span>
           ) : null}
         </span>
-        {!compact ? (
-          <span className="mt-0.5 block text-xs leading-snug text-[var(--muted)]">
-            {item.desc}
-          </span>
-        ) : null}
-      </span>
+      ) : badge > 0 ? (
+        <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--success)] px-1 text-[9px] font-semibold text-white">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      ) : null}
     </Link>
   );
 }
 
-/** Desktop sidebar groups (compact labels). */
+/** Desktop / drawer sidebar groups. */
 export function AdminSidebarNav({
   supportUnread = 0,
+  collapsed = false,
+  onNavigate,
 }: {
   supportUnread?: number;
+  collapsed?: boolean;
+  onNavigate?: () => void;
 }) {
   return (
-    <nav aria-label="Admin" className="space-y-5 px-2 py-3">
+    <nav aria-label="Admin" className={cn("space-y-5", collapsed ? "px-1.5 py-3" : "px-2 py-3")}>
       {ADMIN_NAV_GROUPS.map((group) => (
         <div key={group.id}>
-          <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
-            {group.label}
-          </p>
+          {!collapsed ? (
+            <p className="mb-1.5 px-2.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+              {group.label}
+            </p>
+          ) : (
+            <div className="mx-auto mb-1.5 h-px w-6 bg-[var(--divider)]" aria-hidden />
+          )}
           <ul className="space-y-0.5">
             {group.items.map((item) => (
               <li key={item.href}>
@@ -87,6 +118,8 @@ export function AdminSidebarNav({
                   item={item}
                   supportUnread={supportUnread}
                   compact
+                  collapsed={collapsed}
+                  onNavigate={onNavigate}
                 />
               </li>
             ))}
@@ -97,7 +130,7 @@ export function AdminSidebarNav({
   );
 }
 
-/** Grouped directory (dashboard / control center / mobile overflow). */
+/** Grouped directory cards (dashboard / control center). */
 export function AdminNavDirectory({
   supportUnread = 0,
 }: {
@@ -107,7 +140,7 @@ export function AdminNavDirectory({
     <div className="space-y-8">
       {ADMIN_NAV_GROUPS.map((group) => (
         <section key={group.id}>
-          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[var(--muted)]">
+          <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]">
             {group.label}
           </h2>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">

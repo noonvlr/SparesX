@@ -14,7 +14,7 @@ export function AdminToolbar({
   return (
     <div
       className={cn(
-        "mb-5 space-y-3 rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-3 sm:p-4",
+        "mb-5 space-y-3 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-card)] p-3 sm:p-4",
         className,
       )}
     >
@@ -81,7 +81,7 @@ export function AdminStatStrip({
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface)] px-3.5 py-3"
+          className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-card)] px-3.5 py-3"
         >
           <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
             {item.label}

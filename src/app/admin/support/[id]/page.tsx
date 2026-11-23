@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { AdminPage } from "@/components/layout";
-import { Card, Badge, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Textarea, Input } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
@@ -172,7 +173,7 @@ export default function AdminSupportCasePage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title={ticket.caseNumber ? `Case #${ticket.caseNumber}` : ticket.subject}
         description={`${ticket.kindLabel} · ${ticket.statusLabel}`}
         actions={

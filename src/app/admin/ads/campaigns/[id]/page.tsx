@@ -2,7 +2,7 @@
 
 import { use } from "react";
 import { AdminPage } from "@/components/layout";
-import { PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import AdsSubnav from "../../_components/AdsSubnav";
 import CampaignWizard from "../_components/CampaignWizard";
 
@@ -15,7 +15,7 @@ export default function AdminAdsCampaignEditPage({
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Edit campaign"
         description="Update details, creatives, schedule, then publish or save draft."
       />

@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AdminPage } from "@/components/layout";
-import { Card, Badge, EmptyState, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card, Badge, EmptyState } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
@@ -189,7 +190,7 @@ export default function AdminCategoriesPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Manage Categories"
         description="Add, edit, or remove categories for the homepage"
         actions={

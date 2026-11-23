@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { AdminPage } from "@/components/layout";
-import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Badge, Card, EmptyState } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
@@ -177,7 +178,7 @@ export default function AdminAdsPlacementsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Placements"
         description="Slot keys are immutable. Creatives must match exact size or 2×. Changing dimensions flags mismatched creatives as needing update (not served)."
       />

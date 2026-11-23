@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { DashboardPage } from "@/components/layout";
+import { AdminPage } from "@/components/layout";
 import { Card } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 
 export const metadata: Metadata = {
   title: "Dispute SOP",
@@ -33,30 +34,35 @@ const STEPS = [
 
 export default function AdminDisputeSopPage() {
   return (
-    <DashboardPage
-      title="Dispute SOP"
-      description="Internal checklist for chat and abuse disputes. Not legal advice — counsel review still required for public policies."
-      actions={
-        <Link
-          href="/admin/chat"
-          className="text-sm font-semibold text-[var(--brand)] hover:underline"
-        >
-          Open chat disputes →
-        </Link>
-      }
-    >
-      <div className="space-y-3 max-w-3xl">
+    <AdminPage>
+      <AdminPageHeader
+        title="Dispute SOP"
+        description="Internal checklist for chat and abuse disputes. Not legal advice — counsel review still required for public policies."
+        actions={
+          <Link
+            href="/admin/chat"
+            className="text-sm font-semibold text-[var(--brand)] hover:underline"
+          >
+            Open chat disputes →
+          </Link>
+        }
+      />
+
+      <ol className="space-y-3">
         {STEPS.map((step, i) => (
-          <Card key={step.title} className="p-5">
-            <h2 className="text-base font-semibold text-[var(--ink)] mb-1">
-              {i + 1}. {step.title}
-            </h2>
-            <p className="text-sm text-[var(--muted)] leading-relaxed">
-              {step.body}
-            </p>
-          </Card>
+          <li key={step.title}>
+            <Card padding="md">
+              <p className="text-sm font-semibold text-[var(--ink)]">
+                <span className="mr-2 text-[var(--muted)]">{i + 1}.</span>
+                {step.title}
+              </p>
+              <p className="mt-1.5 text-sm leading-relaxed text-[var(--muted)]">
+                {step.body}
+              </p>
+            </Card>
+          </li>
         ))}
-      </div>
-    </DashboardPage>
+      </ol>
+    </AdminPage>
   );
 }

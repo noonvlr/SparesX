@@ -1,14 +1,14 @@
 "use client";
 
 import { AdminPage } from "@/components/layout";
-import { PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import AdsSubnav from "../../_components/AdsSubnav";
 import CampaignWizard from "../_components/CampaignWizard";
 
 export default function AdminAdsCampaignNewPage() {
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="New campaign"
         description="Draft is created as soon as details are valid so uploads and progress survive refresh."
       />

@@ -4,7 +4,7 @@ import UsersList from "@/app/admin/users/_components/UsersList";
 import UserDetailsModal from "@/app/admin/users/_components/UserDetailsModal";
 import type { AdminUser } from "@/app/admin/users/_components/types";
 import { AdminPage } from "@/components/layout";
-import { PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -160,7 +160,7 @@ export default function UsersManager() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Users"
         description="Search, filter, create, and edit accounts"
         actions={

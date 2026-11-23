@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Badge, PageHeader } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea } from "@/components/ui/Input";
 import { Field } from "@/components/ui/Field";
@@ -244,13 +245,13 @@ export default function AdminProductsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Listings"
         description="Approve, edit, feature, or remove products"
         actions={
           <Link
             href="/products"
-            className="text-sm text-[var(--brand)] hover:underline"
+            className="text-sm font-medium text-[var(--brand)] hover:underline"
           >
             View public catalog →
           </Link>

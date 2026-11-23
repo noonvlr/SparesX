@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card } from "@/components/ui/Card";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
@@ -135,7 +136,7 @@ export default function AdminReportsPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Reports"
         description="Unique visitors are one browser, counted once per day. History starts the day this tracking went live."
       />

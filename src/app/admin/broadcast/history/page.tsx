@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader, Badge } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card, Badge } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
@@ -78,7 +79,7 @@ export default function BroadcastHistoryPage() {
   return (
     <AdminPage>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-        <PageHeader
+        <AdminPageHeader
           title="Broadcast history"
           description="Past admin broadcasts with delivery status."
         />

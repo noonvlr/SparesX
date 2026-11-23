@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState, startTransition } from "react";
 import Link from "next/link";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader, Badge, Skeleton } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
+import { Card, Badge, Skeleton } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Textarea } from "@/components/ui/Input";
@@ -226,7 +227,7 @@ export default function AdminBroadcastPage() {
   return (
     <AdminPage>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-        <PageHeader
+        <AdminPageHeader
           title="Broadcast Messages"
           description="Send targeted in-app messages to users based on account activity and profile."
         />

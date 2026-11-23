@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPage } from "@/components/layout";
 import { AdminToolbar } from "@/components/admin/AdminToolbar";
-import { Card, Badge, PageHeader, Avatar } from "@/components/ui/Card";
+import { Card, Badge, Avatar } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
@@ -174,7 +175,7 @@ export default function AdminChatPage() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Chat disputes"
         description="Read-only chats for conflict review. Delete only for policy violations."
         actions={

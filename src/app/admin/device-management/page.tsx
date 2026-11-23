@@ -9,7 +9,7 @@ import ContextPanel from "./_components/ContextPanel";
 import CatalogImportPanel from "./_components/CatalogImportPanel";
 import { useDeviceHierarchy } from "./_components/hooks";
 import { AdminPage } from "@/components/layout";
-import { PageHeader } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageChrome";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
@@ -37,7 +37,7 @@ function DeviceManagementContent() {
 
   return (
     <AdminPage>
-      <PageHeader
+      <AdminPageHeader
         title="Devices"
         description="Types, brands, models, and parts. Select a node to edit; use bulk import below for CSV/JSON."
       />
