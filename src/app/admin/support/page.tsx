@@ -10,6 +10,11 @@ import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import {
+  AdminFilterRow,
+  AdminStatStrip,
+  AdminToolbar,
+} from "@/components/admin/AdminToolbar";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -149,8 +154,8 @@ export default function AdminSupportPage() {
   return (
     <AdminPage>
       <PageHeader
-        title="Support cases"
-        description="Investigate reports with listing, user, and message context captured at submit time."
+        title="Support"
+        description="Cases with listing, user, and message context from submit time."
         actions={
           <div className="flex flex-wrap items-center gap-3">
             <Link
@@ -168,44 +173,36 @@ export default function AdminSupportPage() {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {[
+      <AdminStatStrip
+        items={[
           { label: "Open", value: stats.open },
           { label: "Under review", value: stats.underReview },
           { label: "High priority", value: stats.highPriority },
           { label: "Resolved today", value: stats.resolvedToday },
-        ].map((item) => (
-          <Card key={item.label} className="p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-              {item.label}
-            </p>
-            <p className="text-2xl font-bold text-[var(--ink)] mt-1">
-              {item.value}
-            </p>
-          </Card>
-        ))}
-      </div>
+        ]}
+      />
 
-      <form
-        className="flex flex-col lg:flex-row gap-2 mb-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setQ(qDraft.trim());
-        }}
-      >
-        <Input
-          value={qDraft}
-          onChange={(e) => setQDraft(e.target.value)}
-          placeholder="Search case #, email, user, product…"
-          aria-label="Search cases"
-          size="sm"
-        />
-        <Button type="submit" size="sm">
-          Search
-        </Button>
-      </form>
-
-      <div className="flex flex-wrap gap-2 mb-4">
+      <AdminToolbar>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setQ(qDraft.trim());
+          }}
+        >
+          <Input
+            value={qDraft}
+            onChange={(e) => setQDraft(e.target.value)}
+            placeholder="Search case #, email, user, product…"
+            aria-label="Search cases"
+            size="sm"
+            className="min-w-0 flex-1"
+          />
+          <Button type="submit" size="sm" className="shrink-0">
+            Search
+          </Button>
+        </form>
+        <AdminFilterRow>
         <Select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -258,7 +255,8 @@ export default function AdminSupportPage() {
             </option>
           ))}
         </Select>
-      </div>
+        </AdminFilterRow>
+      </AdminToolbar>
 
       <Card padding="none" className="overflow-hidden">
         {loading ? (

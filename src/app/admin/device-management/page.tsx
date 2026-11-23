@@ -38,14 +38,8 @@ function DeviceManagementContent() {
   return (
     <AdminPage>
       <PageHeader
-        title="Device Management"
-        description="Manage devices, brands, models, and parts categories in one place."
-        actions={
-          <p className="text-xs text-[var(--muted)] max-w-xs">
-            Tip: Select any node to edit details on the right. Use bulk import
-            below for CSV/JSON updates.
-          </p>
-        }
+        title="Devices"
+        description="Types, brands, models, and parts. Select a node to edit; use bulk import below for CSV/JSON."
       />
 
       <div className="grid gap-6 lg:grid-cols-[2fr_3fr]">

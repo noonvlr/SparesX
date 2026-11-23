@@ -4,7 +4,7 @@ import UsersList from "@/app/admin/users/_components/UsersList";
 import UserDetailsModal from "@/app/admin/users/_components/UserDetailsModal";
 import type { AdminUser } from "@/app/admin/users/_components/types";
 import { AdminPage } from "@/components/layout";
-import { Card, PageHeader } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
@@ -13,6 +13,11 @@ import { Select } from "@/components/ui/Select";
 import { Alert } from "@/components/ui/Alert";
 import { Modal } from "@/components/ui/Modal";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import {
+  AdminFilterRow,
+  AdminStatStrip,
+  AdminToolbar,
+} from "@/components/admin/AdminToolbar";
 
 export default function UsersManager() {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -156,116 +161,88 @@ export default function UsersManager() {
   return (
     <AdminPage>
       <PageHeader
-        title="User Management"
-        description="Manage and monitor all system users"
+        title="Users"
+        description="Search, filter, create, and edit accounts"
         actions={
           <Button type="button" onClick={() => setShowCreate(true)}>
-            + Create user
+            Create user
           </Button>
         }
       />
 
-      <Card padding="lg" className="mb-8">
-        <form onSubmit={handleSearch} className="flex flex-col gap-6">
-          <div className="flex flex-col md:flex-row gap-3">
-            <Input
-              type="text"
-              placeholder="Search by name, email, or mobile..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1"
-            />
-            <Button type="submit">Search</Button>
-            {searchQuery && (
-              <Button type="button" variant="secondary" onClick={handleClearSearch}>
+      <AdminStatStrip
+        items={[
+          { label: "On this page", value: stats.total },
+          { label: "Active", value: stats.active },
+          { label: "Blocked", value: stats.blocked },
+          { label: "Admins", value: stats.admins },
+        ]}
+      />
+
+      <AdminToolbar>
+        <form onSubmit={handleSearch} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Input
+            type="text"
+            placeholder="Search name, email, or mobile…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="min-w-0 flex-1"
+            size="sm"
+          />
+          <div className="flex shrink-0 gap-2">
+            <Button type="submit" size="sm">
+              Search
+            </Button>
+            {searchQuery ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleClearSearch}
+              >
                 Clear
               </Button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-[var(--ink-secondary)]">
-                Status:
-              </span>
-              <Select
-                value={statusFilter}
-                onChange={(e) =>
-                  setStatusFilter(
-                    e.target.value as "all" | "active" | "blocked",
-                  )
-                }
-                size="sm"
-                className="w-auto min-w-[120px]"
-              >
-                <option value="all">All</option>
-                <option value="active">Active</option>
-                <option value="blocked">Blocked</option>
-              </Select>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-[var(--ink-secondary)]">
-                Role:
-              </span>
-              <Select
-                value={roleFilter}
-                onChange={(e) =>
-                  setRoleFilter(
-                    e.target.value as "all" | "admin" | "technician",
-                  )
-                }
-                size="sm"
-                className="w-auto min-w-[140px]"
-              >
-                <option value="all">All</option>
-                <option value="admin">Admin</option>
-                <option value="technician">Technician</option>
-              </Select>
-            </div>
+            ) : null}
           </div>
         </form>
-
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-[var(--radius)] bg-[var(--brand-soft)] border border-[var(--border)]">
-            <p className="text-sm font-semibold text-[var(--brand-hover)] mb-2">
-              Total Users
-            </p>
-            <p className="text-2xl font-bold text-[var(--ink)]">{stats.total}</p>
-          </div>
-          <div className="p-5 rounded-[var(--radius)] bg-[var(--success-soft)] border border-[var(--border)]">
-            <p className="text-sm font-semibold text-[var(--success)] mb-2">
-              Active
-            </p>
-            <p className="text-2xl font-bold text-[var(--ink)]">{stats.active}</p>
-          </div>
-          <div className="p-5 rounded-[var(--radius)] bg-[var(--danger-soft)] border border-[var(--border)]">
-            <p className="text-sm font-semibold text-[var(--danger)] mb-2">
-              Blocked
-            </p>
-            <p className="text-2xl font-bold text-[var(--ink)]">{stats.blocked}</p>
-          </div>
-          <div className="p-5 rounded-[var(--radius)] bg-[var(--info-soft)] border border-[var(--border)]">
-            <p className="text-sm font-semibold text-[var(--info)] mb-2">
-              Admins
-            </p>
-            <p className="text-2xl font-bold text-[var(--ink)]">{stats.admins}</p>
-          </div>
-        </div>
-      </Card>
-
-      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-[var(--surface)] px-6 py-4 rounded-[var(--radius)] border border-[var(--border)]">
-        <p className="text-sm text-[var(--ink-secondary)]">
-          Showing{" "}
-          <span className="font-semibold text-[var(--ink)]">
-            {filteredUsers.length}
-          </span>{" "}
-          of <span className="font-semibold text-[var(--ink)]">{users.length}</span>{" "}
-          users
-        </p>
-        <p className="text-xs text-[var(--muted)]">
-          Click a row to view and edit details
-        </p>
-      </div>
+        <AdminFilterRow>
+          <Select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "all" | "active" | "blocked")
+            }
+            size="sm"
+            aria-label="Filter by status"
+            className="w-auto min-w-[7.5rem]"
+          >
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="blocked">Blocked</option>
+          </Select>
+          <Select
+            value={roleFilter}
+            onChange={(e) =>
+              setRoleFilter(e.target.value as "all" | "admin" | "technician")
+            }
+            size="sm"
+            aria-label="Filter by role"
+            className="w-auto min-w-[8.5rem]"
+          >
+            <option value="all">All roles</option>
+            <option value="admin">Admin</option>
+            <option value="technician">Technician</option>
+          </Select>
+          <p className="w-full text-xs text-[var(--muted)] sm:ml-auto sm:w-auto">
+            Showing{" "}
+            <span className="font-semibold text-[var(--ink)]">
+              {filteredUsers.length}
+            </span>{" "}
+            of{" "}
+            <span className="font-semibold text-[var(--ink)]">{users.length}</span>
+            · tap a row to edit
+          </p>
+        </AdminFilterRow>
+      </AdminToolbar>
 
       <UsersList
         users={filteredUsers}

@@ -17,27 +17,29 @@ export default function AdsSubnav() {
   return (
     <nav
       aria-label="Ads management"
-      className="mb-6 flex flex-wrap gap-1 border-b border-[var(--border)] pb-px"
+      className="-mx-1 mb-6 overflow-x-auto scrollbar-hide"
     >
-      {LINKS.map((link) => {
-        const active = link.exact
-          ? pathname === link.href
-          : pathname === link.href || pathname.startsWith(`${link.href}/`);
-        return (
-          <Link
-            key={link.href}
-            href={link.href}
-            className={cn(
-              "-mb-px border-b-2 px-3 py-2 text-sm font-medium transition-colors",
-              active
-                ? "border-[var(--brand)] text-[var(--brand)]"
-                : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]",
-            )}
-          >
-            {link.label}
-          </Link>
-        );
-      })}
+      <div className="flex min-w-max gap-1 border-b border-[var(--border)] px-1 pb-px">
+        {LINKS.map((link) => {
+          const active = link.exact
+            ? pathname === link.href
+            : pathname === link.href || pathname.startsWith(`${link.href}/`);
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                "-mb-px shrink-0 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors",
+                active
+                  ? "border-[var(--brand)] text-[var(--brand)]"
+                  : "border-transparent text-[var(--muted)] hover:text-[var(--ink)]",
+              )}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }

@@ -9,6 +9,11 @@ import { Input } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Spinner";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import {
+  AdminFilterRow,
+  AdminStatusChip,
+  AdminToolbar,
+} from "@/components/admin/AdminToolbar";
 
 const STATUS_TONE: Record<string, "warning" | "success" | "neutral"> = {
   open: "warning",
@@ -136,8 +141,8 @@ export default function AdminRequestsPage() {
   return (
     <AdminPage>
       <PageHeader
-        title="Manage requests"
-        description="Moderate spare-part requests and watch demand signals from the last 30 days"
+        title="Requests"
+        description="Moderate spare-part requests and demand signals (last 30 days)"
         actions={
           <Link
             href="/requests"
@@ -196,47 +201,45 @@ export default function AdminRequestsPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {(
-          [
-            ["all", "All"],
-            ["open", "Open"],
-            ["fulfilled", "Fulfilled"],
-            ["closed", "Closed"],
-          ] as const
-        ).map(([value, label]) => (
-          <Button
-            key={value}
-            type="button"
+      <AdminToolbar>
+        <AdminFilterRow>
+          {(
+            [
+              ["all", "All"],
+              ["open", "Open"],
+              ["fulfilled", "Fulfilled"],
+              ["closed", "Closed"],
+            ] as const
+          ).map(([value, label]) => (
+            <AdminStatusChip
+              key={value}
+              active={status === value}
+              onClick={() => setStatus(value)}
+            >
+              {label} ({statusCounts[value] ?? 0})
+            </AdminStatusChip>
+          ))}
+        </AdminFilterRow>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setPage(1);
+            load(status, q, 1);
+          }}
+        >
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, email, part, brand…"
+            className="min-w-0 flex-1"
             size="sm"
-            variant={status === value ? "primary" : "outline"}
-            onClick={() => setStatus(value)}
-            className="rounded-full"
-          >
-            {label} ({statusCounts[value] ?? 0})
+          />
+          <Button type="submit" size="sm" className="shrink-0">
+            Search
           </Button>
-        ))}
-      </div>
-
-      <form
-        className="flex gap-2 mb-6"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setPage(1);
-          load(status, q, 1);
-        }}
-      >
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name, email, part, brand..."
-          className="flex-1"
-          size="sm"
-        />
-        <Button type="submit" size="sm">
-          Search
-        </Button>
-      </form>
+        </form>
+      </AdminToolbar>
 
       {error && (
         <Alert tone="danger" className="mb-4">

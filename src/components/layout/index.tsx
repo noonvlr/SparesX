@@ -77,8 +77,37 @@ export function AuthPage({
   );
 }
 
-export function AdminPage(props: PageShellProps) {
-  return <PageShell containerSize="xl" {...props} />;
+export function AdminPage({
+  children,
+  className,
+  title,
+  description,
+  actions,
+  flush = false,
+}: PageShellProps) {
+  // Sidebar lives in AdminShell — avoid nested max-width containers.
+  return (
+    <PageFade>
+      <div
+        className={cn(
+          "min-h-[50vh] bg-[var(--surface-2)]",
+          flush ? "py-0" : "py-4 md:py-6",
+          className,
+        )}
+      >
+        <div className="w-full px-4 sm:px-5 lg:px-3 xl:px-4">
+          {title ? (
+            <PageHeader
+              title={title}
+              description={description}
+              actions={actions}
+            />
+          ) : null}
+          {children}
+        </div>
+      </div>
+    </PageFade>
+  );
 }
 
 export { Container, PageHeader };

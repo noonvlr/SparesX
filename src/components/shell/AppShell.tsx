@@ -14,6 +14,14 @@ import { cn } from "@/lib/ui/cn";
 import { useShellAuth } from "./useShellAuth";
 import VisitBeacon from "@/components/analytics/VisitBeacon";
 import { InstallAppBanner, InstallAppDesktopButton, InstallAppGuide, InstallAppMenuItem } from "@/components/pwa/InstallAppOption";
+import {
+  ADMIN_NAV_GROUPS,
+  ADMIN_PRIMARY,
+  isAdminNavActive,
+  isAdminPath,
+} from "@/lib/admin/nav";
+
+const ADMIN_PRIMARY_HREFS = new Set(ADMIN_PRIMARY.map((i) => i.href));
 
 const HIDE_SHELL_ROUTES = [
   "/login",
@@ -214,14 +222,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const moreLinks: MoreLink[] = (() => {
     if (isAdminUser) {
+      // Admin More sheet renders ADMIN_NAV_GROUPS below; only logout here.
       return [
-        { href: "/admin/requests", label: "Requests", icon: <IconGrid className="h-5 w-5" /> },
-        { href: "/admin/device-management", label: "Devices", icon: <IconSearch className="h-5 w-5" /> },
-        { href: "/admin/chat", label: "Chat disputes", icon: <IconChat className="h-5 w-5" /> },
-        { href: "/admin/ads", label: "Ads Management", icon: <IconMore className="h-5 w-5" /> },
-        { href: "/admin/site-settings", label: "Site settings", icon: <IconMore className="h-5 w-5" /> },
-        { href: "/admin/updates", label: "Site updates", icon: <IconMore className="h-5 w-5" /> },
-        { href: "/admin/settings", label: "Control center", icon: <IconUser className="h-5 w-5" /> },
         {
           label: "Logout",
           icon: <IconUser className="h-5 w-5" />,
@@ -412,17 +414,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const topLinks: { href: string; label: string; badge?: number }[] = (() => {
     if (isAuthenticated && userRole === "admin") {
+      // Slim primary strip — full IA lives in sidebar (lg+) and More (mobile).
       return [
-        { href: "/admin/dashboard", label: "Dashboard" },
-        { href: "/admin/users", label: "Users" },
-        { href: "/admin/products", label: "Listings" },
-        { href: "/admin/requests", label: "Requests" },
-        { href: "/admin/device-management", label: "Devices" },
-        { href: "/admin/support", label: "Support", badge: supportUnread },
-        { href: "/admin/chat", label: "Chat disputes" },
-        { href: "/admin/ads", label: "Ads" },
-        { href: "/admin/site-settings", label: "Site settings" },
-        { href: "/admin/updates", label: "Site updates" },
+        ...ADMIN_PRIMARY.map((item) => ({
+          href: item.href,
+          label: item.label,
+          badge:
+            item.badgeKey === "support" && supportUnread > 0
+              ? supportUnread
+              : undefined,
+        })),
+        { href: "/admin/settings", label: "All tools" },
       ];
     }
 
@@ -465,12 +467,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Desktop top navbar */}
       {!hideShell && (
         <header className="hidden md:block sticky top-0 z-40 glass-nav">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[var(--nav-h)] flex items-center justify-between gap-4">
+          <div
+            className={cn(
+              "mx-auto px-4 sm:px-6 lg:px-8 h-[var(--nav-h)] flex items-center justify-between gap-4",
+              isAdminUser ? "max-w-[90rem]" : "max-w-7xl",
+            )}
+          >
             <div className="flex items-center gap-6 min-w-0">
               <BrandMark size="sm" />
               <nav className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide">
                 {topLinks.map((item) => {
-                  const active = isActivePath(pathname, item.href);
+                  const active = isAdminUser
+                    ? isAdminNavActive(pathname, item.href)
+                    : isActivePath(pathname, item.href);
                   return (
                     <Link
                       key={item.href}
@@ -620,11 +629,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-1">
             <ThemeCycleButton />
             <Link
-              href="/products"
+              href={isAdminUser && isAdminPath(pathname) ? "/" : "/products"}
               className="inline-flex items-center justify-center min-h-12 min-w-12 rounded-[var(--radius)] text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand)] transition-colors"
-              aria-label="Search products"
+              aria-label={
+                isAdminUser && isAdminPath(pathname)
+                  ? "View marketplace"
+                  : "Search products"
+              }
             >
-              <IconSearch className="h-5 w-5 opacity-[var(--icon-opacity-inactive)]" />
+              {isAdminUser && isAdminPath(pathname) ? (
+                <IconHome className="h-5 w-5 opacity-[var(--icon-opacity-inactive)]" />
+              ) : (
+                <IconSearch className="h-5 w-5 opacity-[var(--icon-opacity-inactive)]" />
+              )}
             </Link>
             {isAuthenticated ? (
               <button
@@ -810,7 +827,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           />
           <div className="absolute inset-x-0 bottom-0 rounded-t-[var(--radius-xl)] bg-[var(--surface-elevated)] shadow-[var(--shadow-modal)] border-t border-[var(--border)] pb-[env(safe-area-inset-bottom,0px)] animate-in">
             <div className="flex items-center justify-between px-4 pt-3 pb-2">
-              <p className="text-sm font-semibold text-[var(--ink)]">More</p>
+              <p className="text-sm font-semibold text-[var(--ink)]">
+                {isAdminUser ? "Admin tools" : "More"}
+              </p>
               <button
                 type="button"
                 onClick={() => setMobileMoreOpen(false)}
@@ -826,21 +845,79 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </p>
               <ThemeToggle showLabels />
             </div>
-            <div className="px-3 pb-3 space-y-0.5 max-h-[50dvh] overflow-y-auto">
+            <div className="px-3 pb-3 max-h-[55dvh] overflow-y-auto">
               <InstallAppMenuItem onDone={() => setMobileMoreOpen(false)} />
-              {moreLinks.map((item) => {
-                const className = cn(
-                  "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium min-h-12",
-                  item.danger
-                    ? "text-[var(--danger)] hover:bg-[var(--danger-soft)]"
-                    : "text-[var(--ink)] hover:bg-[var(--surface-3)]",
-                );
-                if (item.onClick) {
-                  return (
+              {isAdminUser ? (
+                <div className="space-y-4 pt-1">
+                  {ADMIN_NAV_GROUPS.map((group) => {
+                    const items = group.items.filter(
+                      (item) => !ADMIN_PRIMARY_HREFS.has(item.href),
+                    );
+                    if (items.length === 0) return null;
+                    return (
+                      <div key={group.id}>
+                        <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--muted)]">
+                          {group.label}
+                        </p>
+                        <ul className="space-y-0.5">
+                          {items.map((item) => {
+                            const badge =
+                              item.badgeKey === "support" && supportUnread > 0
+                                ? supportUnread
+                                : 0;
+                            const active = isAdminNavActive(
+                              pathname,
+                              item.href,
+                            );
+                            return (
+                              <li key={item.href}>
+                                <Link
+                                  href={item.href}
+                                  onClick={() => setMobileMoreOpen(false)}
+                                  className={cn(
+                                    "flex w-full items-start gap-2 rounded-[var(--radius)] px-3 py-3 min-h-12",
+                                    active
+                                      ? "bg-[var(--brand-soft)] text-[var(--brand-hover)]"
+                                      : "text-[var(--ink)] hover:bg-[var(--surface-3)]",
+                                  )}
+                                >
+                                  <span className="min-w-0 flex-1">
+                                    <span className="flex items-center gap-2 text-sm font-medium">
+                                      {item.label}
+                                      {badge > 0 ? (
+                                        <Badge
+                                          tone="success"
+                                          className="min-w-[1.25rem] justify-center border-0 bg-[var(--success)] px-1.5 py-0 text-[10px] text-white"
+                                        >
+                                          {badge > 99 ? "99+" : badge}
+                                        </Badge>
+                                      ) : null}
+                                    </span>
+                                    <span className="mt-0.5 block text-xs text-[var(--muted)]">
+                                      {item.desc}
+                                    </span>
+                                  </span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    );
+                  })}
+                  <Link
+                    href="/"
+                    onClick={() => setMobileMoreOpen(false)}
+                    className="flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium text-[var(--ink)] hover:bg-[var(--surface-3)] min-h-12"
+                  >
+                    <IconHome className="h-5 w-5 opacity-[var(--icon-opacity-inactive)]" />
+                    View marketplace
+                  </Link>
+                  {moreLinks.map((item) => (
                     <button
                       key={item.label}
                       type="button"
-                      className={className}
+                      className="flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium min-h-12 text-[var(--danger)] hover:bg-[var(--danger-soft)]"
                       onClick={() => {
                         setMobileMoreOpen(false);
                         item.onClick?.();
@@ -851,30 +928,59 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                       </span>
                       {item.label}
                     </button>
-                  );
-                }
-                return (
-                  <Link
-                    key={`${item.label}-${item.href}`}
-                    href={item.href || "/"}
-                    className={className}
-                    onClick={() => setMobileMoreOpen(false)}
-                  >
-                    <span className="opacity-[var(--icon-opacity-inactive)]">
-                      {item.icon}
-                    </span>
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge && item.badge > 0 ? (
-                      <Badge
-                        tone="success"
-                        className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-[var(--ink-inverse)] border-0"
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-0.5">
+                  {moreLinks.map((item) => {
+                    const className = cn(
+                      "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-3.5 text-sm font-medium min-h-12",
+                      item.danger
+                        ? "text-[var(--danger)] hover:bg-[var(--danger-soft)]"
+                        : "text-[var(--ink)] hover:bg-[var(--surface-3)]",
+                    );
+                    if (item.onClick) {
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          className={className}
+                          onClick={() => {
+                            setMobileMoreOpen(false);
+                            item.onClick?.();
+                          }}
+                        >
+                          <span className="opacity-[var(--icon-opacity-inactive)]">
+                            {item.icon}
+                          </span>
+                          {item.label}
+                        </button>
+                      );
+                    }
+                    return (
+                      <Link
+                        key={`${item.label}-${item.href}`}
+                        href={item.href || "/"}
+                        className={className}
+                        onClick={() => setMobileMoreOpen(false)}
                       >
-                        {item.badge > 99 ? "99+" : item.badge}
-                      </Badge>
-                    ) : null}
-                  </Link>
-                );
-              })}
+                        <span className="opacity-[var(--icon-opacity-inactive)]">
+                          {item.icon}
+                        </span>
+                        <span className="flex-1">{item.label}</span>
+                        {item.badge && item.badge > 0 ? (
+                          <Badge
+                            tone="success"
+                            className="min-w-[1.25rem] justify-center px-1.5 py-0 text-[10px] bg-[var(--success)] text-[var(--ink-inverse)] border-0"
+                          >
+                            {item.badge > 99 ? "99+" : item.badge}
+                          </Badge>
+                        ) : null}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -891,7 +997,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <VerificationBanner />
         <PasswordSetupBanner />
         <div className="flex-1">{children}</div>
-        <Footer />
+        {!isAdminPath(pathname) ? <Footer /> : null}
       </div>
     </div>
   );

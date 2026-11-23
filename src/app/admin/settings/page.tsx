@@ -1,108 +1,55 @@
-import Link from "next/link";
-import { AdminPage } from "@/components/layout";
-import { Card, PageHeader } from "@/components/ui/Card";
-import { Alert } from "@/components/ui/Alert";
+"use client";
 
-const CONTROLS = [
-  {
-    href: "/admin/dashboard",
-    title: "Dashboard",
-    desc: "Platform overview and pending work",
-  },
-  {
-    href: "/admin/products",
-    title: "Products",
-    desc: "Approve, reject, feature, edit, or delete listings",
-  },
-  {
-    href: "/admin/requests",
-    title: "Requests",
-    desc: "Manage spare part requests and statuses",
-  },
-  {
-    href: "/admin/users",
-    title: "Users",
-    desc: "Create accounts, change roles, block, reset passwords",
-  },
-  {
-    href: "/admin/device-management",
-    title: "Device management",
-    desc: "Device types, brands, models, and part categories",
-  },
-  {
-    href: "/admin/categories",
-    title: "Categories",
-    desc: "Part category catalog controls",
-  },
-  {
-    href: "/admin/support",
-    title: "Support inbox",
-    desc: "Reply to user support tickets",
-  },
-  {
-    href: "/admin/chat",
-    title: "Chat disputes",
-    desc: "Read user chats for dispute and policy review",
-  },
-  {
-    href: "/admin/broadcast",
-    title: "Broadcast messages",
-    desc: "Targeted in-app bulk messaging with audience review & history",
-  },
-  {
-    href: "/admin/ads",
-    title: "Ads Management",
-    desc: "Placements, campaigns, and sponsored promo performance",
-  },
-  {
-    href: "/admin/reports",
-    title: "Reports",
-    desc: "Unique visitors plus counts across users, products, chats, and support",
-  },
-  {
-    href: "/admin/site-settings",
-    title: "Site settings",
-    desc: "SMS provider (Renflair/Twilio/MSG91), credentials, and email OTP SMTP",
-  },
-  {
-    href: "/admin/updates",
-    title: "Site updates",
-    desc: "Publish dated updates and bug thanks for the user dashboard feed",
-  },
-];
+import { useEffect, useState } from "react";
+import { AdminPage } from "@/components/layout";
+import { PageHeader } from "@/components/ui/Card";
+import { Alert } from "@/components/ui/Alert";
+import { AdminNavDirectory } from "@/components/admin/AdminNav";
+import { authFetch, getCachedRole } from "@/lib/auth/clientAuth";
 
 export default function AdminSettingsPage() {
+  const [supportUnread, setSupportUnread] = useState(0);
+
+  useEffect(() => {
+    if (getCachedRole() && getCachedRole() !== "admin") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authFetch("/api/admin/support/unread-count");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && typeof data.unreadCount === "number") {
+          setSupportUnread(data.unreadCount);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <AdminPage>
       <PageHeader
-        title="Admin control center"
-        description="All platform controls in one place. Environment secrets stay in Vercel project settings."
+        title="All tools"
+        description="Full directory of admin pages, grouped by job. Sidebar and mobile More use the same map."
       />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
-        {CONTROLS.map((item) => (
-          <Link key={item.href} href={item.href} className="block">
-            <Card
-              hover
-              padding="md"
-              className="hover:border-[var(--brand-muted)]"
-            >
-              <p className="font-semibold text-[var(--ink)]">{item.title}</p>
-              <p className="text-sm text-[var(--muted)] mt-1">{item.desc}</p>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      <AdminNavDirectory supportUnread={supportUnread} />
 
-      <Alert tone="warning" title="Chat access policy">
-        Chat dispute tools are for conflict review and safety only. Prefer
-        support tickets for normal user issues, and only open private chats
-        when a dispute requires evidence. See the{" "}
-        <a href="/admin/disputes" className="underline font-semibold">
-          Dispute SOP
-        </a>
-        .
-      </Alert>
+      <div className="mt-10">
+        <Alert tone="warning" title="Chat access policy">
+          Chat dispute tools are for conflict review and safety only. Prefer
+          support tickets for normal user issues, and only open private chats
+          when a dispute requires evidence. See the{" "}
+          <a href="/admin/disputes" className="underline font-semibold">
+            Dispute SOP
+          </a>
+          .
+        </Alert>
+      </div>
     </AdminPage>
   );
 }

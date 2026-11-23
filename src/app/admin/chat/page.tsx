@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminPage } from "@/components/layout";
+import { AdminToolbar } from "@/components/admin/AdminToolbar";
 import { Card, Badge, PageHeader, Avatar } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -175,9 +176,9 @@ export default function AdminChatPage() {
     <AdminPage>
       <PageHeader
         title="Chat disputes"
-        description="Read-only access to user chats for dispute review. Delete only when content violates policy."
+        description="Read-only chats for conflict review. Delete only for policy violations."
         actions={
-          <div className="flex flex-wrap items-center gap-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               href="/admin/disputes"
               className="text-sm font-semibold text-[var(--brand)] hover:underline"
@@ -185,44 +186,47 @@ export default function AdminChatPage() {
               Dispute SOP
             </Link>
             <Badge tone="brand">
-              {stats.conversationCount} conversations
+              {stats.conversationCount} threads
             </Badge>
-            <Badge tone="neutral">{stats.messageCount} messages</Badge>
+            <Badge tone="neutral">{stats.messageCount} msgs</Badge>
           </div>
         }
       />
 
-      <form
-        className="flex gap-2 mb-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setSearch(q);
-        }}
-      >
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, email, user id, or conversation id"
-          className="flex-1"
-          size="sm"
-        />
-        <Button type="submit" size="sm">
-          Search
-        </Button>
-        {search && (
-          <Button
-            type="button"
-            variant="outline"
+      <AdminToolbar>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setSearch(q);
+          }}
+        >
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, email, user id, or conversation id…"
+            className="min-w-0 flex-1"
             size="sm"
-            onClick={() => {
-              setQ("");
-              setSearch("");
-            }}
-          >
-            Clear
+          />
+          <Button type="submit" size="sm" className="shrink-0">
+            Search
           </Button>
-        )}
-      </form>
+          {search ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => {
+                setQ("");
+                setSearch("");
+              }}
+            >
+              Clear
+            </Button>
+          ) : null}
+        </form>
+      </AdminToolbar>
 
       {error && (
         <Alert tone="danger" className="mb-4">

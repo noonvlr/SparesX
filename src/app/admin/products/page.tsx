@@ -14,6 +14,11 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Modal } from "@/components/ui/Modal";
 import { Table, THead, TBody, TR, TH, TD } from "@/components/ui/Table";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
+import {
+  AdminFilterRow,
+  AdminStatusChip,
+  AdminToolbar,
+} from "@/components/admin/AdminToolbar";
 
 const STATUS_TONE: Record<string, "warning" | "success" | "danger" | "neutral"> = {
   pending: "warning",
@@ -240,8 +245,8 @@ export default function AdminProductsPage() {
   return (
     <AdminPage>
       <PageHeader
-        title="Manage products"
-        description="Approve, edit, feature, or remove any listing"
+        title="Listings"
+        description="Approve, edit, feature, or remove products"
         actions={
           <Link
             href="/products"
@@ -252,61 +257,56 @@ export default function AdminProductsPage() {
         }
       />
 
-      <div className="flex flex-wrap gap-2 mb-4">
-        {(
-          [
-            ["all", "All"],
-            ["pending", "Pending"],
-            ["approved", "Approved"],
-            ["rejected", "Rejected"],
-          ] as const
-        ).map(([value, label]) => (
-          <Button
-            key={value}
-            type="button"
-            size="sm"
-            variant={status === value && !tagFilter ? "primary" : "outline"}
+      <AdminToolbar>
+        <AdminFilterRow>
+          {(
+            [
+              ["all", "All"],
+              ["pending", "Pending"],
+              ["approved", "Approved"],
+              ["rejected", "Rejected"],
+            ] as const
+          ).map(([value, label]) => (
+            <AdminStatusChip
+              key={value}
+              active={status === value && !tagFilter}
+              onClick={() => {
+                setTagFilter("");
+                setStatus(value);
+              }}
+            >
+              {label} ({statusCounts[value] ?? 0})
+            </AdminStatusChip>
+          ))}
+          <AdminStatusChip
+            active={tagFilter === "possible_duplicate"}
             onClick={() => {
-              setTagFilter("");
-              setStatus(value);
+              setTagFilter("possible_duplicate");
+              setStatus("all");
             }}
-            className="rounded-full"
           >
-            {label} ({statusCounts[value] ?? 0})
-          </Button>
-        ))}
-        <Button
-          type="button"
-          size="sm"
-          variant={tagFilter === "possible_duplicate" ? "primary" : "outline"}
-          onClick={() => {
-            setTagFilter("possible_duplicate");
-            setStatus("all");
+            Duplicates ({duplicateCount})
+          </AdminStatusChip>
+        </AdminFilterRow>
+        <form
+          className="flex gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            load(status, q);
           }}
-          className="rounded-full"
         >
-          Possible duplicates ({duplicateCount})
-        </Button>
-      </div>
-
-      <form
-        className="flex gap-2 mb-6"
-        onSubmit={(e) => {
-          e.preventDefault();
-          load(status, q);
-        }}
-      >
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search name, brand, model, part..."
-          className="flex-1"
-          size="sm"
-        />
-        <Button type="submit" size="sm">
-          Search
-        </Button>
-      </form>
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search name, brand, model, part…"
+            className="min-w-0 flex-1"
+            size="sm"
+          />
+          <Button type="submit" size="sm" className="shrink-0">
+            Search
+          </Button>
+        </form>
+      </AdminToolbar>
 
       {error && (
         <Alert tone="danger" className="mb-4">

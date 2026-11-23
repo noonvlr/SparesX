@@ -92,8 +92,8 @@ export default function AdminAdsOverviewPage() {
   return (
     <AdminPage>
       <PageHeader
-        title="Ads Management"
-        description="Manage placements, campaigns, and sponsored promo performance."
+        title="Ads"
+        description="Placements, campaigns, and promo performance"
       />
       <AdsSubnav />
 
