@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/Spinner";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/ui/cn";
 import { authFetch } from "@/lib/auth/clientAuth";
+import { formatCtrDisplay } from "@/lib/ads/ctr";
 import AdsSubnav from "./_components/AdsSubnav";
 
 type OverviewData = {
@@ -124,11 +125,20 @@ export default function AdminAdsOverviewPage() {
           </div>
 
           <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <StatCard label="Impressions" value={a!.impressions} />
-            <StatCard label="Clicks" value={a!.clicks} />
+            <StatCard
+              label="Impressions"
+              value={a!.impressions}
+              href="/admin/ads/analytics"
+            />
+            <StatCard
+              label="Clicks"
+              value={a!.clicks}
+              href="/admin/ads/analytics"
+            />
             <StatCard
               label="CTR"
-              value={a!.ctr === null ? "—" : `${a!.ctr.toFixed(2)}%`}
+              value={formatCtrDisplay(a!.impressions, a!.clicks)}
+              href="/admin/ads/analytics"
             />
           </div>
 
@@ -144,6 +154,12 @@ export default function AdminAdsOverviewPage() {
               className={cn(buttonVariants())}
             >
               View campaigns
+            </Link>
+            <Link
+              href="/admin/ads/analytics"
+              className={cn(buttonVariants({ variant: "secondary" }))}
+            >
+              Analytics
             </Link>
           </div>
         </>

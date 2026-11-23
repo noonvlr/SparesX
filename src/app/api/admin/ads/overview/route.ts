@@ -6,6 +6,7 @@ import { AdPlacement } from "@/lib/models/AdPlacement";
 import { AdDailyStat } from "@/lib/models/AdDailyStat";
 import { getEffectiveStatus } from "@/lib/ads/effectiveStatus";
 import { seedAdPlacements } from "@/lib/ads/seedPlacements";
+import { formatCtr } from "@/lib/ads/ctr";
 
 /**
  * GET — overview counts. Impression/CTR filled from AdDailyStat (zeros until traffic / Phase 7 UI).
@@ -62,10 +63,7 @@ export async function GET(req: NextRequest) {
 
     const impressions = statAgg[0]?.impressions ?? 0;
     const clicks = statAgg[0]?.clicks ?? 0;
-    const ctr =
-      impressions > 0
-        ? Math.round((clicks / impressions) * 10000) / 100
-        : null;
+    const ctr = formatCtr(impressions, clicks);
 
     return NextResponse.json({
       campaigns: counts,

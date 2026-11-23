@@ -8,6 +8,7 @@ const LINKS: Array<{ href: string; label: string; exact?: boolean }> = [
   { href: "/admin/ads", label: "Overview", exact: true },
   { href: "/admin/ads/campaigns", label: "Campaigns" },
   { href: "/admin/ads/placements", label: "Placements" },
+  { href: "/admin/ads/analytics", label: "Analytics" },
 ];
 
 export default function AdsSubnav() {

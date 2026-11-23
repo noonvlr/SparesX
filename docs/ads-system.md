@@ -1,6 +1,6 @@
 # SparesX — Advertisement Management System (AMS)
 
-Living doc. Updated as phases complete. **Status: Phase 5 complete — ready for Phase 6 (tracking).**
+Living doc. Updated as phases complete. **Status: Phases 0–8 complete.**
 
 ---
 
@@ -12,11 +12,11 @@ Living doc. Updated as phases complete. **Status: Phase 5 complete — ready for
 | 1 Models, indexes, seed, admin API skeleton, effective-status | **Done** | Models + helpers + seed + admin APIs + unit tests |
 | 2 Placement management UI + sidebar entry | **Done** | Overview, placements edit, campaigns list, nav |
 | 3 Upload + draft wizard + campaigns table | **Done** | Draft-first wizard, creatives upload, actions |
-| 4 Delivery, public API, PromoSlot, cache | **Done** | Eligibility cache, PromoSlot, click redirect stub |
+| 4 Delivery, public API, PromoSlot, cache | **Done** | Eligibility cache, PromoSlot, click redirect |
 | 5 Page integration + CLS/LCP | **Done** | PromoSlot on home/products/parts/PDP; AdSlot removed |
-| 6 Tracking (impressions, clicks, dedupe, rate limit, tokens) | Pending | |
-| 7 Analytics + Overview | Pending | |
-| 8 Security, tests, perf, docs | Pending | |
+| 6 Tracking (impressions, clicks, dedupe, rate limit, tokens) | **Done** | IO ≥50%/1s, beacon batch, click rollup, privacy |
+| 7 Analytics + Overview | **Done** | `/admin/ads/analytics` + Overview CTR from AdDailyStat |
+| 8 Security, tests, perf, docs | **Done** | Unit tests, demo seed, docs |
 
 ---
 
@@ -178,63 +178,60 @@ Extend `tsx --test` with pure modules: effective status, eligibility, weighted r
 
 Removed unused `AdSlot.tsx`. AdSense script unchanged. Empty slots collapse (no CLS from empty reserved boxes). Loading state briefly reserves aspect ratio.
 
-### Phase 6 — Tracking
+### Phase 6 — Tracking — DONE
 
-- `src/app/api/promos/events/route.ts` (batch beacon)
-- `src/app/api/promos/click/[campaignId]/route.ts` (302 + UTM)
-- Client observer in PromoSlot; skip admin sessions + preview
-- Privacy policy copy update
-- robots explicit `/api/promos`
+- `POST /api/promos/events` — batch `{token,eventType,device,sessionId}`; HMAC verify; Mongo rate limit
+- Click route records deduped click then 302 to Mongo destination + UTM
+- `recordPromoEvent` → unique `AdEvent.dedupeKey` then `$inc` `AdDailyStat` (bots stored but not counted)
+- PromoSlot: IntersectionObserver ≥50% for ≥1s once per mount; skip preview + admin sessions
+- sessionId in `sessionStorage`; device from same 768px breakpoint as `<picture>`
+- Privacy policy §7 mentions first-party anonymous promo measurement
 
-### Phase 7 — Analytics
+### Phase 7 — Analytics — DONE
 
-- Aggregate from `AdDailyStat` only
-- `/admin/ads/analytics` + Overview cards
-- SVG chart; CTR “—” when impressions = 0
+- `GET /api/admin/ads/analytics` from `AdDailyStat` only (IST day range, campaign/placement/device filters)
+- `/admin/ads/analytics` — totals, SVG daily chart, device split, campaign/placement tables
+- Overview cards link to analytics; CTR via `formatCtr` / `—` when impressions = 0
 
-### Phase 8 — Hardening
+### Phase 8 — Hardening — DONE
 
-- Unit tests, demo seed, security pass, build/lint/typecheck, docs finalize
-
----
-
-## Risks
-
-1. **ISR + ads:** Mitigated by client pick + date re-check (D5).
-2. **Ad blockers:** D11 naming; still may block some patterns — acceptable.
-3. **Sidebar width vs creative:** Resolved by 300×600 proposal.
-4. **AdSense coexistence:** Two systems on page; ensure PromoSlot does not use `ad` class names that AdSense/blockers target aggressively.
-5. **Blob orphans:** Duplicate must copy blobs; replace/delete must `del()`.
-6. **CSRF:** Admin mutations must go through cookie+CSRF path already in `requireAdmin`.
-
-## Decisions (from Phase 0 approval)
-
-1. **Sidebar dimensions:** **Approved — 300×600** (2×: 600×1200). Mobile N/A.
-2. **`parts_listing` scope:** **`/products` + parts leaf only** (`/parts/[category]/[brand]/[model]`). Skip category/brand hubs (link lists, low inventory intent). Can add hubs later via placement edit / new key without schema change.
-3. **House fallback default:** **`sidebar_ad` → `fallbackToHouseAds: true`**; all other placements → `false`. Banner slots collapse cleanly when empty; sticky sidebar benefits from a house promo so the filter column doesn’t feel barren. Admin can flip any placement later.
-4. **Overview in Phase 2:** **Ship the `/admin/ads` route + nav in Phase 2** with campaign/placement counts and status chips from Mongo (no impression/CTR yet). Phase 7 fills impression/click/CTR cards and charts. Avoids a dead nav link and matches deep-linkable sub-routes.
-5. **`AdSlot`:** **Replace call sites with `PromoSlot` in Phase 5**; **delete `AdSlot.tsx`** once unused. Keep `AdSenseScript` + `ads.txt` untouched. Do not gate PromoSlot on `NEXT_PUBLIC_ADS_ENABLED` (that flag was for the placeholder).
-
-**Status:** Decisions recorded — **awaiting “go” / Phase 1 approval.**
+- Tests: effective status, IST/dimensions/URL, rotation, token, dedupe/CTR
+- `npm run seed:ads-demo` (aborts in production) — 10 imp / 2 clicks → 20.00% CTR
+- Env: `PROMO_HMAC_SECRET` (fallback `JWT_SECRET`)
+- Build + typecheck required green before ship
 
 ---
 
-## Acceptance criteria map
+## Final architecture summary
 
-| # | Covered by |
-|---|------------|
-| 1 E2E publish | Phases 3–5 |
-| 2 Upload rejections | Phase 3 + tests |
-| 3 Desktop/mobile picture | Phases 4–5 |
-| 4 Pause/expire/cache | Phases 4–6 |
-| 5 Impression rules | Phase 6 |
-| 6 Click + anti-tamper | Phase 6 |
-| 7 CTR seed math | Phases 7–8 |
-| 8 CLS/LCP | Phases 5, 8 |
-| 9 Regression build | Phase 8 |
+**Models:** `AdPlacement`, `AdCampaign` (+ `placementKeys`, creatives), `AdDailyStat`, `AdEvent` (TTL 30d)
 
----
+**Admin:** `/admin/ads`, `/campaigns`, `/campaigns/new`, `/campaigns/[id]`, `/placements`, `/analytics`  
+**Admin APIs:** `/api/admin/ads/*` (all `requireAdmin` + CSRF)
 
-## Deviations from §2 (none pending)
+**Public:** `/api/promos/placement/[key]`, `/api/promos/events`, `/api/promos/click/[campaignId]`  
+**UI:** `<PromoSlot placement="…" />` — client rotation, collapse when empty
 
-Only proposed placement size change for `sidebar_ad` (see open question 1). No new dependencies planned. No new infra providers.
+**Env:** `PROMO_HMAC_SECRET`, `BLOB_READ_WRITE_TOKEN`
+
+## Risks (mitigated)
+
+1. ISR freeze → client pick + date re-check + 60s cache tags  
+2. Ad blockers → `promo` public naming (D11)  
+3. Sidebar fit → 300×600  
+4. Blob orphans → copy on duplicate; delete on replace/remove  
+5. Open redirects → destination from DB + validator at save and click  
+
+## Decisions (locked)
+
+1. Sidebar **300×600**  
+2. `parts_listing` on `/products` + parts leaf only  
+3. House fallback default on `sidebar_ad` only  
+4. Overview shipped early; analytics filled in Phase 7  
+5. `AdSlot` removed; AdSense unchanged  
+
+## Deviations from §2
+
+- `sidebar_ad` desktop **300×600** (not 600×900) to fit `lg:w-72`  
+- No new dependencies; SVG chart instead of a chart library  
+- Click also accepts `s` (session) + `d` (device) query params for server-side click rollup (not destination)

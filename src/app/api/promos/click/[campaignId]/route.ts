@@ -7,13 +7,17 @@ import {
   appendSponsoredUtm,
   validateDestinationUrl,
 } from "@/lib/ads/destinationUrl";
-import { checkRateLimitAsync, clientIpFromRequest } from "@/lib/security/authRateLimit";
+import { recordPromoEvent } from "@/lib/ads/tracking";
+import {
+  checkRateLimitAsync,
+  clientIpFromRequest,
+} from "@/lib/security/authRateLimit";
 
 type Ctx = { params: Promise<{ campaignId: string }> };
 
 /**
- * Click redirect (tracking rollup lands in Phase 6).
- * Destination always loaded from MongoDB — never from the query string.
+ * Click redirect + deduped click count.
+ * Destination always from MongoDB — never from the query string.
  */
 export async function GET(req: NextRequest, ctx: Ctx) {
   try {
@@ -21,6 +25,12 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     const { searchParams } = new URL(req.url);
     const placementKey = String(searchParams.get("p") || "").trim();
     const token = String(searchParams.get("t") || "").trim();
+    const sessionId = String(searchParams.get("s") || "").trim();
+    const deviceRaw = String(searchParams.get("d") || "").trim();
+    const device =
+      deviceRaw === "mobile" || deviceRaw === "desktop"
+        ? deviceRaw
+        : "desktop";
 
     if (
       !mongoose.Types.ObjectId.isValid(campaignId) ||
@@ -33,7 +43,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     const ip = clientIpFromRequest(req);
     const rate = await checkRateLimitAsync({
       key: `promo-click:${ip}`,
-      limit: 60,
+      limit: 30,
       windowMs: 60_000,
     });
     if (!rate.ok) {
@@ -59,6 +69,21 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     const checked = validateDestinationUrl(campaign.destinationUrl);
     if (!checked.ok) {
       return NextResponse.json({ message: "Not found" }, { status: 404 });
+    }
+
+    if (sessionId) {
+      try {
+        await recordPromoEvent({
+          campaignId,
+          placementKey,
+          eventType: "click",
+          device,
+          sessionId,
+          userAgent: req.headers.get("user-agent"),
+        });
+      } catch (err) {
+        console.warn("[promos/click] record failed", err);
+      }
     }
 
     const slug = String(campaign.name || "campaign")

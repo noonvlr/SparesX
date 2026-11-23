@@ -115,6 +115,15 @@ export default function PrivacyPolicyPage() {
           traffic, and improve Platform performance. You may control cookie
           settings through your browser.
         </p>
+        <p className="mt-2">
+          We also measure first-party sponsored promo performance on SparesX
+          (impressions and clicks) using an anonymous session identifier stored
+          in your browser&apos;s session storage. This measurement does not use
+          cross-site tracking, device fingerprinting, or IP addresses for ad
+          analytics. Raw event records are retained for a limited period for
+          deduplication and debugging; aggregated daily counts may be kept longer
+          for reporting.
+        </p>
       </section>
 
       <section>
