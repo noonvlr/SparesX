@@ -6,18 +6,18 @@ type SparesXAiMarkProps = {
   /** Decorative when nested inside a labeled control */
   decorative?: boolean;
   /**
-   * `branded` — chip in currentColor, trace/spark in brand teal.
+   * `branded` — chip in currentColor, spark in brand teal.
    * `mono` — entire mark uses currentColor.
    */
   tone?: "branded" | "mono";
 };
 
 /**
- * SparesX Spark Node — official AI / Assist mark.
+ * SparesX AI mark — chip + spark.
  *
- * Silhouette = SparesX microchip (open top-right + left pins).
- * Meaning = circuit energy becoming an intelligence spark at the open corner.
- * Drawn for 16–20px: square chip body first, then one L-trace + one spark.
+ * Chip (open top-right + left pins) = SparesX parts DNA.
+ * Bold spark in the open corner = Assist / generated intelligence.
+ * Two shapes only at tiny sizes: square chip + star. No fine traces.
  */
 export function SparesXAiMark({
   className,
@@ -39,61 +39,54 @@ export function SparesXAiMark({
     >
       {!decorative ? <title>{title}</title> : null}
 
-      {/* Soft chip body — makes the square read instantly at tiny sizes */}
+      {/* Soft chip body */}
       <rect
-        x="5"
-        y="5"
+        x="3.5"
+        y="5.5"
         width="13"
         height="13"
         rx="3"
         fill="currentColor"
-        opacity="0.08"
+        opacity="0.14"
       />
 
-      {/* Incomplete chip outline — gap only at top-right */}
+      {/* Incomplete chip frame — open top-right */}
       <path
-        d="M16.5 5
-           H8
-           C6.35 5 5 6.35 5 8
+        d="M14.75 5.5
+           H7
+           C5.34 5.5 4 6.84 4 8.5
            V15
-           C5 16.65 6.35 18 8 18
-           H15
-           C16.65 18 18 16.65 18 15
+           C4 16.66 5.34 18 7 18
+           H13.5
+           C15.16 18 16.5 16.66 16.5 15
            V10.25"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="2.35"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* Left pins — signature SparesX detail */}
+      {/* Left pins */}
       <path
-        d="M5 9 H3 M5 11.5 H3 M5 14 H3"
+        d="M4 9.25 H1.6 M4 12 H1.6 M4 14.75 H1.6"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="2.35"
         strokeLinecap="round"
       />
 
-      {/* One L-trace toward the open corner */}
-      <path
-        d="M8.5 14.5 H12 V9"
-        stroke={accent}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <circle cx="12" cy="9" r="1.5" fill={accent} />
+      {/* Center node — quiet “alive” cue */}
+      <circle cx="10.25" cy="12.25" r="2.35" fill={accent} />
 
-      {/* Intelligence spark in the open corner */}
+      {/* Intelligence spark — dominant AI cue in the open corner */}
       <path
-        d="M19 2.1
-           L19.7 4.7
-           L22.4 5.4
-           L19.7 6.1
-           L19 8.7
-           L18.3 6.1
-           L15.6 5.4
-           L18.3 4.7
+        d="M19.25 1.1
+           L20.25 4.2
+           L23.35 5.2
+           L20.25 6.2
+           L19.25 9.3
+           L18.25 6.2
+           L15.15 5.2
+           L18.25 4.2
            Z"
         fill={accent}
       />

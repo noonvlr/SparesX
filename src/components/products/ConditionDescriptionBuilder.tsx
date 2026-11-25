@@ -400,7 +400,7 @@ export default function ConditionDescriptionBuilder({
           </p>
           <span
             className={cn(
-              "desc-gen-btn-wrap",
+              "desc-gen-btn-wrap w-full sm:w-auto",
               generating && "is-busy",
               (!generated || warnings.length > 0) &&
                 !generating &&
@@ -414,16 +414,26 @@ export default function ConditionDescriptionBuilder({
               onClick={() => void regenerate()}
               disabled={!generated || warnings.length > 0 || generating}
               loading={generating}
-              className="gap-1.5 border-0 shadow-none"
+              aria-label={generateLabel}
+              className="h-11 min-h-11 w-full gap-2 border-0 shadow-none sm:h-9 sm:min-h-[36px] sm:w-auto"
             >
               {!generating ? (
                 <SparesXAiMark
                   decorative
                   tone="branded"
-                  className="h-[1.35rem] w-[1.35rem] text-[var(--ink)]"
+                  className="h-5 w-5 text-[var(--ink)]"
                 />
               ) : null}
-              {generateLabel}
+              <span className="sm:hidden" aria-hidden="true">
+                {generating
+                  ? "Writing…"
+                  : hasDescription
+                    ? "Regenerate"
+                    : "Generate"}
+              </span>
+              <span className="hidden sm:inline" aria-hidden="true">
+                {generateLabel}
+              </span>
             </Button>
           </span>
         </div>

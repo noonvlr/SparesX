@@ -749,7 +749,9 @@
 
 .desc-gen-btn-wrap {
   position: relative;
-  display: inline-flex;
+  display: flex;
+  width: 100%;
+  max-width: 100%;
   border-radius: var(--radius);
   padding: 1px;
   background: linear-gradient(
@@ -762,6 +764,15 @@
   animation:
     desc-gen-btn-edge 2.8s linear infinite,
     desc-gen-btn-glow 2.4s ease-in-out infinite;
+  /* Keep glow from causing horizontal scroll on small screens */
+  contain: paint;
+}
+
+@media (min-width: 640px) {
+  .desc-gen-btn-wrap {
+    display: inline-flex;
+    width: auto;
+  }
 }
 
 .desc-gen-btn-wrap.is-busy {
@@ -773,6 +784,7 @@
 .desc-gen-btn-wrap > button {
   position: relative;
   z-index: 1;
+  flex: 1 1 auto;
 }
 
 .desc-gen-orb {
