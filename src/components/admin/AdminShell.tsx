@@ -83,6 +83,14 @@ export default function AdminShell({
     setMobileOpen(false);
   }, [pathname]);
 
+  // Reset main scroll when navigating between admin sections
+  useEffect(() => {
+    const main = document.querySelector(".admin-main");
+    if (main instanceof HTMLElement) {
+      main.scrollTop = 0;
+    }
+  }, [pathname]);
+
   useEffect(() => {
     if (!mobileOpen) return;
     const prev = document.body.style.overflow;
@@ -97,35 +105,51 @@ export default function AdminShell({
     };
   }, [mobileOpen]);
 
+  // Load admin profile once; refresh support unread on focus / interval
   useEffect(() => {
     if (getCachedRole() && getCachedRole() !== "admin") return;
     let cancelled = false;
-    (async () => {
+
+    const loadMe = async () => {
       try {
-        const [meRes, unreadRes] = await Promise.all([
-          authFetch("/api/auth/me"),
-          authFetch("/api/admin/support/unread-count"),
-        ]);
-        if (cancelled) return;
-        if (meRes.ok) {
-          const data = await meRes.json();
-          if (data?.user?.name) setUserName(data.user.name);
-          setProfilePicture(data?.user?.profilePicture || null);
-        }
-        if (unreadRes.ok) {
-          const data = await unreadRes.json();
-          if (typeof data.unreadCount === "number") {
-            setSupportUnread(data.unreadCount);
-          }
+        const meRes = await authFetch("/api/auth/me");
+        if (cancelled || !meRes.ok) return;
+        const data = await meRes.json();
+        if (data?.user?.name) setUserName(data.user.name);
+        setProfilePicture(data?.user?.profilePicture || null);
+      } catch {
+        // ignore
+      }
+    };
+
+    const loadUnread = async () => {
+      try {
+        const unreadRes = await authFetch("/api/admin/support/unread-count");
+        if (cancelled || !unreadRes.ok) return;
+        const data = await unreadRes.json();
+        if (typeof data.unreadCount === "number") {
+          setSupportUnread(data.unreadCount);
         }
       } catch {
         // ignore
       }
-    })();
+    };
+
+    void loadMe();
+    void loadUnread();
+
+    const onFocus = () => {
+      void loadUnread();
+    };
+    window.addEventListener("focus", onFocus);
+    const interval = window.setInterval(loadUnread, 60_000);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      window.clearInterval(interval);
     };
-  }, [pathname]);
+  }, []);
 
   const onLogout = async () => {
     try {

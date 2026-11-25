@@ -16,6 +16,7 @@ export type CreateListingInput = {
   condition: ProductCondition;
   images?: string[];
   priceNegotiable?: boolean;
+  conditionAttributes?: unknown;
 };
 
 export type CreateListingResult = {
@@ -107,6 +108,23 @@ export async function createTechnicianListing(params: {
     partType: input.partType,
   });
 
+  let conditionAttributes: Record<string, unknown> | null = null;
+  if (input.conditionAttributes != null) {
+    const { validateConditionAttributes } = await import(
+      "@/lib/products/condition-desc"
+    );
+    const validated = validateConditionAttributes(input.conditionAttributes, {
+      strictConflicts: true,
+    });
+    if (!validated.ok) {
+      throw Object.assign(
+        new Error(validated.errors[0] || "Invalid condition attributes"),
+        { status: 400, code: "INVALID_CONDITION_ATTRIBUTES", details: validated.errors },
+      );
+    }
+    conditionAttributes = validated.value as Record<string, unknown> | null;
+  }
+
   // Soft duplicate signal for moderation (same seller + brand/model/part/price, 7d)
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const possibleDuplicate = Boolean(
@@ -145,6 +163,7 @@ export async function createTechnicianListing(params: {
     slug,
     status,
     tags,
+    conditionAttributes: conditionAttributes || null,
     deviceTypeId: catalogRefs.deviceTypeId || null,
     brandId: catalogRefs.brandId || null,
     partCategoryId: catalogRefs.partCategoryId || null,

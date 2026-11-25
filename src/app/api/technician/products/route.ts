@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       condition,
       images,
       priceNegotiable,
+      conditionAttributes,
     } = body;
 
     const { checkRateLimitAsync, clientIpFromRequest } = await import(
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
         condition,
         images,
         priceNegotiable,
+        conditionAttributes,
       },
     });
 
@@ -93,8 +95,13 @@ export async function POST(req: NextRequest) {
     }
     const message =
       err instanceof Error ? err.message : "Failed to create listing";
+    const details = (err as { details?: string[] })?.details;
     return NextResponse.json(
-      { message, ...(code ? { code } : {}) },
+      {
+        message,
+        ...(code ? { code } : {}),
+        ...(details ? { details } : {}),
+      },
       { status },
     );
   }

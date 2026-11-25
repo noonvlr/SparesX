@@ -140,16 +140,22 @@ export function ProductSearchBar({
   const isFirstRender = useRef(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [searchInput, setSearchInput] = useState(
-    searchParams.get("search") || "",
-  );
-  const [search, setSearch] = useState(searchParams.get("search") || "");
+  const urlSearch = searchParams.get("search") || "";
+  const [searchInput, setSearchInput] = useState(urlSearch);
+  const [search, setSearch] = useState(urlSearch);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
 
   useEffect(() => {
     setRecentSearches(loadRecentSearches());
   }, []);
+
+  // Keep input in sync when browser Back/Forward changes the URL
+  useEffect(() => {
+    setSearchInput(urlSearch);
+    setSearch(urlSearch);
+  }, [urlSearch]);
 
   // Debounce so typing doesn't spam navigation
   useEffect(() => {
@@ -173,7 +179,7 @@ export function ProductSearchBar({
     if (next !== current) {
       router.push(next ? `/products?${next}` : "/products");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: push only when debounced search changes
   }, [search]);
 
   useEffect(() => {
@@ -219,7 +225,19 @@ export function ProductSearchBar({
     setRecentSearches([]);
   };
 
-  const hasDropdownContent = suggestions.length > 0 || matchingRecent.length > 0;
+  const flatOptions = useMemo(() => {
+    const recent = matchingRecent.map((term) => ({
+      kind: "recent" as const,
+      value: term,
+    }));
+    const products = suggestions.map((name) => ({
+      kind: "product" as const,
+      value: name,
+    }));
+    return [...recent, ...products];
+  }, [matchingRecent, suggestions]);
+
+  const hasDropdownContent = flatOptions.length > 0;
 
   return (
     <div
@@ -232,13 +250,46 @@ export function ProductSearchBar({
           <Input
             type="search"
             inputMode="search"
+            role="combobox"
+            aria-expanded={showSuggestions && hasDropdownContent}
+            aria-autocomplete="list"
+            aria-controls="product-search-listbox"
             placeholder="Search by name, brand, or model…"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => {
+              setSearchInput(e.target.value);
+              setHighlightIndex(-1);
+            }}
             onFocus={() => setShowSuggestions(true)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") commitSearch(searchInput);
-              if (e.key === "Escape") setShowSuggestions(false);
+              if (e.key === "ArrowDown" && flatOptions.length) {
+                e.preventDefault();
+                setShowSuggestions(true);
+                setHighlightIndex((i) =>
+                  i < flatOptions.length - 1 ? i + 1 : 0,
+                );
+                return;
+              }
+              if (e.key === "ArrowUp" && flatOptions.length) {
+                e.preventDefault();
+                setHighlightIndex((i) =>
+                  i > 0 ? i - 1 : flatOptions.length - 1,
+                );
+                return;
+              }
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (highlightIndex >= 0 && flatOptions[highlightIndex]) {
+                  commitSearch(flatOptions[highlightIndex].value);
+                } else {
+                  commitSearch(searchInput);
+                }
+                return;
+              }
+              if (e.key === "Escape") {
+                setShowSuggestions(false);
+                setHighlightIndex(-1);
+              }
             }}
             className="h-auto rounded-[var(--radius-lg)] border-[var(--border)] bg-[var(--surface)] py-3 pl-12 pr-10 shadow-[var(--shadow-md)]"
           />
@@ -257,7 +308,11 @@ export function ProductSearchBar({
         </div>
 
         {showSuggestions && hasDropdownContent ? (
-          <div className="glass absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]">
+          <div
+            id="product-search-listbox"
+            role="listbox"
+            className="glass absolute inset-x-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]"
+          >
             {matchingRecent.length > 0 ? (
               <div className="px-2 pt-2.5">
                 <div className="flex items-center justify-between px-2 pb-1.5">
@@ -272,17 +327,29 @@ export function ProductSearchBar({
                     Clear
                   </button>
                 </div>
-                {matchingRecent.map((term) => (
-                  <button
-                    key={`recent-${term}`}
-                    type="button"
-                    onClick={() => commitSearch(term)}
-                    className="flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2.5 py-2 text-left text-sm text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand-hover)] transition-colors"
-                  >
-                    <IconClock className="h-4 w-4 shrink-0 text-[var(--muted)]" />
-                    <span className="truncate">{term}</span>
-                  </button>
-                ))}
+                {matchingRecent.map((term) => {
+                  const idx = flatOptions.findIndex(
+                    (o) => o.kind === "recent" && o.value === term,
+                  );
+                  const active = idx === highlightIndex;
+                  return (
+                    <button
+                      key={`recent-${term}`}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => commitSearch(term)}
+                      className={`flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2.5 py-2 text-left text-sm transition-colors ${
+                        active
+                          ? "bg-[var(--brand-soft)] text-[var(--brand-hover)]"
+                          : "text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand-hover)]"
+                      }`}
+                    >
+                      <IconClock className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+                      <span className="truncate">{term}</span>
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
 
@@ -291,17 +358,29 @@ export function ProductSearchBar({
                 <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                   Products
                 </p>
-                {suggestions.map((name) => (
-                  <button
-                    key={`suggestion-${name}`}
-                    type="button"
-                    onClick={() => commitSearch(name)}
-                    className="flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2.5 py-2 text-left text-sm text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand-hover)] transition-colors"
-                  >
-                    <IconSearch className="h-4 w-4 shrink-0 text-[var(--muted)]" />
-                    <span className="truncate">{name}</span>
-                  </button>
-                ))}
+                {suggestions.map((name) => {
+                  const idx = flatOptions.findIndex(
+                    (o) => o.kind === "product" && o.value === name,
+                  );
+                  const active = idx === highlightIndex;
+                  return (
+                    <button
+                      key={`suggestion-${name}`}
+                      type="button"
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => commitSearch(name)}
+                      className={`flex w-full items-center gap-2.5 rounded-[var(--radius)] px-2.5 py-2 text-left text-sm transition-colors ${
+                        active
+                          ? "bg-[var(--brand-soft)] text-[var(--brand-hover)]"
+                          : "text-[var(--ink-secondary)] hover:bg-[var(--brand-soft)] hover:text-[var(--brand-hover)]"
+                      }`}
+                    >
+                      <IconSearch className="h-4 w-4 shrink-0 text-[var(--muted)]" />
+                      <span className="truncate">{name}</span>
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
           </div>
@@ -346,6 +425,7 @@ export default function ProductFilters() {
     min: searchParams.get("minPrice") || "",
     max: searchParams.get("maxPrice") || "",
   });
+  const [debouncedPrice, setDebouncedPrice] = useState(priceRange);
   const [selectedCity, setSelectedCity] = useState(
     searchParams.get("city") || "",
   );
@@ -364,12 +444,52 @@ export default function ProductFilters() {
   );
   const [savingSearch, setSavingSearch] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
+  const syncingFromUrl = useRef(false);
+  const lastPushedUrl = useRef<string | null>(null);
 
-  // Keep sort in sync when changed from the results toolbar
-  const urlSort = searchParams.get("sort") || "featured";
+  // Debounce price so each digit does not navigate
   useEffect(() => {
-    setSelectedSort((prev) => (prev === urlSort ? prev : urlSort));
-  }, [urlSort]);
+    const timer = setTimeout(() => setDebouncedPrice(priceRange), 400);
+    return () => clearTimeout(timer);
+  }, [priceRange]);
+
+  // Sync filter fields when URL changes from Back/Forward (not our own pushes)
+  const urlKey = searchParams.toString();
+  useEffect(() => {
+    if (lastPushedUrl.current === urlKey) return;
+
+    syncingFromUrl.current = true;
+    setSelectedDeviceCategory(
+      searchParams.get("deviceCategory") || searchParams.get("category") || "",
+    );
+    setSelectedBrand(searchParams.get("brand") || "");
+    setSelectedModel(
+      searchParams.get("deviceModel") || searchParams.get("model") || "",
+    );
+    setSelectedPartType(searchParams.get("partType") || "");
+    setSelectedCondition(searchParams.get("condition") || "");
+    const nextPrice = {
+      min: searchParams.get("minPrice") || "",
+      max: searchParams.get("maxPrice") || "",
+    };
+    setPriceRange(nextPrice);
+    setDebouncedPrice(nextPrice);
+    setSelectedCity(searchParams.get("city") || "");
+    setIncludeNearby(
+      searchParams.get("nearby") === "1" ||
+        searchParams.get("nearby") === "true",
+    );
+    setSelectedSellerType(searchParams.get("sellerType") || "");
+    setSelectedSort(searchParams.get("sort") || "featured");
+    setNegotiableOnly(
+      searchParams.get("negotiable") === "1" ||
+        searchParams.get("negotiable") === "true",
+    );
+    queueMicrotask(() => {
+      syncingFromUrl.current = false;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlKey]);
 
   // Load device types + conditions + cities on mount
   useEffect(() => {
@@ -509,6 +629,7 @@ export default function ProductFilters() {
       isFirstRender.current = false;
       return;
     }
+    if (syncingFromUrl.current) return;
 
     const searchValue = searchParams.get("search");
     const limitValue = searchParams.get("limit");
@@ -521,8 +642,8 @@ export default function ProductFilters() {
     if (selectedModel) params.set("deviceModel", selectedModel);
     if (selectedPartType) params.set("partType", selectedPartType);
     if (selectedCondition) params.set("condition", selectedCondition);
-    if (priceRange.min) params.set("minPrice", priceRange.min);
-    if (priceRange.max) params.set("maxPrice", priceRange.max);
+    if (debouncedPrice.min) params.set("minPrice", debouncedPrice.min);
+    if (debouncedPrice.max) params.set("maxPrice", debouncedPrice.max);
     if (selectedCity) params.set("city", selectedCity);
     if (selectedCity && includeNearby) params.set("nearby", "1");
     if (selectedSellerType) params.set("sellerType", selectedSellerType);
@@ -535,6 +656,7 @@ export default function ProductFilters() {
     const next = params.toString();
     const current = searchParams.toString();
     if (next !== current) {
+      lastPushedUrl.current = next;
       router.push(next ? `/products?${next}` : "/products");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -544,7 +666,7 @@ export default function ProductFilters() {
     selectedModel,
     selectedPartType,
     selectedCondition,
-    priceRange,
+    debouncedPrice,
     selectedCity,
     includeNearby,
     selectedSellerType,
@@ -656,7 +778,9 @@ export default function ProductFilters() {
     setSelectedBrandSlug(match?.slug || "");
   };
 
-  const FilterFields = () => (
+  // Render as a function (not a nested component) so React does not remount
+  // inputs on every keystroke and steal focus from price fields.
+  const renderFilterFields = (radioScope: string) => (
     <div className="space-y-5">
       <div>
         <label className={fieldLabelClasses}>Device type</label>
@@ -724,7 +848,7 @@ export default function ProductFilters() {
             <label className="flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors">
               <input
                 type="radio"
-                name="partType"
+                name={`partType-${radioScope}`}
                 value=""
                 checked={selectedPartType === ""}
                 onChange={(e) => setSelectedPartType(e.target.value)}
@@ -740,7 +864,7 @@ export default function ProductFilters() {
             >
               <input
                 type="radio"
-                name="partType"
+                name={`partType-${radioScope}`}
                 value={partType.value}
                 checked={selectedPartType === partType.value}
                 onChange={(e) => setSelectedPartType(e.target.value)}
@@ -761,7 +885,7 @@ export default function ProductFilters() {
           <label className="flex items-center gap-2.5 p-1.5 rounded-[var(--radius)] hover:bg-[var(--brand-soft)] cursor-pointer transition-colors">
             <input
               type="radio"
-              name="condition"
+              name={`condition-${radioScope}`}
               value=""
               checked={selectedCondition === ""}
               onChange={(e) => setSelectedCondition(e.target.value)}
@@ -776,7 +900,7 @@ export default function ProductFilters() {
             >
               <input
                 type="radio"
-                name="condition"
+                name={`condition-${radioScope}`}
                 value={condition.value}
                 checked={selectedCondition === condition.value}
                 onChange={(e) => setSelectedCondition(e.target.value)}
@@ -920,7 +1044,7 @@ export default function ProductFilters() {
             <IconFilter className="h-4 w-4 text-[var(--brand)]" />
             Refine search
           </h2>
-          <FilterFields />
+          {renderFilterFields("desktop")}
         </div>
         <PromoSlot placement="sidebar_ad" />
       </div>
@@ -942,7 +1066,7 @@ export default function ProductFilters() {
 
       {/* Mobile filter sheet */}
       <Modal open={isOpen} onClose={() => setIsOpen(false)} title="Refine search">
-        <FilterFields />
+        {renderFilterFields("mobile")}
         <div className="pt-5 mt-5 border-t border-[var(--border)]">
           <Button type="button" className="w-full" onClick={() => setIsOpen(false)}>
             Show results

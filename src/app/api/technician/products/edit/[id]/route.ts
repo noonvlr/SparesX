@@ -15,12 +15,33 @@ export async function PUT(
     return NextResponse.json({ message: "Forbidden" }, { status: 403 });
   }
   const { id } = await params;
-  const { name, description, price, category, condition, images } =
-    await req.json();
+  const body = await req.json();
+  const { name, description, price, category, condition, images, conditionAttributes } =
+    body;
   await connectDB();
   const product = await Product.findOne({ _id: id, technician: auth.id });
   if (!product) {
     return NextResponse.json({ message: "Product not found" }, { status: 404 });
+  }
+
+  if (conditionAttributes !== undefined) {
+    const { validateConditionAttributes } = await import(
+      "@/lib/products/condition-desc"
+    );
+    const validated = validateConditionAttributes(conditionAttributes, {
+      strictConflicts: true,
+    });
+    if (!validated.ok) {
+      return NextResponse.json(
+        {
+          message: validated.errors[0] || "Invalid condition attributes",
+          code: "INVALID_CONDITION_ATTRIBUTES",
+          details: validated.errors,
+        },
+        { status: 400 },
+      );
+    }
+    product.conditionAttributes = validated.value;
   }
 
   const prev = {

@@ -328,47 +328,51 @@ export default function RequestForm({
     setMessage(null);
     setError(null);
 
-    const res = await authFetch("/api/requests", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        category: form.partTypeLabel || form.partType,
-        deviceCategory: form.deviceCategory,
-        brand: form.brand,
-        deviceModel: form.deviceModel,
-        description: form.description,
-        expireAfterDays: form.expireAfterDays,
-      }),
-    });
+    try {
+      const res = await authFetch("/api/requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          category: form.partTypeLabel || form.partType,
+          deviceCategory: form.deviceCategory,
+          brand: form.brand,
+          deviceModel: form.deviceModel,
+          description: form.description,
+          expireAfterDays: form.expireAfterDays,
+        }),
+      });
 
-    if (res.ok) {
-      setMessage("Request submitted. Sellers will reach out if they can help.");
-      setForm((f) => ({
-        ...f,
-        deviceCategory: "",
-        brand: "",
-        brandSlug: "",
-        deviceModel: "",
-        partType: "",
-        partTypeLabel: "",
-        description: "",
-        expireAfterDays: DEFAULT_REQUEST_EXPIRE_DAYS,
-      }));
-      setBrandSearch("");
-      setModelSearch("");
-      setPartTypeSearch("");
-      onSubmitted?.();
-    } else {
-      const data = await res.json();
-      setError(data.message || "Failed to submit request.");
+      if (res.ok) {
+        setMessage("Request submitted. Sellers will reach out if they can help.");
+        setForm((f) => ({
+          ...f,
+          deviceCategory: "",
+          brand: "",
+          brandSlug: "",
+          deviceModel: "",
+          partType: "",
+          partTypeLabel: "",
+          description: "",
+          expireAfterDays: DEFAULT_REQUEST_EXPIRE_DAYS,
+        }));
+        setBrandSearch("");
+        setModelSearch("");
+        setPartTypeSearch("");
+        onSubmitted?.();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Failed to submit request.");
+      }
+    } catch {
+      setError("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   if (authChecking || (isAuthenticated && dataLoading)) {
@@ -626,8 +630,23 @@ export default function RequestForm({
                   placeholder="Search part type (e.g., Screen, Battery)..."
                   value={partTypeSearch}
                   onChange={(e) => {
-                    setPartTypeSearch(e.target.value);
+                    const value = e.target.value;
+                    setPartTypeSearch(value);
                     setShowPartTypeDropdown(true);
+                    setForm((f) => {
+                      if (!f.partType) return f;
+                      const selectedLabel =
+                        f.partTypeLabel ||
+                        partTypes.find((p) => p.value === f.partType)?.label ||
+                        f.partType;
+                      if (
+                        value.trim().toLowerCase() ===
+                        selectedLabel.toLowerCase()
+                      ) {
+                        return f;
+                      }
+                      return { ...f, partType: "", partTypeLabel: "" };
+                    });
                   }}
                   onFocus={() => setShowPartTypeDropdown(true)}
                   onBlur={() =>

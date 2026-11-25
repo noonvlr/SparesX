@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cache } from "react";
+import { Suspense, cache } from "react";
 import ProductFilters, { ProductSearchBar } from "./_components/ProductFilters";
+import ProductsScrollRestore from "./_components/ProductsScrollRestore";
 import ProductSortSelect from "./_components/ProductSortSelect";
 import ProductCard from "@/components/ProductCard";
 import PromoSlot from "@/components/promo/PromoSlot";
@@ -217,6 +218,9 @@ export default async function BrowseProductsPage({
 
   return (
     <main className="min-h-screen bg-[var(--surface-2)]">
+      <Suspense fallback={null}>
+        <ProductsScrollRestore />
+      </Suspense>
       {products.length > 0 ? (
         <script
           type="application/ld+json"

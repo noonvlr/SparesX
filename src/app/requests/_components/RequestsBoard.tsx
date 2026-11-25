@@ -78,15 +78,22 @@ function highlightText(text: string, query: string) {
     "gi",
   );
   const parts = text.split(pattern);
-  return parts.map((part, i) =>
-    pattern.test(part) ? (
-      <mark key={i} className="bg-[var(--warning-soft)] text-[var(--warning)] rounded px-0.5">
+  return parts.map((part, i) => {
+    // Avoid RegExp.test with /g (lastIndex) — use a fresh match check
+    const isMatch = tokens.some(
+      (t) => t.toLowerCase() === part.toLowerCase(),
+    );
+    return isMatch ? (
+      <mark
+        key={i}
+        className="bg-[var(--warning-soft)] text-[var(--warning)] rounded px-0.5"
+      >
         {part}
       </mark>
     ) : (
       <span key={i}>{part}</span>
-    ),
-  );
+    );
+  });
 }
 
 export default function RequestsBoard({
@@ -126,7 +133,8 @@ export default function RequestsBoard({
   const [waUrl, setWaUrl] = useState<string | null>(null);
   const [waReason, setWaReason] = useState<string | null>(null);
 
-  // Keep local tab + deep-link query in sync with the URL
+  // Keep local tab + deep-link query in sync with the URL (Back/Forward).
+  // Do not overwrite searchInput while the user is mid-typing a newer query.
   useEffect(() => {
     setTab(tabFromSearchParams(searchParams));
     const nextQuery =
@@ -134,18 +142,43 @@ export default function RequestsBoard({
       searchParams.get("search") ||
       searchParams.get("brand") ||
       "";
-    if (nextQuery) {
+    const trimmed = nextQuery.trim();
+    setSearch((prev) => {
+      if (prev === trimmed) return prev;
       setSearchInput(nextQuery);
-      setSearch(nextQuery.trim());
-    }
+      return trimmed;
+    });
     const nextCategory = searchParams.get("category") || "";
-    setCategoryFilter(nextCategory);
+    setCategoryFilter((prev) => (prev === nextCategory ? prev : nextCategory));
   }, [searchParams]);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(searchInput.trim()), 300);
     return () => clearTimeout(timer);
   }, [searchInput]);
+
+  // Keep browse search + category in the URL so Back restores them
+  useEffect(() => {
+    if (tab !== "browse") return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("search");
+    params.delete("brand");
+    if (search) params.set("q", search);
+    else params.delete("q");
+    if (categoryFilter) params.set("category", categoryFilter);
+    else params.delete("category");
+    // Preserve tab=browse only when explicitly set; default browse needs no tab
+    if (params.get("tab") === "browse") params.delete("tab");
+
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next !== current) {
+      router.replace(next ? `/requests?${next}` : "/requests", {
+        scroll: false,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, categoryFilter, tab]);
 
   useEffect(() => {
     if (!focusId || loading || tab !== "browse") return;

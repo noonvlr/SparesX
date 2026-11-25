@@ -664,6 +664,147 @@
   animation: shimmer 2s infinite;
 }
 
+/* Product description generate — soft “writing” cue (no layout redesign) */
+@keyframes desc-gen-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@keyframes desc-gen-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes desc-gen-float {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translateY(-5px);
+    opacity: 0.9;
+  }
+}
+
+.desc-gen-shell {
+  position: relative;
+}
+
+.desc-gen-shell.is-generating {
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 28%, transparent);
+}
+
+.desc-gen-shell.is-generating::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    color-mix(in srgb, var(--brand) 18%, transparent) 45%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: desc-gen-shimmer 1.4s linear infinite;
+  z-index: 1;
+}
+
+@keyframes desc-gen-btn-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--brand) 35%, transparent),
+      0 0 10px color-mix(in srgb, var(--brand) 22%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--brand) 55%, transparent),
+      0 0 16px color-mix(in srgb, var(--brand) 38%, transparent);
+  }
+}
+
+@keyframes desc-gen-btn-edge {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.desc-gen-btn-wrap {
+  position: relative;
+  display: inline-flex;
+  border-radius: var(--radius);
+  padding: 1px;
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--brand) 15%, transparent),
+    color-mix(in srgb, var(--brand) 70%, transparent),
+    color-mix(in srgb, var(--brand) 15%, transparent)
+  );
+  background-size: 200% 100%;
+  animation:
+    desc-gen-btn-edge 2.8s linear infinite,
+    desc-gen-btn-glow 2.4s ease-in-out infinite;
+}
+
+.desc-gen-btn-wrap.is-busy {
+  animation:
+    desc-gen-btn-edge 1.2s linear infinite,
+    desc-gen-btn-glow 1.2s ease-in-out infinite;
+}
+
+.desc-gen-btn-wrap > button {
+  position: relative;
+  z-index: 1;
+}
+
+.desc-gen-orb {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 9999px;
+  background: var(--brand);
+  animation: desc-gen-pulse 1s ease-in-out infinite;
+}
+
+.desc-gen-spark {
+  width: 0.28rem;
+  height: 0.28rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--brand) 70%, white);
+  animation: desc-gen-float 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desc-gen-shell.is-generating::before,
+  .desc-gen-orb,
+  .desc-gen-spark,
+  .desc-gen-btn-wrap,
+  .desc-gen-btn-wrap.is-busy {
+    animation: none !important;
+  }
+
+  .desc-gen-btn-wrap {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 35%, transparent);
+  }
+}
+
 /* Homepage marketplace stats */
 @keyframes homeStatsEnter {
   from {

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { Alert } from "@/components/ui/Alert";
@@ -11,6 +11,8 @@ import { Select } from "@/components/ui/Select";
 import { LoadingState } from "@/components/feedback";
 import { authFetch, isLoggedInClient } from "@/lib/auth/clientAuth";
 import PriceSuggestHint from "@/components/PriceSuggestHint";
+import ConditionDescriptionBuilder from "@/components/products/ConditionDescriptionBuilder";
+import type { ConditionAttributes } from "@/lib/products/condition-desc";
 
 interface Brand {
   _id: string;
@@ -49,6 +51,8 @@ export default function EditProductPage() {
     partType: "",
     condition: "new" as "new" | "used" | "refurbished",
   });
+  const [conditionAttributes, setConditionAttributes] =
+    useState<ConditionAttributes | null>(null);
 
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
@@ -69,14 +73,44 @@ export default function EditProductPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [dirty, setDirty] = useState(false);
   const router = useRouter();
   const {
     uploadImages,
     uploading: uploadingImages,
     uploadError,
   } = useImageUpload();
+
+  const formReady = useRef(false);
+
+  useEffect(() => {
+    if (loading) {
+      formReady.current = false;
+      return;
+    }
+    if (!formReady.current) {
+      formReady.current = true;
+      return;
+    }
+    setDirty(true);
+  }, [form, existingImages, imageFiles, conditionAttributes, loading]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty]);
+
+  function markDirty() {
+    setDirty(true);
+  }
 
   useEffect(() => {
     // Get ID directly from params (Next.js 16 provides it synchronously in client components)
@@ -129,11 +163,17 @@ export default function EditProductPage() {
           partType: product.partType || "",
           condition: product.condition || "new",
         });
+        setConditionAttributes(
+          product.conditionAttributes?.version === 1
+            ? product.conditionAttributes
+            : null,
+        );
         setBrandSearch(product.brand || "");
         setModelSearch(product.deviceModel || "");
         setPartTypeSearch(product.partType || "");
         setExistingImages(product.images || []);
         console.log("[Edit] Form populated successfully");
+        setDirty(false);
         setLoading(false);
       })
       .catch((error) => {
@@ -246,13 +286,46 @@ export default function EditProductPage() {
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
-    if (files) {
-      setImageFiles(Array.from(files));
+    if (!files?.length) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    const next: File[] = [];
+    for (const file of Array.from(files)) {
+      if (!allowed.includes(file.type)) {
+        setError("Only JPEG, PNG, and WebP images are supported");
+        continue;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Each image must be 5MB or smaller");
+        continue;
+      }
+      next.push(file);
     }
+    const maxImages = 10;
+    const room = Math.max(0, maxImages - existingImages.length - imageFiles.length);
+    if (next.length > room) {
+      setError(`You can upload up to ${maxImages} images total`);
+    }
+    if (room > 0 && next.length) {
+      setImageFiles((prev) => [...prev, ...next.slice(0, room)]);
+      markDirty();
+      setError("");
+    }
+    e.target.value = "";
+  }
+
+  function removeExistingImage(index: number) {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+    markDirty();
+  }
+
+  function removeNewImage(index: number) {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    markDirty();
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (saving || uploadingImages) return;
     const productId = params?.id as string;
 
     setError("");
@@ -262,6 +335,7 @@ export default function EditProductPage() {
       return;
     }
 
+    setSaving(true);
     try {
       // Upload new images if any
       let uploadedImageUrls = existingImages;
@@ -283,10 +357,12 @@ export default function EditProductPage() {
           ...form,
           price: Number(form.price),
           images: uploadedImageUrls,
+          conditionAttributes: conditionAttributes || null,
         }),
       });
       const data = await res.json();
       if (res.ok) {
+        setDirty(false);
         setSuccess("Product updated successfully!");
         setTimeout(() => router.push("/technician/products"), 1200);
       } else {
@@ -294,7 +370,20 @@ export default function EditProductPage() {
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
+    } finally {
+      setSaving(false);
     }
+  }
+
+  function confirmLeave(href?: string) {
+    if (
+      dirty &&
+      !window.confirm("You have unsaved changes. Leave without saving?")
+    ) {
+      return;
+    }
+    if (href) router.push(href);
+    else router.back();
   }
 
   if (loading)
@@ -310,7 +399,7 @@ export default function EditProductPage() {
         title="Edit Product"
         description="Update your device parts listing"
         actions={
-          <Button variant="secondary" onClick={() => router.back()}>
+          <Button variant="secondary" onClick={() => confirmLeave()}>
             <svg
               className="w-5 h-5"
               fill="none"
@@ -570,8 +659,22 @@ export default function EditProductPage() {
                     placeholder="Search part type (e.g., Screen, Battery, Camera)..."
                     value={partTypeSearch}
                     onChange={(e) => {
-                      setPartTypeSearch(e.target.value);
+                      const value = e.target.value;
+                      setPartTypeSearch(value);
                       setShowPartTypeDropdown(true);
+                      setForm((f) => {
+                        if (!f.partType) return f;
+                        const selectedLabel =
+                          partTypes.find((p) => p.value === f.partType)
+                            ?.label || f.partType;
+                        if (
+                          value.trim().toLowerCase() ===
+                          selectedLabel.toLowerCase()
+                        ) {
+                          return f;
+                        }
+                        return { ...f, partType: "" };
+                      });
                     }}
                     onFocus={() => setShowPartTypeDropdown(true)}
                     onBlur={() =>
@@ -611,18 +714,37 @@ export default function EditProductPage() {
                 </Field>
               </div>
 
-              {/* Description */}
-              <Field label="Description" required className="mt-4">
-                <Textarea
-                  placeholder="Describe the product, condition, and any special features..."
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, description: e.target.value }))
-                  }
-                  className="h-32 resize-none"
-                  required
-                />
-              </Field>
+              {form.partType ? (
+                <div className="mt-4">
+                  <ConditionDescriptionBuilder
+                    deviceCategory={form.deviceCategory}
+                    partType={form.partType}
+                    brand={form.brand}
+                    deviceModel={form.deviceModel}
+                    partTypeLabel={
+                      partTypes.find((p) => p.value === form.partType)?.label
+                    }
+                    description={form.description}
+                    attributes={conditionAttributes}
+                    onAttributesChange={setConditionAttributes}
+                    onDescriptionChange={(description) =>
+                      setForm((f) => ({ ...f, description }))
+                    }
+                  />
+                </div>
+              ) : (
+                <Field label="Description" required className="mt-4">
+                  <Textarea
+                    placeholder="Describe the product, condition, and any special features..."
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, description: e.target.value }))
+                    }
+                    className="h-32 resize-none"
+                    required
+                  />
+                </Field>
+              )}
 
               {/* Price & Condition */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -673,7 +795,7 @@ export default function EditProductPage() {
                   <div className="grid grid-cols-3 gap-3 md:grid-cols-4">
                     {existingImages.map((img, idx) => (
                       <div
-                        key={idx}
+                        key={`${img}-${idx}`}
                         className="relative w-full aspect-square rounded-[var(--radius)] overflow-hidden border-2 border-[var(--border)] bg-[var(--surface-2)] flex items-center justify-center"
                       >
                         <img
@@ -682,6 +804,14 @@ export default function EditProductPage() {
                           className="w-full h-full object-contain"
                           loading="lazy"
                         />
+                        <button
+                          type="button"
+                          aria-label={`Remove image ${idx + 1}`}
+                          onClick={() => removeExistingImage(idx)}
+                          className="absolute top-1 right-1 rounded-full bg-[var(--ink)]/70 px-2 py-0.5 text-xs text-[var(--ink-inverse)] hover:bg-[var(--ink)]"
+                        >
+                          ×
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -698,20 +828,40 @@ export default function EditProductPage() {
                 <input
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   onChange={handleImageChange}
-                  disabled={uploadingImages}
+                  disabled={uploadingImages || saving}
                   className="w-full px-4 py-2.5 border border-[var(--border-strong)] rounded-[var(--radius)] bg-[var(--surface)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/30 focus:border-[var(--brand)] transition disabled:bg-[var(--surface-3)]"
                 />
                 {imageFiles.length > 0 && (
-                  <p className="text-sm text-[var(--success)] mt-2">
-                    ✓ {imageFiles.length} new image(s) selected
-                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {imageFiles.map((file, idx) => (
+                      <li
+                        key={`${file.name}-${idx}`}
+                        className="flex items-center justify-between gap-2 rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm"
+                      >
+                        <span className="truncate text-[var(--ink-secondary)]">
+                          {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label={`Remove ${file.name}`}
+                          onClick={() => removeNewImage(idx)}
+                          className="shrink-0 text-[var(--muted)] hover:text-[var(--ink)]"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 {uploadingImages && (
                   <p className="text-sm text-[var(--brand)] mt-2">
-                    🔄 Uploading images...
+                    Uploading images…
                   </p>
+                )}
+                {uploadError && (
+                  <p className="text-sm text-[var(--danger)] mt-2">{uploadError}</p>
                 )}
               </div>
             </div>
@@ -722,17 +872,22 @@ export default function EditProductPage() {
                 type="button"
                 variant="secondary"
                 className="flex-1"
-                onClick={() => router.push("/technician/products")}
+                onClick={() => confirmLeave("/technician/products")}
+                disabled={saving || uploadingImages}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="flex-1"
-                disabled={uploadingImages}
-                loading={uploadingImages}
+                disabled={saving || uploadingImages}
+                loading={saving || uploadingImages}
               >
-                {uploadingImages ? "Uploading..." : "Update Product"}
+                {uploadingImages
+                  ? "Uploading…"
+                  : saving
+                    ? "Saving…"
+                    : "Update Product"}
               </Button>
             </div>
           </>

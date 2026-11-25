@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { openChatUi } from "@/components/chat/openChat";
 import { showToast } from "@/components/ToastHost";
@@ -185,6 +185,8 @@ export function useContactFlow(productId: string) {
   const [waActionLoading, setWaActionLoading] = useState(false);
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [contactError, setContactError] = useState<string | null>(null);
+  const loadingRef = useRef(false);
+  const cacheKeyRef = useRef<string | null>(null);
 
   const openContact = async () => {
     if (!isLoggedInClient()) {
@@ -192,6 +194,21 @@ export function useContactFlow(productId: string) {
       return;
     }
     setContactOpen(true);
+
+    // Prevent duplicate fetches from double-taps / rapid clicks
+    if (loadingRef.current) return;
+
+    // Reuse cached payload for the same product when reopening
+    if (
+      cacheKeyRef.current === productId &&
+      sellerId &&
+      !contactError &&
+      waState
+    ) {
+      return;
+    }
+
+    loadingRef.current = true;
     setLoadingContact(true);
     setContactError(null);
     setWaState(null);
@@ -222,12 +239,14 @@ export function useContactFlow(productId: string) {
           reason: waData.reason,
           whatsappUrl: waData.whatsappUrl || null,
         });
+        cacheKeyRef.current = productId;
       } else {
         setContactError(waData.message || "Could not load WhatsApp status");
       }
     } catch {
       setContactError("Failed to load contact options");
     } finally {
+      loadingRef.current = false;
       setLoadingContact(false);
     }
   };

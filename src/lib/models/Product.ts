@@ -35,6 +35,16 @@ export interface IProduct extends Document {
   // SEO and searchability
   slug?: string;
   tags?: string[];
+  /**
+   * Structured condition-form selections (rule-based description builder).
+   * Optional — older listings omit this field.
+   */
+  conditionAttributes?: {
+    version: 1;
+    templateId: string;
+    selections: Record<string, string[]>;
+    fields: Record<string, string>;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -85,6 +95,7 @@ const ProductSchema: Schema<IProduct> = new Schema({
   // Additional fields
   slug: { type: String, unique: true, sparse: true },
   tags: [{ type: String }],
+  conditionAttributes: { type: Schema.Types.Mixed, default: null },
 }, { timestamps: true });
 
 // Create compound index for efficient filtering

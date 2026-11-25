@@ -17,6 +17,8 @@ import { ShareListingPanel } from "@/components/ShareListing";
 import PriceSuggestHint from "@/components/PriceSuggestHint";
 import { productPath } from "@/lib/seo/site";
 import type { ShareableListing } from "@/lib/share/listingShare";
+import ConditionDescriptionBuilder from "@/components/products/ConditionDescriptionBuilder";
+import type { ConditionAttributes } from "@/lib/products/condition-desc";
 
 interface Brand {
   _id: string;
@@ -88,6 +90,8 @@ function AddProductForm() {
     condition: "new",
     priceNegotiable: false,
   });
+  const [conditionAttributes, setConditionAttributes] =
+    useState<ConditionAttributes | null>(null);
 
   const [brands, setBrands] = useState<Brand[]>([]);
   const [models, setModels] = useState<Model[]>([]);
@@ -427,8 +431,24 @@ function AddProductForm() {
     [images.length, uploadImages, setUploadError],
   );
 
+  const formDirty =
+    Boolean(form.name || form.description || form.brand || form.partType) ||
+    images.length > 0 ||
+    Boolean(conditionAttributes && Object.keys(conditionAttributes.selections || {}).length);
+
+  useEffect(() => {
+    if (!formDirty || listedProduct) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [formDirty, listedProduct]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || uploadingImages) return;
     setError("");
     setSuccess("");
 
@@ -474,6 +494,7 @@ function AddProductForm() {
           ...form,
           price: Number(form.price),
           images: uploadedImageUrls,
+          conditionAttributes: conditionAttributes || null,
         }),
       });
 
@@ -619,6 +640,7 @@ function AddProductForm() {
                   type="button"
                   onClick={() => {
                     setPartTypeSearch("");
+                    setConditionAttributes(null);
                     setForm((f) => ({
                       ...f,
                       deviceCategory: cat.value,
@@ -627,6 +649,7 @@ function AddProductForm() {
                       deviceModel: "",
                       modelNumber: "",
                       partType: "",
+                      description: "",
                     }));
                   }}
                   className={`px-4 py-3 rounded-[var(--radius)] border-2 transition-all duration-200 font-medium capitalize text-center flex-shrink-0 min-w-max w-28 active:scale-95 ${
@@ -801,8 +824,23 @@ function AddProductForm() {
                     placeholder="Search part type (e.g., Screen, Battery, Camera)..."
                     value={partTypeSearch}
                     onChange={(e) => {
-                      setPartTypeSearch(e.target.value);
+                      const value = e.target.value;
+                      setPartTypeSearch(value);
                       setShowPartTypeDropdown(true);
+                      // Clear stale selection when the typed label no longer matches
+                      setForm((f) => {
+                        if (!f.partType) return f;
+                        const selectedLabel =
+                          partTypes.find((p) => p.value === f.partType)
+                            ?.label || f.partType;
+                        if (
+                          value.trim().toLowerCase() ===
+                          selectedLabel.toLowerCase()
+                        ) {
+                          return f;
+                        }
+                        return { ...f, partType: "" };
+                      });
                     }}
                     onFocus={() => setShowPartTypeDropdown(true)}
                     onBlur={() =>
@@ -843,18 +881,38 @@ function AddProductForm() {
                 </Field>
               </div>
 
-              {/* Description */}
-              <Field label="Description" required className="mt-4">
-                <Textarea
-                  placeholder="Describe the product, condition, and any special features..."
-                  value={form.description}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, description: e.target.value }))
-                  }
-                  className="h-32 resize-none"
-                  required
-                />
-              </Field>
+              {/* Condition form + description generator */}
+              {form.partType ? (
+                <div className="mt-4">
+                  <ConditionDescriptionBuilder
+                    deviceCategory={form.deviceCategory}
+                    partType={form.partType}
+                    brand={form.brand}
+                    deviceModel={form.deviceModel}
+                    partTypeLabel={
+                      partTypes.find((p) => p.value === form.partType)?.label
+                    }
+                    description={form.description}
+                    attributes={conditionAttributes}
+                    onAttributesChange={setConditionAttributes}
+                    onDescriptionChange={(description) =>
+                      setForm((f) => ({ ...f, description }))
+                    }
+                  />
+                </div>
+              ) : (
+                <Field label="Description" required className="mt-4">
+                  <Textarea
+                    placeholder="Select a part type first, or describe the product here…"
+                    value={form.description}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, description: e.target.value }))
+                    }
+                    className="h-32 resize-none"
+                    required
+                  />
+                </Field>
+              )}
 
               {/* Price & Condition */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
